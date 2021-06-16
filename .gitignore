@@ -1,0 +1,13 @@
+node_modules
+.DS_Store
+.idea
+dist
+test/**/*.js
+allure-results
+artifacts/build-info
+.env
+cache/**/*
+artifacts/**/*.dbg.json
+*.dbg.json
+.embeddedMode
+.saleTemplateName

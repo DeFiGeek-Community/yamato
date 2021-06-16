@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "lib": [
+      "es6"
+    ],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "declaration": true,
+    "strict": false,
+    "sourceMap": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "removeComments": true,
+    "noImplicitAny": false,
+    "esModuleInterop": true,
+    "paths": {
+      "@src/*": ["./src/*"],
+      "@test/*": ["./test/*"],
+      "*": ["node_modules/*"]
+    },
+    "baseUrl": "./",
+    "outDir": "dist",
+    "typeRoots" : ["./node_modules/@types"]
+  },
+  "include": [
+    "hardhat.config.ts",
+    "src/**/*.ts",
+    "deploy/**/*.ts",
+		"./node_modules/hardhat/hardhat-ethers/src/type-extensions.d.ts",
+		"./node_modules/hardhat/hardhat-waffle/src/type-extensions.d.ts",
+    "./typechain/**/*.ts"
+  ]
+}
