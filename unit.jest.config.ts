@@ -15,7 +15,6 @@ module.exports = {
     '^@typechainTypes/(.*)$': '<rootDir>/typechain/$1',
   },
   "setupFilesAfterEnv": [
-    "jest-allure/dist/setup",
     "./jest.setup.js"
   ],
   "preset": "ts-jest",

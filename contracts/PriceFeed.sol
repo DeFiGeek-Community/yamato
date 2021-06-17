@@ -13,6 +13,16 @@ pragma solidity ^0.8.3;
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 
-contract PriceFeed {
-    
+interface IPriceFeed {
+    function fetchPrice() external returns (uint jpyPerUSD, uint ethPerUSD);
 }
+
+
+
+contract PriceFeed is IPriceFeed {
+    function fetchPrice() public override returns (uint jpyPerUSD, uint ethPerUSD) {
+        jpyPerUSD = 100;
+        ethPerUSD = (1/2500 * 10**18);
+    }
+}
+

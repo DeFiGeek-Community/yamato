@@ -3,7 +3,6 @@ const isDebug = !false;
 const { ethers } = require("hardhat");
 import { BigNumber } from 'ethers';
 
-const reporter = (<any>global).reporter;
 const { waffleJest } = require("@ethereum-waffle/jest");
 expect.extend(waffleJest);
 const betterexpect = (<any>expect); // TODO: better typing for waffleJest
@@ -15,7 +14,6 @@ import { summon, create, getSharedProvider, getSharedSigners,
 import { getBulksaleAbiArgs, getTokenAbiArgs, sendEther } from "@test/param/scenarioHelper";
 import { State } from '@test/param/parameterizedSpecs';
 import { parameterizedSpecs } from '@test/param/paramSpecEntrypoint';
-import { Severity, Reporter } from "jest-allure/dist/Reporter";
 import { suite, test } from '@testdeck/jest'
 import fs from 'fs';
 import { BalanceLogger } from '@src/BalanceLogger';
