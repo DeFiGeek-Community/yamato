@@ -23,10 +23,10 @@ interface IPool {
     function withdrawDividendReserve(uint amount) external;
     function lockETH(uint amount) external;
     function sendETH(address recipient, uint amount) external;
-    function redemptionReserve() external view;
-    function debtCancelReserve() external view;
-    function dividendReserve() external view;
-    function lockedCollateral() external view;
+    function redemptionReserve() external view returns (uint);
+    function debtCancelReserve() external view returns (uint);
+    function dividendReserve() external view returns (uint);
+    function lockedCollateral() external view returns (uint);
 }
 
 
@@ -34,10 +34,10 @@ interface IPool {
 contract Pool is IPool {
     // TODO: Distribute YMT like provideToSP() in the Liquity
     IYamato yamato = IYamato(address(0));
-    uint public redemptionReserve; // Auto redemption pool a.k.a. (kinda) Stability Pool in Liquity
-    uint public debtCancelReserve; // Protocol Controlling Value (PCV) to remove Pledges(coll=0, debt>0)
-    uint public dividendReserve; // All redeemed Pledges returns coll=ETH to here.
-    uint public lockedCollateral; // All collateralized ETH
+    uint public override redemptionReserve; // Auto redemption pool a.k.a. (kinda) Stability Pool in Liquity
+    uint public override debtCancelReserve; // Protocol Controlling Value (PCV) to remove Pledges(coll=0, debt>0)
+    uint public override dividendReserve; // All redeemed Pledges returns coll=ETH to here.
+    uint public override lockedCollateral; // All collateralized ETH
 
     event Received(address, uint);
     receive() external payable {

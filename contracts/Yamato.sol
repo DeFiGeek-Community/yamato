@@ -67,7 +67,7 @@ contract Yamato is IYamato, ReentrancyGuard{
     /// @notice Make a Pledge with ETH and borrow some CJPY instead. Forefront 20% fee.
     /// @dev In JPY term, 15.84%=RR, 0.16%=RRGas, 3.96%=DCR, 0.4%=DCRGas
     /// @param issueAmountInCjpy maximal redeemable amount
-    function issue(uint issueAmountInCjpy) public {
+    function issue(uint issueAmountInCjpy) public payable {
         require(!issueLocks[msg.sender], "Issuance is being locked for this sender.");
         issueLocks[msg.sender] = true;
 
@@ -124,7 +124,6 @@ contract Yamato is IYamato, ReentrancyGuard{
         */
         (uint jpyPerUSD, uint ethPerUSD) = feed.fetchPrice();
         uint jpyPerEth = jpyPerUSD / ethPerUSD; // jpy/eth = (jpy/usd) / (eth/usd)
-        uint ethAmount = cjpyAmount / jpyPerEth;
 
 
         /*
@@ -362,7 +361,7 @@ contract Yamato is IYamato, ReentrancyGuard{
     /// @param collInCjpy coll * ethPriceInJpy
     /// @param debt from pledge
     /// @return ICR in uint256
-    function getICR(uint collInCjpy, uint debt) public view returns (uint ICR) {
+    function getICR(uint collInCjpy, uint debt) public pure returns (uint ICR) {
         if(debt == 0){
             ICR = 2**256 - 1;
         } else {

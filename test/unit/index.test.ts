@@ -35,7 +35,7 @@ describe("Yamato", function() {
 
       YamatoMock.smocked.issue.will.return.with('Some return value!')
 
-      console.log(await YamatoMock.issue()) // 'Some return value!'
+      console.log(await YamatoMock.callStatic.issue()) // 'Some return value!'
     });
   });
 });
