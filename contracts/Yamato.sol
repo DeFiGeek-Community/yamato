@@ -35,10 +35,21 @@ contract Yamato is ReentrancyGuard {
     mapping(address=>uint) public withdrawLocks;
 
     uint8 public MCR = 110; // MinimumCollateralizationRatio
-    uint8 public FR = 20; // FR
+    uint8 public FR = 20; // FeeRate
     uint8 public RRR = 80; // RedemptionReserveRate
     uint8 public DCRR = 20; // DebtCancelReserveRate
     uint8 public GRR = 1; // GasReserveRate
+
+
+
+    /*
+    ==============================
+        Single Pledge Actions
+    ==============================
+        - issue
+        - repay
+        - withdraw
+    */
 
 
     /// @title issue()
@@ -90,138 +101,6 @@ contract Yamato is ReentrancyGuard {
         pool.lockETH(ethAmount);
         locked = false;
         withdrawLocks[msg.sender] = block.timestamp + 3 days;
-    }
-
-    /// @title close()
-    /// @author 0xMotoko
-    /// @notice Initialize all pledges such that ICR is 0 (= (0*price)/debt )
-    /// @dev Will be run by incentivised DAO member. Scan all pledges and filter debt>0, coll=0.
-    /// @return void
-    function close() public nonReentrant {
-        uint debtCancelStart = pool.debtCancelReserve;
-        /*
-            1. Scan Pledges
-        */
-        for(uint i = 0; i < pledgesIndices.length; i++){
-            address borrower = pledgesIndices[i];
-            Pledge storage pledge = pledges[borrower];
-            if(pledge.coll == 0 && pool.debtCancelReserve > 0){
-                /*
-                    2. Close Zero-collateral Pledges
-                */
-                pool.useDebtCancelReserve(pledge.debt);
-                cjpy.burn(address(pool), pledge.debt);
-                debtCancelUsage += pledge.debt;
-                pledge.debt = 0;
-                pledge.isCreated = false;
-            }
-        }
-
-        /*
-            3. Gas compenation
-        */
-        uint debtCancelEnd = pool.debtCancelReserve;
-        uint debtCancelDiff = debtCancelStart - debtCancelEnd;
-        uint gasCompensation = debtCancelDiff * (GRR/100);
-        (bool success,) = payable(msg.sender).call{value:gasCompensation}("");
-        require(success, "Gas payback has been failed.");
-        pool.useDebtCancelReserve(gasCompensation);
-    }
-
-
-    /// @title redeem()
-    /// @author 0xMotoko
-    /// @notice Retrieve ETH collaterals from Pledges by burning CJPY
-    /// @dev Need allowance. Lowest ICR Pledges get redeemed first. TCR will go up. coll=0 pledges are to be remained.
-    /// @param cjpyAmount maximal redeemable amount
-    /// @return void
-    function redeem(uint cjpyAmount) public nonReentrant {
-        uint redeemStart = pool.redemptionReserve;
-
-        /*
-            1. Get feed
-        */
-        (uint jpyPerUSD, uint ethPerUSD) = feed.fetchPrice();
-        uint jpyPerEth = jpyPerUSD / ethPerUSD; // jpy/eth = (jpy/usd) / (eth/usd)
-
-        /*
-            2. Validate TCR
-        */
-        require(getICR(getEntireSystemColl()*jpyPerEth,getEntireSystemDebt())<MCR, "Redemption failure: TCR is not less than MCR.");
-
-
-        /*
-            4. Sort Pledges by ICR
-        */
-        for(uint i = 0; i < pledgesIndices.length; i++){
-            address borrower = pledgesIndices[i];
-
-            Pledge storage pledge = pledges[borrower];
-            uint jpyAmountOfColl = jpyPerEth * pledge.coll;
-            uint8 IndividualCollateralRatio = (pledge.debt / jpyAmountOfColl) * 100;
-
-            if(IndividualCollateralRatio < MCR){
-                sortedPledges[IndividualCollateralRatio].push(pledge);
-            }
-        }
-
-        /*
-            5. Update lowest ICR pledges until cjpy exhausted.
-        */
-        uint remainingCjpyAmount = cjpyAmount;
-        uint oldDebt;
-        for(uint8 i = 0; i < MCR; i++){
-            uint8 ICR = i;
-            Pledge[] storage _sortedPledgesPerICR = sortedPledges[ICR];
-            for(uint j = 0; j < _sortedPledgesPerICR.length; j++){
-                Pledge storage pledge = _sortedPledgesPerICR[j];
-                uint oldDebt = pledge.debt;
-                uint reducingCjpyAmount;
-
-                if(remainingCjpyAmount > pledge.debt){
-                    reducingCjpyAmount = oldDebt;
-                } else {
-                    reducingCjpyAmount = remainingCjpyAmount;
-                }
-                uint reducingEthAmount = reducingCjpyAmount / jpyPerEth;
-                pledge.debt -= reducingCjpyAmount;
-                pledge.coll -= reducingEthAmount;
-                remainingCjpyAmount -= reducingCjpyAmount;
-
-
-                /*
-                    5. If core redemption, then reduce pool numbers
-                */
-                cjpy.burn(msg.sender, reducingCjpyAmount);
-                if(msg.sender == address(pool)){
-                    /*
-                    
-                    Scenario: Auto Redemption
-                    
-                    [ Pool Subtotal ]
-                        (-) Debt Cancel Reserve
-                        (+) Dividend Reserve
-
-                    */
-                    pool.useRedemptionReserve(reducingCjpyAmount);
-                    pool.accumulateDividendReserve(reducingEthAmount);
-                    pool.sendETH(address(pool), reducingEthAmount);
-                } else {
-                    pool.sendETH(msg.sender, reducingEthAmount);
-                }
-
-            }
-        }
-
-        /*
-            6. Gas compenation
-        */
-        uint redeemEnd = pool.redemptionReserve;
-        uint redeemDiff = redeemStart - redeemEnd;
-        uint gasCompensation = redeemDiff * (GRR/100);
-        (bool success,) = payable(msg.sender).call{value:gasCompensation}("");
-        require(success, "Gas payback has been failed.");
-        pool.useRedemptionReserve(gasCompensation);
     }
 
 
@@ -298,6 +177,173 @@ contract Yamato is ReentrancyGuard {
         (bool success,) = payable(msg.sender).call{value:ethAmount}("");
         require(success, "ETH transfer failed");
     }
+
+
+
+    /*
+    ==============================
+        Multi Pledge Actions
+    ==============================
+        - redeem
+        - sweep
+    */
+
+    /// @title redeem()
+    /// @author 0xMotoko
+    /// @notice Retrieve ETH collaterals from Pledges by burning CJPY
+    /// @dev Need allowance. Lowest ICR Pledges get redeemed first. TCR will go up. coll=0 pledges are to be remained.
+    /// @param maxRedemptionCjpyAmount maximal redeemable amount
+    /// @param isCoreRedemption A flag for who to pay
+    /// @return void
+    function redeem(uint maxRedemptionCjpyAmount, bool isCoreRedemption) public nonReentrant {
+        uint redeemStart = pool.redemptionReserve;
+
+        /*
+            1. Get feed
+        */
+        (uint jpyPerUSD, uint ethPerUSD) = feed.fetchPrice();
+        uint jpyPerEth = jpyPerUSD / ethPerUSD; // jpy/eth = (jpy/usd) / (eth/usd)
+
+        /*
+            2. Validate TCR
+        */
+        require(getICR(getEntireSystemColl()*jpyPerEth,getEntireSystemDebt())<MCR, "Redemption failure: TCR is not less than MCR.");
+
+
+        /*
+            4. Sort Pledges by ICR
+        */
+        for(uint i = 0; i < pledgesIndices.length; i++){
+            address borrower = pledgesIndices[i];
+
+            Pledge storage pledge = pledges[borrower];
+            uint jpyAmountOfColl = jpyPerEth * pledge.coll;
+            uint8 IndividualCollateralRatio = (pledge.debt / jpyAmountOfColl) * 100;
+
+            if(IndividualCollateralRatio < MCR){
+                sortedPledges[IndividualCollateralRatio].push(pledge);
+            }
+        }
+
+        /*
+            5. Update lowest ICR pledges until cjpy exhausted.
+        */
+        uint oldDebt;
+        uint reserveLeft = maxRedemptionCjpyAmount;
+        for(uint8 i = 1; i < MCR; i++){
+            uint8 ICR = i;
+            Pledge[] storage _sortedPledgesPerICR = sortedPledges[ICR];
+            for(uint j = 0; j < _sortedPledgesPerICR.length; j++){
+                Pledge storage pledge = _sortedPledgesPerICR[j];
+                uint oldDebt = pledge.debt;
+                uint reducingCjpyAmount;
+
+                if(reserveLeft >= pledge.debt){
+                    reducingCjpyAmount = oldDebt;
+                } else {
+                    reducingCjpyAmount = reserveLeft;
+                }
+                if(reducingCjpyAmount > reserveLeft) break; // TODO: Can it quit 2-depth loops early?
+
+                uint reducingEthAmount = reducingCjpyAmount / jpyPerEth;
+                pledge.debt -= reducingCjpyAmount;
+                pledge.coll -= reducingEthAmount;
+                reserveLeft -= reducingCjpyAmount;
+            }
+        }
+
+
+        /*
+            5. Ditribute colls.
+        */
+        uint totalRedeemedCjpyAmount = redeemStart - pool.redemptionReserve;
+        uint totalRedeemedEthAmount = totalRedeemedCjpyAmount / jpyPerEth;
+        uint dividendEthAmount = totalRedeemedEthAmount * (100-GRR)/100;
+        if(isCoreRedemption){
+            /* 
+            [ Core Redemption - Pool Subtotal ]
+                (-) Debt Cancel Reserve
+                (+) Dividend Reserve
+            */
+            cjpy.burn(address(pool), totalRedeemedCjpyAmount);
+            pool.useRedemptionReserve(totalRedeemedCjpyAmount);
+            pool.accumulateDividendReserve(dividendEthAmount);
+
+            // TODO: gas compensation for the redeemed ETH
+            pool.sendETH(address(pool), dividendEthAmount * (100-GRR)/100 );
+        } else {
+            /* 
+            [ Peer redemption ]
+            */
+            cjpy.burn(msg.sender, totalRedeemedCjpyAmount);
+            pool.sendETH(msg.sender, dividendEthAmount);
+        }
+
+
+        /*
+            6. Gas compensation
+        */
+        uint gasCompensation = totalRedeemedEthAmount * (GRR/100);
+        (bool success,) = payable(msg.sender).call{value:gasCompensation}("");
+        require(success, "Gas payback has been failed.");
+    }
+
+
+
+    /// @title sweep()
+    /// @author 0xMotoko
+    /// @notice Initialize all pledges such that ICR is 0 (= (0*price)/debt )
+    /// @dev Will be run by incentivised DAO member. Scan all pledges and filter debt>0, coll=0. Pay gas compensation from the 1% of DebtCancelReserve at most, and as same as 1% of the actual debt cancelling amount.
+    /// @return void
+    function sweep() public nonReentrant {
+        uint debtCancelStart = pool.debtCancelReserve;
+        require(debtCancelStart > 0, "Sweep failure: debt cancel reserve is empty.");
+        uint maxGasCompensation = debtCancelStart * (GRR/100);
+        uint maxDebtCancellable = debtCancelStart - maxGasCompensation;
+        /*
+            1. Scan Pledges
+        */
+        for(uint i = 0; i < pledgesIndices.length; i++){
+            address borrower = pledgesIndices[i];
+            Pledge storage pledge = pledges[borrower];
+            uint currentUsage = debtCancelStart - pool.debtCancelReserve;
+
+            /*
+                2. (Full or partical) repayment of Zero-collateral Pledges
+            */
+            uint availablePart = maxDebtCancellable - currentUsage;
+            if(pledge.coll == 0){
+                uint _debt;
+                if(availablePart >= pledge.debt) {
+                    _debt = pledge.debt;
+                } else {
+                    _debt = availablePart;
+                }
+                pool.useDebtCancelReserve(_debt);
+                cjpy.burn(address(pool), _debt);
+                pledge.debt -= _debt;
+                pledge.isCreated = (pledge.debt > 0);
+            }
+
+            /*
+                3. Early quit for saving gas.
+            */ 
+            if(availablePart < pledge.debt) break;
+        }
+
+        /*
+            4. Gas compensation
+        */
+        uint debtCancelEnd = pool.debtCancelReserve;
+        uint debtCancelDiff = debtCancelStart - debtCancelEnd;
+        uint gasCompensation = debtCancelDiff * (GRR/100);
+        (bool success,) = payable(msg.sender).call{value:gasCompensation}("");
+        require(success, "Gas payback has been failed.");
+        pool.useDebtCancelReserve(gasCompensation);
+
+
+    }
+
 
 
     function getICR(uint collInCjpy, uint debt) internal returns (uint ICR) {
