@@ -21,6 +21,12 @@ contract Pool is IPool {
     uint public debtCancelReserve; // Protocol Controlling Value (PCV) to remove Pledges(coll=0, debt>0)
     uint public dividendReserve; // All redeemed Pledges returns coll=ETH to here.
     uint public lockedCollateral; // All collateralized ETH
+
+    event Received(address, uint);
+    receive() external payable {
+        emit Received(msg.sender, msg.value);
+    }
+
     modifier onlyYamato(){
         require(msg.sender == address(yamato), "You are not Yamato contract.");
         _;
@@ -55,7 +61,6 @@ contract Pool is IPool {
         (bool success,) = payable(recipient).call{value:amount}("");
         require(success, "transfer failed");
     }
-
 }
 
 interface IPool {
