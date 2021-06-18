@@ -79,23 +79,13 @@ export class PriceFeed extends BaseContract {
   functions: {
     fetchPrice(
       overrides?: CallOverrides
-    ): Promise<
-      [BigNumber, BigNumber] & { jpyPerUSD: BigNumber; ethPerUSD: BigNumber }
-    >;
+    ): Promise<[BigNumber] & { jpyPerETH: BigNumber }>;
   };
 
-  fetchPrice(
-    overrides?: CallOverrides
-  ): Promise<
-    [BigNumber, BigNumber] & { jpyPerUSD: BigNumber; ethPerUSD: BigNumber }
-  >;
+  fetchPrice(overrides?: CallOverrides): Promise<BigNumber>;
 
   callStatic: {
-    fetchPrice(
-      overrides?: CallOverrides
-    ): Promise<
-      [BigNumber, BigNumber] & { jpyPerUSD: BigNumber; ethPerUSD: BigNumber }
-    >;
+    fetchPrice(overrides?: CallOverrides): Promise<BigNumber>;
   };
 
   filters: {};

@@ -1,5 +1,5 @@
 import { ethers } from 'hardhat'
-import { smockit, smoddit } from '@eth-optimism/smock';
+import { smockit, smoddit, isMockContract } from '@eth-optimism/smock';
 import { BigNumber, utils } from 'ethers';
 const { AbiCoder, ParamType } = utils;
 
@@ -25,17 +25,43 @@ const YAMATO_ABI = genABI('Yamato');
 /* Parameterized Test (Testcases are in /test/parameterizedSpecs.ts) */
 describe("Yamato", function() {
   describe("issue()", function() {
-    it(`issue and count funcs`, async function() {
-      const YamatoFactory = await ethers.getContractFactory('Yamato')
-      const Yamato = await YamatoFactory.deploy()
-
-
-
-      const YamatoMock = await smockit(Yamato)
-
-      YamatoMock.smocked.issue.will.return.with('Some return value!')
-
-      console.log(await YamatoMock.callStatic.issue()) // 'Some return value!'
+    it(`succeeds to make a mock`, async function() {
+      const spec = await ethers.getContractFactory('Yamato')
+      const mock = await smockit(spec)
+      betterexpect(isMockContract(mock)).toBe(true);
     });
+    it(`succeeds to make a mocked func`, async function() {
+      const spec1 = await ethers.getContractFactory('Pool')
+      const spec2 = await ethers.getContractFactory('PriceFeed')
+      const spec3 = await ethers.getContractFactory('YMT')
+      const spec4 = await ethers.getContractFactory('CJPY')
+      const mockPool = await smockit(spec1)
+      const mockFeed = await smockit(spec2)
+      const mockYMT = await smockit(spec3)
+      const mockCJPY = await smockit(spec4)
+      const mockCaller = await (await ethers.getContractFactory('Yamato')).deploy(
+        mockPool.address,
+        mockFeed.address,
+        mockYMT.address,
+        mockCJPY.address
+      );
+
+      mockPool.smocked['depositRedemptionReserve(uint256)'].will.return.with(0);
+      mockPool.smocked['depositRedemptionReserve(uint256)'].will.return.with(0);
+      mockPool.smocked['depositDebtCancelReserve(uint256)'].will.return.with(0);
+      mockPool.smocked['lockETH(uint256)'].will.return.with(0);
+      mockFeed.smocked.fetchPrice.will.return.with("260000");
+      
+
+      await mockCaller.issue(toERC20("300000"), {value:toERC20("1.31")});
+
+      // betterexpect(mockPool.smocked.depositRedemptionReserve.calls[0])
+      // .to.deep.equal([mockArg1]);
+      // betterexpect(mockPool.smocked.depositDebtCancelReserve.calls[0])
+      // .to.deep.equal([mockArg2]);
+      // betterexpect(mockPool.smocked.lockETH.calls[0])
+      // .to.deep.equal([mockArg3]);
+    });
+
   });
 });

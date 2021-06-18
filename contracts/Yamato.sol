@@ -19,6 +19,7 @@ import "./CJPY.sol";
 import "./PriceFeed.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./IERC20MintableBurnable.sol";
+import "hardhat/console.sol";
 
 interface IYamato {
 
@@ -28,10 +29,10 @@ interface IYamato {
 /// @title Yamato Pledge Manager Contract
 /// @author 0xMotoko
 contract Yamato is IYamato, ReentrancyGuard{
-    IPool pool = IPool(address(0));
-    IERC20MintableBurnable ymt = IERC20MintableBurnable(address(0));
-    IERC20MintableBurnable cjpy = IERC20MintableBurnable(address(0));
-    IPriceFeed feed = IPriceFeed(address(0));
+    IPool pool;
+    IERC20MintableBurnable ymt;
+    IERC20MintableBurnable cjpy;
+    IPriceFeed feed;
     struct Pledge {
         uint coll;
         uint debt;
@@ -52,6 +53,12 @@ contract Yamato is IYamato, ReentrancyGuard{
     uint8 public DCRR = 20; // DebtCancelReserveRate
     uint8 public GRR = 1; // GasReserveRate
 
+    constructor(address _pool, address _feed, address _ymt, address _cjpy){
+         pool = IPool(_pool);
+         feed = IPriceFeed(_feed);
+         ymt = IERC20MintableBurnable(_ymt);
+         cjpy = IERC20MintableBurnable(_cjpy);
+    }
 
 
     /*
@@ -72,8 +79,7 @@ contract Yamato is IYamato, ReentrancyGuard{
         issueLocks[msg.sender] = true;
 
         uint ethAmount = msg.value;
-        (uint jpyPerUSD, uint ethPerUSD) = feed.fetchPrice();
-        uint jpyPerEth = jpyPerUSD / ethPerUSD; // jpy/eth = (jpy/usd) / (eth/usd)
+        uint jpyPerEth = feed.fetchPrice();
         uint jpyAmountToMint = jpyPerEth * ethAmount;
         cjpy.mint(msg.sender, jpyAmountToMint); // onlyYamato
         uint fee = jpyAmountToMint * FR/100;
@@ -96,6 +102,8 @@ contract Yamato is IYamato, ReentrancyGuard{
             totalColl += ethAmount;
             totalDebt += issueAmountInCjpy;
         } else {
+            console.log("ethAmount:%s, jpyPerEth:%s, issueAmountInCjpy:%s", ethAmount, jpyPerEth, issueAmountInCjpy);
+            console.log("ICR:%s, MCR:%s", getICR(ethAmount*jpyPerEth, issueAmountInCjpy), MCR);
             require( getICR(ethAmount*jpyPerEth, issueAmountInCjpy) >= MCR, "This minting is invalid because of too large borrowing.");
             pledge.coll = ethAmount;
             pledge.debt = jpyAmountToMint;
@@ -122,8 +130,7 @@ contract Yamato is IYamato, ReentrancyGuard{
         /*
             1. Get feed
         */
-        (uint jpyPerUSD, uint ethPerUSD) = feed.fetchPrice();
-        uint jpyPerEth = jpyPerUSD / ethPerUSD; // jpy/eth = (jpy/usd) / (eth/usd)
+        uint jpyPerEth = feed.fetchPrice();
 
 
         /*
@@ -158,8 +165,7 @@ contract Yamato is IYamato, ReentrancyGuard{
         /*
             1. Get feed
         */
-        (uint jpyPerUSD, uint ethPerUSD) = feed.fetchPrice();
-        uint jpyPerEth = jpyPerUSD / ethPerUSD; // jpy/eth = (jpy/usd) / (eth/usd)
+        uint jpyPerEth = feed.fetchPrice();
 
         /*
             2. Update pledge
@@ -203,8 +209,7 @@ contract Yamato is IYamato, ReentrancyGuard{
         /*
             1. Get feed
         */
-        (uint jpyPerUSD, uint ethPerUSD) = feed.fetchPrice();
-        uint jpyPerEth = jpyPerUSD / ethPerUSD; // jpy/eth = (jpy/usd) / (eth/usd)
+        uint jpyPerEth = feed.fetchPrice();
 
         /*
             2. Validate TCR
@@ -365,7 +370,7 @@ contract Yamato is IYamato, ReentrancyGuard{
         if(debt == 0){
             ICR = 2**256 - 1;
         } else {
-            ICR = (collInCjpy / debt)*100;
+            ICR = 100 * collInCjpy / debt;
         }
     }
 

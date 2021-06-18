@@ -13,12 +13,7 @@ const _abi = [
     outputs: [
       {
         internalType: "uint256",
-        name: "jpyPerUSD",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "ethPerUSD",
+        name: "jpyPerETH",
         type: "uint256",
       },
     ],
