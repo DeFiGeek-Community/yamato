@@ -30,7 +30,7 @@ describe("Yamato", function() {
       const mock = await smockit(spec)
       betterexpect(isMockContract(mock)).toBe(true);
     });
-    it(`succeeds to make a mocked func`, async function() {
+    it(`succeeds to make a pledge with ICR=110%, and the TCR will be 110%`, async function() {
       const spec1 = await ethers.getContractFactory('Pool')
       const spec2 = await ethers.getContractFactory('PriceFeed')
       const spec3 = await ethers.getContractFactory('YMT')
@@ -53,14 +53,13 @@ describe("Yamato", function() {
       mockFeed.smocked.fetchPrice.will.return.with("260000");
       
 
-      await mockCaller.issue(toERC20("300000"), {value:toERC20("1.31")});
+      const toBorrow = toERC20("236364");
+      const toCollateralize = toERC20("1.00");
+      await mockCaller.issue(toBorrow, {value:toCollateralize});
 
-      // betterexpect(mockPool.smocked.depositRedemptionReserve.calls[0])
-      // .to.deep.equal([mockArg1]);
-      // betterexpect(mockPool.smocked.depositDebtCancelReserve.calls[0])
-      // .to.deep.equal([mockArg2]);
-      // betterexpect(mockPool.smocked.lockETH.calls[0])
-      // .to.deep.equal([mockArg3]);
+      const TCR = await mockCaller.getTCR(228800);
+
+      betterexpect(TCR.toString()).toBe("110");
     });
 
   });

@@ -80,15 +80,16 @@ contract Yamato is IYamato, ReentrancyGuard{
 
         uint ethAmount = msg.value;
         uint jpyPerEth = feed.fetchPrice();
-        uint jpyAmountToMint = jpyPerEth * ethAmount;
-        cjpy.mint(msg.sender, jpyAmountToMint); // onlyYamato
-        uint fee = jpyAmountToMint * FR/100;
+        uint cjpyAmountToMint = jpyPerEth * ethAmount;
+        cjpy.mint(msg.sender, cjpyAmountToMint); // onlyYamato
+        uint fee = cjpyAmountToMint * FR/100;
         uint redemptionReserve = fee * RRR/100;
         uint debtCancelReserve = fee * DCRR/100;
+        uint availableCjpy = cjpyAmountToMint - fee;
 
         cjpy.transfer(address(pool), redemptionReserve);
         cjpy.transfer(address(pool), debtCancelReserve);
-        cjpy.transfer(msg.sender, jpyAmountToMint - fee);
+        cjpy.transfer(msg.sender, availableCjpy);
 
         pool.depositRedemptionReserve(redemptionReserve);
         pool.depositDebtCancelReserve(debtCancelReserve);
@@ -102,16 +103,14 @@ contract Yamato is IYamato, ReentrancyGuard{
             totalColl += ethAmount;
             totalDebt += issueAmountInCjpy;
         } else {
-            console.log("ethAmount:%s, jpyPerEth:%s, issueAmountInCjpy:%s", ethAmount, jpyPerEth, issueAmountInCjpy);
-            console.log("ICR:%s, MCR:%s", getICR(ethAmount*jpyPerEth, issueAmountInCjpy), MCR);
-            require( getICR(ethAmount*jpyPerEth, issueAmountInCjpy) >= MCR, "This minting is invalid because of too large borrowing.");
+            require( getICR(ethAmount*jpyPerEth, availableCjpy/*issueAmountInCjpy*/) >= MCR, "This minting is invalid because of too large borrowing.");
             pledge.coll = ethAmount;
-            pledge.debt = jpyAmountToMint;
+            pledge.debt = availableCjpy;
             pledge.isCreated = true;
 
             pledgesIndices.push(msg.sender);
             totalColl += ethAmount;
-            totalDebt += jpyAmountToMint;
+            totalDebt += availableCjpy;
         }
 
 
@@ -366,12 +365,13 @@ contract Yamato is IYamato, ReentrancyGuard{
     /// @param collInCjpy coll * ethPriceInJpy
     /// @param debt from pledge
     /// @return ICR in uint256
-    function getICR(uint collInCjpy, uint debt) public pure returns (uint ICR) {
+    function getICR(uint collInCjpy, uint debt) public view returns (uint ICR) {
         if(debt == 0){
             ICR = 2**256 - 1;
         } else {
             ICR = 100 * collInCjpy / debt;
         }
+        console.log(collInCjpy, debt, ICR);
     }
 
     /// @notice Calculate TCR
