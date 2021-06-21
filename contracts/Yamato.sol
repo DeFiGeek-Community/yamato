@@ -371,7 +371,6 @@ contract Yamato is IYamato, ReentrancyGuard{
         } else {
             ICR = 100 * collInCjpy / debt;
         }
-        console.log(collInCjpy, debt, ICR);
     }
 
     /// @notice Calculate TCR

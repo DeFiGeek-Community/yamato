@@ -16,20 +16,23 @@ import { parameterizedSpecs } from '@test/param/paramSpecEntrypoint';
 import { suite, test } from '@testdeck/jest'
 import fs from 'fs';
 import { BalanceLogger } from '@src/BalanceLogger';
-import { BulksaleDAO, BasicPlugin } from '../../typechain'; 
+import { Yamato, Pool } from '../../typechain'; 
 
 import { genABI } from '@src/genABI';
 
 const YAMATO_ABI = genABI('Yamato');
 
 /* Parameterized Test (Testcases are in /test/parameterizedSpecs.ts) */
+describe("Smock", function() {
+  it(`succeeds to make a mock`, async function() {
+    const spec = await ethers.getContractFactory('Yamato')
+    const mock = await smockit(spec)
+    betterexpect(isMockContract(mock)).toBe(true);
+  });
+});
+
 describe("Yamato", function() {
   describe("issue()", function() {
-    it(`succeeds to make a mock`, async function() {
-      const spec = await ethers.getContractFactory('Yamato')
-      const mock = await smockit(spec)
-      betterexpect(isMockContract(mock)).toBe(true);
-    });
     it(`succeeds to make a pledge with ICR=110%, and the TCR will be 110%`, async function() {
       const PRICE = 260000;
       const MCR = 1.1;
@@ -41,7 +44,7 @@ describe("Yamato", function() {
       const mockFeed = await smockit(spec2)
       const mockYMT = await smockit(spec3)
       const mockCJPY = await smockit(spec4)
-      const yamato = await (await ethers.getContractFactory('Yamato')).deploy(
+      const yamato:Yamato = await (await ethers.getContractFactory('Yamato')).deploy(
         mockPool.address,
         mockFeed.address,
         mockYMT.address,
@@ -70,5 +73,55 @@ describe("Yamato", function() {
 
     });
 
+    it.todo(`should run depositRedemptionReserve() of Pool.sol`);
+    it.todo(`should run depositDebtCancelReserve() of Pool.sol`);
+    it.todo(`should run lockETH() of Pool.sol`);
+
   });
+  describe("repay()", function() {
+    it(`should reduce debt`, async function() {
+    });
+    it(`should improve TCR`, async function() {
+    });
+    it(`can't be executed in the TCR < MCR`, async function() {
+    });
+  });
+  describe("withdraw()", function() {
+    it(`should reduce coll`, async function() {
+    });
+    it(`should decrease TCR`, async function() {
+    });
+    it(`can't be executed in the TCR < MCR nor make TCR < MCR`, async function() {
+    });
+    it.todo(`should run sendETH() of Pool.sol`);
+  });
+
+  describe("redeem()", function() {
+    it(`should reduce debt of lowest ICR pledges`, async function() {
+    });
+    it(`should return colls from them and it goes to RedemptionReserve`, async function() {
+    });
+    it(`should keep TCR(??)`, async function() {
+    });
+    it(`doesn't care how much TCR is. (compare to MCR)`, async function() {
+    });
+    it(`doesn't remain any sorted Trove state in the contract`, async function() {
+    });
+    it(`can remain coll=0 debt>0 pledge in the storage`, async function() {
+    });
+    it.todo(`[poolFlag:false] should NOT run useRedemptionReserve() of Pool.sol`);
+    it.todo(`[poolFlag:true] should run useRedemptionReserve() of Pool.sol`);
+    it.todo(`should run accumulateDividendReserve() of Pool.sol`);
+  });
+
+  describe("sweep()", function() {
+    it(`should improve TCR`, async function() {
+    });
+    it(`doesn't care how much TCR is. (compare to MCR)`, async function() {
+    });
+    it(`should remove coll=0 pledges from the smallest debt`, async function() {
+    });
+    it.todo(`should run useDebtCancelReserve() of Pool.sol`);
+  });
+
 });
