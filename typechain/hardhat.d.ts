@@ -65,45 +65,13 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC165__factory>;
     getContractFactory(
-      name: "BasicPlugin",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.BasicPlugin__factory>;
-    getContractFactory(
-      name: "BulksaleDAO",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.BulksaleDAO__factory>;
-    getContractFactory(
-      name: "BulksaleV1",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.BulksaleV1__factory>;
-    getContractFactory(
-      name: "BytesLib",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.BytesLib__factory>;
-    getContractFactory(
       name: "CJPY",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.CJPY__factory>;
     getContractFactory(
-      name: "Factory",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Factory__factory>;
-    getContractFactory(
-      name: "IBasicPlugin",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IBasicPlugin__factory>;
-    getContractFactory(
       name: "IERC20MintableBurnable",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC20MintableBurnable__factory>;
-    getContractFactory(
-      name: "ITemplateContract",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ITemplateContract__factory>;
-    getContractFactory(
-      name: "OwnableToken",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.OwnableToken__factory>;
     getContractFactory(
       name: "IPool",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -120,10 +88,6 @@ declare module "hardhat/types/runtime" {
       name: "PriceFeed",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.PriceFeed__factory>;
-    getContractFactory(
-      name: "SampleToken",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.SampleToken__factory>;
     getContractFactory(
       name: "Yamato",
       signerOrOptions?: ethers.Signer | FactoryOptions

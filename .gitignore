@@ -4,7 +4,8 @@ node_modules
 dist
 test/**/*.js
 allure-results
-artifacts/build-info
+artifacts
+typechain
 .env
 cache/**/*
 artifacts/**/*.dbg.json
