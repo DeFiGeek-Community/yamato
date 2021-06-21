@@ -103,14 +103,14 @@ contract Yamato is IYamato, ReentrancyGuard{
             totalColl += ethAmount;
             totalDebt += issueAmountInCjpy;
         } else {
-            require( getICR(ethAmount*jpyPerEth, availableCjpy/*issueAmountInCjpy*/) >= MCR, "This minting is invalid because of too large borrowing.");
+            require( getICR(ethAmount*jpyPerEth, issueAmountInCjpy/*issueAmountInCjpy*/) >= MCR, "This minting is invalid because of too large borrowing.");
             pledge.coll = ethAmount;
-            pledge.debt = availableCjpy;
+            pledge.debt = issueAmountInCjpy;
             pledge.isCreated = true;
 
             pledgesIndices.push(msg.sender);
             totalColl += ethAmount;
-            totalDebt += availableCjpy;
+            totalDebt += issueAmountInCjpy;
         }
 
 
