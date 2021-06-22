@@ -127,29 +127,26 @@ contract Yamato is IYamato, ReentrancyGuard{
     /// @param cjpyAmount maximal redeemable amount
     function repay(uint cjpyAmount) public {
         /*
-            1. Get feed
+            1. Get feed and Pledge
         */
         uint jpyPerEth = feed.fetchPrice();
-
-
-        /*
-            2. Update pledge
-        */
         Pledge storage pledge = pledges[msg.sender];
-        pledge.debt -= cjpyAmount;
-        totalDebt -= cjpyAmount;
 
 
         /*
-            3. Validate TCR
+            2. Check repayability
         */
         require(getICR(pledge.coll*jpyPerEth,pledge.debt) >= MCR, "Repayment failure: ICR is not more than MCR.");
 
-
+        /*
+            2. Update pledge and the global variable
+        */
+        pledge.debt -= cjpyAmount;
+        totalDebt -= cjpyAmount;
 
         /*
-            4-1. Charge CJPY
-            4-2. Return coll to the redeemer
+            3-1. Charge CJPY
+            3-2. Return coll to the redeemer
         */
         cjpy.burnFrom(msg.sender, cjpyAmount);
     }
