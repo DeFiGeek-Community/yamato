@@ -80,6 +80,24 @@ describe("Yamato", function() {
       betterexpect(pledge.debt.toString()).toBe("236363636363636350000000");
 
     });
+    it(`should have zero ETH balance after issuance`, async function() {
+      const PRICE = 260000;
+      const MCR = 1.1;
+      mockPool.smocked['depositRedemptionReserve(uint256)'].will.return.with(0);
+      mockPool.smocked['depositDebtCancelReserve(uint256)'].will.return.with(0);
+      mockPool.smocked['lockETH(uint256)'].will.return.with(0);
+      mockFeed.smocked.fetchPrice.will.return.with(PRICE);
+      
+      const toCollateralize = 1;
+      const toBorrow = (PRICE * toCollateralize) / MCR;
+      await yamato.issue(toERC20(toBorrow+""), {value:toERC20(toCollateralize+"")});
+
+      const balance = await yamato.provider.getBalance(yamato.address);
+
+
+      betterexpect(balance.toString()).toBe("0");
+
+    });
 
     it.todo(`should run depositRedemptionReserve() of Pool.sol`);
     it.todo(`should run depositDebtCancelReserve() of Pool.sol`);
@@ -120,13 +138,13 @@ describe("Yamato", function() {
       const toCollateralize = 1;
       const toBorrow = (PRICE * toCollateralize) / MCR;
       await yamato.issue(toERC20(toBorrow+""), {value:toERC20(toCollateralize+"")});
-      const TCR_before = await yamato.getTCR(PRICE);
+      const TCRbefore = await yamato.getTCR(PRICE);
  
       await yamato.repay(toERC20(toBorrow+""));
-      const TCR = await yamato.getTCR(PRICE);
+      const TCRafter = await yamato.getTCR(PRICE);
 
-      betterexpect(TCR).toBeGtBN(TCR_before);
-      betterexpect(TCR.toString()).toBe("115792089237316195423570985008687907853269984665640564039457584007913129639935");
+      betterexpect(TCRafter).toBeGtBN(TCRbefore);
+      betterexpect(TCRafter.toString()).toBe("115792089237316195423570985008687907853269984665640564039457584007913129639935");
     });
     it(`can't be executed in the TCR < MCR`, async function() {
       const PRICE = 260000;
@@ -145,29 +163,131 @@ describe("Yamato", function() {
       await betterexpect( yamato.repay(toERC20(toBorrow+"")) ).toBeReverted();
 
     });
+
+    // TODO: Have a attack contract to recursively calls the issue function
+    it.todo(`should validate locked state`)
   });
+
   describe("withdraw()", function() {
+    it(`should validate locked state`, async function() {
+      const PRICE = 260000;
+      const MCR = 1.1;
+      mockFeed.smocked.fetchPrice.will.return.with(PRICE);
+      mockPool.smocked['sendETH(address,uint256)'].will.return.with(0);     
+
+      const toCollateralize = 1;
+      const toBorrow = 0;
+      await yamato.issue(toERC20(toBorrow+""), {value:toERC20(toCollateralize+"")});
+      await betterexpect( yamato.withdraw(toERC20(toCollateralize/10+"")) ).toBeReverted();
+    });
     it(`should reduce coll`, async function() {
+      const PRICE = 260000;
+      const MCR = 1.1;
+      mockFeed.smocked.fetchPrice.will.return.with(PRICE);
+      mockPool.smocked['sendETH(address,uint256)'].will.return.with(0);     
+
+      const toCollateralize = 1;
+      const toBorrow = 0;
+      await yamato.issue(toERC20(toBorrow+""), {value:toERC20(toCollateralize+"")});
+      const pledgeBefore = await yamato.pledges(await yamato.signer.getAddress());
+
+      betterexpect(pledgeBefore.coll.toString()).toBe("1000000000000000000");
+      betterexpect(pledgeBefore.debt.toString()).toBe("0");
+
+      yamato.provider.send("evm_increaseTime", [60*60*24*3+1])
+      yamato.provider.send("evm_mine")
+
+      await yamato.withdraw(toERC20(toCollateralize/10+""));
+
+      const pledgeAfter = await yamato.pledges(await yamato.signer.getAddress());
+
+      betterexpect(pledgeAfter.coll.toString()).toBe(toERC20(toCollateralize*9/10+"").toString());
+      betterexpect(pledgeAfter.debt.toString()).toBe("0");
     });
-    it(`should decrease TCR`, async function() {
+    it.skip(`should decrease TCR`, async function() {
+      const PRICE = 260000;
+      const MCR = 1.1;
+      mockFeed.smocked.fetchPrice.will.return.with(PRICE);
+      mockPool.smocked['sendETH(address,uint256)'].will.return.with(0);     
+
+      const toCollateralize = 1;
+      const toBorrow = 0;
+      await yamato.issue(toERC20(toBorrow+""), {value:toERC20(toCollateralize+"")});
+      const pledgeBefore = await yamato.pledges(await yamato.signer.getAddress());
+
+      betterexpect(pledgeBefore.coll.toString()).toBe("1000000000000000000");
+      betterexpect(pledgeBefore.debt.toString()).toBe("0");
+
+      yamato.provider.send("evm_increaseTime", [60*60*24*3+1])
+      yamato.provider.send("evm_mine")
+
+
+      const TCRbefore = await yamato.getTCR(PRICE);
+
+      await yamato.withdraw(toERC20(toCollateralize/10+""));
+      const TCRafter = await yamato.getTCR(PRICE);
+
+      betterexpect(TCRafter).toBeLtBN(TCRbefore);
+
     });
-    it(`can't be executed in the TCR < MCR nor make TCR < MCR`, async function() {
+    it(`can't be executed in the TCR < MCR`, async function() {
+      const PRICE = 260000;
+      const MCR = 1.1;
+      mockFeed.smocked.fetchPrice.will.return.with(PRICE);
+      mockPool.smocked['sendETH(address,uint256)'].will.return.with(0);     
+
+      const toCollateralize = 1;
+      const toBorrow = (PRICE * toCollateralize) / MCR;
+      await yamato.issue(toERC20(toBorrow+""), {value:toERC20(toCollateralize+"")});
+      const pledgeBefore = await yamato.pledges(await yamato.signer.getAddress());
+
+      betterexpect(pledgeBefore.coll.toString()).toBe("1000000000000000000");
+      betterexpect(pledgeBefore.debt.toString()).toBe("236363636363636350000000");
+
+      yamato.provider.send("evm_increaseTime", [60*60*24*3+1])
+      yamato.provider.send("evm_mine")
+
+      mockFeed.smocked.fetchPrice.will.return.with(PRICE/2);
+
+      await betterexpect( yamato.withdraw(toERC20(toCollateralize/10+"")) ).toBeReverted();
+
+    });
+    it(`can't make ICR < MCR by this withdrawal`, async function() {
+      const PRICE = 260000;
+      const MCR = 1.1;
+      mockFeed.smocked.fetchPrice.will.return.with(PRICE);
+      mockPool.smocked['sendETH(address,uint256)'].will.return.with(0);     
+
+      const toCollateralize = 1;
+      const toBorrow = (PRICE * toCollateralize) / MCR;
+      await yamato.issue(toERC20(toBorrow+""), {value:toERC20(toCollateralize+"")});
+      const pledgeBefore = await yamato.pledges(await yamato.signer.getAddress());
+
+      betterexpect(pledgeBefore.coll.toString()).toBe("1000000000000000000");
+      betterexpect(pledgeBefore.debt.toString()).toBe("236363636363636350000000");
+
+      yamato.provider.send("evm_increaseTime", [60*60*24*3+1])
+      yamato.provider.send("evm_mine")
+
+      mockFeed.smocked.fetchPrice.will.return.with(PRICE/2);
+
+      await betterexpect( yamato.withdraw(toERC20(toCollateralize/10+"")) ).toBeReverted();
     });
     it.todo(`should run sendETH() of Pool.sol`);
   });
 
   describe("redeem()", function() {
-    it(`should reduce debt of lowest ICR pledges`, async function() {
+    it.skip(`should reduce debt of lowest ICR pledges`, async function() {
     });
-    it(`should return colls from them and it goes to RedemptionReserve`, async function() {
+    it.skip(`should return colls from them and it goes to RedemptionReserve`, async function() {
     });
-    it(`should keep TCR(??)`, async function() {
+    it.skip(`should keep TCR(??)`, async function() {
     });
-    it(`doesn't care how much TCR is. (compare to MCR)`, async function() {
+    it.skip(`doesn't care how much TCR is. (compare to MCR)`, async function() {
     });
-    it(`doesn't remain any sorted Trove state in the contract`, async function() {
+    it.skip(`doesn't remain any sorted Trove state in the contract`, async function() {
     });
-    it(`can remain coll=0 debt>0 pledge in the storage`, async function() {
+    it.skip(`can remain coll=0 debt>0 pledge in the storage`, async function() {
     });
     it.todo(`[poolFlag:false] should NOT run useRedemptionReserve() of Pool.sol`);
     it.todo(`[poolFlag:true] should run useRedemptionReserve() of Pool.sol`);
@@ -175,11 +295,11 @@ describe("Yamato", function() {
   });
 
   describe("sweep()", function() {
-    it(`should improve TCR`, async function() {
+    it.skip(`should improve TCR`, async function() {
     });
-    it(`doesn't care how much TCR is. (compare to MCR)`, async function() {
+    it.skip(`doesn't care how much TCR is. (compare to MCR)`, async function() {
     });
-    it(`should remove coll=0 pledges from the smallest debt`, async function() {
+    it.skip(`should remove coll=0 pledges from the smallest debt`, async function() {
     });
     it.todo(`should run useDebtCancelReserve() of Pool.sol`);
   });

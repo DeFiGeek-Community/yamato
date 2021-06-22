@@ -156,33 +156,38 @@ contract Yamato is IYamato, ReentrancyGuard{
     /// @dev Nood reentrancy guard. TCR will go down.
     /// @param ethAmount withdrawal amount
     function withdraw(uint ethAmount) public nonReentrant {
-        require(withdrawLocks[msg.sender] <= block.timestamp, "Withdrawal is being locked for this sender.");
-
         /*
-            1. Get feed
+            1. Get feed and pledge
         */
         uint jpyPerEth = feed.fetchPrice();
+        Pledge storage pledge = pledges[msg.sender];
 
         /*
-            2. Update pledge
+            2. Validate
         */
-        Pledge storage pledge = pledges[msg.sender];
+        require(withdrawLocks[msg.sender] <= block.timestamp, "Withdrawal is being locked for this sender.");
+        require(getICR(pledge.coll*jpyPerEth,pledge.debt) >= MCR, "Withdrawal failure: ICR is not more than MCR.");
+        console.log(getICR(pledge.coll*jpyPerEth,pledge.debt));
+
+        /*
+            3. Update pledge
+        */
         pledge.coll -= ethAmount;
         totalColl -= ethAmount;
 
 
         /*
-            3. Validate TCR
+            4. Validate TCR
         */
-        require(getICR(pledge.coll*jpyPerEth,pledge.debt) >= MCR, "Withdrawal failure: ICR is not more than MCR.");
+        console.log(getICR(pledge.coll*jpyPerEth,pledge.debt));
+        require(getICR(pledge.coll*jpyPerEth,pledge.debt) >= MCR, "Withdrawal failure: ICR can't be less than MCR after withdrawal.");
 
 
         /*
-            4-1. Charge CJPY
-            4-2. Return coll to the redeemer
+            5-1. Charge CJPY
+            5-2. Return coll to the withdrawer
         */
-        (bool success,) = payable(msg.sender).call{value:ethAmount}("");
-        require(success, "ETH transfer failed");
+        pool.sendETH(msg.sender, ethAmount);
     }
 
 
