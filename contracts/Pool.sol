@@ -17,14 +17,14 @@ import "./Yamato.sol";
 interface IPool {
     function depositRedemptionReserve(uint amount) external;
     function useRedemptionReserve(uint amount) external;
-    function depositDebtCancelReserve(uint amount) external;
-    function useDebtCancelReserve(uint amount) external;
+    function depositSweepReserve(uint amount) external;
+    function useSweepReserve(uint amount) external;
     function accumulateDividendReserve(uint amount) external;
     function withdrawDividendReserve(uint amount) external;
     function lockETH(uint amount) external;
     function sendETH(address recipient, uint amount) external;
     function redemptionReserve() external view returns (uint);
-    function debtCancelReserve() external view returns (uint);
+    function sweepReserve() external view returns (uint);
     function dividendReserve() external view returns (uint);
     function lockedCollateral() external view returns (uint);
 }
@@ -35,7 +35,7 @@ contract Pool is IPool {
     // TODO: Distribute YMT like provideToSP() in the Liquity
     IYamato yamato = IYamato(address(0));
     uint public override redemptionReserve; // Auto redemption pool a.k.a. (kinda) Stability Pool in Liquity
-    uint public override debtCancelReserve; // Protocol Controlling Value (PCV) to remove Pledges(coll=0, debt>0)
+    uint public override sweepReserve; // Protocol Controlling Value (PCV) to remove Pledges(coll=0, debt>0)
     uint public override dividendReserve; // All redeemed Pledges returns coll=ETH to here.
     uint public override lockedCollateral; // All collateralized ETH
 
@@ -56,11 +56,11 @@ contract Pool is IPool {
         redemptionReserve -= amount;
     }
 
-    function depositDebtCancelReserve(uint amount) public override onlyYamato {
-        debtCancelReserve += amount;
+    function depositSweepReserve(uint amount) public override onlyYamato {
+        sweepReserve += amount;
     }
-    function useDebtCancelReserve(uint amount) public override onlyYamato {
-        debtCancelReserve -= amount;
+    function useSweepReserve(uint amount) public override onlyYamato {
+        sweepReserve -= amount;
     }
 
     function accumulateDividendReserve(uint amount) public override onlyYamato  {

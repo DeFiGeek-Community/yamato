@@ -51,7 +51,7 @@ contract Yamato is IYamato, ReentrancyGuard{
     uint8 public MCR = 110; // MinimumCollateralizationRatio
     uint8 public FR = 20; // FeeRate
     uint8 public RRR = 80; // RedemptionReserveRate
-    uint8 public DCRR = 20; // DebtCancelReserveRate
+    uint8 public SRR = 20; // SweepReserveRate
     uint8 public GRR = 1; // GasReserveRate
 
     constructor(address _pool, address _feed, address _ymt, address _cjpy){
@@ -73,7 +73,7 @@ contract Yamato is IYamato, ReentrancyGuard{
 
 
     /// @notice Make a Pledge with ETH and borrow some CJPY instead. Forefront 20% fee.
-    /// @dev In JPY term, 15.84%=RR, 0.16%=RRGas, 3.96%=DCR, 0.4%=DCRGas
+    /// @dev In JPY term, 15.84%=RR, 0.16%=RRGas, 3.96%=SR, 0.4%=SRGas
     /// @param issueAmountInCjpy maximal redeemable amount
     function issue(uint issueAmountInCjpy) public payable {
         require(!issueLocks[msg.sender], "Issuance is being locked for this sender.");
@@ -85,15 +85,15 @@ contract Yamato is IYamato, ReentrancyGuard{
         cjpy.mint(msg.sender, cjpyAmountToMint); // onlyYamato
         uint fee = cjpyAmountToMint * FR/100;
         uint redemptionReserve = fee * RRR/100;
-        uint debtCancelReserve = fee * DCRR/100;
+        uint sweepReserve = fee * SRR/100;
         uint availableCjpy = cjpyAmountToMint - fee;
 
         cjpy.transfer(address(pool), redemptionReserve);
-        cjpy.transfer(address(pool), debtCancelReserve);
+        cjpy.transfer(address(pool), sweepReserve);
         cjpy.transfer(msg.sender, availableCjpy);
 
         pool.depositRedemptionReserve(redemptionReserve);
-        pool.depositDebtCancelReserve(debtCancelReserve);
+        pool.depositSweepReserve(sweepReserve);
 
         Pledge storage pledge = pledges[msg.sender];
 
@@ -317,24 +317,24 @@ contract Yamato is IYamato, ReentrancyGuard{
 
 
     /// @notice Initialize all pledges such that ICR is 0 (= (0*price)/debt )
-    /// @dev Will be run by incentivised DAO member. Scan all pledges and filter debt>0, coll=0. Pay gas compensation from the 1% of DebtCancelReserve at most, and as same as 1% of the actual debt cancelling amount.
+    /// @dev Will be run by incentivised DAO member. Scan all pledges and filter debt>0, coll=0. Pay gas compensation from the 1% of SweepReserve at most, and as same as 1% of the actual sweeping amount.
     function sweep() public nonReentrant {
-        uint debtCancelStart = pool.debtCancelReserve();
-        require(debtCancelStart > 0, "Sweep failure: debt cancel reserve is empty.");
-        uint maxGasCompensation = debtCancelStart * (GRR/100);
-        uint maxDebtCancellable = debtCancelStart - maxGasCompensation;
+        uint sweepStart = pool.sweepReserve();
+        require(sweepStart > 0, "Sweep failure: sweep reserve is empty.");
+        uint maxGasCompensation = sweepStart * (GRR/100);
+        uint maxSweeplable = sweepStart - maxGasCompensation;
         /*
             1. Scan Pledges
         */
         for(uint i = 0; i < pledgesIndices.length; i++){
             address borrower = pledgesIndices[i];
             Pledge storage pledge = pledges[borrower];
-            uint currentUsage = debtCancelStart - pool.debtCancelReserve();
+            uint currentUsage = sweepStart - pool.sweepReserve();
 
             /*
                 2. (Full or partical) repayment of Zero-collateral Pledges
             */
-            uint availablePart = maxDebtCancellable - currentUsage;
+            uint availablePart = maxSweeplable - currentUsage;
             if(pledge.coll == 0){
                 uint _debt;
                 if(availablePart >= pledge.debt) {
@@ -342,7 +342,7 @@ contract Yamato is IYamato, ReentrancyGuard{
                 } else {
                     _debt = availablePart;
                 }
-                pool.useDebtCancelReserve(_debt);
+                pool.useSweepReserve(_debt);
                 cjpy.burnFrom(address(pool), _debt);
                 pledge.debt -= _debt;
                 totalDebt -= _debt;
@@ -358,12 +358,12 @@ contract Yamato is IYamato, ReentrancyGuard{
         /*
             4. Gas compensation
         */
-        uint debtCancelEnd = pool.debtCancelReserve();
-        uint debtCancelDiff = debtCancelStart - debtCancelEnd;
-        uint gasCompensation = debtCancelDiff * (GRR/100);
+        uint sweepEnd = pool.sweepReserve();
+        uint sweepDiff = sweepStart - sweepEnd;
+        uint gasCompensation = sweepDiff * (GRR/100);
         (bool success,) = payable(msg.sender).call{value:gasCompensation}("");
         require(success, "Gas payback has been failed.");
-        pool.useDebtCancelReserve(gasCompensation);
+        pool.useSweepReserve(gasCompensation);
 
     }
 

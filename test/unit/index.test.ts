@@ -61,7 +61,7 @@ describe("Yamato", function() {
       const PRICE = 260000;
       const MCR = 1.1;
       mockPool.smocked['depositRedemptionReserve(uint256)'].will.return.with(0);
-      mockPool.smocked['depositDebtCancelReserve(uint256)'].will.return.with(0);
+      mockPool.smocked['depositSweepReserve(uint256)'].will.return.with(0);
       mockPool.smocked['lockETH(uint256)'].will.return.with(0);
       mockFeed.smocked.fetchPrice.will.return.with(PRICE);
       
@@ -84,7 +84,7 @@ describe("Yamato", function() {
       const PRICE = 260000;
       const MCR = 1.1;
       mockPool.smocked['depositRedemptionReserve(uint256)'].will.return.with(0);
-      mockPool.smocked['depositDebtCancelReserve(uint256)'].will.return.with(0);
+      mockPool.smocked['depositSweepReserve(uint256)'].will.return.with(0);
       mockPool.smocked['lockETH(uint256)'].will.return.with(0);
       mockFeed.smocked.fetchPrice.will.return.with(PRICE);
       
@@ -100,7 +100,7 @@ describe("Yamato", function() {
     });
 
     it.todo(`should run depositRedemptionReserve() of Pool.sol`);
-    it.todo(`should run depositDebtCancelReserve() of Pool.sol`);
+    it.todo(`should run depositSweepReserve() of Pool.sol`);
     it.todo(`should run lockETH() of Pool.sol`);
 
   });
@@ -284,7 +284,7 @@ describe("Yamato", function() {
       PRICE_AFTER = PRICE/2;
       MCR = 1.1;
       mockPool.smocked['depositRedemptionReserve(uint256)'].will.return.with(0);
-      mockPool.smocked['depositDebtCancelReserve(uint256)'].will.return.with(0);
+      mockPool.smocked['depositSweepReserve(uint256)'].will.return.with(0);
       mockPool.smocked['lockETH(uint256)'].will.return.with(0);
       mockPool.smocked['sendETH(address,uint256)'].will.return.with(0);
       mockPool.smocked.redemptionReserve.will.return.with(1000000000000);
@@ -369,7 +369,7 @@ describe("Yamato", function() {
     });
     it.skip(`should remove coll=0 pledges from the smallest debt`, async function() {
     });
-    it.todo(`should run useDebtCancelReserve() of Pool.sol`);
+    it.todo(`should run useSweepReserve() of Pool.sol`);
   });
 
 });
