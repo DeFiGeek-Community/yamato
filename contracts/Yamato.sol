@@ -37,6 +37,7 @@ contract Yamato is IYamato, ReentrancyGuard{
         uint coll;
         uint debt;
         bool isCreated;
+        address owner;
     }
     mapping(address=>Pledge) public pledges;
     address[] public pledgesIndices;
@@ -107,6 +108,7 @@ contract Yamato is IYamato, ReentrancyGuard{
             pledge.coll = ethAmount;
             pledge.debt = issueAmountInCjpy;
             pledge.isCreated = true;
+            pledge.owner = msg.sender;
 
             pledgesIndices.push(msg.sender);
             totalColl += ethAmount;
@@ -167,7 +169,6 @@ contract Yamato is IYamato, ReentrancyGuard{
         */
         require(withdrawLocks[msg.sender] <= block.timestamp, "Withdrawal is being locked for this sender.");
         require(getICR(pledge.coll*jpyPerEth,pledge.debt) >= MCR, "Withdrawal failure: ICR is not more than MCR.");
-        console.log(getICR(pledge.coll*jpyPerEth,pledge.debt));
 
         /*
             3. Update pledge
@@ -179,7 +180,6 @@ contract Yamato is IYamato, ReentrancyGuard{
         /*
             4. Validate TCR
         */
-        console.log(getICR(pledge.coll*jpyPerEth,pledge.debt));
         require(getICR(pledge.coll*jpyPerEth,pledge.debt) >= MCR, "Withdrawal failure: ICR can't be less than MCR after withdrawal.");
 
 
@@ -211,6 +211,7 @@ contract Yamato is IYamato, ReentrancyGuard{
             1. Get feed
         */
         uint jpyPerEth = feed.fetchPrice();
+        
 
         /*
             2. Validate TCR
@@ -225,50 +226,55 @@ contract Yamato is IYamato, ReentrancyGuard{
             address borrower = pledgesIndices[i];
 
             Pledge memory pledge = pledges[borrower];
-            uint ICR = getICR(pledge.coll * jpyPerEth, pledge.debt);
-
-            if(ICR < MCR){
-                sortedPledges[ICR].push(pledge);
+            if(pledge.coll > 0){
+                uint ICR = getICR(pledge.coll * jpyPerEth, pledge.debt);
+                if(ICR < MCR){
+                    sortedPledges[ICR].push(pledge);
+                }
             }
         }
 
         /*
             5. Update lowest ICR pledges until cjpy exhausted.
         */
-        uint reserveLeft = maxRedemptionCjpyAmount;
+        uint reserveLeftInEth = maxRedemptionCjpyAmount/jpyPerEth;
         for(uint i = 1; i < MCR; i++){
             uint ICR = i;
             Pledge[] storage _sortedPledgesPerICR = sortedPledges[ICR];
             for(uint j = 0; j < _sortedPledgesPerICR.length; j++){
-                Pledge storage pledge = _sortedPledgesPerICR[j];
-                uint oldDebt = pledge.debt;
-                uint reducingCjpyAmount;
-
-                if(reserveLeft >= pledge.debt){
-                    reducingCjpyAmount = oldDebt;
-                } else {
-                    reducingCjpyAmount = reserveLeft;
-                }
-
-                /*
-                    5-2. Delete all scanned sorted pledges
-                */
-                if(reducingCjpyAmount > reserveLeft){
-                    for(uint k = 1; k < ICR; k++){
-                        for(uint l = 1; l < j; l++){
-                            delete sortedPledges[k][l];                    
-                        }
+                Pledge memory sPledge = _sortedPledgesPerICR[j];
+                Pledge storage pledge = pledges[sPledge.owner];
+                if(pledge.coll > 0){
+                    bool isFullRedemption = reserveLeftInEth >= pledge.coll;
+                    uint reducingEthAmount;
+                    if(isFullRedemption){
+                        reducingEthAmount = pledge.coll;
+                    } else {
+                        reducingEthAmount = reserveLeftInEth;
                     }
-                    break;
-                } // TODO: Can it quit 2-depth loops early?
 
-                uint reducingEthAmount = reducingCjpyAmount / jpyPerEth;
-                pledge.debt -= reducingCjpyAmount;
-                pledge.coll -= reducingEthAmount;
-                totalDebt -= reducingCjpyAmount;
-                totalColl -= reducingEthAmount;
+                    /*
+                        5-1. Update
+                    */
+                    pledge.debt -= reducingEthAmount * jpyPerEth;
+                    pledge.coll -= reducingEthAmount;
 
-                reserveLeft -= reducingCjpyAmount;
+                    require(totalDebt > reducingEthAmount * jpyPerEth, "totalDebt is negative");
+                    totalDebt -= reducingEthAmount * jpyPerEth;
+                    require(totalColl > reducingEthAmount, "totalColl is negative");
+                    totalColl -= reducingEthAmount;
+
+                    reserveLeftInEth -= reducingEthAmount;
+                }
+            }
+        }
+
+        /*
+            5-2. Delete temporal pledges
+        */
+        for(uint i = 1; i < MCR; i++){
+            for(uint j = 1; j < sortedPledges[i].length; j++){
+                delete sortedPledges[i][j];                    
             }
         }
 

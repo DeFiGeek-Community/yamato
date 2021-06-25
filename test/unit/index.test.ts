@@ -277,21 +277,89 @@ describe("Yamato", function() {
   });
 
   describe("redeem()", function() {
-    it.skip(`should reduce debt of lowest ICR pledges`, async function() {
+    let accounts, PRICE, PRICE_AFTER, MCR, toCollateralize, toBorrow
+    beforeEach(async () => {
+      accounts = await getSharedSigners();
+      PRICE = 260000;
+      PRICE_AFTER = PRICE/2;
+      MCR = 1.1;
+      mockPool.smocked['depositRedemptionReserve(uint256)'].will.return.with(0);
+      mockPool.smocked['depositDebtCancelReserve(uint256)'].will.return.with(0);
+      mockPool.smocked['lockETH(uint256)'].will.return.with(0);
+      mockPool.smocked['sendETH(address,uint256)'].will.return.with(0);
+      mockPool.smocked.redemptionReserve.will.return.with(1000000000000);
+      mockFeed.smocked.fetchPrice.will.return.with(PRICE);
+
+      toCollateralize = 1;
+      toBorrow = (PRICE * toCollateralize) / MCR;
+      await yamato.connect(accounts[0]).issue(toERC20(toBorrow+""), {value:toERC20(toCollateralize+"")});
+      await yamato.connect(accounts[1]).issue(toERC20(toBorrow+""), {value:toERC20(toCollateralize+"")});
+      await yamato.connect(accounts[2]).issue(toERC20(toBorrow+""), {value:toERC20(toCollateralize+"")});
+
+      mockFeed.smocked.fetchPrice.will.return.with(PRICE_AFTER);
+
+      await yamato.connect(accounts[3]).issue(toERC20(toBorrow+""), {value:toERC20(toCollateralize*2+"")});
+      await yamato.connect(accounts[4]).issue(toERC20(toBorrow+""), {value:toERC20(toCollateralize*2+"")});
+      await yamato.connect(accounts[5]).issue(toERC20(toBorrow+""), {value:toERC20(toCollateralize*2+"")});
     });
-    it.skip(`should return colls from them and it goes to RedemptionReserve`, async function() {
+
+    it(`should reduce debt of lowest ICR pledges`, async function() {
+      let p0 = await yamato.pledges(accounts[0].address);
+      let icr0 = await yamato.getICR(p0.coll.mul(PRICE_AFTER), p0.debt);
+      betterexpect(icr0.toString()).toBe("55");
+
+      await yamato.connect(accounts[0]).redeem(toERC20(toBorrow+""), false);
+
+      p0 = await yamato.pledges(accounts[0].address);
+      icr0 = await yamato.getICR(p0.coll.mul(PRICE_AFTER), p0.debt);
+      betterexpect(icr0.toString()).toBe("0");
     });
-    it.skip(`should keep TCR(??)`, async function() {
+    it(`should improve TCR when TCR > 1`, async function() {
+      const PRICE_A_BIT_DUMPED = PRICE*0.65;
+      const TCRBefore = await yamato.getTCR(PRICE_A_BIT_DUMPED);
+
+      mockFeed.smocked.fetchPrice.will.return.with(PRICE_A_BIT_DUMPED);
+      await yamato.connect(accounts[0]).redeem(toERC20(toBorrow+""), false);
+
+      const TCRAfter = await yamato.getTCR(PRICE_A_BIT_DUMPED);
+
+      betterexpect(TCRAfter).toBeGtBN(TCRBefore);
     });
-    it.skip(`doesn't care how much TCR is. (compare to MCR)`, async function() {
+    it(`should shrink TCR when TCR < 1`, async function() {
+      const TCRBefore = await yamato.getTCR(PRICE_AFTER);
+
+      mockFeed.smocked.fetchPrice.will.return.with(PRICE_AFTER);
+      await yamato.connect(accounts[0]).redeem(toERC20(toBorrow+""), false);
+
+      const TCRAfter = await yamato.getTCR(PRICE_AFTER);
+
+      betterexpect(TCRAfter).toBeLtBN(TCRBefore);
     });
-    it.skip(`doesn't remain any sorted Trove state in the contract`, async function() {
+    it(`should not run if TCR > 1.1`, async function() {
+      mockFeed.smocked.fetchPrice.will.return.with(PRICE);
+      await betterexpect(yamato.connect(accounts[0]).redeem(toERC20(toBorrow+""), false) ).toBeReverted();
     });
     it.skip(`can remain coll=0 debt>0 pledge in the storage`, async function() {
+    });
+    it.skip(`doesn't remain any sorted Trove state in the contract`, async function() {
     });
     it.todo(`[poolFlag:false] should NOT run useRedemptionReserve() of Pool.sol`);
     it.todo(`[poolFlag:true] should run useRedemptionReserve() of Pool.sol`);
     it.todo(`should run accumulateDividendReserve() of Pool.sol`);
+    it.todo(`should run sendETH() of Pool.sol for successful redeemer`);
+    it.todo(`should not run sendETH() of Pool.sol when there're no ICR<MCR && coll>0 pledges`);
+    it.todo(`should reduce CJPY of successful redeemer`)
+    it.todo(`should not reduce CJPY when there're no ICR<MCR && coll>0 pledges`)
+    it.todo(`should return colls from them and it goes to RedemptionReserve`)
+    // , async function() {
+    //   const balanceBefore = await yamato.provider.getBalance(accounts[0].address);
+
+    //   await yamato.connect(accounts[0]).redeem(toERC20(toBorrow+""), false);
+
+    //   const balanceAfter = await yamato.provider.getBalance(accounts[0].address);
+    //   betterexpect(balanceAfter).toBeGtBN(balanceBefore);
+    // });
+
   });
 
   describe("sweep()", function() {
