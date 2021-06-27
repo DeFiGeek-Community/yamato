@@ -335,6 +335,7 @@ contract Yamato is IYamato, ReentrancyGuard{
                 2. (Full or partical) repayment of Zero-collateral Pledges
             */
             uint availablePart = maxSweeplable - currentUsage;
+            console.log("totalColl:%s, totalDebt:%s", totalColl, totalDebt);
             if(pledge.coll == 0){
                 uint _debt;
                 if(availablePart >= pledge.debt) {
@@ -342,12 +343,14 @@ contract Yamato is IYamato, ReentrancyGuard{
                 } else {
                     _debt = availablePart;
                 }
+                console.log("_debt:%s", _debt);
                 pool.useSweepReserve(_debt);
                 cjpy.burnFrom(address(pool), _debt);
                 pledge.debt -= _debt;
                 totalDebt -= _debt;
                 pledge.isCreated = (pledge.debt > 0);
             }
+            console.log("totalColl:%s, totalDebt:%s", totalColl, totalDebt);
 
             /*
                 3. Early quit for saving gas.
