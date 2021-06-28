@@ -55,7 +55,31 @@ describe("Yamato", function() {
     );
   });
 
-  describe("issue()", function() {
+  describe("deposit()", function() {
+    it(`succeeds to make a pledge and totalCollDiff>0 totalDebtDiff=0`, async function() {
+      const PRICE = 260000;
+      const MCR = 1.1;
+      mockPool.smocked['depositRedemptionReserve(uint256)'].will.return.with(0);
+      mockPool.smocked['depositSweepReserve(uint256)'].will.return.with(0);
+      mockPool.smocked['lockETH(uint256)'].will.return.with(0);
+      mockFeed.smocked.fetchPrice.will.return.with(PRICE);
+      
+
+      const toCollateralize = 1;
+
+      const totalCollBefore = await yamato.totalColl();
+      const totalDebtBefore = await yamato.totalDebt();
+
+      await yamato.deposit({value:toERC20(toCollateralize+"")});
+
+      const totalCollAfter = await yamato.totalColl();
+      const totalDebtAfter = await yamato.totalDebt();
+
+      betterexpect(totalCollAfter).toBeGtBN(totalCollBefore);
+      betterexpect(totalDebtAfter).toEqBN(totalDebtBefore);
+    });
+  });
+  describe("borrow()", function() {
 
     it(`succeeds to make a pledge with ICR=110%, and the TCR will be 110%`, async function() {
       const PRICE = 260000;
@@ -68,7 +92,8 @@ describe("Yamato", function() {
 
       const toCollateralize = 1;
       const toBorrow = (PRICE * toCollateralize) / MCR;
-      await yamato.issue(toERC20(toBorrow+""), {value:toERC20(toCollateralize+"")});
+      await yamato.deposit({value:toERC20(toCollateralize+"")});
+      await yamato.borrow(toERC20(toBorrow+""));
       const TCR = await yamato.getTCR(PRICE);
 
       betterexpect(TCR.toString()).toBe("110");
@@ -90,7 +115,8 @@ describe("Yamato", function() {
       
       const toCollateralize = 1;
       const toBorrow = (PRICE * toCollateralize) / MCR;
-      await yamato.issue(toERC20(toBorrow+""), {value:toERC20(toCollateralize+"")});
+      await yamato.deposit({value:toERC20(toCollateralize+"")});
+      await yamato.borrow(toERC20(toBorrow+""));
 
       const balance = await yamato.provider.getBalance(yamato.address);
 
@@ -114,7 +140,8 @@ describe("Yamato", function() {
 
       const toCollateralize = 1;
       const toBorrow = (PRICE * toCollateralize) / MCR;
-      await yamato.issue(toERC20(toBorrow+""), {value:toERC20(toCollateralize+"")});
+      await yamato.deposit({value:toERC20(toCollateralize+"")});
+      await yamato.borrow(toERC20(toBorrow+""));
       const pledgeBefore = await yamato.pledges(await yamato.signer.getAddress());
 
       betterexpect(pledgeBefore.coll.toString()).toBe("1000000000000000000");
@@ -137,7 +164,8 @@ describe("Yamato", function() {
 
       const toCollateralize = 1;
       const toBorrow = (PRICE * toCollateralize) / MCR;
-      await yamato.issue(toERC20(toBorrow+""), {value:toERC20(toCollateralize+"")});
+      await yamato.deposit({value:toERC20(toCollateralize+"")});
+      await yamato.borrow(toERC20(toBorrow+""));
       const TCRbefore = await yamato.getTCR(PRICE);
  
       await yamato.repay(toERC20(toBorrow+""));
@@ -154,7 +182,8 @@ describe("Yamato", function() {
       
       const toCollateralize = 1;
       const toBorrow = (PRICE * toCollateralize) / MCR;
-      await yamato.issue(toERC20(toBorrow+""), {value:toERC20(toCollateralize+"")});
+      await yamato.deposit({value:toERC20(toCollateralize+"")});
+      await yamato.borrow(toERC20(toBorrow+""));
  
       mockFeed.smocked.fetchPrice.will.return.with(PRICE/2);
       const dumpedTCR = await yamato.getTCR(PRICE/2);
@@ -164,7 +193,7 @@ describe("Yamato", function() {
 
     });
 
-    // TODO: Have a attack contract to recursively calls the issue function
+    // TODO: Have a attack contract to recursively calls the depoit and borrow function
     it.todo(`should validate locked state`)
   });
 
@@ -177,7 +206,8 @@ describe("Yamato", function() {
 
       const toCollateralize = 1;
       const toBorrow = 0;
-      await yamato.issue(toERC20(toBorrow+""), {value:toERC20(toCollateralize+"")});
+      await yamato.deposit({value:toERC20(toCollateralize+"")});
+      await yamato.borrow(toERC20(toBorrow+""));
       await betterexpect( yamato.withdraw(toERC20(toCollateralize/10+"")) ).toBeReverted();
     });
     it(`should reduce coll`, async function() {
@@ -188,7 +218,8 @@ describe("Yamato", function() {
 
       const toCollateralize = 1;
       const toBorrow = 0;
-      await yamato.issue(toERC20(toBorrow+""), {value:toERC20(toCollateralize+"")});
+      await yamato.deposit({value:toERC20(toCollateralize+"")});
+      await yamato.borrow(toERC20(toBorrow+""));
       const pledgeBefore = await yamato.pledges(await yamato.signer.getAddress());
 
       betterexpect(pledgeBefore.coll.toString()).toBe("1000000000000000000");
@@ -212,7 +243,8 @@ describe("Yamato", function() {
 
       const toCollateralize = 1;
       const toBorrow = 0;
-      await yamato.issue(toERC20(toBorrow+""), {value:toERC20(toCollateralize+"")});
+      await yamato.deposit({value:toERC20(toCollateralize+"")});
+      await yamato.borrow(toERC20(toBorrow+""));
       const pledgeBefore = await yamato.pledges(await yamato.signer.getAddress());
 
       betterexpect(pledgeBefore.coll.toString()).toBe("1000000000000000000");
@@ -238,7 +270,8 @@ describe("Yamato", function() {
 
       const toCollateralize = 1;
       const toBorrow = (PRICE * toCollateralize) / MCR;
-      await yamato.issue(toERC20(toBorrow+""), {value:toERC20(toCollateralize+"")});
+      await yamato.deposit({value:toERC20(toCollateralize+"")});
+      await yamato.borrow(toERC20(toBorrow+""));
       const pledgeBefore = await yamato.pledges(await yamato.signer.getAddress());
 
       betterexpect(pledgeBefore.coll.toString()).toBe("1000000000000000000");
@@ -260,7 +293,8 @@ describe("Yamato", function() {
 
       const toCollateralize = 1;
       const toBorrow = (PRICE * toCollateralize) / MCR;
-      await yamato.issue(toERC20(toBorrow+""), {value:toERC20(toCollateralize+"")});
+      await yamato.deposit({value:toERC20(toCollateralize+"")});
+      await yamato.borrow(toERC20(toBorrow+""));
       const pledgeBefore = await yamato.pledges(await yamato.signer.getAddress());
 
       betterexpect(pledgeBefore.coll.toString()).toBe("1000000000000000000");
@@ -292,15 +326,21 @@ describe("Yamato", function() {
 
       toCollateralize = 1;
       toBorrow = (PRICE * toCollateralize) / MCR;
-      await yamato.connect(accounts[0]).issue(toERC20(toBorrow+""), {value:toERC20(toCollateralize+"")});
-      await yamato.connect(accounts[1]).issue(toERC20(toBorrow+""), {value:toERC20(toCollateralize+"")});
-      await yamato.connect(accounts[2]).issue(toERC20(toBorrow+""), {value:toERC20(toCollateralize+"")});
+      await yamato.connect(accounts[0]).deposit({value:toERC20(toCollateralize+"")});
+      await yamato.connect(accounts[0]).borrow(toERC20(toBorrow+""));
+      await yamato.connect(accounts[1]).deposit({value:toERC20(toCollateralize+"")});
+      await yamato.connect(accounts[1]).borrow(toERC20(toBorrow+""));
+      await yamato.connect(accounts[2]).deposit({value:toERC20(toCollateralize+"")});
+      await yamato.connect(accounts[2]).borrow(toERC20(toBorrow+""));
 
       mockFeed.smocked.fetchPrice.will.return.with(PRICE_AFTER);
 
-      await yamato.connect(accounts[3]).issue(toERC20(toBorrow+""), {value:toERC20(toCollateralize*2+"")});
-      await yamato.connect(accounts[4]).issue(toERC20(toBorrow+""), {value:toERC20(toCollateralize*2+"")});
-      await yamato.connect(accounts[5]).issue(toERC20(toBorrow+""), {value:toERC20(toCollateralize*2+"")});
+      await yamato.connect(accounts[3]).deposit({value:toERC20(toCollateralize*2+"")});
+      await yamato.connect(accounts[3]).borrow(toERC20(toBorrow+""));
+      await yamato.connect(accounts[4]).deposit({value:toERC20(toCollateralize*2+"")});
+      await yamato.connect(accounts[4]).borrow(toERC20(toBorrow+""));
+      await yamato.connect(accounts[5]).deposit({value:toERC20(toCollateralize*2+"")});
+      await yamato.connect(accounts[5]).borrow(toERC20(toBorrow+""));
     });
 
     it(`should reduce debt of lowest ICR pledges`, async function() {
@@ -380,8 +420,10 @@ describe("Yamato", function() {
 
       toCollateralize = 1;
       toBorrow = (PRICE * toCollateralize) / MCR;
-      await yamato.connect(accounts[2]).issue(toERC20(toBorrow+""), {value:toERC20(toCollateralize+"")});
-      await yamato.connect(accounts[3]).issue(toERC20(toBorrow+""), {value:toERC20(toCollateralize+"")});
+      await yamato.connect(accounts[2]).deposit({value:toERC20(toCollateralize+"")});
+      await yamato.connect(accounts[2]).borrow(toERC20(toBorrow+""));
+      await yamato.connect(accounts[3]).deposit({value:toERC20(toCollateralize+"")});
+      await yamato.connect(accounts[3]).borrow(toERC20(toBorrow+""));
 
       mockFeed.smocked.fetchPrice.will.return.with(PRICE_AFTER);
 

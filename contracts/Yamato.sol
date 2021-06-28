@@ -45,8 +45,8 @@ contract Yamato is IYamato, ReentrancyGuard{
     uint public totalColl;
     uint public totalDebt;
 
-    mapping(address=>bool) public issueLocks;
     mapping(address=>uint) public withdrawLocks;
+    mapping(address=>uint) public depositAndBorrowLocks;
 
     uint8 public MCR = 110; // MinimumCollateralizationRatio
     uint8 public FR = 20; // FeeRate
@@ -66,60 +66,80 @@ contract Yamato is IYamato, ReentrancyGuard{
     ==============================
         Single Pledge Actions
     ==============================
-        - issue
+        - deposit
+        - borrow
         - repay
         - withdraw
     */
 
 
-    /// @notice Make a Pledge with ETH and borrow some CJPY instead. Forefront 20% fee.
+    /// @notice Make a Pledge with ETH
     /// @dev In JPY term, 15.84%=RR, 0.16%=RRGas, 3.96%=SR, 0.4%=SRGas
-    /// @param issueAmountInCjpy maximal redeemable amount
-    function issue(uint issueAmountInCjpy) public payable {
-        require(!issueLocks[msg.sender], "Issuance is being locked for this sender.");
-        issueLocks[msg.sender] = true;
-
+    function deposit() public payable nonReentrant {
+        /*
+            1. Feed and mint
+        */
         uint ethAmount = msg.value;
         uint jpyPerEth = feed.fetchPrice();
         uint cjpyAmountToMint = jpyPerEth * ethAmount;
         cjpy.mint(msg.sender, cjpyAmountToMint); // onlyYamato
+
+
+        /*
+            2. Fee process
+        */
         uint fee = cjpyAmountToMint * FR/100;
         uint redemptionReserve = fee * RRR/100;
         uint sweepReserve = fee * SRR/100;
-        uint availableCjpy = cjpyAmountToMint - fee;
 
         cjpy.transfer(address(pool), redemptionReserve);
         cjpy.transfer(address(pool), sweepReserve);
-        cjpy.transfer(msg.sender, availableCjpy);
 
         pool.depositRedemptionReserve(redemptionReserve);
         pool.depositSweepReserve(sweepReserve);
 
+        /*
+            3. Write to pledge
+        */
         Pledge storage pledge = pledges[msg.sender];
 
-        if(pledge.isCreated){
-            require( getICR((pledge.coll+ethAmount)*jpyPerEth, pledge.debt+issueAmountInCjpy) >= MCR, "This minting is invalid because of too large borrowing.");
-            pledge.coll += ethAmount;
-            pledge.debt += issueAmountInCjpy;
-            totalColl += ethAmount;
-            totalDebt += issueAmountInCjpy;
-        } else {
-            require( getICR(ethAmount*jpyPerEth, issueAmountInCjpy/*issueAmountInCjpy*/) >= MCR, "This minting is invalid because of too large borrowing.");
-            pledge.coll = ethAmount;
-            pledge.debt = issueAmountInCjpy;
+        pledge.coll += ethAmount;
+        totalColl += ethAmount;
+        if(!pledge.isCreated){ // new pledge
             pledge.isCreated = true;
             pledge.owner = msg.sender;
-
             pledgesIndices.push(msg.sender);
-            totalColl += ethAmount;
-            totalDebt += issueAmountInCjpy;
         }
 
-
+        /*
+            4. Send ETH to pool
+        */
         (bool success,) = payable(address(pool)).call{value:ethAmount}("");
         require(success, "transfer failed");
         pool.lockETH(ethAmount);
-        issueLocks[msg.sender] = false;
+        withdrawLocks[msg.sender] = block.timestamp + 3 days;
+        depositAndBorrowLocks[msg.sender] = block.number;
+    }
+
+
+    /// @notice Borrow in CJPY. Forefront 20% fee.
+    /// @dev This function can't be executed just the same block with your deposit
+    /// @param borrowAmountInCjpy maximal redeemable amount
+    function borrow(uint borrowAmountInCjpy) public {
+        require(depositAndBorrowLocks[msg.sender] < block.number, "Borrowing should not be executed within the same block with your deposit.");
+
+        uint jpyPerEth = feed.fetchPrice();
+
+        Pledge storage pledge = pledges[msg.sender];
+
+        if(pledge.isCreated){
+            require( getICR((pledge.coll)*jpyPerEth, pledge.debt+borrowAmountInCjpy) >= MCR, "This minting is invalid because of too large borrowing.");
+            pledge.debt += borrowAmountInCjpy;
+            totalDebt += borrowAmountInCjpy;
+        }
+
+        cjpy.transfer(address(pool), borrowAmountInCjpy);
+
         withdrawLocks[msg.sender] = block.timestamp + 3 days;
     }
 
