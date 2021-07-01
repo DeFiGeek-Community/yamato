@@ -74,7 +74,7 @@ contract Yamato is IYamato, ReentrancyGuard{
 
 
     /// @notice Make a Pledge with ETH. "Top-up" supported.
-    /// @dev In JPY term, 15.84%=RR, 0.16%=RRGas, 3.96%=SR, 0.4%=SRGas
+    /// @dev We haven't supported ERC-20 pledges and pool 
     function deposit() public payable nonReentrant {
         uint ethAmount = msg.value;
 
@@ -101,7 +101,7 @@ contract Yamato is IYamato, ReentrancyGuard{
     }
 
 
-    /// @notice Borrow in CJPY. Forefront 20% fee.
+    /// @notice Borrow in CJPY. In JPY term, 15.84%=RR, 0.16%=RRGas, 3.96%=SR, 0.4%=SRGas
     /// @dev This function can't be executed just the same block with your deposit
     /// @param borrowAmountInCjpy maximal redeemable amount
     function borrow(uint borrowAmountInCjpy) public {
