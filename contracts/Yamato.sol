@@ -73,33 +73,13 @@ contract Yamato is IYamato, ReentrancyGuard{
     */
 
 
-    /// @notice Make a Pledge with ETH
+    /// @notice Make a Pledge with ETH. "Top-up" supported.
     /// @dev In JPY term, 15.84%=RR, 0.16%=RRGas, 3.96%=SR, 0.4%=SRGas
     function deposit() public payable nonReentrant {
-        /*
-            1. Feed and mint
-        */
         uint ethAmount = msg.value;
-        uint jpyPerEth = feed.fetchPrice();
-        uint cjpyAmountToMint = jpyPerEth * ethAmount;
-        cjpy.mint(msg.sender, cjpyAmountToMint); // onlyYamato
-
 
         /*
-            2. Fee process
-        */
-        uint fee = cjpyAmountToMint * FR/100;
-        uint redemptionReserve = fee * RRR/100;
-        uint sweepReserve = fee * SRR/100;
-
-        cjpy.transfer(address(pool), redemptionReserve);
-        cjpy.transfer(address(pool), sweepReserve);
-
-        pool.depositRedemptionReserve(redemptionReserve);
-        pool.depositSweepReserve(sweepReserve);
-
-        /*
-            3. Write to pledge
+            1. Write to pledge
         */
         Pledge storage pledge = pledges[msg.sender];
 
@@ -112,12 +92,11 @@ contract Yamato is IYamato, ReentrancyGuard{
         }
 
         /*
-            4. Send ETH to pool
+            2. Send ETH to pool
         */
         (bool success,) = payable(address(pool)).call{value:ethAmount}("");
         require(success, "transfer failed");
         pool.lockETH(ethAmount);
-        withdrawLocks[msg.sender] = block.timestamp + 3 days;
         depositAndBorrowLocks[msg.sender] = block.number;
     }
 
@@ -126,20 +105,46 @@ contract Yamato is IYamato, ReentrancyGuard{
     /// @dev This function can't be executed just the same block with your deposit
     /// @param borrowAmountInCjpy maximal redeemable amount
     function borrow(uint borrowAmountInCjpy) public {
-        require(depositAndBorrowLocks[msg.sender] < block.number, "Borrowing should not be executed within the same block with your deposit.");
-
+        /*
+            1. Fee calculation
+        */
         uint jpyPerEth = feed.fetchPrice();
+        uint fee = borrowAmountInCjpy * FR/100;
+        uint redemptionReserve = fee * RRR/100;
+        uint sweepReserve = fee * SRR/100;
 
         Pledge storage pledge = pledges[msg.sender];
 
-        if(pledge.isCreated){
 
-            require( getICR((pledge.coll)*jpyPerEth, pledge.debt+borrowAmountInCjpy) >= MCR, "This minting is invalid because of too large borrowing.");
-            pledge.debt += borrowAmountInCjpy;
-            totalDebt += borrowAmountInCjpy;
-        }
+        /*
+            2. Validate
+        */
+        require(depositAndBorrowLocks[msg.sender] < block.number, "Borrowing should not be executed within the same block with your deposit.");
+        require(pledge.isCreated, "This pledge is not created yet.");
+        require( getICR(pledge.coll*jpyPerEth, pledge.debt+borrowAmountInCjpy) >= MCR, "This minting is invalid because of too large borrowing.");
 
-        cjpy.transfer(address(pool), borrowAmountInCjpy);
+        /*
+            3. State transitions
+        */
+
+        /*
+            3-1. Top-up scenario
+        */
+        pledge.debt += borrowAmountInCjpy;
+        totalDebt += borrowAmountInCjpy;
+
+        /*
+            3-2. Cheat guard
+        */
+        withdrawLocks[msg.sender] = block.timestamp + 3 days;
+
+        /*
+            3-3. Borrowed fund & fee transfer
+        */
+        cjpy.mint(msg.sender, borrowAmountInCjpy-fee); // onlyYamato
+        cjpy.mint(address(pool), fee); // onlyYamato
+        pool.depositRedemptionReserve(redemptionReserve);
+        pool.depositSweepReserve(sweepReserve);
     }
 
 

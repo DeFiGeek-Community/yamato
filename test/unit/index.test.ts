@@ -81,26 +81,11 @@ describe("Yamato", function() {
       betterexpect(totalCollAfter).toBeGtBN(totalCollBefore);
       betterexpect(totalDebtAfter).toEqBN(totalDebtBefore);
     });
-    it(`should run depositRedemptionReserve`, async function() {
-      const toCollateralize = 1;
-      mockPool.smocked['depositRedemptionReserve(uint256)'].will.return.with(0);
-      await yamato.deposit({value:toERC20(toCollateralize+"")});
-      betterexpect(mockPool.smocked['depositRedemptionReserve(uint256)'].calls.length).toBe(1);
-    });
-    it(`should run depositSweepReserve`, async function() {
-      const toCollateralize = 1;
-      mockPool.smocked['depositSweepReserve(uint256)'].will.return.with(0);
-      await yamato.deposit({value:toERC20(toCollateralize+"")});
-      betterexpect(mockPool.smocked['depositSweepReserve(uint256)'].calls.length).toBe(1);
-    });
-    it(`should run lockETH`, async function() {
-      const toCollateralize = 1;
-      mockPool.smocked['lockETH(uint256)'].will.return.with(0);
-      await yamato.deposit({value:toERC20(toCollateralize+"")});
-      betterexpect(mockPool.smocked['lockETH(uint256)'].calls.length).toBe(1);
-    });
   });
   describe("borrow()", function() {
+    beforeEach(async function(){
+      mockPool.smocked['depositRedemptionReserve(uint256)'].will.return.with(0);
+    });
     it(`succeeds to make a pledge with ICR=110%, and the TCR will be 110%`, async function() {
       const toCollateralize = 1;
       const toBorrow = (PRICE * toCollateralize) / MCR;
@@ -133,12 +118,26 @@ describe("Yamato", function() {
       await yamato.borrow(toERC20(toBorrow+""));
       betterexpect(mockFeed.smocked.fetchPrice.calls.length).toBe(1);
     });
-    it(`should run cjpy.transfer() of Pool.sol`, async function(){
+    it(`should run cjpy.mint() of Pool.sol`, async function(){
       const toCollateralize = 1;
       const toBorrow = (PRICE * toCollateralize) / MCR;
       await yamato.deposit({value:toERC20(toCollateralize+"")});
       await yamato.borrow(toERC20(toBorrow+""));
-      betterexpect(mockCJPY.smocked['transfer(address,uint256)'].calls.length).toBe(1);
+      betterexpect(mockCJPY.smocked['mint(address,uint256)'].calls.length).toBe(2);
+    });
+    it(`should run depositRedemptionReserve`, async function() {
+      const toCollateralize = 1;
+      const toBorrow = (PRICE * toCollateralize) / MCR;
+      await yamato.deposit({value:toERC20(toCollateralize+"")});
+      await yamato.borrow(toERC20(toBorrow+""));
+      betterexpect(mockPool.smocked['depositRedemptionReserve(uint256)'].calls.length).toBe(1);
+    });
+    it(`should run depositSweepReserve`, async function() {
+      const toCollateralize = 1;
+      const toBorrow = (PRICE * toCollateralize) / MCR;
+      await yamato.deposit({value:toERC20(toCollateralize+"")});
+      await yamato.borrow(toERC20(toBorrow+""));
+      betterexpect(mockPool.smocked['depositSweepReserve(uint256)'].calls.length).toBe(1);
     });
 
   });
