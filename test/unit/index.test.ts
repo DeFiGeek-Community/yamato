@@ -63,6 +63,8 @@ describe("Yamato", function() {
     mockPool.smocked['depositSweepReserve(uint256)'].will.return.with(0);
     mockPool.smocked['lockETH(uint256)'].will.return.with(0);
     mockFeed.smocked.fetchPrice.will.return.with(PRICE);
+    mockPool.smocked.redemptionReserve.will.return.with(1);
+    mockPool.smocked.sweepReserve.will.return.with(1);
 
   });
 
@@ -154,21 +156,26 @@ describe("Yamato", function() {
       await yamato.borrow(toERC20(toBorrow+""));
       betterexpect(mockCJPY.smocked['mint(address,uint256)'].calls.length).toBe(2);
     });
-    it(`should run depositRedemptionReserve`, async function() {
+    it(`should run depositRedemptionReserve when RR is inferior to SR`, async function() {
+      mockPool.smocked.redemptionReserve.will.return.with(1);
+      mockPool.smocked.sweepReserve.will.return.with(10);
       const toCollateralize = 1;
       const toBorrow = (PRICE * toCollateralize) / MCR;
       await yamato.deposit({value:toERC20(toCollateralize+"")});
       await yamato.borrow(toERC20(toBorrow+""));
       betterexpect(mockPool.smocked['depositRedemptionReserve(uint256)'].calls.length).toBe(1);
+      betterexpect(mockPool.smocked['depositSweepReserve(uint256)'].calls.length).toBe(0);
     });
-    it(`should run depositSweepReserve`, async function() {
+    it(`should run depositSweepReserve when RR is superior to SR`, async function() {
+      mockPool.smocked.redemptionReserve.will.return.with(10);
+      mockPool.smocked.sweepReserve.will.return.with(1);
       const toCollateralize = 1;
       const toBorrow = (PRICE * toCollateralize) / MCR;
       await yamato.deposit({value:toERC20(toCollateralize+"")});
       await yamato.borrow(toERC20(toBorrow+""));
+      betterexpect(mockPool.smocked['depositRedemptionReserve(uint256)'].calls.length).toBe(0);
       betterexpect(mockPool.smocked['depositSweepReserve(uint256)'].calls.length).toBe(1);
     });
-
   });
   describe("repay()", function() {
     it(`should reduce debt`, async function() {

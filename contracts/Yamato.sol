@@ -125,9 +125,6 @@ contract Yamato is IYamato, ReentrancyGuard{
             2. Fee
         */
         uint fee = borrowAmountInCjpy * FR(_ICRAfter*100)/10000;
-        uint redemptionReserve = fee * RRR/100;
-        uint sweepReserve = fee * SRR/100;
-
 
 
         /*
@@ -150,8 +147,12 @@ contract Yamato is IYamato, ReentrancyGuard{
         */
         cjpy.mint(msg.sender, borrowAmountInCjpy-fee); // onlyYamato
         cjpy.mint(address(pool), fee); // onlyYamato
-        pool.depositRedemptionReserve(redemptionReserve);
-        pool.depositSweepReserve(sweepReserve);
+
+        if(pool.redemptionReserve()/pool.sweepReserve() >= 5){
+            pool.depositSweepReserve(fee);
+        } else {
+            pool.depositRedemptionReserve(fee);
+        }
     }
 
 
