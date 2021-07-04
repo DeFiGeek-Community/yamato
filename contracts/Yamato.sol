@@ -20,6 +20,7 @@ import "./PriceFeed.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./IERC20MintableBurnable.sol";
 import "hardhat/console.sol";
+import "prb-math/contracts/PRBMathSD59x18.sol";
 
 interface IYamato {
 
@@ -29,6 +30,8 @@ interface IYamato {
 /// @title Yamato Pledge Manager Contract
 /// @author 0xMotoko
 contract Yamato is IYamato, ReentrancyGuard{
+    using PRBMathSD59x18 for int256;
+
     IPool pool;
     IERC20MintableBurnable ymt;
     IERC20MintableBurnable cjpy;
@@ -49,7 +52,6 @@ contract Yamato is IYamato, ReentrancyGuard{
     mapping(address=>uint) public depositAndBorrowLocks;
 
     uint8 public MCR = 110; // MinimumCollateralizationRatio
-    uint8 public FR = 20; // FeeRate
     uint8 public RRR = 80; // RedemptionReserveRate
     uint8 public SRR = 20; // SweepReserveRate
     uint8 public GRR = 1; // GasReserveRate
@@ -106,22 +108,27 @@ contract Yamato is IYamato, ReentrancyGuard{
     /// @param borrowAmountInCjpy maximal redeemable amount
     function borrow(uint borrowAmountInCjpy) public {
         /*
-            1. Fee calculation
+            1. Ready
         */
-        uint jpyPerEth = feed.fetchPrice();
-        uint fee = borrowAmountInCjpy * FR/100;
-        uint redemptionReserve = fee * RRR/100;
-        uint sweepReserve = fee * SRR/100;
-
         Pledge storage pledge = pledges[msg.sender];
-
+        uint jpyPerEth = feed.fetchPrice();
+        uint _ICRAfter = getICR(pledge.coll * jpyPerEth, pledge.debt + borrowAmountInCjpy);
 
         /*
             2. Validate
         */
         require(depositAndBorrowLocks[msg.sender] < block.number, "Borrowing should not be executed within the same block with your deposit.");
         require(pledge.isCreated, "This pledge is not created yet.");
-        require( getICR(pledge.coll*jpyPerEth, pledge.debt+borrowAmountInCjpy) >= MCR, "This minting is invalid because of too large borrowing.");
+        require( _ICRAfter >= MCR, "This minting is invalid because of too large borrowing.");
+
+        /*
+            2. Fee
+        */
+        uint fee = borrowAmountInCjpy * FR(_ICRAfter*100)/10000;
+        uint redemptionReserve = fee * RRR/100;
+        uint sweepReserve = fee * SRR/100;
+
+
 
         /*
             3. State transitions
@@ -413,5 +420,22 @@ contract Yamato is IYamato, ReentrancyGuard{
         TCR = getICR(totalColl*jpyPerEth,totalDebt);
     }
 
+
+    /// @param _ICRpertenk IndividualCollateralRatio per 10k
+    /// @dev Three linear fumula there are
+    function FR(uint _ICRpertenk) public view returns (uint _FRpertenk) {
+        require(_ICRpertenk >= 11000, "ICR too low to get fee data.");
+        if(11000 <= _ICRpertenk && _ICRpertenk < 13000) {
+            _FRpertenk = 2000 - (_ICRpertenk - 11000)/100 * 100;
+        } else if (13000 <= _ICRpertenk && _ICRpertenk < 15000) {
+            _FRpertenk = 400 - (_ICRpertenk - 12500)/100 * 8;
+        } else if (15000 <= _ICRpertenk && _ICRpertenk < 20000) {
+            _FRpertenk = 200 - (_ICRpertenk - 15000)/100 * 2;
+        } else if (20000 <= _ICRpertenk && _ICRpertenk < 50000) {
+            _FRpertenk = 100 - (_ICRpertenk - 20000)/100 /10 * 4;
+        } else {
+            _FRpertenk = 10;
+        }
+    }
 
 }
