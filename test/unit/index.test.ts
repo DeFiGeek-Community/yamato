@@ -97,7 +97,7 @@ describe("Yamato", function() {
     it(`returns 400 pertenk for ICR 13000 pertenk`, async function() {
       betterexpect(await yamato.FR(13000)).toEqBN(400);
     });
-    it(`returns 208 pertenk for ICR 14900 pertenk`, async function() {
+    it(`returns 210 pertenk for ICR 14900 pertenk`, async function() {
       betterexpect(await yamato.FR(14900)).toEqBN(210);
     });
     it(`returns 200 pertenk for ICR 15000 pertenk`, async function() {
@@ -112,10 +112,10 @@ describe("Yamato", function() {
     it(`returns 100 pertenk for ICR 20000 pertenk`, async function() {
       betterexpect(await yamato.FR(20000)).toEqBN(100);
     });
-    it(`returns 80 pertenk for ICR 25000 pertenk`, async function() {
+    it(`returns 85 pertenk for ICR 25000 pertenk`, async function() {
       betterexpect(await yamato.FR(25000)).toEqBN(85);
     });
-    it(`returns 60 pertenk for ICR 30000 pertenk`, async function() {
+    it(`returns 70 pertenk for ICR 30000 pertenk`, async function() {
       betterexpect(await yamato.FR(30000)).toEqBN(70);
     });
     it(`returns 40 pertenk for ICR 40000 pertenk`, async function() {
@@ -124,10 +124,10 @@ describe("Yamato", function() {
     it(`returns 11 pertenk for ICR 49700 pertenk`, async function() {
       betterexpect(await yamato.FR(49700)).toEqBN(11);
     });
-    it(`returns 10 pertenk for ICR 49800 pertenk`, async function() {
+    it(`returns 11 pertenk for ICR 49800 pertenk`, async function() {
       betterexpect(await yamato.FR(49800)).toEqBN(11);
     });
-    it(`returns 10 pertenk for ICR 49900 pertenk`, async function() {
+    it(`returns 11 pertenk for ICR 49900 pertenk`, async function() {
       betterexpect(await yamato.FR(49900)).toEqBN(11);
     });
     it(`returns 10 pertenk for ICR 50000 pertenk`, async function() {
