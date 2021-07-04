@@ -427,13 +427,13 @@ contract Yamato is IYamato, ReentrancyGuard{
     function FR(uint _ICRpertenk) public view returns (uint _FRpertenk) {
         require(_ICRpertenk >= 11000, "ICR too low to get fee data.");
         if(11000 <= _ICRpertenk && _ICRpertenk < 13000) {
-            _FRpertenk = 2000 - (_ICRpertenk - 11000)/100 * 80;
+            _FRpertenk = 2000 - (_ICRpertenk - 11000) * 80 /100;
         } else if (13000 <= _ICRpertenk && _ICRpertenk < 15000) {
-            _FRpertenk = 400 - (_ICRpertenk - 13000)/100 * 10;
+            _FRpertenk = 400 - (_ICRpertenk - 13000) * 10 /100;
         } else if (15000 <= _ICRpertenk && _ICRpertenk < 20000) {
-            _FRpertenk = 200 - (_ICRpertenk - 15000)/100 * 2;
+            _FRpertenk = 200 - (_ICRpertenk - 15000) * 2 /100;
         } else if (20000 <= _ICRpertenk && _ICRpertenk < 50000) {
-            _FRpertenk = 100 - (_ICRpertenk - 20000)/100 * 3 /10;
+            _FRpertenk = 100 - (_ICRpertenk - 20000) * 3 /10 /100;
         } else {
             _FRpertenk = 10;
         }

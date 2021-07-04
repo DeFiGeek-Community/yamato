@@ -84,9 +84,18 @@ describe("Yamato", function() {
       betterexpect(totalDebtAfter).toEqBN(totalDebtBefore);
     });
   });
-  describe.only("FR()", function() { /* Given ICR, get borrowing fee. */
+  describe("FR()", function() { /* Given ICR, get borrowing fee. */
     it(`returns 2000 pertenk for ICR 11000 pertenk`, async function() {
       betterexpect(await yamato.FR(11000)).toEqBN(2000);
+    });
+    it(`returns 2000 pertenk for ICR 11001 pertenk`, async function() {
+      betterexpect(await yamato.FR(11001)).toEqBN(2000);
+    });
+    it(`returns 1999 pertenk for ICR 11002 pertenk`, async function() {
+      betterexpect(await yamato.FR(11002)).toEqBN(1999);
+    });
+    it(`returns 1992 pertenk for ICR 11010 pertenk`, async function() {
+      betterexpect(await yamato.FR(11010)).toEqBN(1992);
     });
     it(`returns 800 pertenk for ICR 12500 pertenk`, async function() {
       betterexpect(await yamato.FR(12500)).toEqBN(800);
