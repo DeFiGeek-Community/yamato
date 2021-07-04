@@ -84,12 +84,21 @@ describe("Yamato", function() {
       betterexpect(totalDebtAfter).toEqBN(totalDebtBefore);
     });
   });
-  describe("FR()", function() { /* Given ICR, get borrowing fee. */
+  describe.only("FR()", function() { /* Given ICR, get borrowing fee. */
     it(`returns 2000 pertenk for ICR 11000 pertenk`, async function() {
       betterexpect(await yamato.FR(11000)).toEqBN(2000);
     });
-    it(`returns 500 pertenk for ICR 12500 pertenk`, async function() {
-      betterexpect(await yamato.FR(12500)).toEqBN(500);
+    it(`returns 800 pertenk for ICR 12500 pertenk`, async function() {
+      betterexpect(await yamato.FR(12500)).toEqBN(800);
+    });
+    it(`returns 480 pertenk for ICR 12900 pertenk`, async function() {
+      betterexpect(await yamato.FR(12900)).toEqBN(480);
+    });
+    it(`returns 400 pertenk for ICR 13000 pertenk`, async function() {
+      betterexpect(await yamato.FR(13000)).toEqBN(400);
+    });
+    it(`returns 208 pertenk for ICR 14900 pertenk`, async function() {
+      betterexpect(await yamato.FR(14900)).toEqBN(210);
     });
     it(`returns 200 pertenk for ICR 15000 pertenk`, async function() {
       betterexpect(await yamato.FR(15000)).toEqBN(200);
@@ -97,17 +106,29 @@ describe("Yamato", function() {
     it(`returns 150 pertenk for ICR 17500 pertenk`, async function() {
       betterexpect(await yamato.FR(17500)).toEqBN(150);
     });
+    it(`returns 102 pertenk for ICR 19900 pertenk`, async function() {
+      betterexpect(await yamato.FR(19900)).toEqBN(102);
+    });
     it(`returns 100 pertenk for ICR 20000 pertenk`, async function() {
       betterexpect(await yamato.FR(20000)).toEqBN(100);
     });
     it(`returns 80 pertenk for ICR 25000 pertenk`, async function() {
-      betterexpect(await yamato.FR(25000)).toEqBN(80);
+      betterexpect(await yamato.FR(25000)).toEqBN(85);
     });
     it(`returns 60 pertenk for ICR 30000 pertenk`, async function() {
-      betterexpect(await yamato.FR(30000)).toEqBN(60);
+      betterexpect(await yamato.FR(30000)).toEqBN(70);
     });
-    it(`returns 20 pertenk for ICR 40000 pertenk`, async function() {
-      betterexpect(await yamato.FR(40000)).toEqBN(20);
+    it(`returns 40 pertenk for ICR 40000 pertenk`, async function() {
+      betterexpect(await yamato.FR(40000)).toEqBN(40);
+    });
+    it(`returns 11 pertenk for ICR 49700 pertenk`, async function() {
+      betterexpect(await yamato.FR(49700)).toEqBN(11);
+    });
+    it(`returns 10 pertenk for ICR 49800 pertenk`, async function() {
+      betterexpect(await yamato.FR(49800)).toEqBN(11);
+    });
+    it(`returns 10 pertenk for ICR 49900 pertenk`, async function() {
+      betterexpect(await yamato.FR(49900)).toEqBN(11);
     });
     it(`returns 10 pertenk for ICR 50000 pertenk`, async function() {
       betterexpect(await yamato.FR(50000)).toEqBN(10);
