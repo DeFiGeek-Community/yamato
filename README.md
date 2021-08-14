@@ -7,7 +7,7 @@ A stablecoin lending machine.
 - Any state transition could be back to the normal in the end.
 - That's all, really.
 
-![Overview (Use case diagram + Class diagram)](./yamato.png)
+![yamato (4)](https://user-images.githubusercontent.com/83639348/129440476-93175c19-bc92-4116-b851-98a9ec6a1eae.png)
 
 
 ## Spec
