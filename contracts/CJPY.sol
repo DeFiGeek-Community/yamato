@@ -1,4 +1,4 @@
-pragma solidity ^0.8.3;
+pragma solidity 0.7.6;
 
 /*
  * SPDX-License-Identifier: GPL-3.0-or-later
@@ -13,35 +13,18 @@ pragma solidity ^0.8.3;
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 
-import "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
+import "./Currency.sol";
 import "./Yamato.sol";
 
 /**
  * @author 0xMotoko
- * @title CJPY Token
+ * @title CToken (Convertible Token).
  * @notice Very stable.
  */
-contract CJPY is ERC20PresetMinterPauser {
-    IYamato yamato = IYamato(address(0));
-    constructor(uint initialSupply) ERC20PresetMinterPauser("Collateralized JPY", "CJPY") {
+contract CJPY is Currency {
+
+    constructor(uint initialSupply) Currency("Convertible JPY Token","CJPY") {
         _mint(msg.sender, initialSupply);
     }
 
-    modifier onlyYamato(){
-        require(msg.sender == address(yamato), "You are not Yamato contract.");
-        _;
-    }
-
-    function mint(address to, uint amount) public virtual override onlyYamato() {
-        _mint(to, amount);
-    }
-
-
-    function approve(address spender, uint256 amount) public virtual override returns (bool) {
-        require(_msgSender() != spender, "sender and spender shouldn't be the same.");
-        require(amount > 0, "Amount is zero.");
-
-        _approve(_msgSender(), spender, amount);
-        return true;
-    }
 }

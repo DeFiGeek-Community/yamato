@@ -1,4 +1,4 @@
-pragma solidity ^0.8.3;
+pragma solidity 0.7.6;
 
 /*
  * SPDX-License-Identifier: GPL-3.0-or-later
@@ -17,10 +17,9 @@ import "./Pool.sol";
 import "./YMT.sol";
 import "./CJPY.sol";
 import "./PriceFeed.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "./IERC20MintableBurnable.sol";
 import "hardhat/console.sol";
-import "prb-math/contracts/PRBMathSD59x18.sol";
 
 interface IYamato {
 
@@ -30,7 +29,6 @@ interface IYamato {
 /// @title Yamato Pledge Manager Contract
 /// @author 0xMotoko
 contract Yamato is IYamato, ReentrancyGuard{
-    using PRBMathSD59x18 for int256;
 
     IPool pool;
     IERC20MintableBurnable ymt;

@@ -18,10 +18,10 @@ import "./Yamato.sol";
 
 /**
  * @author 0xMotoko
- * @title YMT Token
- * @notice Divident. Inflatable but the rate is to be decreasing. 
+ * @title veYMT Token
+ * @notice Locked YMT. An ERC-20 but w/o transfer()
  */
-contract YMT is ERC20PresetMinterPauser {
+contract veYMT is ERC20PresetMinterPauser {
     IYamato yamato = IYamato(address(0));
     constructor(uint256 initialSupply) ERC20PresetMinterPauser("Yamato", "YMT") {
         _mint(msg.sender, initialSupply);

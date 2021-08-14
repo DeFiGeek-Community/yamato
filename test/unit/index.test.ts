@@ -23,7 +23,7 @@ import { genABI } from '@src/genABI';
 const YAMATO_ABI = genABI('Yamato');
 
 /* Parameterized Test (Testcases are in /test/parameterizedSpecs.ts) */
-describe("Smock", function() {
+describe("Smock for Yamato", function() {
   it(`succeeds to make a mock`, async function() {
     const spec = await ethers.getContractFactory('Yamato')
     const mock = await smockit(spec)

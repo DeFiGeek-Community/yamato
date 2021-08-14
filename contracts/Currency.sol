@@ -12,19 +12,17 @@ pragma solidity 0.7.6;
 
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
-
 import "@openzeppelin/contracts/presets/ERC20PresetMinterPauser.sol";
 import "./Yamato.sol";
 
 /**
  * @author 0xMotoko
- * @title YMT Token
- * @notice Divident. Inflatable but the rate is to be decreasing. 
+ * @title CToken (Convertible Token).
+ * @notice Very stable.
  */
-contract YMT is ERC20PresetMinterPauser {
+contract Currency is ERC20PresetMinterPauser {
     IYamato yamato = IYamato(address(0));
-    constructor(uint256 initialSupply) ERC20PresetMinterPauser("Yamato", "YMT") {
-        _mint(msg.sender, initialSupply);
+    constructor(string memory name, string memory symbol) ERC20PresetMinterPauser(name, symbol) {
     }
 
     modifier onlyYamato(){
@@ -36,6 +34,7 @@ contract YMT is ERC20PresetMinterPauser {
         _mint(to, amount);
     }
 
+
     function approve(address spender, uint256 amount) public virtual override returns (bool) {
         require(_msgSender() != spender, "sender and spender shouldn't be the same.");
         require(amount > 0, "Amount is zero.");
@@ -43,5 +42,4 @@ contract YMT is ERC20PresetMinterPauser {
         _approve(_msgSender(), spender, amount);
         return true;
     }
-
 }

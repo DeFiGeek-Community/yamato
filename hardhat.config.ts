@@ -18,6 +18,17 @@ module.exports = {
   solidity: {
     compilers: [
       {
+        version: "0.7.6",
+        settings: {
+          outputSelection: {
+            "*": {
+              "*": ["storageLayout"],
+            },
+          },
+        },
+      },
+
+      {
         version: "0.8.3",
         settings: {
           outputSelection: {
@@ -47,7 +58,10 @@ module.exports = {
       live: true,
       saveDeployments: true,
       tags: ["staging"]
-    }
+    },
+  },
+  ovm: {
+    solcVersion: '0.7.6'
   },
   namedAccounts: {
     foundation: {
