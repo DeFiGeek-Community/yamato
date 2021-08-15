@@ -51,7 +51,7 @@ contract ChainlinkMock {
           }
         }
 
-        int change = lastPrice / 100;
+        int change = lastPrice / 1000;
         change = change * int(deviation);
         answer = sign ? lastPrice + change : lastPrice - change;
 
