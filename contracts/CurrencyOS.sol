@@ -16,15 +16,20 @@ pragma solidity 0.7.6;
 import "./IERC20MintableBurnable.sol";
 import "./IFeed.sol";
 
-contract CurrencyOS {
-    IERC20MintableBurnable CJPY;
+interface ICurrencyOS {
+    function mintCJPY(address to, uint amount) external;
+    function burnCJPY(address to, uint amount) external;
+}
+
+contract CurrencyOS is ICurrencyOS {
+    IERC20MintableBurnable currency;
     IERC20MintableBurnable YMT;
     IERC20MintableBurnable veYMT;
     IFeed feed;
     address public governance;
     mapping(address=>bool) public yamatoes;
-    constructor(address cjpyAddr, address ymtAddr, address veYmtAddr, address feedAddr){
-        CJPY = IERC20MintableBurnable(cjpyAddr);
+    constructor(address currencyAddr, address ymtAddr, address veYmtAddr, address feedAddr){
+        currency = IERC20MintableBurnable(currencyAddr);
         YMT = IERC20MintableBurnable(ymtAddr);
         veYMT = IERC20MintableBurnable(veYmtAddr);
         feed = IFeed(feedAddr);
@@ -43,6 +48,13 @@ contract CurrencyOS {
     modifier onlyYamato(){
         require(yamatoes[msg.sender], "Caller is not Yamato");
         _;
+    }
+
+    function mintCJPY(address to, uint amount) public onlyYamato override {
+        currency.mint(to, amount);
+    }
+    function burnCJPY(address to, uint amount) public onlyYamato override {
+        currency.burnFrom(to, amount);
     }
 
 }

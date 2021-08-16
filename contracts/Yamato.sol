@@ -16,6 +16,7 @@ pragma solidity 0.7.6;
 import "./Pool.sol";
 import "./YMT.sol";
 import "./CJPY.sol";
+import "./CurrencyOS.sol";
 import "./PriceFeed.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "./IERC20MintableBurnable.sol";
@@ -32,7 +33,7 @@ contract Yamato is IYamato, ReentrancyGuard{
 
     IPool pool;
     IERC20MintableBurnable ymt;
-    IERC20MintableBurnable cjpy;
+    ICurrencyOS cjpyOS;
     IPriceFeed feed;
     struct Pledge {
         uint coll;
@@ -54,11 +55,11 @@ contract Yamato is IYamato, ReentrancyGuard{
     uint8 public SRR = 20; // SweepReserveRate
     uint8 public GRR = 1; // GasReserveRate
 
-    constructor(address _pool, address _feed, address _ymt, address _cjpy){
+    constructor(address _pool, address _feed, address _ymt, address _cjpyOS){
          pool = IPool(_pool);
          feed = IPriceFeed(_feed);
          ymt = IERC20MintableBurnable(_ymt);
-         cjpy = IERC20MintableBurnable(_cjpy);
+         cjpyOS = ICurrencyOS(_cjpyOS);
     }
 
 
@@ -143,8 +144,8 @@ contract Yamato is IYamato, ReentrancyGuard{
         /*
             3-3. Borrowed fund & fee transfer
         */
-        cjpy.mint(msg.sender, borrowAmountInCjpy-fee); // onlyYamato
-        cjpy.mint(address(pool), fee); // onlyYamato
+        cjpyOS.mintCJPY(msg.sender, borrowAmountInCjpy-fee); // onlyYamato
+        cjpyOS.mintCJPY(address(pool), fee); // onlyYamato
 
         if(pool.redemptionReserve()/pool.sweepReserve() >= 5){
             pool.depositSweepReserve(fee);
@@ -180,7 +181,7 @@ contract Yamato is IYamato, ReentrancyGuard{
             3-1. Charge CJPY
             3-2. Return coll to the redeemer
         */
-        cjpy.burnFrom(msg.sender, cjpyAmount);
+        cjpyOS.burnCJPY(msg.sender, cjpyAmount);
     }
 
 
@@ -321,7 +322,7 @@ contract Yamato is IYamato, ReentrancyGuard{
                 (-) Debt Cancel Reserve
                 (+) Dividend Reserve
             */
-            cjpy.burnFrom(address(pool), totalRedeemedCjpyAmount);
+            cjpyOS.burnCJPY(address(pool), totalRedeemedCjpyAmount);
             pool.useRedemptionReserve(totalRedeemedCjpyAmount);
             pool.accumulateDividendReserve(dividendEthAmount);
 
@@ -331,7 +332,7 @@ contract Yamato is IYamato, ReentrancyGuard{
             /* 
             [ Peer redemption ]
             */
-            cjpy.burnFrom(msg.sender, totalRedeemedCjpyAmount);
+            cjpyOS.burnCJPY(msg.sender, totalRedeemedCjpyAmount);
             pool.sendETH(msg.sender, dividendEthAmount);
         }
 
@@ -373,7 +374,7 @@ contract Yamato is IYamato, ReentrancyGuard{
                     _debt = availablePart;
                 }
                 pool.useSweepReserve(_debt);
-                cjpy.burnFrom(address(pool), _debt);
+                cjpyOS.burnCJPY(address(pool), _debt);
                 pledge.debt -= _debt;
                 totalDebt -= _debt;
                 pledge.isCreated = (pledge.debt > 0);

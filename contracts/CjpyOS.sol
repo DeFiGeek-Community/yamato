@@ -17,11 +17,4 @@ import "./CurrencyOS.sol";
 contract CjpyOS is CurrencyOS {
     constructor(address cjpyAddr, address ymtAddr, address veYmtAddr, address feedAddr) CurrencyOS(cjpyAddr, ymtAddr, veYmtAddr, feedAddr) {
     }
-
-    function mintCJPY(address _to, uint _amount) public onlyYamato {
-        CJPY.mint(_to, _amount);
-    }
-    function burnCJPY(address _to, uint _amount) public onlyYamato {
-        CJPY.burnFrom(_to, _amount);
-    }
 }

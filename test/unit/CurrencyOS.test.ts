@@ -66,7 +66,7 @@ describe("CjpyOS", function() {
   describe("addYamato()", function() {
     it(`succeeds to add new Yamato`, async function() {
       await cjpyOS.addYamato(accounts[0].address); // onlyYamato
-      betterexpect(await cjpyOS.yamatoes(accounts[0].address)).toBe(true);      
+      betterexpect(await cjpyOS.yamatoes(accounts[0].address)).toBe(true);
     });
   });
 
