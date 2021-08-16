@@ -169,10 +169,11 @@ contract Yamato is IYamato, ReentrancyGuard{
         /*
             2. Check repayability
         */
-        require(getICR(pledge.coll*jpyPerEth,pledge.debt) >= MCR, "Repayment failure: ICR is not more than MCR.");
+        require(cjpyAmount > 0, "cjpyAmount is zero");
+        require(pledge.debt > 0, "pledge.debt is zero");
 
         /*
-            2. Update pledge and the global variable
+            2-1. Update pledge and the global variable
         */
         pledge.debt -= cjpyAmount;
         totalDebt -= cjpyAmount;

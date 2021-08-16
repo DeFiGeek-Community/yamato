@@ -261,7 +261,7 @@ describe("Yamato", function() {
       betterexpect(mockCjpyOS.smocked['burnCJPY(address,uint256)'].calls.length).toBe(1);
     });
 
-    it(`can't be executed in the TCR < MCR`, async function() {
+    it(`can repay even under TCR < MCR`, async function() {
       const MCR = 1.1;
       const toCollateralize = 1;
       const toBorrow = (PRICE * toCollateralize) / MCR;
@@ -272,9 +272,28 @@ describe("Yamato", function() {
       const dumpedTCR = await yamato.getTCR(PRICE/2);
       betterexpect(parseInt(dumpedTCR.toString()) < MCR*100).toBe(true);
 
-      await betterexpect( yamato.repay(toERC20(toBorrow+"")) ).toBeReverted();
+      const TCRbefore = await yamato.getTCR(PRICE);
+      await yamato.repay(toERC20(toBorrow+""));
+      const TCRafter = await yamato.getTCR(PRICE);
 
+      betterexpect(TCRafter).toBeGtBN(TCRbefore);
     });
+    it(`fails for empty cjpy amount`, async function() {
+      const MCR = 1.1;
+      const toCollateralize = 1;
+      const toBorrow = (PRICE * toCollateralize) / MCR;
+      await yamato.deposit({value:toERC20(toCollateralize+"")});
+      await yamato.borrow(toERC20(toBorrow+""));
+      await betterexpect( yamato.repay(toERC20(0+"")) ).toBeReverted(); 
+    });
+    it(`fails for no-debt pledge`, async function() {
+      const MCR = 1.1;
+      const toCollateralize = 1;
+      const toBorrow = (PRICE * toCollateralize) / MCR;
+      await yamato.deposit({value:toERC20(toCollateralize+"")});
+      await betterexpect( yamato.repay(toERC20(toBorrow+"")) ).toBeReverted(); 
+    });
+
 
     // TODO: Have a attack contract to recursively calls the deposit and borrow function
     it.todo(`should validate locked state`)
