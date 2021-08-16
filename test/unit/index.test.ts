@@ -182,7 +182,7 @@ describe("Yamato", function() {
       await yamato.borrow(toERC20(toBorrow+""));
       betterexpect(mockFeed.smocked.fetchPrice.calls.length).toBe(1);
     });
-    it(`should run cjpy.mint() of Pool.sol`, async function(){
+    it(`should run CjpyOS.mintCJPY() of Pool.sol`, async function(){
       const toCollateralize = 1;
       const toBorrow = (PRICE * toCollateralize) / MCR;
       await yamato.deposit({value:toERC20(toCollateralize+"")});
@@ -238,7 +238,7 @@ describe("Yamato", function() {
       betterexpect(pledgeAfter.debt.toString()).toBe("0");
     });
     it(`should improve TCR`, async function() {
-      const MCR = 1.1;      
+      const MCR = 1.1;
       const toCollateralize = 1;
       const toBorrow = (PRICE * toCollateralize) / MCR;
       await yamato.deposit({value:toERC20(toCollateralize+"")});
@@ -472,6 +472,10 @@ describe("Yamato", function() {
     it(`should run sendETH() of Pool.sol for successful redeemer`, async function(){
       await yamato.connect(accounts[0]).redeem(toERC20(toBorrow+""), false);
       betterexpect(mockPool.smocked['sendETH(address,uint256)'].calls.length).toBe(1);
+    });
+    it(`should run burnCJPY() of Yamato.sol for successful redeemer`, async function(){
+      await yamato.connect(accounts[0]).redeem(toERC20(toBorrow+""), false);
+      betterexpect(mockCjpyOS.smocked['burnCJPY(address,uint256)'].calls.length).toBe(1);
     });
     it.skip(`can remain coll=0 debt>0 pledge in the storage`, async function() {
     });
