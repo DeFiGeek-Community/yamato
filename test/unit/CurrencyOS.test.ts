@@ -64,6 +64,10 @@ describe("CjpyOS", function() {
   });
 
   describe("addYamato()", function() {
+    it(`fails to add new Yamato`, async function() {
+      await betterexpect( cjpyOS.connect(accounts[1].address).addYamato(accounts[1].address) ).toBeReverted()
+    });
+
     it(`succeeds to add new Yamato`, async function() {
       await cjpyOS.addYamato(accounts[0].address); // onlyYamato
       betterexpect(await cjpyOS.yamatoes(accounts[0].address)).toBe(true);
@@ -71,7 +75,7 @@ describe("CjpyOS", function() {
   });
 
   describe("mintCJPY()", function() {
-    it(`fail to mint CJPY`, async function() {
+    it(`fails to mint CJPY`, async function() {
       await betterexpect( cjpyOS.mintCJPY(accounts[0].address, 10000) ).toBeReverted()
     });
 
@@ -83,7 +87,7 @@ describe("CjpyOS", function() {
   });
 
   describe("burnCJPY()", function() {
-    it(`fail to burn CJPY`, async function() {
+    it(`fails to burn CJPY`, async function() {
       await betterexpect( cjpyOS.burnCJPY(accounts[0].address, 10000) ).toBeReverted()
     });
 

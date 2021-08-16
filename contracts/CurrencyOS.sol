@@ -15,6 +15,7 @@ pragma solidity 0.7.6;
 
 import "./IERC20MintableBurnable.sol";
 import "./IFeed.sol";
+import "hardhat/console.sol";
 
 interface ICurrencyOS {
     function mintCJPY(address to, uint amount) external;
