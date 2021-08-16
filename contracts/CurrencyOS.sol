@@ -1,5 +1,5 @@
 pragma solidity 0.7.6;
-
+pragma abicoder v2;
 /*
  * SPDX-License-Identifier: GPL-3.0-or-later
  * Yamato
@@ -23,12 +23,20 @@ interface ICurrencyOS {
 }
 
 contract CurrencyOS is ICurrencyOS {
+    struct YamatoConf {
+        address yamatoAddr;
+        uint rewardAllocation;
+        bool isL2;
+        bool isFilled;
+    }
+
     IERC20MintableBurnable currency;
     IERC20MintableBurnable YMT;
     IERC20MintableBurnable veYMT;
     IFeed feed;
     address public governance;
-    mapping(address=>bool) public yamatoes;
+    mapping(address=>YamatoConf) public yamatoes;
+    address[] public yamatoIndice;
     constructor(address currencyAddr, address ymtAddr, address veYmtAddr, address feedAddr){
         currency = IERC20MintableBurnable(currencyAddr);
         YMT = IERC20MintableBurnable(ymtAddr);
@@ -36,8 +44,9 @@ contract CurrencyOS is ICurrencyOS {
         feed = IFeed(feedAddr);
         governance = msg.sender;
     }
-    function addYamato(address _yamato) public onlyGovernance {
-        yamatoes[_yamato] = true;
+    function addYamato(YamatoConf memory _conf) public onlyGovernance {
+        yamatoIndice.push(_conf.yamatoAddr);
+        yamatoes[_conf.yamatoAddr] = _conf;
     }
     modifier onlyGovernance(){
         require(msg.sender == governance, "You are not the governer.");
@@ -47,7 +56,7 @@ contract CurrencyOS is ICurrencyOS {
 
 
     modifier onlyYamato(){
-        require(yamatoes[msg.sender], "Caller is not Yamato");
+        require(yamatoes[msg.sender].isFilled, "Caller is not Yamato");
         _;
     }
 

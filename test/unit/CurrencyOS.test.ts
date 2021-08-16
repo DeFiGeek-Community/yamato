@@ -64,13 +64,22 @@ describe("CjpyOS", function() {
   });
 
   describe("addYamato()", function() {
-    it(`fails to add new Yamato`, async function() {
-      await betterexpect( cjpyOS.connect(accounts[1].address).addYamato(accounts[1].address) ).toBeReverted()
+    it(`fails to add new Yamato for non-governer.`, async function() {
+      const rewardAllocation = 1000;
+      const isL2 = false;
+      const isFilled = true;
+      await betterexpect( cjpyOS.connect(accounts[1].address).addYamato([accounts[1].address, rewardAllocation, isL2, isFilled]) ).toBeReverted()
     });
 
     it(`succeeds to add new Yamato`, async function() {
-      await cjpyOS.addYamato(accounts[0].address); // onlyYamato
-      betterexpect(await cjpyOS.yamatoes(accounts[0].address)).toBe(true);
+      const rewardAllocation = 1000;
+      const isL2 = false;
+      const isFilled = true;
+      await cjpyOS.addYamato([accounts[0].address, rewardAllocation, isL2, isFilled]); // onlyYamato
+      const state = await cjpyOS.yamatoes(accounts[0].address);
+      betterexpect(state[0]).toBe(accounts[0].address);
+      betterexpect(state[2]).toBe(false);
+      betterexpect(state[3]).toBe(true);
     });
   });
 
@@ -80,7 +89,10 @@ describe("CjpyOS", function() {
     });
 
     it(`succeeds to mint CJPY`, async function() {
-      await cjpyOS.addYamato(accounts[0].address); // onlyYamato
+      const rewardAllocation = 1000;
+      const isL2 = false;
+      const isFilled = true;
+      await cjpyOS.addYamato([accounts[0].address, rewardAllocation, isL2, isFilled]); // onlyGovernance
       await cjpyOS.mintCJPY(accounts[0].address, 10000); // onlyYamato
       betterexpect(mockCJPY.smocked['mint(address,uint256)'].calls.length).toBe(1);
     });
@@ -92,7 +104,10 @@ describe("CjpyOS", function() {
     });
 
     it(`succeeds to burn CJPY`, async function() {
-      await cjpyOS.addYamato(accounts[0].address); // onlyYamato
+      const rewardAllocation = 1000;
+      const isL2 = false;
+      const isFilled = true;
+      await cjpyOS.addYamato([accounts[0].address, rewardAllocation, isL2, isFilled]); // onlyGovernance
       await cjpyOS.burnCJPY(accounts[0].address, 10000); // onlyYamato
       betterexpect(mockCJPY.smocked['burnFrom(address,uint256)'].calls.length).toBe(1);
     });
