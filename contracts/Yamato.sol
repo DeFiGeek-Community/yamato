@@ -238,6 +238,7 @@ contract Yamato is IYamato, ReentrancyGuard{
     /// @param isCoreRedemption A flag for who to pay
     function redeem(uint maxRedemptionCjpyAmount, bool isCoreRedemption) public nonReentrant {
         uint redeemStart = pool.redemptionReserve();
+        uint sortedPledgesCount = 0;
 
         /*
             1. Get feed
@@ -246,13 +247,7 @@ contract Yamato is IYamato, ReentrancyGuard{
         
 
         /*
-            2. Validate TCR
-        */
-        require(getTCR(jpyPerEth)<MCR, "Redemption failure: TCR is not less than MCR.");
-
-
-        /*
-            4. Sort Pledges by ICR
+            2. Sort Pledges by ICR
         */
         for(uint i = 0; i < pledgesIndices.length; i++){
             address borrower = pledgesIndices[i];
@@ -262,12 +257,19 @@ contract Yamato is IYamato, ReentrancyGuard{
                 uint ICR = getICR(pledge.coll * jpyPerEth, pledge.debt);
                 if(ICR < MCR){
                     sortedPledges[ICR].push(pledge);
+                    sortedPledgesCount += 1;
                 }
             }
         }
 
         /*
-            5. Update lowest ICR pledges until cjpy exhausted.
+            3. Validate TCR
+        */
+        require(sortedPledgesCount > 0, "No low-ICR pledges to redeem.");
+
+
+        /*
+            4. Update lowest ICR pledges until cjpy exhausted.
         */
         uint reserveLeftInEth = maxRedemptionCjpyAmount/jpyPerEth;
         for(uint i = 1; i < MCR; i++){
@@ -302,7 +304,7 @@ contract Yamato is IYamato, ReentrancyGuard{
         }
 
         /*
-            5-2. Delete temporal pledges
+            5. Delete temporal pledges
         */
         for(uint i = 1; i < MCR; i++){
             for(uint j = 1; j < sortedPledges[i].length; j++){
@@ -312,7 +314,7 @@ contract Yamato is IYamato, ReentrancyGuard{
 
 
         /*
-            5. Ditribute colls.
+            6. Ditribute colls.
         */
         uint totalRedeemedCjpyAmount = redeemStart - pool.redemptionReserve();
         uint totalRedeemedEthAmount = totalRedeemedCjpyAmount / jpyPerEth;
@@ -339,7 +341,7 @@ contract Yamato is IYamato, ReentrancyGuard{
 
 
         /*
-            6. Gas compensation
+            7. Gas compensation
         */
         uint gasCompensation = totalRedeemedEthAmount * (GRR/100);
         (bool success,) = payable(msg.sender).call{value:gasCompensation}("");

@@ -472,8 +472,8 @@ describe("Yamato", function() {
 
       betterexpect(TCRAfter).toBeLtBN(TCRBefore);
     });
-    it(`should not run if TCR > 1.1`, async function() {
-      mockFeed.smocked.fetchPrice.will.return.with(PRICE);
+    it(`should not run if there are no ICR < MCR pledges`, async function() {
+      mockFeed.smocked.fetchPrice.will.return.with(PRICE*2);
       await betterexpect(yamato.connect(accounts[0]).redeem(toERC20(toBorrow+""), false) ).toBeReverted();
     });
     it(`should NOT run useRedemptionReserve() of Pool.sol when isCoreRedemption=false`, async function(){
