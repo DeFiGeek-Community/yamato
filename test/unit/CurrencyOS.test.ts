@@ -75,7 +75,7 @@ describe("CjpyOS", function() {
       const rewardAllocation = 1000;
       const isL2 = false;
       const isFilled = true;
-      await cjpyOS.addYamato([accounts[0].address, rewardAllocation, isL2, isFilled]); // onlyYamato
+      await cjpyOS.addYamato([accounts[0].address, rewardAllocation, isL2, isFilled]); // onlyGovernance
       const state = await cjpyOS.yamatoes(accounts[0].address);
       betterexpect(state[0]).toBe(accounts[0].address);
       betterexpect(state[2]).toBe(false);
