@@ -20,18 +20,18 @@ import { Yamato, Pool } from '../../typechain';
 
 import { genABI } from '@src/genABI';
 
-const CJPY_OS_ABI = genABI('CjpyOS');
+const PriceFeed_ABI = genABI('PriceFeed');
 
 /* Parameterized Test (Testcases are in /test/parameterizedSpecs.ts) */
-describe("Smock for CjpyOS", function() {
+describe("Smock for PriceFeed", function() {
   it(`succeeds to make a mock`, async function() {
-    const spec = await ethers.getContractFactory('CjpyOS')
+    const spec = await ethers.getContractFactory('PriceFeed')
     const mock = await smockit(spec)
     betterexpect(isMockContract(mock)).toBe(true);
   });
 });
 
-describe("CjpyOS", function() {
+describe("PriceFeed", function() {
   let mockAggregatorV3;
   let mockTellorCaller;
   let feed;
@@ -56,7 +56,8 @@ describe("CjpyOS", function() {
 
   describe("fetchPrice()", function() {
     it.skip(`succeeds to fetch`, async function() {
-        // TODO: Liquity's PriceFeed test is very good example https://github.com/liquity/dev/blob/main/packages/contracts/test/PriceFeedTest.js
+        let res = await feed.fetchPrice();
+        console.log(res);
     });
 
     it.skip(`fails fetch`, async function() {

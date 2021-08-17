@@ -15,9 +15,9 @@ pragma solidity 0.7.6;
 
 import "./Pool.sol";
 import "./YMT.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "./CurrencyOS.sol";
 import "./PriceFeed.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "./IERC20MintableBurnable.sol";
 import "hardhat/console.sol";
 
