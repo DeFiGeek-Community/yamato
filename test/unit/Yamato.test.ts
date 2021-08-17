@@ -54,8 +54,7 @@ describe("Yamato", function() {
     mockCjpyOS = await smockit(spec5)
     yamato = await (await ethers.getContractFactory('Yamato')).deploy(
       mockPool.address,
-      mockCjpyOS.address,
-      mockFeed.address
+      mockCjpyOS.address
     );
 
     PRICE = 260000;
@@ -67,6 +66,7 @@ describe("Yamato", function() {
     mockFeed.smocked.fetchPrice.will.return.with(PRICE);
     mockPool.smocked.redemptionReserve.will.return.with(1);
     mockPool.smocked.sweepReserve.will.return.with(1);
+    mockCjpyOS.smocked.feed.will.return.with(mockFeed.address);
 
   });
 

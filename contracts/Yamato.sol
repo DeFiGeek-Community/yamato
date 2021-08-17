@@ -22,7 +22,6 @@ import "./IERC20MintableBurnable.sol";
 import "hardhat/console.sol";
 
 interface IYamato {
-    // function setFeed(address _feed) external; 
 }
 
 
@@ -53,18 +52,10 @@ contract Yamato is IYamato, ReentrancyGuard{
     uint8 public SRR = 20; // SweepReserveRate
     uint8 public GRR = 1; // GasReserveRate
 
-    constructor(address _pool, address _cjpyOS, address _feed){
+    constructor(address _pool, address _cjpyOS){
         pool = IPool(_pool);
         cjpyOS = ICurrencyOS(_cjpyOS);
-        feed = IPriceFeed(_feed);
     }
-    // function setFeed(address _feed) public onlyCurrencyOS override {
-    //     feed = IPriceFeed(_feed);
-    // }
-    // modifier onlyCurrencyOS(){
-    //     require(msg.sender == address(cjpyOS), "You are not the CurrencyOS");
-    //     _;
-    // }
 
 
 
@@ -115,7 +106,7 @@ contract Yamato is IYamato, ReentrancyGuard{
             1. Ready
         */
         Pledge storage pledge = pledges[msg.sender];
-        uint jpyPerEth = feed.fetchPrice();
+        uint jpyPerEth = IPriceFeed(cjpyOS.feed()).fetchPrice();
         uint _ICRAfter = getICR(pledge.coll * jpyPerEth, pledge.debt + borrowAmountInCjpy);
 
         /*
@@ -167,7 +158,7 @@ contract Yamato is IYamato, ReentrancyGuard{
         /*
             1. Get feed and Pledge
         */
-        uint jpyPerEth = feed.fetchPrice();
+        uint jpyPerEth = IPriceFeed(cjpyOS.feed()).fetchPrice();
         Pledge storage pledge = pledges[msg.sender];
 
 
@@ -198,7 +189,7 @@ contract Yamato is IYamato, ReentrancyGuard{
         /*
             1. Get feed and pledge
         */
-        uint jpyPerEth = feed.fetchPrice();
+        uint jpyPerEth = IPriceFeed(cjpyOS.feed()).fetchPrice();
         Pledge storage pledge = pledges[msg.sender];
 
         /*
@@ -248,7 +239,7 @@ contract Yamato is IYamato, ReentrancyGuard{
         /*
             1. Get feed
         */
-        uint jpyPerEth = feed.fetchPrice();
+        uint jpyPerEth = IPriceFeed(cjpyOS.feed()).fetchPrice();
         
 
         /*

@@ -21,6 +21,7 @@ import "hardhat/console.sol";
 interface ICurrencyOS {
     function mintCJPY(address to, uint amount) external;
     function burnCJPY(address to, uint amount) external;
+    function feed() external view returns (address);
 }
 
 contract CurrencyOS is ICurrencyOS {
@@ -34,7 +35,7 @@ contract CurrencyOS is ICurrencyOS {
     IERC20MintableBurnable public currency;
     IERC20MintableBurnable public YMT;
     IERC20MintableBurnable public veYMT;
-    IPriceFeed public feed;
+    address public override feed;
     address public governance;
     mapping(address=>YamatoConf) public yamatoes;
     address[] public yamatoIndice;
@@ -42,11 +43,10 @@ contract CurrencyOS is ICurrencyOS {
         currency = IERC20MintableBurnable(currencyAddr);
         YMT = IERC20MintableBurnable(ymtAddr);
         veYMT = IERC20MintableBurnable(veYmtAddr);
-        feed = IPriceFeed(feedAddr);
+        feed = feedAddr;
         governance = msg.sender;
     }
     function addYamato(YamatoConf memory _conf) public onlyGovernance {
-        // IYamato(_conf.yamatoAddr).setFeed(address(feed));
         yamatoIndice.push(_conf.yamatoAddr);
         yamatoes[_conf.yamatoAddr] = _conf;
     }
