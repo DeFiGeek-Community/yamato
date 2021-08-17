@@ -15,14 +15,12 @@ pragma abicoder v2;
 
 import "./IERC20MintableBurnable.sol";
 import "./PriceFeed.sol";
+import "./Yamato.sol";
 import "hardhat/console.sol";
 
 interface ICurrencyOS {
     function mintCJPY(address to, uint amount) external;
     function burnCJPY(address to, uint amount) external;
-    function getFeed() external view returns (address);
-    function getYMT() external view returns (address);
-    function getVeYMT() external view returns (address);
 }
 
 contract CurrencyOS is ICurrencyOS {
@@ -48,6 +46,7 @@ contract CurrencyOS is ICurrencyOS {
         governance = msg.sender;
     }
     function addYamato(YamatoConf memory _conf) public onlyGovernance {
+        // IYamato(_conf.yamatoAddr).setFeed(address(feed));
         yamatoIndice.push(_conf.yamatoAddr);
         yamatoes[_conf.yamatoAddr] = _conf;
     }
@@ -68,16 +67,6 @@ contract CurrencyOS is ICurrencyOS {
     }
     function burnCJPY(address to, uint amount) public onlyYamato override {
         currency.burnFrom(to, amount);
-    }
-
-    function getYMT() public view override returns (address) {
-        return address(YMT);
-    }
-    function getVeYMT() public view override returns (address) {
-        return address(YMT);
-    }
-    function getFeed() public view override returns (address) {
-        return address(YMT);
     }
 
 }

@@ -22,7 +22,7 @@ import "./IERC20MintableBurnable.sol";
 import "hardhat/console.sol";
 
 interface IYamato {
-
+    // function setFeed(address _feed) external; 
 }
 
 
@@ -32,8 +32,6 @@ contract Yamato is IYamato, ReentrancyGuard{
 
     IPool pool;
     ICurrencyOS cjpyOS;
-    // IERC20MintableBurnable YMT;
-    // IERC20MintableBurnable veYMT;
     IPriceFeed feed;
     struct Pledge {
         uint coll;
@@ -60,6 +58,14 @@ contract Yamato is IYamato, ReentrancyGuard{
         cjpyOS = ICurrencyOS(_cjpyOS);
         feed = IPriceFeed(_feed);
     }
+    // function setFeed(address _feed) public onlyCurrencyOS override {
+    //     feed = IPriceFeed(_feed);
+    // }
+    // modifier onlyCurrencyOS(){
+    //     require(msg.sender == address(cjpyOS), "You are not the CurrencyOS");
+    //     _;
+    // }
+
 
 
     /*
