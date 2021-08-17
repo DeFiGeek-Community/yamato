@@ -15,7 +15,6 @@ pragma solidity 0.7.6;
 
 import "./Pool.sol";
 import "./YMT.sol";
-import "./CJPY.sol";
 import "./CurrencyOS.sol";
 import "./PriceFeed.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
@@ -32,8 +31,9 @@ interface IYamato {
 contract Yamato is IYamato, ReentrancyGuard{
 
     IPool pool;
-    IERC20MintableBurnable ymt;
     ICurrencyOS cjpyOS;
+    // IERC20MintableBurnable YMT;
+    // IERC20MintableBurnable veYMT;
     IPriceFeed feed;
     struct Pledge {
         uint coll;
@@ -55,11 +55,10 @@ contract Yamato is IYamato, ReentrancyGuard{
     uint8 public SRR = 20; // SweepReserveRate
     uint8 public GRR = 1; // GasReserveRate
 
-    constructor(address _pool, address _feed, address _ymt, address _cjpyOS){
-         pool = IPool(_pool);
-         feed = IPriceFeed(_feed);
-         ymt = IERC20MintableBurnable(_ymt);
-         cjpyOS = ICurrencyOS(_cjpyOS);
+    constructor(address _pool, address _cjpyOS, address _feed){
+        pool = IPool(_pool);
+        cjpyOS = ICurrencyOS(_cjpyOS);
+        feed = IPriceFeed(_feed);
     }
 
 
@@ -121,28 +120,28 @@ contract Yamato is IYamato, ReentrancyGuard{
         require( _ICRAfter >= MCR, "This minting is invalid because of too large borrowing.");
 
         /*
-            2. Fee
+            3. Fee
         */
         uint fee = borrowAmountInCjpy * FR(_ICRAfter*100)/10000;
 
 
         /*
-            3. State transitions
+            4. State transitions
         */
 
         /*
-            3-1. Top-up scenario
+            4-1. Top-up scenario
         */
         pledge.debt += borrowAmountInCjpy;
         totalDebt += borrowAmountInCjpy;
 
         /*
-            3-2. Cheat guard
+            4-2. Cheat guard
         */
         withdrawLocks[msg.sender] = block.timestamp + 3 days;
 
         /*
-            3-3. Borrowed fund & fee transfer
+            4-3. Borrowed fund & fee transfer
         */
         cjpyOS.mintCJPY(msg.sender, borrowAmountInCjpy-fee); // onlyYamato
         cjpyOS.mintCJPY(address(pool), fee); // onlyYamato
