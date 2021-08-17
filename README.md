@@ -13,6 +13,18 @@ A stablecoin lending machine.
 ## Spec
 - See `./test/unit/index.test.ts`
 
+## Dev first steps
+1. Clone the latest code from yamato repos.
+1. Initialize the local work space.
+    1. $ cd yamato
+    1. $ mkdir typechain
+    1. $ npm i
+1. Running the compile & test
+    1. $ npx hardhat compile
+    1. $ npx jest --projects unit.jest.config.ts
+
+If it's working fine, you should see the tests run.
+If not, please check that the npm dependencies are installed as expected. As of this writing, smock version is 1.1.5 and hardhat version is 2.2.1.
 
 ## Rinkeby
 
