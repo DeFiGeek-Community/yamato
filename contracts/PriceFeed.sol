@@ -17,9 +17,18 @@ interface IPriceFeed {
     function fetchPrice() external pure returns (uint jpyPerETH);
 }
 
-
+interface AggregatorV3Interface {}
+interface ITellorCaller {}
 
 contract PriceFeed is IPriceFeed {
+    AggregatorV3Interface public priceAggregator;  // Mainnet Chainlink aggregator
+    ITellorCaller public tellorCaller;  // Wrapper contract that calls the Tellor system
+    constructor(address _priceAggregatorAddress, address _tellorCallerAddress){
+        priceAggregator = AggregatorV3Interface(_priceAggregatorAddress);
+        tellorCaller = ITellorCaller(_tellorCallerAddress);
+    }
+
+
     function fetchPrice() public pure override returns (uint jpyPerETH) {
         jpyPerETH = 11111;
     }
