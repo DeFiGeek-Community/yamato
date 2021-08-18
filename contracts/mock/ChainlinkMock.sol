@@ -19,6 +19,11 @@ contract ChainlinkMock {
     uint8 private chaosCounter;
     int256 public lastPrice;
 
+    // mapping from a specific roundId to previous values
+    mapping(uint80 => int256) private prevAnswers;
+    mapping(uint80 => uint256) private prevTimestamps;
+    mapping(uint80 => uint80) private prevAnsweredInRounds;
+
     constructor() public {
         lastRoundId = 30000000000000000001;
         lastPriceUpdateRoundId = 30000000000000000001;
@@ -67,7 +72,31 @@ contract ChainlinkMock {
         answeredInRound = currentRoundId;
         lastPriceUpdateRoundId = currentRoundId;
       }
+
+      lastRoundId = currentRoundId;
+      prevAnswers[currentRoundId] = answer;
+      prevTimestamps[currentRoundId] = block.timestamp;
+      prevAnsweredInRounds[currentRoundId] = answeredInRound;
+
       return (currentRoundId, answer, block.timestamp, block.timestamp, answeredInRound);
+    }
+
+    function decimals() external view returns (uint8) {
+        // For ETH/USD, decimals are static being 8
+        return 8;
+    }
+
+    function getRoundData(uint80 _roundId) external view returns (
+        uint80 roundId, 
+        int256 answer, 
+        uint256 startedAt, 
+        uint256 updatedAt, 
+        uint80 answeredInRound
+    ) {
+      uint256 timestamp = prevTimestamps[_roundId];
+      require(timestamp != 0, "The specified round Id doesn't have a previous answer.");
+      
+      return (_roundId, prevAnswers[_roundId], timestamp, timestamp, prevAnsweredInRounds[_roundId]);
     }
 
     function randomize() private view returns (uint, bool) {
