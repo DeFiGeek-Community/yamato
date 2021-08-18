@@ -14,21 +14,44 @@ pragma solidity 0.7.6;
 //solhint-disable no-inline-assembly
 
 contract ChainlinkMock {
+    uint8 public symbol;
+    uint8 private ETHUSD = 1;
+    uint8 private JPYUSD = 2;
+
+    int256 public lastPrice;
+
     uint80 private lastRoundId;
     uint80 private lastPriceUpdateRoundId;
     uint8 private chaosCounter;
-    int256 public lastPrice;
-
+    
     // mapping from a specific roundId to previous values
     mapping(uint80 => int256) private prevAnswers;
     mapping(uint80 => uint256) private prevTimestamps;
     mapping(uint80 => uint80) private prevAnsweredInRounds;
 
-    constructor() public {
+    constructor(string memory _symbol) public {
+        symbol = getSymbolId(_symbol);
+        require(symbol > 0, "Only ETH/USD and JPY/USD is supported.");
+
         lastRoundId = 30000000000000000001;
         lastPriceUpdateRoundId = 30000000000000000001;
         chaosCounter = 0;
-        lastPrice = 300000000000;
+        lastPrice = initialPrice();
+    }
+
+    function getSymbolId(string memory _symbol) private view returns (uint8) {
+      bytes32 value = keccak256(abi.encodePacked(_symbol));
+      if (value == keccak256(abi.encodePacked("ETH/USD"))) {
+        return ETHUSD;
+      } else if (value == keccak256(abi.encodePacked("JPY/USD"))){
+        return JPYUSD;
+      }
+      return 0;
+    }
+
+    function initialPrice() private view returns (int256) {
+      if (symbol == ETHUSD) {return 300000000000;} // 3000 USD
+      if (symbol == JPYUSD) {return 1000000;} // 0.010 JPYUSD = 100 USDJPY
     }
 
     function latestRoundData() external returns (
@@ -62,7 +85,7 @@ contract ChainlinkMock {
 
         if (answer == 0) {
           // Price shouldn't be zero, reset if so
-          answer = 300000000000;
+          answer = initialPrice();
         } else if (answer < 0) {
           // Price shouldn't be negative, flip the sign if so
           answer = answer * -1;
@@ -81,8 +104,8 @@ contract ChainlinkMock {
       return (currentRoundId, answer, block.timestamp, block.timestamp, answeredInRound);
     }
 
-    function decimals() external view returns (uint8) {
-        // For ETH/USD, decimals are static being 8
+    function decimals() external pure returns (uint8) {
+        // For both ETH/USD and JPY/USD, decimals are static being 8
         return 8;
     }
 
