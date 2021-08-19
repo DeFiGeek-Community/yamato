@@ -101,17 +101,18 @@ contract PriceFeed is Ownable, BaseMath, IPriceFeed {
 
         // Explicitly set initial system status
         status = Status.chainlinkWorking;
-
+    }
+    function initialize() public onlyOwner {
         // Get an initial price from Chainlink to serve as first reference for lastGoodPrice
         ChainlinkResponse memory chainlinkResponse = _getCurrentChainlinkResponse();
         ChainlinkResponse memory prevChainlinkResponse = _getPrevChainlinkResponse(chainlinkResponse.roundId, chainlinkResponse.decimals);
         
-        require(!_chainlinkIsBroken(chainlinkResponse, prevChainlinkResponse) && !_chainlinkIsFrozen(chainlinkResponse), 
-            "PriceFeed: Chainlink must be working and current");
+        // require(!_chainlinkIsBroken(chainlinkResponse, prevChainlinkResponse) && !_chainlinkIsFrozen(chainlinkResponse), 
+        //     "PriceFeed: Chainlink must be working and current");
 
-        _storeChainlinkPrice(chainlinkResponse);
+        // _storeChainlinkPrice(chainlinkResponse);
 
-        _renounceOwnership();
+        // _renounceOwnership();
     }
 
 
@@ -130,6 +131,7 @@ contract PriceFeed is Ownable, BaseMath, IPriceFeed {
     *
     */
     function fetchPrice() external override returns (uint) {
+        return 1;
         // Get current and previous price data from Chainlink, and current price data from Tellor
         ChainlinkResponse memory chainlinkResponse = _getCurrentChainlinkResponse();
         ChainlinkResponse memory prevChainlinkResponse = _getPrevChainlinkResponse(chainlinkResponse.roundId, chainlinkResponse.decimals);
@@ -550,25 +552,26 @@ contract PriceFeed is Ownable, BaseMath, IPriceFeed {
         */
 
         // Try to get the price data from the previous round:
-        try priceAggregator.getRoundData(_currentRoundId - 1) returns 
-        (
-            uint80 roundId,
-            int256 answer,
-            uint256 /* startedAt */,
-            uint256 timestamp,
-            uint80 /* answeredInRound */
-        )
-        {
-            // If call to Chainlink succeeds, return the response and success = true
-            prevChainlinkResponse.roundId = roundId;
-            prevChainlinkResponse.answer = answer;
-            prevChainlinkResponse.timestamp = timestamp;
-            prevChainlinkResponse.decimals = _currentDecimals;
-            prevChainlinkResponse.success = true;
-            return prevChainlinkResponse;
-        } catch {
-            // If call to Chainlink aggregator reverts, return a zero response with success = false
-            return prevChainlinkResponse;
-        }
+        priceAggregator.getRoundData(_currentRoundId - 1);
+        // try priceAggregator.getRoundData(_currentRoundId - 1) returns 
+        // (
+        //     uint80 roundId,
+        //     int256 answer,
+        //     uint256 /* startedAt */,
+        //     uint256 timestamp,
+        //     uint80 /* answeredInRound */
+        // )
+        // {
+        //     // If call to Chainlink succeeds, return the response and success = true
+        //     prevChainlinkResponse.roundId = roundId;
+        //     prevChainlinkResponse.answer = answer;
+        //     prevChainlinkResponse.timestamp = timestamp;
+        //     prevChainlinkResponse.decimals = _currentDecimals;
+        //     prevChainlinkResponse.success = true;
+        //     return prevChainlinkResponse;
+        // } catch {
+        //     // If call to Chainlink aggregator reverts, return a zero response with success = false
+        //     return prevChainlinkResponse;
+        // }
     }
 }

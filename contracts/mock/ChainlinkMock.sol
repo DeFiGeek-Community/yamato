@@ -139,4 +139,6 @@ contract ChainlinkMock {
       chaosCounter += 1;
       return false;
     }
+
+    function getRoundData(uint256 _roundId) public {}
 }

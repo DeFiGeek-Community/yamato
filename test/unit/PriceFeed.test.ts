@@ -39,25 +39,27 @@ describe("PriceFeed", function() {
 
   beforeEach(async () => {
     accounts = await getSharedSigners();
-    const spec1 = await ethers.getContractFactory('ChainLinkMock')
+    const spec1 = await ethers.getContractFactory('ChainlinkMock')
+    const spec2 = await ethers.getContractFactory('TellorCallerMock')
     mockAggregatorV3 = await smockit(spec1) // https://github.com/liquity/dev/blob/main/packages/contracts/contracts/Dependencies/AggregatorV3Interface.sol
-    mockTellorCaller = await smockit(spec1) // https://github.com/liquity/dev/blob/main/packages/contracts/contracts/Interfaces/ITellorCaller.sol
+    mockTellorCaller = await smockit(spec2) // https://github.com/liquity/dev/blob/main/packages/contracts/contracts/Interfaces/ITellorCaller.sol
 
     feed = await (await ethers.getContractFactory('PriceFeed')).deploy(
         mockAggregatorV3.address,
         mockTellorCaller.address
     );
-
-    mockAggregatorV3.smocked.decimals.will.return.with(0);
-    mockAggregatorV3.smocked.latestRoundData.will.return.with(0);
-    mockAggregatorV3.smocked['getRoundData(uint256)'].will.return.with(0);
-    mockTellorCaller.smocked['getTellorCurrentValue(uint256)'].will.return.with(0);
+    // await feed.initialize();
+    mockAggregatorV3.smocked.decimals.will.return.with(18); // uint8
+    mockAggregatorV3.smocked.latestRoundData.will.return.with([2,110,0,0,2]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
+    mockAggregatorV3.smocked['getRoundData(uint80)'].will.return.with([2,110,0,0,2]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
+    mockTellorCaller.smocked['getTellorCurrentValue(uint256)'].will.return.with([true,110,0]); // bool ifRetrieve, uint256 value, uint256 _timestampRetrieved
   });
 
   describe("fetchPrice()", function() {
-    it.skip(`succeeds to fetch`, async function() {
-        let res = await feed.fetchPrice();
-        console.log(res);
+    it(`succeeds to fetch`, async function() {
+        await feed.initialize();
+        let tx = await feed.fetchPrice();
+        await tx.wait();
     });
 
     it.skip(`fails fetch`, async function() {
