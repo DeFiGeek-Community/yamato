@@ -44,20 +44,21 @@ describe("PriceFeed", function() {
     mockAggregatorV3 = await smockit(spec1) // https://github.com/liquity/dev/blob/main/packages/contracts/contracts/Dependencies/AggregatorV3Interface.sol
     mockTellorCaller = await smockit(spec2) // https://github.com/liquity/dev/blob/main/packages/contracts/contracts/Interfaces/ITellorCaller.sol
 
+    const now = Math.ceil(Date.now()/1000) - 14400/2; // TIMEOUT = 14400 secs
+    mockAggregatorV3.smocked.decimals.will.return.with(18); // uint8
+    mockAggregatorV3.smocked.latestRoundData.will.return.with([2,110,now,now,2]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
+    mockAggregatorV3.smocked['getRoundData(uint80)'].will.return.with([2,110,now,now,2]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
+    mockTellorCaller.smocked['getTellorCurrentValue(uint256)'].will.return.with([true,110,now]); // bool ifRetrieve, uint256 value, uint256 _timestampRetrieved
+
     feed = await (await ethers.getContractFactory('PriceFeed')).deploy(
         mockAggregatorV3.address,
         mockTellorCaller.address
     );
-    // await feed.initialize();
-    mockAggregatorV3.smocked.decimals.will.return.with(18); // uint8
-    mockAggregatorV3.smocked.latestRoundData.will.return.with([2,110,0,0,2]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
-    mockAggregatorV3.smocked['getRoundData(uint80)'].will.return.with([2,110,0,0,2]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
-    mockTellorCaller.smocked['getTellorCurrentValue(uint256)'].will.return.with([true,110,0]); // bool ifRetrieve, uint256 value, uint256 _timestampRetrieved
+
   });
 
   describe("fetchPrice()", function() {
     it(`succeeds to fetch`, async function() {
-        await feed.initialize();
         let tx = await feed.fetchPrice();
         await tx.wait();
     });

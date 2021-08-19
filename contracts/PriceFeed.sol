@@ -22,6 +22,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/BaseMath.sol";
 import "./Dependencies/LiquityMath.sol";
+import "hardhat/console.sol";
 
 /*
 * PriceFeed for mainnet deployment, to be connected to Chainlink's live ETH:USD aggregator reference 
@@ -101,18 +102,17 @@ contract PriceFeed is Ownable, BaseMath, IPriceFeed {
 
         // Explicitly set initial system status
         status = Status.chainlinkWorking;
-    }
-    function initialize() public onlyOwner {
+
         // Get an initial price from Chainlink to serve as first reference for lastGoodPrice
         ChainlinkResponse memory chainlinkResponse = _getCurrentChainlinkResponse();
         ChainlinkResponse memory prevChainlinkResponse = _getPrevChainlinkResponse(chainlinkResponse.roundId, chainlinkResponse.decimals);
-        
-        // require(!_chainlinkIsBroken(chainlinkResponse, prevChainlinkResponse) && !_chainlinkIsFrozen(chainlinkResponse), 
-        //     "PriceFeed: Chainlink must be working and current");
 
-        // _storeChainlinkPrice(chainlinkResponse);
+        require(!_chainlinkIsBroken(chainlinkResponse, prevChainlinkResponse) && !_chainlinkIsFrozen(chainlinkResponse), 
+            "PriceFeed: Chainlink must be working and current");
 
-        // _renounceOwnership();
+        _storeChainlinkPrice(chainlinkResponse);
+
+        _renounceOwnership();
     }
 
 
@@ -552,26 +552,25 @@ contract PriceFeed is Ownable, BaseMath, IPriceFeed {
         */
 
         // Try to get the price data from the previous round:
-        priceAggregator.getRoundData(_currentRoundId - 1);
-        // try priceAggregator.getRoundData(_currentRoundId - 1) returns 
-        // (
-        //     uint80 roundId,
-        //     int256 answer,
-        //     uint256 /* startedAt */,
-        //     uint256 timestamp,
-        //     uint80 /* answeredInRound */
-        // )
-        // {
-        //     // If call to Chainlink succeeds, return the response and success = true
-        //     prevChainlinkResponse.roundId = roundId;
-        //     prevChainlinkResponse.answer = answer;
-        //     prevChainlinkResponse.timestamp = timestamp;
-        //     prevChainlinkResponse.decimals = _currentDecimals;
-        //     prevChainlinkResponse.success = true;
-        //     return prevChainlinkResponse;
-        // } catch {
-        //     // If call to Chainlink aggregator reverts, return a zero response with success = false
-        //     return prevChainlinkResponse;
-        // }
+        try priceAggregator.getRoundData(_currentRoundId - 1) returns 
+        (
+            uint80 roundId,
+            int256 answer,
+            uint256 /* startedAt */,
+            uint256 timestamp,
+            uint80 /* answeredInRound */
+        )
+        {
+            // If call to Chainlink succeeds, return the response and success = true
+            prevChainlinkResponse.roundId = roundId;
+            prevChainlinkResponse.answer = answer;
+            prevChainlinkResponse.timestamp = timestamp;
+            prevChainlinkResponse.decimals = _currentDecimals;
+            prevChainlinkResponse.success = true;
+            return prevChainlinkResponse;
+        } catch {
+            // If call to Chainlink aggregator reverts, return a zero response with success = false
+            return prevChainlinkResponse;
+        }
     }
 }
