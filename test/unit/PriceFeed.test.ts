@@ -31,12 +31,21 @@ describe("Smock for PriceFeed", function() {
   });
 });
 
-describe("PriceFeed", function() {
-  let mockAggregatorV3;
-  let mockTellorCaller;
-  let feed;
-  let accounts;
 
+
+let feed;
+let accounts;
+let mockAggregatorV3;
+let mockTellorCaller;
+function setMocks(_price){
+    const now = Math.ceil(Date.now()/1000) - 14400/2; // TIMEOUT = 14400 secs
+    mockAggregatorV3.smocked.decimals.will.return.with(18); // uint8
+    mockAggregatorV3.smocked.latestRoundData.will.return.with([2,_price,now,now,2]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
+    mockAggregatorV3.smocked['getRoundData(uint80)'].will.return.with([2,_price,now,now,2]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
+    mockTellorCaller.smocked['getTellorCurrentValue(uint256)'].will.return.with([true,_price,now]); // bool ifRetrieve, uint256 value, uint256 _timestampRetrieved
+
+}
+describe("PriceFeed", function() {
   beforeEach(async () => {
     accounts = await getSharedSigners();
     const spec1 = await ethers.getContractFactory('ChainlinkMock')
@@ -44,11 +53,7 @@ describe("PriceFeed", function() {
     mockAggregatorV3 = await smockit(spec1) // https://github.com/liquity/dev/blob/main/packages/contracts/contracts/Dependencies/AggregatorV3Interface.sol
     mockTellorCaller = await smockit(spec2) // https://github.com/liquity/dev/blob/main/packages/contracts/contracts/Interfaces/ITellorCaller.sol
 
-    const now = Math.ceil(Date.now()/1000) - 14400/2; // TIMEOUT = 14400 secs
-    mockAggregatorV3.smocked.decimals.will.return.with(18); // uint8
-    mockAggregatorV3.smocked.latestRoundData.will.return.with([2,110,now,now,2]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
-    mockAggregatorV3.smocked['getRoundData(uint80)'].will.return.with([2,110,now,now,2]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
-    mockTellorCaller.smocked['getTellorCurrentValue(uint256)'].will.return.with([true,110,now]); // bool ifRetrieve, uint256 value, uint256 _timestampRetrieved
+    setMocks(110)
 
     feed = await (await ethers.getContractFactory('PriceFeed')).deploy(
         mockAggregatorV3.address,
@@ -59,8 +64,10 @@ describe("PriceFeed", function() {
 
   describe("fetchPrice()", function() {
     it(`succeeds to fetch`, async function() {
+        setMocks(111)
         let tx = await feed.fetchPrice();
-        await tx.wait();
+        let res = await tx.wait();
+        console.log(BigNumber.from(res.logs[1].data).toString());
     });
 
     it.skip(`fails fetch`, async function() {

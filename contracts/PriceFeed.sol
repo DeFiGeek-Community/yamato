@@ -131,7 +131,6 @@ contract PriceFeed is Ownable, BaseMath, IPriceFeed {
     *
     */
     function fetchPrice() external override returns (uint) {
-        return 1;
         // Get current and previous price data from Chainlink, and current price data from Tellor
         ChainlinkResponse memory chainlinkResponse = _getCurrentChainlinkResponse();
         ChainlinkResponse memory prevChainlinkResponse = _getPrevChainlinkResponse(chainlinkResponse.roundId, chainlinkResponse.decimals);
