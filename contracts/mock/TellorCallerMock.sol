@@ -14,5 +14,7 @@ pragma solidity 0.7.6;
 //solhint-disable no-inline-assembly
 
 contract TellorCallerMock {
-    function getTellorCurrentValue(uint256 _roundId) public {}
+    function getTellorCurrentValue(uint256 _requestId) public view returns (bool, uint256, uint256)  {
+        return (true, 1, 1);
+    }
 }
