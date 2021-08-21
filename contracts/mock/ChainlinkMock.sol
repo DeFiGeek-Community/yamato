@@ -36,7 +36,7 @@ contract ChainlinkMock {
         lastRoundId = 30000000000000000001;
         lastPriceUpdateRoundId = 30000000000000000001;
         chaosCounter = 0;
-        lastPrice = initialPrice();
+        setPriceToDefault();
     }
 
     function getSymbolId(string memory _symbol) private view returns (uint8) {
@@ -49,9 +49,13 @@ contract ChainlinkMock {
       return 0;
     }
 
-    function initialPrice() private view returns (int256) {
-      if (symbol == ETHUSD) {return 300000000000;} // 3000 USD
-      if (symbol == JPYUSD) {return 1000000;} // 0.010 JPYUSD = 100 USDJPY
+    function setLastPrice(int256 _price) public {
+      lastPrice = _price;
+    }
+
+    function setPriceToDefault() public {
+      if (symbol == ETHUSD) {lastPrice = 300000000000;} // 3000 USD
+      if (symbol == JPYUSD) {lastPrice = 1000000;} // 0.010 JPYUSD = 100 USDJPY
     }
 
     function latestRoundData() external returns (
@@ -85,7 +89,8 @@ contract ChainlinkMock {
 
         if (answer == 0) {
           // Price shouldn't be zero, reset if so
-          answer = initialPrice();
+          setPriceToDefault();
+          answer = lastPrice;
         } else if (answer < 0) {
           // Price shouldn't be negative, flip the sign if so
           answer = answer * -1;
