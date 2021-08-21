@@ -1,5 +1,7 @@
 pragma solidity 0.7.6;
 
+import "./OracleMockBase.sol";
+
 /*
  * SPDX-License-Identifier: GPL-3.0-or-later
  * Yamato
@@ -13,7 +15,7 @@ pragma solidity 0.7.6;
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 
-contract ChainlinkMock {
+contract ChainlinkMock is OracleMockBase {
     uint8 public symbol;
     uint8 private ETHUSD = 1;
     uint8 private JPYUSD = 2;
@@ -36,7 +38,7 @@ contract ChainlinkMock {
         lastRoundId = 30000000000000000001;
         lastPriceUpdateRoundId = 30000000000000000001;
         chaosCounter = 0;
-        lastPrice = initialPrice();
+        setPriceToDefault();
     }
 
     function getSymbolId(string memory _symbol) private view returns (uint8) {
@@ -49,9 +51,13 @@ contract ChainlinkMock {
       return 0;
     }
 
-    function initialPrice() private view returns (int256) {
-      if (symbol == ETHUSD) {return 300000000000;} // 3000 USD
-      if (symbol == JPYUSD) {return 1000000;} // 0.010 JPYUSD = 100 USDJPY
+    function setLastPrice(int256 _price) public {
+      lastPrice = _price;
+    }
+
+    function setPriceToDefault() public {
+      if (symbol == ETHUSD) {lastPrice = 300000000000;} // 3000 USD
+      if (symbol == JPYUSD) {lastPrice = 1000000;} // 0.010 JPYUSD = 100 USDJPY
     }
 
     function latestRoundData() external returns (
@@ -85,7 +91,8 @@ contract ChainlinkMock {
 
         if (answer == 0) {
           // Price shouldn't be zero, reset if so
-          answer = initialPrice();
+          setPriceToDefault();
+          answer = lastPrice;
         } else if (answer < 0) {
           // Price shouldn't be negative, flip the sign if so
           answer = answer * -1;
@@ -120,24 +127,6 @@ contract ChainlinkMock {
       require(timestamp != 0, "The specified round Id doesn't have a previous answer.");
       
       return (_roundId, prevAnswers[_roundId], timestamp, timestamp, prevAnsweredInRounds[_roundId]);
-    }
-
-    function randomize() private view returns (uint, bool) {
-      uint randomNumber = uint(keccak256(abi.encodePacked(msg.sender,  block.timestamp,  blockhash(block.number - 1))));
-      uint deviation = randomNumber % 11;
-      bool sign = randomNumber % 2 == 1 ? true : false;
-      return (deviation, sign);
-    }
-
-    // If chaos counter == 10, reset it to 0 and trigger chaos = 51% deviation
-    // Otherwise, increment the chaos counter and return false
-    function chaos() private returns (bool) {
-      if (chaosCounter == 10) {
-        chaosCounter == 0;
-        return true;
-      }
-      chaosCounter += 1;
-      return false;
     }
 
     function getRoundData(uint256 _roundId) public {}
