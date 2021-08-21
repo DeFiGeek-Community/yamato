@@ -27,6 +27,9 @@ If it's working fine, you should see the tests run.
 If not, please check that the npm dependencies are installed as expected. As of this writing, smock version is 1.1.5 and hardhat version is 2.2.1.
 
 ## Rinkeby
+- Chainlink Mock (ETH/USD) 0x81CE5a8399e49dCF8a0ce2c0A0C7015bb1F042bC
+- Chainlink Mock (JPY/USD) 0x6C4e3804ddFE3be631b6DdF232025AC760765279
+- Tellor Mock (ETH/JPY) 0x5b46654612f6Ff6510147b00B96FeB8E4AA93FF6
 
 `npm run deploy:testnet`
 
