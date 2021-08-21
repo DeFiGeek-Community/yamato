@@ -136,7 +136,7 @@ contract PriceFeed is Ownable, BaseMath, IPriceFeed {
         ChainlinkResponse memory prevChainlinkResponse = _getPrevChainlinkResponse(chainlinkResponse.roundId, chainlinkResponse.decimals);
         TellorResponse memory tellorResponse = _getCurrentTellorResponse();
 
-        console.log("[=== %s ===]", !_chainlinkIsBroken(chainlinkResponse, prevChainlinkResponse) && !_chainlinkIsFrozen(chainlinkResponse) ? "ChainLink" : !_tellorIsBroken(tellorResponse) && !_tellorIsFrozen(tellorResponse) ? "Tellor" : "None");
+        // console.log("[=== %s ===]", !_chainlinkIsBroken(chainlinkResponse, prevChainlinkResponse) && !_chainlinkIsFrozen(chainlinkResponse) ? "ChainLink" : !_tellorIsBroken(tellorResponse) && !_tellorIsFrozen(tellorResponse) ? "Tellor" : "None");
         // console.log("_tellorIsBroken(%s), _tellorIsFrozen(%s), tellorResponse.success(%s)", _tellorIsBroken(tellorResponse), _tellorIsFrozen(tellorResponse), tellorResponse.success);
         // console.log("tellorResponse.ifRetrieve(%s), tellorResponse.timestamp(%s), tellorResponse.value(%s)", tellorResponse.ifRetrieve, tellorResponse.timestamp, tellorResponse.value);
 

@@ -38,34 +38,27 @@ let accounts;
 let mockAggregatorV3;
 let mockTellorCaller;
 let mockRoundCount = 0;
-async function setMocks(_price, conf){
-    let now = Math.ceil(Date.now()/1000); 
+async function setMocks(conf){
+    let cPrice = conf.price.chainlink
+    let tPrice = conf.price.tellor
+    let now = Math.ceil(Date.now()/1000)
     if(feed){
         let block = await feed.provider.getBlock("latest")
         now = block.timestamp
     }
 
-    let cDiff = 0; // TIMEOUT = 14400 secs
-    let tDiff = 0;
-    if(conf.length > 0){
-        let confs = conf.split("&")
-        for(var i = 0; i < confs.length; i++){
-            let arr = confs[i].split("=");
-            if (arr[0] == "chainlink") {
-                cDiff += parseInt(arr[1]);
-            } else if (arr[0] == "tellor") {
-                tDiff += parseInt(arr[1]);
-            } else {
-                throw new Error("Weird conf");
-            }    
-        }
-    }
+    let cDiff = conf.silentFor.chainlink; // TIMEOUT = 14400 secs
+    let tDiff = conf.silentFor.tellor;
 
     mockRoundCount++;
-    mockAggregatorV3.smocked.decimals.will.return.with(18); // uint8
-    mockAggregatorV3.smocked.latestRoundData.will.return.with([mockRoundCount,_price,now-cDiff,now-cDiff,2]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
-    mockAggregatorV3.smocked['getRoundData(uint80)'].will.return.with([mockRoundCount,_price,now-cDiff,now-cDiff,mockRoundCount+1]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
-    mockTellorCaller.smocked.getTellorCurrentValue.will.return.with([true,_price,now-tDiff]); // bool ifRetrieve, uint256 value, uint256 _timestampRetrieved
+    const CHAINLINK_DIGITS = 8;
+    const chainlinkPrice = BigNumber.from(cPrice).mul(BigNumber.from(10).pow(CHAINLINK_DIGITS));
+    mockAggregatorV3.smocked.decimals.will.return.with(CHAINLINK_DIGITS); // uint8
+    mockAggregatorV3.smocked.latestRoundData.will.return.with([mockRoundCount,chainlinkPrice,now-cDiff,now-cDiff,2]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
+    mockAggregatorV3.smocked['getRoundData(uint80)'].will.return.with([mockRoundCount,chainlinkPrice,now-cDiff,now-cDiff,mockRoundCount+1]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
+    const TELLOR_DIGITS = 6;
+    const tellorPrice = BigNumber.from(tPrice).mul(BigNumber.from(10).pow(TELLOR_DIGITS));
+    mockTellorCaller.smocked.getTellorCurrentValue.will.return.with([true,tellorPrice,now-tDiff]); // bool ifRetrieve, uint256 value, uint256 _timestampRetrieved
 }
 describe("PriceFeed", function() {
   beforeEach(async () => {
@@ -75,7 +68,7 @@ describe("PriceFeed", function() {
     mockAggregatorV3 = await smockit(spec1) // https://github.com/liquity/dev/blob/main/packages/contracts/contracts/Dependencies/AggregatorV3Interface.sol
     mockTellorCaller = await smockit(spec2) // https://github.com/liquity/dev/blob/main/packages/contracts/contracts/Interfaces/ITellorCaller.sol
 
-    await setMocks(110, "chainlink=7200&tellor=7200")
+    await setMocks({ price: { chainlink: 110, tellor: 110 }, silentFor: { chainlink: 7200, tellor: 7200} })
 
     feed = await (await ethers.getContractFactory('PriceFeed')).deploy(
         mockAggregatorV3.address,
@@ -85,19 +78,28 @@ describe("PriceFeed", function() {
 
   describe("fetchPrice()", function() {
     it(`succeeds to get price from ChainLink`, async function() {
-        await setMocks(111, "chainlink=7200&tellor=7200")
+        await setMocks({ price: { chainlink: 111, tellor: 112 }, silentFor: { chainlink: 7200, tellor: 7200} })
         let tx = await feed.fetchPrice();
         let res = await tx.wait();
-        console.log(BigNumber.from(res.logs[0].data).toString());
+        betterexpect(BigNumber.from(res.logs[0].data).div(BigNumber.from(10).pow(18))).toEqBN(111);
     });
 
-    it(`succeeds to get price from Tellor because of `, async function() {
+    it(`succeeds to get price from Tellor because ChainLink is frozen`, async function() {
         feed.provider.send("evm_increaseTime", [7200])
         feed.provider.send("evm_mine")
-        await setMocks(112, "chainlink=14401&tellor=3600")
+        await setMocks({ price: { chainlink: 111, tellor: 113 }, silentFor: { chainlink: 14401, tellor: 3600} })
         let tx = await feed.fetchPrice();
         let res = await tx.wait();
-        console.log(BigNumber.from(res.logs[1].data).toString());
+        betterexpect(BigNumber.from(res.logs[1].data).div(BigNumber.from(10).pow(18))).toEqBN(113);
+    });
+
+    it(`returns last good price as both oracles are untrusted`, async function() {
+        feed.provider.send("evm_increaseTime", [7200])
+        feed.provider.send("evm_mine")
+        await setMocks({ price: { chainlink: 109, tellor: 109 }, silentFor: { chainlink: 14401, tellor: 14401} })
+        let tx = await feed.fetchPrice();
+        let res = await tx.wait();
+        betterexpect(BigNumber.from(res.logs[0].data).div(BigNumber.from(10).pow(18))).toEqBN(0);
     });
 
   });
