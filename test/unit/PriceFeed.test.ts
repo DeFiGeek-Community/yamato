@@ -82,6 +82,17 @@ describe("PriceFeed", function() {
         let tx = await feed.fetchPrice();
         let res = await tx.wait();
         betterexpect(BigNumber.from(res.logs[0].data).div(BigNumber.from(10).pow(18))).toEqBN(111);
+        let status = await feed.status();
+        /*
+            enum Status {
+                chainlinkWorking,
+                usingTellorChainlinkUntrusted,
+                bothOraclesUntrusted,
+                usingTellorChainlinkFrozen,
+                usingChainlinkTellorUntrusted
+            }
+        */
+        betterexpect(status).toBe(0);
     });
 
     it(`succeeds to get price from Tellor because ChainLink is frozen`, async function() {
@@ -91,15 +102,32 @@ describe("PriceFeed", function() {
         let tx = await feed.fetchPrice();
         let res = await tx.wait();
         betterexpect(BigNumber.from(res.logs[1].data).div(BigNumber.from(10).pow(18))).toEqBN(113);
+        let status = await feed.status();
+        betterexpect(status).toBe(3);
     });
 
     it(`returns last good price as both oracles are untrusted`, async function() {
+        // 1. Timeout setting
         feed.provider.send("evm_increaseTime", [7200])
         feed.provider.send("evm_mine")
-        await setMocks({ price: { chainlink: 109, tellor: 109 }, silentFor: { chainlink: 14401, tellor: 14401} })
-        let tx = await feed.fetchPrice();
-        let res = await tx.wait();
-        betterexpect(BigNumber.from(res.logs[0].data).div(BigNumber.from(10).pow(18))).toEqBN(0);
+
+        // 2. Set lastGoodPrice
+        let priceAtLastTime = 108
+        await setMocks({ price: { chainlink: priceAtLastTime, tellor: priceAtLastTime }, silentFor: { chainlink: 2000, tellor: 2000} })
+        await (await feed.fetchPrice()).wait()
+        const status1 = await feed.status();
+        const lastGoodPrice1 = await feed.lastGoodPrice();
+        betterexpect(status1).toBe(0);
+        betterexpect(BigNumber.from(priceAtLastTime).mul(BigNumber.from(10).pow(18))).toEqBN(lastGoodPrice1);
+
+        // 3. Exec
+        let priceAtExec = 109
+        await setMocks({ price: { chainlink: priceAtExec, tellor: priceAtExec }, silentFor: { chainlink: 14401, tellor: 14401} })
+        await (await feed.fetchPrice()).wait()
+        const status2 = await feed.status();
+        const lastGoodPrice2 = await feed.lastGoodPrice();
+        betterexpect(status2).toBe(2);
+        betterexpect(BigNumber.from(priceAtLastTime).mul(BigNumber.from(10).pow(18))).toEqBN(lastGoodPrice2);
     });
 
   });

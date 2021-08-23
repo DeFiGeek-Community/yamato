@@ -15,7 +15,7 @@ import "./OracleMockBase.sol";
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 
-contract TellorMock is OracleMockBase {
+contract TellorCallerMock is OracleMockBase {
 
     uint256 public lastPrice;
 
@@ -23,7 +23,7 @@ contract TellorMock is OracleMockBase {
         setPriceToDefault();
     }
 
-    function getCurrentValue(uint256 _requestId) public returns (bool ifRetrieve, uint256 value, uint256 _timestampRetrieved){
+    function getTellorCurrentValue(uint256 _requestId) public returns (bool ifRetrieve, uint256 value, uint256 _timestampRetrieved){
         require(_requestId == 59, "Only ETH/JPY is supported.");
         (
         uint deviation,

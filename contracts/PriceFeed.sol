@@ -136,11 +136,6 @@ contract PriceFeed is Ownable, BaseMath, IPriceFeed {
         ChainlinkResponse memory prevChainlinkResponse = _getPrevChainlinkResponse(chainlinkResponse.roundId, chainlinkResponse.decimals);
         TellorResponse memory tellorResponse = _getCurrentTellorResponse();
 
-        // console.log("[=== %s ===]", !_chainlinkIsBroken(chainlinkResponse, prevChainlinkResponse) && !_chainlinkIsFrozen(chainlinkResponse) ? "ChainLink" : !_tellorIsBroken(tellorResponse) && !_tellorIsFrozen(tellorResponse) ? "Tellor" : "None");
-        // console.log("_tellorIsBroken(%s), _tellorIsFrozen(%s), tellorResponse.success(%s)", _tellorIsBroken(tellorResponse), _tellorIsFrozen(tellorResponse), tellorResponse.success);
-        // console.log("tellorResponse.ifRetrieve(%s), tellorResponse.timestamp(%s), tellorResponse.value(%s)", tellorResponse.ifRetrieve, tellorResponse.timestamp, tellorResponse.value);
-
-
         // --- CASE 1: System fetched last price from Chainlink  ---
         if (status == Status.chainlinkWorking) {
             // If Chainlink is broken, try Tellor
@@ -172,9 +167,15 @@ contract PriceFeed is Ownable, BaseMath, IPriceFeed {
                     return lastGoodPrice;     
                 }
 
+                // 0xMotoko added at Aug 23, 2021 :: Because when ChainLink and Tellor are frozen simultaneouslly, returning usingTellorChainlinkFrozen is wrong.
+                if( _tellorIsFrozen(tellorResponse)) {
+                    _changeStatus(Status.bothOraclesUntrusted);
+                    return lastGoodPrice;
+                }
+
                 // If Tellor is frozen or working, remember Chainlink froze, and switch to Tellor
                 _changeStatus(Status.usingTellorChainlinkFrozen);
-               
+
                 if (_tellorIsFrozen(tellorResponse)) {return lastGoodPrice;}
 
                 // If Tellor is working, use it
@@ -251,7 +252,7 @@ contract PriceFeed is Ownable, BaseMath, IPriceFeed {
             if (_bothOraclesLiveAndUnbrokenAndSimilarPrice(chainlinkResponse, prevChainlinkResponse, tellorResponse)) {
                 _changeStatus(Status.chainlinkWorking);
                 return _storeChainlinkPrice(chainlinkResponse);
-            } 
+            }            
 
             // Otherwise, return the last good price - both oracles are still untrusted (no status change)
             return lastGoodPrice;
