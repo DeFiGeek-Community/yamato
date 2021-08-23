@@ -37,7 +37,8 @@ contract PriceFeed is Ownable, BaseMath, IPriceFeed {
 
     string constant public NAME = "PriceFeed";
 
-    AggregatorV3Interface public priceAggregator;  // Mainnet Chainlink aggregator
+    AggregatorV3Interface public ethPriceAggregatorInUSD;  // Mainnet Chainlink aggregator
+    AggregatorV3Interface public jpyPriceAggregatorInUSD;  // Mainnet Chainlink aggregator
     ITellorCaller public tellorCaller;  // Wrapper contract that calls the Tellor system
 
     // Core Liquity contracts
@@ -71,6 +72,8 @@ contract PriceFeed is Ownable, BaseMath, IPriceFeed {
         uint256 timestamp;
         bool success;
         uint8 decimals;
+        int256 subAnswer;
+        uint8 subDecimal;
     }
 
     struct TellorResponse {
@@ -96,8 +99,9 @@ contract PriceFeed is Ownable, BaseMath, IPriceFeed {
 
 
 
-    constructor(address _priceAggregatorAddress, address _tellorCallerAddress){
-        priceAggregator = AggregatorV3Interface(_priceAggregatorAddress);
+    constructor(address _ethPriceAggregatorInUSDAddress, address _jpyPriceAggregatorInUSDAddress, address _tellorCallerAddress){
+        ethPriceAggregatorInUSD = AggregatorV3Interface(_ethPriceAggregatorInUSDAddress);
+        jpyPriceAggregatorInUSD = AggregatorV3Interface(_jpyPriceAggregatorInUSDAddress);
         tellorCaller = ITellorCaller(_tellorCallerAddress);
 
         // Explicitly set initial system status
@@ -105,7 +109,7 @@ contract PriceFeed is Ownable, BaseMath, IPriceFeed {
 
         // Get an initial price from Chainlink to serve as first reference for lastGoodPrice
         ChainlinkResponse memory chainlinkResponse = _getCurrentChainlinkResponse();
-        ChainlinkResponse memory prevChainlinkResponse = _getPrevChainlinkResponse(chainlinkResponse.roundId, chainlinkResponse.decimals);
+        ChainlinkResponse memory prevChainlinkResponse = _getPrevChainlinkResponse(chainlinkResponse.roundId, chainlinkResponse.decimals, chainlinkResponse.subAnswer, chainlinkResponse.subDecimal);
 
         require(!_chainlinkIsBroken(chainlinkResponse, prevChainlinkResponse) && !_chainlinkIsFrozen(chainlinkResponse), 
             "PriceFeed: Chainlink must be working and current");
@@ -133,7 +137,7 @@ contract PriceFeed is Ownable, BaseMath, IPriceFeed {
     function fetchPrice() external override returns (uint) {
         // Get current and previous price data from Chainlink, and current price data from Tellor
         ChainlinkResponse memory chainlinkResponse = _getCurrentChainlinkResponse();
-        ChainlinkResponse memory prevChainlinkResponse = _getPrevChainlinkResponse(chainlinkResponse.roundId, chainlinkResponse.decimals);
+        ChainlinkResponse memory prevChainlinkResponse = _getPrevChainlinkResponse(chainlinkResponse.roundId, chainlinkResponse.decimals, chainlinkResponse.subAnswer, chainlinkResponse.subDecimal);
         TellorResponse memory tellorResponse = _getCurrentTellorResponse();
 
         // --- CASE 1: System fetched last price from Chainlink  ---
@@ -519,17 +523,26 @@ contract PriceFeed is Ownable, BaseMath, IPriceFeed {
     }
 
     function _getCurrentChainlinkResponse() internal view returns (ChainlinkResponse memory chainlinkResponse) {
+        ChainlinkResponse memory ethChainlinkResponseInUSD;
+        ChainlinkResponse memory jpyChainlinkResponseInUSD;
         // First, try to get current decimal precision:
-        try priceAggregator.decimals() returns (uint8 decimals) {
+        try ethPriceAggregatorInUSD.decimals() returns (uint8 decimals) {
             // If call to Chainlink succeeds, record the current decimal precision
-            chainlinkResponse.decimals = decimals;
+            ethChainlinkResponseInUSD.decimals = decimals;
+        } catch {
+            // If call to Chainlink aggregator reverts, return a zero response with success = false
+            return chainlinkResponse;
+        }
+        try jpyPriceAggregatorInUSD.decimals() returns (uint8 decimals) {
+            // If call to Chainlink succeeds, record the current decimal precision
+            jpyChainlinkResponseInUSD.decimals = decimals;
         } catch {
             // If call to Chainlink aggregator reverts, return a zero response with success = false
             return chainlinkResponse;
         }
 
         // Secondly, try to get latest price data:
-        try priceAggregator.latestRoundData() returns
+        try ethPriceAggregatorInUSD.latestRoundData() returns
         (
             uint80 roundId,
             int256 answer,
@@ -539,25 +552,50 @@ contract PriceFeed is Ownable, BaseMath, IPriceFeed {
         )
         {
             // If call to Chainlink succeeds, return the response and success = true
-            chainlinkResponse.roundId = roundId;
-            chainlinkResponse.answer = answer;
-            chainlinkResponse.timestamp = timestamp;
-            chainlinkResponse.success = true;
-            return chainlinkResponse;
+            ethChainlinkResponseInUSD.roundId = roundId;
+            ethChainlinkResponseInUSD.answer = answer;
+            ethChainlinkResponseInUSD.timestamp = timestamp;
+            ethChainlinkResponseInUSD.success = true;
         } catch {
             // If call to Chainlink aggregator reverts, return a zero response with success = false
             return chainlinkResponse;
         }
+        try jpyPriceAggregatorInUSD.latestRoundData() returns
+        (
+            uint80 roundId,
+            int256 answer,
+            uint256 /* startedAt */,
+            uint256 timestamp,
+            uint80 /* answeredInRound */
+        )
+        {
+            // If call to Chainlink succeeds, return the response and success = true
+            jpyChainlinkResponseInUSD.roundId = roundId;
+            jpyChainlinkResponseInUSD.answer = answer;
+            jpyChainlinkResponseInUSD.timestamp = timestamp;
+            jpyChainlinkResponseInUSD.success = true;
+        } catch {
+            // If call to Chainlink aggregator reverts, return a zero response with success = false
+            return chainlinkResponse;
+        }
+
+        chainlinkResponse.roundId = ethChainlinkResponseInUSD.roundId;
+        chainlinkResponse.answer = int256( uint(ethChainlinkResponseInUSD.answer).mul(pow(10, jpyChainlinkResponseInUSD.decimals)).div(uint(jpyChainlinkResponseInUSD.answer)) );
+        chainlinkResponse.timestamp = ethChainlinkResponseInUSD.timestamp;
+        chainlinkResponse.success = true;
+        chainlinkResponse.subAnswer = jpyChainlinkResponseInUSD.answer;
+        chainlinkResponse.subDecimal = jpyChainlinkResponseInUSD.decimals;
+        return chainlinkResponse;
     }
 
-    function _getPrevChainlinkResponse(uint80 _currentRoundId, uint8 _currentDecimals) internal view returns (ChainlinkResponse memory prevChainlinkResponse) {
+    function _getPrevChainlinkResponse(uint80 _currentRoundId, uint8 _currentDecimals, int256 _jpyInUSD, uint8 _jpyOracleDecimals) internal view returns (ChainlinkResponse memory prevChainlinkResponse) {
         /*
         * NOTE: Chainlink only offers a current decimals() value - there is no way to obtain the decimal precision used in a 
         * previous round.  We assume the decimals used in the previous round are the same as the current round.
         */
 
         // Try to get the price data from the previous round:
-        try priceAggregator.getRoundData(_currentRoundId - 1) returns 
+        try ethPriceAggregatorInUSD.getRoundData(_currentRoundId - 1) returns 
         (
             uint80 roundId,
             int256 answer,
@@ -568,7 +606,7 @@ contract PriceFeed is Ownable, BaseMath, IPriceFeed {
         {
             // If call to Chainlink succeeds, return the response and success = true
             prevChainlinkResponse.roundId = roundId;
-            prevChainlinkResponse.answer = answer;
+            prevChainlinkResponse.answer = int256( uint(answer).mul(pow(10, uint256(_jpyOracleDecimals))).div(uint(_jpyInUSD)) );
             prevChainlinkResponse.timestamp = timestamp;
             prevChainlinkResponse.decimals = _currentDecimals;
             prevChainlinkResponse.success = true;
@@ -576,6 +614,25 @@ contract PriceFeed is Ownable, BaseMath, IPriceFeed {
         } catch {
             // If call to Chainlink aggregator reverts, return a zero response with success = false
             return prevChainlinkResponse;
+        }
+    }
+
+
+    function pow(uint256 base, uint256 exponent) internal pure returns (uint256) {
+        if (exponent == 0) {
+            return 1;
+        }
+        else if (exponent == 1) {
+            return base;
+        }
+        else if (base == 0 && exponent != 0) {
+            return 0;
+        }
+        else {
+            uint256 z = base;
+            for (uint256 i = 1; i < exponent; i++)
+                z = z.mul(base);
+            return z;
         }
     }
 }

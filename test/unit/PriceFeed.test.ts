@@ -35,54 +35,65 @@ describe("Smock for PriceFeed", function() {
 
 let feed;
 let accounts;
-let mockAggregatorV3;
+let mockAggregatorV3EthUsd;
+let mockAggregatorV3JpyUsd;
 let mockTellorCaller;
 let mockRoundCount = 0;
 async function setMocks(conf){
-    let cPrice = conf.price.chainlink
-    let tPrice = conf.price.tellor
+    const CHAINLINK_DIGITS = 8;
+    const TELLOR_DIGITS = 6;
+    let cPriceEthInUsd = BigNumber.from(conf.price.chainlink.ethInUsd).mul(BigNumber.from(10).pow(CHAINLINK_DIGITS));
+    let cPriceJpyInUsd = BigNumber.from(conf.price.chainlink.jpyInUsd * (10 ** CHAINLINK_DIGITS));
+    let tPrice = BigNumber.from(conf.price.tellor).mul(BigNumber.from(10).pow(TELLOR_DIGITS))
+    let cDiff = conf.silentFor.chainlink; // TIMEOUT = 14400 secs
+    let tDiff = conf.silentFor.tellor;
+
     let now = Math.ceil(Date.now()/1000)
     if(feed){
         let block = await feed.provider.getBlock("latest")
         now = block.timestamp
     }
 
-    let cDiff = conf.silentFor.chainlink; // TIMEOUT = 14400 secs
-    let tDiff = conf.silentFor.tellor;
 
     mockRoundCount++;
-    const CHAINLINK_DIGITS = 8;
-    const chainlinkPrice = BigNumber.from(cPrice).mul(BigNumber.from(10).pow(CHAINLINK_DIGITS));
-    mockAggregatorV3.smocked.decimals.will.return.with(CHAINLINK_DIGITS); // uint8
-    mockAggregatorV3.smocked.latestRoundData.will.return.with([mockRoundCount,chainlinkPrice,now-cDiff,now-cDiff,2]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
-    mockAggregatorV3.smocked['getRoundData(uint80)'].will.return.with([mockRoundCount,chainlinkPrice,now-cDiff,now-cDiff,mockRoundCount+1]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
-    const TELLOR_DIGITS = 6;
-    const tellorPrice = BigNumber.from(tPrice).mul(BigNumber.from(10).pow(TELLOR_DIGITS));
-    mockTellorCaller.smocked.getTellorCurrentValue.will.return.with([true,tellorPrice,now-tDiff]); // bool ifRetrieve, uint256 value, uint256 _timestampRetrieved
+    mockAggregatorV3EthUsd.smocked.decimals.will.return.with(CHAINLINK_DIGITS); // uint8
+    mockAggregatorV3EthUsd.smocked.latestRoundData.will.return.with([mockRoundCount,cPriceEthInUsd,now-cDiff,now-cDiff,2]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
+    mockAggregatorV3EthUsd.smocked['getRoundData(uint80)'].will.return.with([mockRoundCount,cPriceEthInUsd,now-cDiff,now-cDiff,mockRoundCount+1]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
+    mockAggregatorV3JpyUsd.smocked.decimals.will.return.with(CHAINLINK_DIGITS); // uint8
+    mockAggregatorV3JpyUsd.smocked.latestRoundData.will.return.with([mockRoundCount,cPriceJpyInUsd,now-cDiff,now-cDiff,2]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
+    mockAggregatorV3JpyUsd.smocked['getRoundData(uint80)'].will.return.with([mockRoundCount,cPriceJpyInUsd,now-cDiff,now-cDiff,mockRoundCount+1]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
+    mockTellorCaller.smocked.getTellorCurrentValue.will.return.with([true,tPrice,now-tDiff]); // bool ifRetrieve, uint256 value, uint256 _timestampRetrieved
 }
 describe("PriceFeed", function() {
   beforeEach(async () => {
     accounts = await getSharedSigners();
     const spec1 = await ethers.getContractFactory('ChainlinkMock')
-    const spec2 = await ethers.getContractFactory('TellorCallerMock')
-    mockAggregatorV3 = await smockit(spec1) // https://github.com/liquity/dev/blob/main/packages/contracts/contracts/Dependencies/AggregatorV3Interface.sol
-    mockTellorCaller = await smockit(spec2) // https://github.com/liquity/dev/blob/main/packages/contracts/contracts/Interfaces/ITellorCaller.sol
+    const spec2 = await ethers.getContractFactory('ChainlinkMock')
+    const spec3 = await ethers.getContractFactory('TellorCallerMock')
+    mockAggregatorV3EthUsd = await smockit(spec1) // https://github.com/liquity/dev/blob/main/packages/contracts/contracts/Dependencies/AggregatorV3Interface.sol
+    mockAggregatorV3JpyUsd = await smockit(spec2)
+    mockTellorCaller = await smockit(spec3) // https://github.com/liquity/dev/blob/main/packages/contracts/contracts/Interfaces/ITellorCaller.sol
 
-    await setMocks({ price: { chainlink: 110, tellor: 110 }, silentFor: { chainlink: 7200, tellor: 7200} })
+    await setMocks({ price: { chainlink: { ethInUsd: 3200, jpyInUsd: 0.0091 }, tellor: 351648 }, silentFor: { chainlink: 7200, tellor: 7200} })
 
     feed = await (await ethers.getContractFactory('PriceFeed')).deploy(
-        mockAggregatorV3.address,
+        mockAggregatorV3EthUsd.address,
+        mockAggregatorV3JpyUsd.address,
         mockTellorCaller.address
     );
   });
 
   describe("fetchPrice()", function() {
     it(`succeeds to get price from ChainLink`, async function() {
-        await setMocks({ price: { chainlink: 111, tellor: 112 }, silentFor: { chainlink: 7200, tellor: 7200} })
-        let tx = await feed.fetchPrice();
-        let res = await tx.wait();
-        betterexpect(BigNumber.from(res.logs[0].data).div(BigNumber.from(10).pow(18))).toEqBN(111);
-        let status = await feed.status();
+        let cPriceAtExecInEthUsd = 3201
+        let cPriceAtExecInJpyUsd = 0.0091
+        let tPriceAtExecInJpyUsd = 351649
+        await setMocks({ price: { chainlink: { ethInUsd: cPriceAtExecInEthUsd, jpyInUsd: cPriceAtExecInJpyUsd }, tellor: tPriceAtExecInJpyUsd }, silentFor: { chainlink: 7200, tellor: 7200} })
+        await (await feed.fetchPrice()).wait()
+        const status = await feed.status()
+        const lastGoodPrice = await feed.lastGoodPrice();
+        betterexpect(Math.floor(cPriceAtExecInEthUsd/cPriceAtExecInJpyUsd)).toEqBN(`${lastGoodPrice}`.substr(0,6));
+        betterexpect(status).toBe(0);
         /*
             enum Status {
                 chainlinkWorking,
@@ -92,18 +103,21 @@ describe("PriceFeed", function() {
                 usingChainlinkTellorUntrusted
             }
         */
-        betterexpect(status).toBe(0);
-    });
+        });
 
     it(`succeeds to get price from Tellor because ChainLink is frozen`, async function() {
         feed.provider.send("evm_increaseTime", [7200])
         feed.provider.send("evm_mine")
-        await setMocks({ price: { chainlink: 111, tellor: 113 }, silentFor: { chainlink: 14401, tellor: 3600} })
-        let tx = await feed.fetchPrice();
-        let res = await tx.wait();
-        betterexpect(BigNumber.from(res.logs[1].data).div(BigNumber.from(10).pow(18))).toEqBN(113);
-        let status = await feed.status();
+
+        let cPriceAtExecInEthUsd = 3202
+        let cPriceAtExecInJpyUsd = 0.0091
+        let tPriceAtExecInJpyUsd = 351650
+        await setMocks({ price: { chainlink: { ethInUsd: cPriceAtExecInEthUsd, jpyInUsd: cPriceAtExecInJpyUsd }, tellor: tPriceAtExecInJpyUsd }, silentFor: { chainlink: 14401, tellor: 3600} })
+        await (await feed.fetchPrice()).wait()
+        const status = await feed.status()
+        const lastGoodPrice = await feed.lastGoodPrice();
         betterexpect(status).toBe(3);
+        betterexpect(BigNumber.from(tPriceAtExecInJpyUsd).mul(BigNumber.from(10).pow(18))).toEqBN(lastGoodPrice);
     });
 
     it(`returns last good price as both oracles are untrusted`, async function() {
@@ -112,22 +126,26 @@ describe("PriceFeed", function() {
         feed.provider.send("evm_mine")
 
         // 2. Set lastGoodPrice
-        let priceAtLastTime = 108
-        await setMocks({ price: { chainlink: priceAtLastTime, tellor: priceAtLastTime }, silentFor: { chainlink: 2000, tellor: 2000} })
+        let cPriceAtLastTimeInEthUsd = 3203
+        let cPriceAtLastTimeInJpyUsd = 0.0091
+        let tPriceAtLastTimeInJpyUsd = 351651
+        await setMocks({ price: { chainlink: { ethInUsd: cPriceAtLastTimeInEthUsd, jpyInUsd: cPriceAtLastTimeInJpyUsd }, tellor: tPriceAtLastTimeInJpyUsd }, silentFor: { chainlink: 2000, tellor: 2000} })
         await (await feed.fetchPrice()).wait()
         const status1 = await feed.status();
         const lastGoodPrice1 = await feed.lastGoodPrice();
         betterexpect(status1).toBe(0);
-        betterexpect(BigNumber.from(priceAtLastTime).mul(BigNumber.from(10).pow(18))).toEqBN(lastGoodPrice1);
+        betterexpect(Math.floor(cPriceAtLastTimeInEthUsd/cPriceAtLastTimeInJpyUsd)).toEqBN(`${lastGoodPrice1}`.substr(0,6));
 
         // 3. Exec
-        let priceAtExec = 109
-        await setMocks({ price: { chainlink: priceAtExec, tellor: priceAtExec }, silentFor: { chainlink: 14401, tellor: 14401} })
+        let cPriceAtExecInEthUsd = 3204
+        let cPriceAtExecInJpyUsd = 0.0091
+        let tPriceAtExecInJpyUsd = 351652
+        await setMocks({ price: { chainlink: { ethInUsd: cPriceAtExecInEthUsd, jpyInUsd: cPriceAtExecInJpyUsd }, tellor: tPriceAtExecInJpyUsd }, silentFor: { chainlink: 14401, tellor: 14401} })
         await (await feed.fetchPrice()).wait()
         const status2 = await feed.status();
         const lastGoodPrice2 = await feed.lastGoodPrice();
         betterexpect(status2).toBe(2);
-        betterexpect(BigNumber.from(priceAtLastTime).mul(BigNumber.from(10).pow(18))).toEqBN(lastGoodPrice2);
+        betterexpect(Math.floor(cPriceAtLastTimeInEthUsd/cPriceAtLastTimeInJpyUsd)).toEqBN(`${lastGoodPrice2}`.substr(0,6));
     });
 
   });
