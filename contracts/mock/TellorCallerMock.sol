@@ -1,16 +1,12 @@
 pragma solidity 0.7.6;
 
-import "./OracleMockBase.sol";
-
 /*
  * SPDX-License-Identifier: GPL-3.0-or-later
- * Yamato
+ * Written by somewherecat
  * Copyright (C) 2021 Yamato Protocol (DeFiGeek Community Japan)
- *
- * This Factory is a fork of Murray Software's deliverables.
- * And this entire project is including the fork of Hegic Protocol.
- * Hence the license is alinging to the GPL-3.0
 */
+
+import "./OracleMockBase.sol";
 
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
