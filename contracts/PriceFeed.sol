@@ -583,7 +583,7 @@ contract PriceFeed is Ownable, BaseMath, IPriceFeed {
         chainlinkResponse.answer = int256( uint(ethChainlinkResponseInUSD.answer).mul(pow(10, jpyChainlinkResponseInUSD.decimals)).div(uint(jpyChainlinkResponseInUSD.answer)) );
         chainlinkResponse.timestamp = ethChainlinkResponseInUSD.timestamp;
         chainlinkResponse.success = true;
-        chainlinkResponse.subAnswer = jpyChainlinkResponseInUSD.answer;
+        chainlinkResponse.subAnswer = jpyChainlinkResponseInUSD.answer; // TODO: What if JPYUSD changes a lot since the last ETHUSD feed round? (No way...)
         chainlinkResponse.subDecimal = jpyChainlinkResponseInUSD.decimals;
         return chainlinkResponse;
     }

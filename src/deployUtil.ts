@@ -73,10 +73,12 @@ type Options = {
   linkings?:Array<string>|undefined;
   log?: boolean|undefined;
   getContractFactory: any;
+  gasLimit?: number|undefined;
+  gasPrice?: number|undefined;
 }
 
 export function setProvider(){
-    const provider = getDefaultProvider('rinkeby', {
+    const provider = getDefaultProvider(process.env.ALCHEMY_URL, {
         etherscan: process.env.ETHERSCAN_API_KEY,
         infura: process.env.INFURA_API_TOKEN,
         alchemy: process.env.ALCHEMY_API_TOKEN,
@@ -93,6 +95,8 @@ export async function deploy(contractName:string, opts:Options){
     if(!opts.args) opts.args = [];
     if(!opts.linkings) opts.linkings = [];
     if(!opts.log) opts.log = false;
+    if(!opts.gasLimit) opts.gasLimit = 12000000; // Yay, after London!
+    if(!opts.gasPrice) opts.gasPrice = 1;
 
     const _Factory = await opts.getContractFactory(contractName, {
       signer: opts.signer
@@ -100,7 +104,7 @@ export async function deploy(contractName:string, opts:Options){
 
 
     
-    const _Contract:Contract = await _Factory.deploy(...opts.args);
+    const _Contract:Contract = await _Factory.deploy(...opts.args, { gasLimit: opts.gasLimit, gasPrice: opts.gasPrice });
 
     let contract:Contract = new Contract(_Contract.address, opts.ABI, provider);
 

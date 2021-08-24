@@ -15,23 +15,26 @@ import {
   isEmbeddedMode,
   backToInitMode,
 } from '@src/deployUtil';
+import { Wallet } from 'ethers';
+
+const ChainLinkEthUsd = "0x81CE5a8399e49dCF8a0ce2c0A0C7015bb1F042bC"
+const ChainLinkJpyUsd = "0x6C4e3804ddFE3be631b6DdF232025AC760765279"
+const TellorEthJpy = "0x5b46654612f6Ff6510147b00B96FeB8E4AA93FF6"
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  if( !isEmbeddedMode() ) return;
+  await setProvider();
   const { ethers } = hre;
   const {
     getContractFactory, Contract, BigNumber, Signer, getSigners,
   } = ethers;
-  setProvider();
-  const foundation = getFoundation();
-  const deployer = getDeployer();
-
-  await deploy('SampleToken', {
-    from: deployer,
-    args: [parseEther('115792089237316195423570985008687907853269984665640564039457')],
+  const signers = ethers.getSigners();
+ 
+  const factory = await deploy('PriceFeed', {
+    from: signers[0],
+    args: [ChainLinkEthUsd, ChainLinkJpyUsd, TellorEthJpy],
     log: true,
     getContractFactory
   });
 };
 export default func;
-func.tags = ['SampleToken'];
+func.tags = ['PriceFeed'];
