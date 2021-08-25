@@ -23,28 +23,18 @@ const ChainLinkJpyUsd = "0x6C4e3804ddFE3be631b6DdF232025AC760765279"
 const TellorEthJpy = "0x5b46654612f6Ff6510147b00B96FeB8E4AA93FF6"
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  await sleep(30000);
   await setProvider();
   const { ethers, deployments } = hre;
+  const { getContractFactory, Contract, BigNumber, Signer, getSigners } = ethers;
+
   const chainlinkEthUsd = await deployments.get("ChainLinkMock")
   console.log(chainlinkEthUsd);
 
-  const {
-    getContractFactory, Contract, BigNumber, Signer, getSigners,
-  } = ethers;
-
-  let signer = getDeployer();
-
-  let _nonce;
-  
-  _nonce = await signer.getTransactionCount("pending");
-  console.log(`_nonce: ${_nonce}`);
   const feed = await deploy('PriceFeed', {
     args: [ChainLinkEthUsd, ChainLinkJpyUsd, TellorEthJpy],
     // args: [chainlinkEthUsd.address, chainlinkJpyUsd.address, tellor.address],
-    getContractFactory,
-    nonce: _nonce + 4
-  }).catch(console.trace)
+    getContractFactory
+  }).catch(e=> console.trace(e.message) )
 
 };
 export default func;

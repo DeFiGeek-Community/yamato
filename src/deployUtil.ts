@@ -12,6 +12,7 @@ import {
   Contract
 } from "ethers";
 import { genABI } from '@src/genABI';
+import { isConstructSignatureDeclaration } from 'typescript';
 const addressExp = /address public constant factory = address\(0x([0-9a-fA-F]{40})\);/;
 const EMBEDDED_MODE_FILE = '.embeddedMode';
 
@@ -113,8 +114,12 @@ export async function deploy(contractName:string, opts:Options){
     const _Contract:Contract = await _Factory.deploy(...opts.args, {
       // maxPriorityFeePerGas: opts.maxPriorityFeePerGas,
       //  maxFeePerGas: opts.maxFeePerGas,
-        nonce: opts.nonce
+        // nonce: opts.nonce
     });
+    const tx = _Contract.deployTransaction
+    console.log(`Waiting for ${contractName} deployTx at nonce ${tx.nonce}...`)
+    const res = await tx.wait().catch(e=> console.trace(e.message) )
+    if(!res) new Error(`DeployTx of ${contractName} failed.`)
 
     let contract:Contract = new Contract(_Contract.address, opts.ABI, provider);
 
