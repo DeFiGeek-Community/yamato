@@ -78,7 +78,7 @@ type Options = {
 }
 
 export function setProvider(){
-    const provider = getDefaultProvider(process.env.ALCHEMY_URL, {
+    const provider = getDefaultProvider('rinkeby', {
         etherscan: process.env.ETHERSCAN_API_KEY,
         infura: process.env.INFURA_API_TOKEN,
         alchemy: process.env.ALCHEMY_API_TOKEN,
@@ -95,8 +95,8 @@ export async function deploy(contractName:string, opts:Options){
     if(!opts.args) opts.args = [];
     if(!opts.linkings) opts.linkings = [];
     if(!opts.log) opts.log = false;
-    if(!opts.gasLimit) opts.gasLimit = 12000000; // Yay, after London!
-    if(!opts.gasPrice) opts.gasPrice = 1;
+    if(!opts.gasLimit) opts.gasLimit = 7000000; // Yay, after London!
+    if(!opts.gasPrice) opts.gasPrice = 100*(1000**3);
 
     const _Factory = await opts.getContractFactory(contractName, {
       signer: opts.signer
@@ -105,6 +105,10 @@ export async function deploy(contractName:string, opts:Options){
 
     
     const _Contract:Contract = await _Factory.deploy(...opts.args, { gasLimit: opts.gasLimit, gasPrice: opts.gasPrice });
+    const tx = _Contract.deployTransaction
+    console.log(`Waiting for ${contractName} deployTx...`);
+    let res = await tx.wait().catch(e=> console.trace(e.message) );
+    if(!res) throw new Error(`The deployment of ${contractName} is failed.`)
 
     let contract:Contract = new Contract(_Contract.address, opts.ABI, provider);
 

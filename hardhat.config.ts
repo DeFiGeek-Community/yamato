@@ -10,6 +10,7 @@ import "@nomiclabs/hardhat-solhint";
 import "hardhat-deploy";
 import "hardhat-deploy-ethers";
 import '@typechain/hardhat'
+import "@nomiclabs/hardhat-etherscan";
 
 /**
  * @type import('hardhat/config').HardhatUserConfig
@@ -59,9 +60,19 @@ module.exports = {
       saveDeployments: true,
       tags: ["staging"]
     },
+    kovan: {
+      url: process.env.ALCHEMY_URL.replace(/rinkeby/, 'kovan'),
+      accounts: [process.env.FOUNDATION_PRIVATE_KEY, process.env.DEPLOYER_PRIVATE_KEY],
+      live: true,
+      saveDeployments: true,
+      tags: ["staging"]
+    },
   },
   ovm: {
     solcVersion: '0.7.6'
+  },
+  etherscan: {
+    apiKey: process.env.ETHERSCAN_API_KEY
   },
   namedAccounts: {
     foundation: {

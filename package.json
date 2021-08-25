@@ -28,6 +28,7 @@
     "@ethereum-waffle/jest": "^3.2.2",
     "@nomiclabs/ethereumjs-vm": "^4.2.2",
     "@nomiclabs/hardhat-ethers": "^2.0.2",
+    "@nomiclabs/hardhat-etherscan": "^2.1.5",
     "@nomiclabs/hardhat-solhint": "^2.0.0",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
     "@nomiclabs/hardhat-web3": "^2.0.0",
@@ -70,6 +71,7 @@
     "test:unit": "npm run compile? && jest --projects unit.jest.config.ts",
     "deploy:testnet": "npx hardhat deploy --network rinkeby",
     "deploy:localhost": "npx hardhat deploy --network localhost",
-    "cli:fetchPrice": "ts-node -r tsconfig-paths/register src/priceFeedSDK.ts"
+    "cli:fetchPrice": "ts-node -r tsconfig-paths/register src/priceFeedSDK.ts",
+    "verify:testnet": "npx hardhat verify --network rinkeby"
   }
 }

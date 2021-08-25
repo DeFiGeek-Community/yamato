@@ -29,12 +29,15 @@ import {
 
     const feed: Contract = new Contract(PRICE_FEED_ADDR_RINKEBY, genABI("PriceFeed"), singletonProvider());
 
-    let tx = await feed.connect(getFoundation()).fetchPrice();
+    console.log('calling')
+    let tx = await feed.connect(getFoundation()).fetchPrice({gasLimit: 300000, gasPrice:1*(1000**3)});
+    console.log('waiting', tx.hash.substr(0,8))
     let res = await tx.wait();
+    console.log('called')
 
-    let status = await feed.status().catch(console.trace);
-    let lastGoodPrice = await feed.lastGoodPrice().catch(console.trace);
+    // let status = await feed.status().catch(console.trace);
+    // let lastGoodPrice = await feed.lastGoodPrice().catch(console.trace);
 
-    console.log(`status:${status}, lastGoodPrice:${lastGoodPrice}`);
+    // console.log(`status:${status}, lastGoodPrice:${lastGoodPrice}`);
       
 })().then();
