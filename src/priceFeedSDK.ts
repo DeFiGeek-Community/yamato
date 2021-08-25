@@ -1,10 +1,11 @@
-const PRICE_FEED_ADDR_RINKEBY = "0xEf61f50987212D116521477E74502DA532073467";
+const PRICE_FEED_ADDR_RINKEBY = "0xef61f50987212d116521477e74502da532073467";
 
 import {
     Wallet,
     Signer,
     getDefaultProvider,
-    Contract
+    Contract,
+    BigNumber
 } from "ethers";
 
 import { genABI } from '@src/genABI';
@@ -32,9 +33,14 @@ import {
     let tx = await feed.connect(getFoundation()).fetchPrice();
     let res = await tx.wait();
 
-    let status = await feed.status().catch(console.trace);
-    let lastGoodPrice = await feed.lastGoodPrice().catch(console.trace);
+    console.log(res)
+    // console.log(BigNumber.from(res.logs[0].data).toString())
 
-    console.log(`status:${status}, lastGoodPrice:${lastGoodPrice}`);
+
+    // let status = await feed.status().catch(console.trace);
+    // let lastGoodPrice = await feed.lastGoodPrice().catch(console.trace);
+    // let ethPriceAggregatorInUSD = await feed.ethPriceAggregatorInUSD().catch(console.trace);
+
+    // console.log(`status:${status}, lastGoodPrice:${lastGoodPrice}, ethPriceAggregatorInUSD:${ethPriceAggregatorInUSD}`);
       
 })().then();

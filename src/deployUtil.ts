@@ -12,6 +12,7 @@ import {
   Contract
 } from "ethers";
 import { genABI } from '@src/genABI';
+import { isConstructSignatureDeclaration } from 'typescript';
 const addressExp = /address public constant factory = address\(0x([0-9a-fA-F]{40})\);/;
 const EMBEDDED_MODE_FILE = '.embeddedMode';
 
@@ -75,6 +76,9 @@ type Options = {
   getContractFactory: any;
   gasLimit?: number|undefined;
   gasPrice?: number|undefined;
+  maxPriorityFeePerGas?: number|undefined;
+  maxFeePerGas?: number|undefined;
+  nonce?: number|undefined;
 }
 
 export function setProvider(){
@@ -94,9 +98,12 @@ export async function deploy(contractName:string, opts:Options){
     if(!opts.ABI) opts.ABI = genABI(contractName);
     if(!opts.args) opts.args = [];
     if(!opts.linkings) opts.linkings = [];
-    if(!opts.log) opts.log = false;
+    if(!opts.log) opts.log = true;
     if(!opts.gasLimit) opts.gasLimit = 12000000; // Yay, after London!
-    if(!opts.gasPrice) opts.gasPrice = 1;
+    if(!opts.gasPrice) opts.gasPrice = 20;
+    if(!opts.maxPriorityFeePerGas) opts.maxPriorityFeePerGas = 100;
+    if(!opts.maxFeePerGas) opts.maxFeePerGas = 2000;
+    if(!opts.nonce) opts.nonce = await opts.from.getTransactionCount("pending");
 
     const _Factory = await opts.getContractFactory(contractName, {
       signer: opts.signer
@@ -104,11 +111,19 @@ export async function deploy(contractName:string, opts:Options){
 
 
     
-    const _Contract:Contract = await _Factory.deploy(...opts.args, { gasLimit: opts.gasLimit, gasPrice: opts.gasPrice });
+    const _Contract:Contract = await _Factory.deploy(...opts.args, {
+      // maxPriorityFeePerGas: opts.maxPriorityFeePerGas,
+      //  maxFeePerGas: opts.maxFeePerGas,
+        // nonce: opts.nonce
+    });
+    const tx = _Contract.deployTransaction
+    console.log(`Waiting for ${contractName} deployTx at nonce ${tx.nonce}...`)
+    const res = await tx.wait().catch(e=> console.trace(e.message) )
+    if(!res) new Error(`DeployTx of ${contractName} failed.`)
 
     let contract:Contract = new Contract(_Contract.address, opts.ABI, provider);
 
-    if(opts.log) console.log(`${contractName} is deployed as ${_Contract.address} by ${await opts.signer.getAddress()}`);
+    if(opts.log) console.log(`${contractName} is deployed as ${_Contract.address} by ${await _Contract.signer.getAddress()} on ${(await provider.getNetwork()).name} at ${await provider.getBlockNumber()} and nonce ${opts.nonce}`);
 
     let _signedContract:Contract = contract.connect(<Signer>opts.signer);
 
@@ -127,4 +142,8 @@ export function getFoundation():Signer{
 }
 export function getDeployer():Signer{
   return new Wallet(process.env.DEPLOYER_PRIVATE_KEY, singletonProvider());
+}
+
+export async function sleep(n){
+  return new Promise(resolve => setTimeout(resolve, n))
 }
