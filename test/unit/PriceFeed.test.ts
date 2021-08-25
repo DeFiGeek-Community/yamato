@@ -85,8 +85,8 @@ async function setMocks(conf: MockConf){
 describe("PriceFeed", function() {
   beforeEach(async () => {
     accounts = await getSharedSigners();
-    const spec1 = await ethers.getContractFactory('ChainlinkMock')
-    const spec2 = await ethers.getContractFactory('ChainlinkMock')
+    const spec1 = await ethers.getContractFactory('ChainLinkMock')
+    const spec2 = await ethers.getContractFactory('ChainLinkMock')
     const spec3 = await ethers.getContractFactory('TellorCallerMock')
     mockAggregatorV3EthUsd = await smockit(spec1) // https://github.com/liquity/dev/blob/main/packages/contracts/contracts/Dependencies/AggregatorV3Interface.sol
     mockAggregatorV3JpyUsd = await smockit(spec2)
