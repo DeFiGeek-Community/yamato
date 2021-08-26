@@ -11,7 +11,7 @@ import "./OracleMockBase.sol";
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 
-contract ChainlinkMock is OracleMockBase {
+contract ChainLinkMock is OracleMockBase {
     uint8 public symbol;
     uint8 private ETHUSD = 1;
     uint8 private JPYUSD = 2;
