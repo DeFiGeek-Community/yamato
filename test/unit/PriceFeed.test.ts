@@ -1,5 +1,5 @@
 import { ethers } from 'hardhat'
-import { smockit, smoddit, isMockContract } from '@eth-optimism/smock';
+import { smockit, smoddit, isMockContract } from 'optimism/packages/smock';
 import { BigNumber, utils } from 'ethers';
 const { AbiCoder, ParamType } = utils;
 

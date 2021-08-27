@@ -24,7 +24,7 @@
     "typescript": "^4.0.2"
   },
   "devDependencies": {
-    "@eth-optimism/smock": "0xMotoko/optimism#hotfix/hardhat-v2.4.x",
+    "@eth-optimism/core-utils": "^0.5.3",
     "@ethereum-waffle/jest": "^3.2.2",
     "@nomiclabs/ethereumjs-vm": "^4.2.2",
     "@nomiclabs/hardhat-ethers": "^2.0.2",
@@ -54,6 +54,7 @@
     "hardhat-tracer": "^1.0.0-alpha.6",
     "jasmine": "^3.7.0",
     "jest": "^26.4.2",
+    "optimism": "0xMotoko/optimism#hotfix/hardhat-v2.4.x",
     "prb-math": "^2.2.0",
     "solc": "^0.8.4",
     "ts-jest": "^26.5.5",
