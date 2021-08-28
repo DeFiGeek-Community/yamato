@@ -497,7 +497,7 @@ contract PriceFeed is Ownable, BaseMath, IPriceFeed {
 
     // --- Oracle response wrapper functions ---
 
-    function _getCurrentTellorResponse() internal view returns (TellorResponse memory tellorResponse) {
+    function _getCurrentTellorResponse() internal returns (TellorResponse memory tellorResponse) {
         try tellorCaller.getTellorCurrentValue(ETHUSD_TELLOR_REQ_ID) returns
         (
             bool ifRetrieve,
@@ -518,7 +518,7 @@ contract PriceFeed is Ownable, BaseMath, IPriceFeed {
         }
     }
 
-    function _getCurrentChainlinkResponse() internal view returns (ChainlinkResponse memory chainlinkResponse) {
+    function _getCurrentChainlinkResponse() internal returns (ChainlinkResponse memory chainlinkResponse) {
         ChainlinkResponse memory ethChainlinkResponseInUSD;
         ChainlinkResponse memory jpyChainlinkResponseInUSD;
         // First, try to get current decimal precision:
