@@ -13,7 +13,7 @@ pragma solidity 0.7.6;
 // Base class to create a oracle mock contract for a specific provider
 contract OracleMockBase {
 
-    uint8 private chaosCounter = 0;
+    uint8 public chaosCounter = 0;
 
     function randomize() internal view returns (uint, bool) {
       uint randomNumber = uint(keccak256(abi.encodePacked(msg.sender,  block.timestamp,  blockhash(block.number - 1))));
@@ -26,7 +26,7 @@ contract OracleMockBase {
     // Otherwise, increment the chaos counter and return false
     function chaos() internal returns (bool) {
       if (chaosCounter == 10) {
-        chaosCounter == 0;
+        chaosCounter = 0;
         return true;
       }
       chaosCounter += 1;

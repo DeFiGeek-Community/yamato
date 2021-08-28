@@ -20,7 +20,6 @@ contract ChainLinkMock is OracleMockBase {
 
     uint80 private lastRoundId;
     uint80 private lastPriceUpdateRoundId;
-    uint8 private chaosCounter;
     
     // mapping from a specific roundId to previous values
     mapping(uint80 => int256) private prevAnswers;
@@ -33,7 +32,6 @@ contract ChainLinkMock is OracleMockBase {
 
         lastRoundId = 30000000000000000001;
         lastPriceUpdateRoundId = 30000000000000000001;
-        chaosCounter = 0;
         setPriceToDefault();
     }
 
