@@ -56,7 +56,7 @@ contract ChainLinkMock is OracleMockBase {
       if (symbol == JPYUSD) {lastPrice = 1000000;} // 0.010 JPYUSD = 100 USDJPY
     }
 
-    function latestRoundData() public returns (
+    function latestRoundData() external returns (
       uint80 roundId, // The round ID.
       int256 answer, // The price.
       uint256 startedAt, // Timestamp of when the round started.

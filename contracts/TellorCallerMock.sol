@@ -19,7 +19,7 @@ contract TellorCallerMock is OracleMockBase {
         setPriceToDefault();
     }
 
-    function getTellorCurrentValue(uint256 _requestId) public returns (bool ifRetrieve, uint256 value, uint256 _timestampRetrieved){
+    function getTellorCurrentValue(uint256 _requestId) external returns (bool ifRetrieve, uint256 value, uint256 _timestampRetrieved){
         require(_requestId == 59, "Only ETH/JPY is supported.");
         (
         uint deviation,

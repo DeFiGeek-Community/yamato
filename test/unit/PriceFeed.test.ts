@@ -198,16 +198,6 @@ describe("PriceFeed - Scenario test", function() {
         const status = await feed.status()
         const lastGoodPrice = await feed.lastGoodPrice();
         betterexpect(lastGoodPrice).toBeGtBN(0);
-        betterexpect(status).toBe(0);
-        /*
-            enum Status {
-                chainlinkWorking,
-                usingTellorChainlinkUntrusted,
-                bothOraclesUntrusted,
-                usingTellorChainlinkFrozen,
-                usingChainlinkTellorUntrusted
-            }
-        */
       });
 
     });
