@@ -151,10 +151,10 @@ export function verifyWithEtherscan(){
   let ChainLinkJpyUsd = readFileSync(getDeploymentAddressPath('ChainLinkMock', 'JpyUsd')).toString()
   let Tellor = readFileSync(getDeploymentAddressPath('TellorCallerMock', '')).toString()
   let PriceFeed = readFileSync(getDeploymentAddressPath('PriceFeed', '')).toString()
-  execSync(`npm run verify:testnet -- ${ChainLinkEthUsd} ETH/USD`)
-  execSync(`npm run verify:testnet -- ${ChainLinkJpyUsd} JPY/USD`)
-  execSync(`npm run verify:testnet -- ${Tellor}`)
-  execSync(`npm run verify:testnet -- ${PriceFeed} ${ChainLinkEthUsd} ${ChainLinkJpyUsd} ${Tellor}`)
+  execSync(`npm run verify:testnet -- --contract contracts/ChainLinkMock.sol:ChainLinkMock ${ChainLinkEthUsd} ETH/USD`)
+  execSync(`npm run verify:testnet -- --contract contracts/ChainLinkMock.sol:ChainLinkMock ${ChainLinkJpyUsd} JPY/USD`)
+  execSync(`npm run verify:testnet -- --contract contracts/TellorCallerMock.sol:TellorCallerMock ${Tellor}`)
+  execSync(`npm run verify:testnet -- --contract contracts/PriceFeed.sol:PriceFeed ${PriceFeed} ${ChainLinkEthUsd} ${ChainLinkJpyUsd} ${Tellor}`)
 }
 
 

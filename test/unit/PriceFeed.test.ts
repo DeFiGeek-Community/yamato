@@ -16,7 +16,7 @@ import { parameterizedSpecs } from '@test/param/paramSpecEntrypoint';
 import { suite, test } from '@testdeck/jest'
 import fs from 'fs';
 import { BalanceLogger } from '@src/BalanceLogger';
-import { Yamato, Pool } from '../../typechain'; 
+import { Yamato, Pool, ChainLinkMock, TellorCallerMock, PriceFeed } from '../../typechain'; 
 
 import { genABI } from '@src/genABI';
 
@@ -168,5 +168,48 @@ describe("PriceFeed", function() {
 
   });
 
+
+});
+
+describe("PriceFeed - Scenario test", function() {
+  beforeEach(async () => {
+    accounts = await getSharedSigners();
+    const spec1 = await ethers.getContractFactory('ChainLinkMock')
+    const spec2 = await ethers.getContractFactory('ChainLinkMock')
+    const spec3 = await ethers.getContractFactory('TellorCallerMock')
+
+    const ChainLinkMockEthUsd:ChainLinkMock = await create<ChainLinkMock>("ChainLinkMock", genABI("ChainLinkMock"), ["ETH/USD"], accounts[0]);
+    const ChainLinkMockJpyUsd:ChainLinkMock = await create<ChainLinkMock>("ChainLinkMock", genABI("ChainLinkMock"), ["JPY/USD"], accounts[0]);
+    const TellorCallerMock:TellorCallerMock = await create<TellorCallerMock>("TellorCallerMock", genABI("TellorCallerMock"), [], accounts[0]);
+
+    await ChainLinkMockEthUsd.connect(accounts[0]).latestRoundData({gasLimit:15000000});
+    await ChainLinkMockJpyUsd.connect(accounts[0]).latestRoundData({gasLimit:15000000});
+
+    feed = await (await ethers.getContractFactory('PriceFeed')).deploy(
+      ChainLinkMockEthUsd.address,
+      ChainLinkMockJpyUsd.address,
+      TellorCallerMock.address
+    );
+  });
+
+  describe("fetchPrice()", function() {
+    it(`succeeds to get price from ChainLink`, async function() {
+        await (await feed.connect(accounts[0]).fetchPrice({gasLimit:15000000})).wait()
+        const status = await feed.status()
+        const lastGoodPrice = await feed.lastGoodPrice();
+        betterexpect(lastGoodPrice).toBeGtBN(0);
+        betterexpect(status).toBe(0);
+        /*
+            enum Status {
+                chainlinkWorking,
+                usingTellorChainlinkUntrusted,
+                bothOraclesUntrusted,
+                usingTellorChainlinkFrozen,
+                usingChainlinkTellorUntrusted
+            }
+        */
+      });
+
+    });
 
 });
