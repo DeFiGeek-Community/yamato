@@ -12,4 +12,4 @@ artifacts/**/*.dbg.json
 *.dbg.json
 .embeddedMode
 .saleTemplateName
-deployments
+deployments/rinkeby/*
