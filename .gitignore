@@ -13,3 +13,4 @@ artifacts/**/*.dbg.json
 .embeddedMode
 .saleTemplateName
 deployments/rinkeby/*
+!deployments/rinkeby/.chainId
