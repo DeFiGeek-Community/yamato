@@ -41,7 +41,7 @@ contract PriceFeed is Ownable, BaseMath, IPriceFeed {
     // address borrowerOperationsAddress;
     // address troveManagerAddress;
 
-    uint constant public ETHUSD_TELLOR_REQ_ID = 1;
+    uint constant public ETHUSD_TELLOR_REQ_ID = 59;
 
     // Use to convert a price answer to an 18-digit precision uint
     uint constant public TARGET_DIGITS = 18;  
