@@ -18,20 +18,23 @@ import {
   sleep,
   getDeploymentAddressPath
 } from '@src/deployUtil';
-import { Wallet } from 'ethers';
-
-let ChainLinkEthUsd = "0x81CE5a8399e49dCF8a0ce2c0A0C7015bb1F042bC"
-let ChainLinkJpyUsd = "0x6C4e3804ddFE3be631b6DdF232025AC760765279"
-let TellorEthJpy = "0x5b46654612f6Ff6510147b00B96FeB8E4AA93FF6"
+import { genABI } from '@src/genABI';
+import { Wallet, Contract } from 'ethers';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  await setProvider();
+  const p = await setProvider();
   const { ethers, deployments } = hre;
-  const { getContractFactory, Contract, BigNumber, Signer, getSigners } = ethers;
+  const { getContractFactory, BigNumber, Signer, getSigners } = ethers;
 
-  ChainLinkEthUsd = readFileSync(getDeploymentAddressPath('ChainLinkMock', 'EthUsd')).toString()
-  ChainLinkJpyUsd = readFileSync(getDeploymentAddressPath('ChainLinkMock', 'JpyUsd')).toString()
-  TellorEthJpy = readFileSync(getDeploymentAddressPath('TellorCallerMock', '')).toString()
+  const ChainLinkEthUsd = readFileSync(getDeploymentAddressPath('ChainLinkMock', 'EthUsd')).toString()
+  const ChainLinkJpyUsd = readFileSync(getDeploymentAddressPath('ChainLinkMock', 'JpyUsd')).toString()
+  const TellorEthJpy = readFileSync(getDeploymentAddressPath('TellorCallerMock', '')).toString()
+
+  const chainlinkEthUsd = new Contract(ChainLinkEthUsd, genABI("ChainLinkMock"), p);
+  const chainlinkJpyUsd = new Contract(ChainLinkJpyUsd, genABI("ChainLinkMock"), p);
+
+  await (await chainlinkEthUsd.connect(getFoundation()).latestRoundData()).wait()
+  await (await chainlinkJpyUsd.connect(getFoundation()).latestRoundData()).wait()
 
   const feed = await deploy('PriceFeed', {
     args: [ChainLinkEthUsd, ChainLinkJpyUsd, TellorEthJpy],

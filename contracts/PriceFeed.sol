@@ -103,16 +103,16 @@ contract PriceFeed is Ownable, BaseMath, IPriceFeed {
         // Explicitly set initial system status
         status = Status.chainlinkWorking;
 
-        // Get an initial price from Chainlink to serve as first reference for lastGoodPrice
-        // ChainlinkResponse memory chainlinkResponse = _getCurrentChainlinkResponse();
-        // ChainlinkResponse memory prevChainlinkResponse = _getPrevChainlinkResponse(chainlinkResponse.roundId, chainlinkResponse.decimals, chainlinkResponse.subAnswer, chainlinkResponse.subDecimal);
+        //Get an initial price from Chainlink to serve as first reference for lastGoodPrice
+        ChainlinkResponse memory chainlinkResponse = _getCurrentChainlinkResponse();
+        ChainlinkResponse memory prevChainlinkResponse = _getPrevChainlinkResponse(chainlinkResponse.roundId, chainlinkResponse.decimals, chainlinkResponse.subAnswer, chainlinkResponse.subDecimal);
 
-        // require(!_chainlinkIsBroken(chainlinkResponse, prevChainlinkResponse) && !_chainlinkIsFrozen(chainlinkResponse), 
-        //     "PriceFeed: Chainlink must be working.");
+        require(!_chainlinkIsBroken(chainlinkResponse, prevChainlinkResponse) && !_chainlinkIsFrozen(chainlinkResponse), 
+            "PriceFeed: Chainlink must be working.");
 
-        // _storeChainlinkPrice(chainlinkResponse);
+        _storeChainlinkPrice(chainlinkResponse);
 
-        // _renounceOwnership();
+        _renounceOwnership();
     }
 
 
