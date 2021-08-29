@@ -13,8 +13,6 @@ import "./OracleMockBase.sol";
 
 contract TellorCallerMock is OracleMockBase {
 
-    uint256 public lastPrice;
-
     constructor() {
         setPriceToDefault();
     }
@@ -26,9 +24,10 @@ contract TellorCallerMock is OracleMockBase {
         bool sign
         ) = randomize();
 
+        uint256 _lastPrice = uint256(lastPrice);
         if (deviation == 0) {
             // no deviation
-            value = lastPrice;
+            value = _lastPrice;
         } else {
             if (deviation == 10) {
                 if (chaos()) {
@@ -36,26 +35,22 @@ contract TellorCallerMock is OracleMockBase {
                 }
             }
 
-            uint change = lastPrice / 100;
+            uint change = _lastPrice / 100;
             change = change * deviation;
-            value = sign ? lastPrice + change : lastPrice - change;
+            value = sign ? _lastPrice + change : _lastPrice - change;
 
             if (value == 0) {
                 // Price shouldn't be zero, reset if so
                 setPriceToDefault();
-                value = lastPrice;
+                value = _lastPrice;
             }
-            lastPrice = value;
+            lastPrice = int256(value);
         }
         
-        return (true, lastPrice, block.timestamp);
+        return (true, value, block.timestamp);
     }
 
-    function setLastPrice(uint256 _price) public {
-      lastPrice = _price;
-    }
-
-    function setPriceToDefault() public {
+    function setPriceToDefault() public override onlyOwner {
       lastPrice = 300000000000; // 300000 JPY
     }
 }

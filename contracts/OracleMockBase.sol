@@ -6,14 +6,23 @@ pragma solidity 0.7.6;
  * Copyright (C) 2021 Yamato Protocol (DeFiGeek Community Japan)
 */
 
-
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 
+import "./Dependencies/Ownable.sol";
+
 // Base class to create a oracle mock contract for a specific provider
-contract OracleMockBase {
+abstract contract OracleMockBase is Ownable {
 
     uint8 public chaosCounter = 0;
+
+    int256 public lastPrice;
+
+    function setLastPrice(int256 _price) public onlyOwner {
+      lastPrice = _price;
+    }
+
+    function setPriceToDefault() public virtual;
 
     function randomize() internal view returns (uint, bool) {
       uint randomNumber = uint(keccak256(abi.encodePacked(msg.sender,  block.timestamp,  blockhash(block.number - 1))));

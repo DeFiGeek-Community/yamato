@@ -16,15 +16,13 @@ contract ChainLinkMock is OracleMockBase {
     uint8 private ETHUSD = 1;
     uint8 private JPYUSD = 2;
 
-    int256 public lastPrice;
-
-    uint80 private lastRoundId;
-    uint80 private lastPriceUpdateRoundId;
+    uint80 public lastRoundId;
+    uint80 public lastPriceUpdateRoundId;
     
     // mapping from a specific roundId to previous values
-    mapping(uint80 => int256) private prevAnswers;
-    mapping(uint80 => uint256) private prevTimestamps;
-    mapping(uint80 => uint80) private prevAnsweredInRounds;
+    mapping(uint80 => int256) public prevAnswers;
+    mapping(uint80 => uint256) public prevTimestamps;
+    mapping(uint80 => uint80) public prevAnsweredInRounds;
 
     constructor(string memory _symbol) public {
         symbol = getSymbolId(_symbol);
@@ -45,11 +43,7 @@ contract ChainLinkMock is OracleMockBase {
       return 0;
     }
 
-    function setLastPrice(int256 _price) public {
-      lastPrice = _price;
-    }
-
-    function setPriceToDefault() public {
+    function setPriceToDefault() public override onlyOwner {
       if (symbol == ETHUSD) {lastPrice = 300000000000;} // 3000 USD
       if (symbol == JPYUSD) {lastPrice = 1000000;} // 0.010 JPYUSD = 100 USDJPY
     }
