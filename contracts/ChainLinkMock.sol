@@ -7,22 +7,23 @@ pragma solidity 0.7.6;
 */
 
 import "./OracleMockBase.sol";
+import "./Dependencies/AggregatorV3Interface.sol";
 
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 
-contract ChainLinkMock is OracleMockBase {
-    uint8 public symbol;
+contract ChainLinkMock is OracleMockBase, AggregatorV3Interface {
+    uint8 private symbol;
     uint8 private ETHUSD = 1;
     uint8 private JPYUSD = 2;
 
-    uint80 public lastRoundId;
-    uint80 public lastPriceUpdateRoundId;
+    uint80 private lastRoundId;
+    uint80 private lastPriceUpdateRoundId;
     
     // mapping from a specific roundId to previous values
-    mapping(uint80 => int256) public prevAnswers;
-    mapping(uint80 => uint256) public prevTimestamps;
-    mapping(uint80 => uint80) public prevAnsweredInRounds;
+    mapping(uint80 => int256) private prevAnswers;
+    mapping(uint80 => uint256) private prevTimestamps;
+    mapping(uint80 => uint80) private prevAnsweredInRounds;
 
     constructor(string memory _symbol) public {
         symbol = getSymbolId(_symbol);
@@ -48,31 +49,26 @@ contract ChainLinkMock is OracleMockBase {
       if (symbol == JPYUSD) {lastPrice = 1000000;} // 0.010 JPYUSD = 100 USDJPY
     }
 
-    function latestRoundData() external returns (
+    function latestRoundData() public virtual override view returns (
       uint80 roundId, // The round ID.
       int256 answer, // The price.
       uint256 startedAt, // Timestamp of when the round started.
       uint256 updatedAt, // Timestamp of when the round was updated.
       uint80 answeredInRound // The round ID of the round in which the answer was computed.
     ) {
-      (
-        uint deviation,
-        bool sign
-      ) = randomize();
-      
+      uint256 timestamp = prevTimestamps[lastRoundId];
+      return (lastRoundId, lastPrice, timestamp, timestamp, lastPriceUpdateRoundId);
+    }
+
+    function simulatePriceMove(uint deviation, bool sign) internal override onlyOwner {
       uint80 currentRoundId = lastRoundId + 1;
-    
+      int256 answer;
+      uint80 answeredInRound;
       if (deviation == 0) {
         // no deviation, hence answeredInRound == lastPriceUpdateRoundId
         answer = lastPrice;
         answeredInRound = lastPriceUpdateRoundId;
       } else {
-        if (deviation == 10) {
-          if (chaos()) {
-            deviation = 51;
-          }
-        }
-
         int change = lastPrice / 1000;
         change = change * int(deviation);
         answer = sign ? lastPrice + change : lastPrice - change;
@@ -95,16 +91,14 @@ contract ChainLinkMock is OracleMockBase {
       prevAnswers[currentRoundId] = answer;
       prevTimestamps[currentRoundId] = block.timestamp;
       prevAnsweredInRounds[currentRoundId] = answeredInRound;
-
-      return (currentRoundId, answer, block.timestamp, block.timestamp, answeredInRound);
     }
 
-    function decimals() external pure returns (uint8) {
+    function decimals() external virtual override view returns (uint8) {
         // For both ETH/USD and JPY/USD, decimals are static being 8
         return 8;
     }
 
-    function getRoundData(uint80 _roundId) public view returns (
+    function getRoundData(uint80 _roundId) external virtual override view returns (
         uint80 roundId, 
         int256 answer, 
         uint256 startedAt, 
@@ -117,5 +111,11 @@ contract ChainLinkMock is OracleMockBase {
       return (_roundId, prevAnswers[_roundId], timestamp, timestamp, prevAnsweredInRounds[_roundId]);
     }
 
-    function getRoundData(uint256 _roundId) public {}
+    function description() external virtual override view returns (string memory) {
+      return "Chainlink Mock for the Yamato protocol.";
+    }
+
+    function version() external virtual override view returns (uint256) {
+      return 1;
+    }
 }

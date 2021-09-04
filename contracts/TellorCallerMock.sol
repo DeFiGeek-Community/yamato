@@ -7,34 +7,26 @@ pragma solidity 0.7.6;
 */
 
 import "./OracleMockBase.sol";
+import "./Interfaces/ITellorCaller.sol";
 
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 
-contract TellorCallerMock is OracleMockBase {
+contract TellorCallerMock is OracleMockBase, ITellorCaller {
 
     constructor() {
         setPriceToDefault();
     }
 
-    function getTellorCurrentValue(uint256 _requestId) external returns (bool ifRetrieve, uint256 value, uint256 _timestampRetrieved){
+    function getTellorCurrentValue(uint256 _requestId) external virtual override view returns (bool ifRetrieve, uint256 value, uint256 _timestampRetrieved){
         require(_requestId == 59, "Only ETH/JPY is supported.");
-        (
-        uint deviation,
-        bool sign
-        ) = randomize();
+        return (true, uint256(lastPrice), block.timestamp);
+    }
 
+    function simulatePriceMove(uint deviation, bool sign) internal override onlyOwner {
         uint256 _lastPrice = uint256(lastPrice);
-        if (deviation == 0) {
-            // no deviation
-            value = _lastPrice;
-        } else {
-            if (deviation == 10) {
-                if (chaos()) {
-                    deviation = 51;
-                }
-            }
-
+        uint256 value;
+        if (deviation != 0) { // nothing to do if deviation is zero
             uint change = _lastPrice / 100;
             change = change * deviation;
             value = sign ? _lastPrice + change : _lastPrice - change;
@@ -46,8 +38,6 @@ contract TellorCallerMock is OracleMockBase {
             }
             lastPrice = int256(value);
         }
-        
-        return (true, value, block.timestamp);
     }
 
     function setPriceToDefault() public override onlyOwner {

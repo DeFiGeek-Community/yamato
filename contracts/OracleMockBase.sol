@@ -14,31 +14,25 @@ import "./Dependencies/Ownable.sol";
 // Base class to create a oracle mock contract for a specific provider
 abstract contract OracleMockBase is Ownable {
 
-    uint8 public chaosCounter = 0;
-
-    int256 public lastPrice;
+    int256 internal lastPrice;
+    uint private lastBlockNumber;
 
     function setLastPrice(int256 _price) public onlyOwner {
       lastPrice = _price;
+      lastBlockNumber = block.number;
     }
 
     function setPriceToDefault() public virtual;
 
-    function randomize() internal view returns (uint, bool) {
+    function simulatePriceMove(uint deviation, bool sign) internal virtual;
+
+    function simulatePriceMove() public onlyOwner {
+      require(block.number != lastBlockNumber, "Price cannot be updated twice in the same block.");
+      lastBlockNumber = block.number;
+
       uint randomNumber = uint(keccak256(abi.encodePacked(msg.sender,  block.timestamp,  blockhash(block.number - 1))));
       uint deviation = randomNumber % 11;
       bool sign = randomNumber % 2 == 1 ? true : false;
-      return (deviation, sign);
-    }
-
-    // If chaos counter == 10, reset it to 0 and trigger chaos = 51% deviation
-    // Otherwise, increment the chaos counter and return false
-    function chaos() internal returns (bool) {
-      if (chaosCounter == 10) {
-        chaosCounter = 0;
-        return true;
-      }
-      chaosCounter += 1;
-      return false;
+      simulatePriceMove(deviation, sign);
     }
 }
