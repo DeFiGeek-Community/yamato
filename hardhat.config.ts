@@ -11,6 +11,7 @@ import "hardhat-deploy";
 import "hardhat-deploy-ethers";
 import '@typechain/hardhat'
 import "@nomiclabs/hardhat-etherscan";
+import 'hardhat-abi-exporter';
 
 /**
  * @type import('hardhat/config').HardhatUserConfig
@@ -85,6 +86,13 @@ module.exports = {
       "mainnet": "0xD2dd063B77cdB7b2823297a305195128eF2C300c",
       "rinkeby": "0xD2dd063B77cdB7b2823297a305195128eF2C300c"
     }
+  },
+  abiExporter: {
+    path: './abis/yamato-abis',
+    clear: true,
+    flat: true,
+    except: ['Dependencies','Interfaces','mock'],
+    spacing: 2
   }
 };
 

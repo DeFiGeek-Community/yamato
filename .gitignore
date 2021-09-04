@@ -1,16 +1,19 @@
 node_modules
 .DS_Store
 .idea
-dist
 test/**/*.js
-allure-results
-artifacts
-typechain
 .env
-cache/**/*
-artifacts/**/*.dbg.json
-*.dbg.json
 .embeddedMode
 .saleTemplateName
+
+# build
+dist
+artifacts
+artifacts/**/*.dbg.json
+allure-results
+typechain
+*.dbg.json
+cache/**/*
 deployments/rinkeby/*
 !deployments/rinkeby/.chainId
+abis
