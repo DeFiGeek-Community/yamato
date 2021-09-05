@@ -27,12 +27,14 @@ abstract contract OracleMockBase is Ownable {
     function simulatePriceMove(uint deviation, bool sign) internal virtual;
 
     function simulatePriceMove() public onlyOwner {
-      require(block.number != lastBlockNumber, "Price cannot be updated twice in the same block.");
-      lastBlockNumber = block.number;
+      // Within each block, only once price update is allowed (volatility control)
+      if (block.number != lastBlockNumber) {
+        lastBlockNumber = block.number;
 
-      uint randomNumber = uint(keccak256(abi.encodePacked(msg.sender,  block.timestamp,  blockhash(block.number - 1))));
-      uint deviation = randomNumber % 11;
-      bool sign = randomNumber % 2 == 1 ? true : false;
-      simulatePriceMove(deviation, sign);
+        uint randomNumber = uint(keccak256(abi.encodePacked(msg.sender,  block.timestamp,  blockhash(block.number - 1))));
+        uint deviation = randomNumber % 11;
+        bool sign = randomNumber % 2 == 1 ? true : false;
+        simulatePriceMove(deviation, sign);
+      }
     }
 }
