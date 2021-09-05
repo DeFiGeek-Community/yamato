@@ -17,7 +17,7 @@ A stablecoin lending machine.
 As of this writing, the following library versions have been confirmed working fine.
 - Node: 14.16.1
 - npm: 6.14.12
-- hardhat: 2.2.1
+- hardhat: 2.1.1
 - smock: 1.1.5
 
 Please note, using a different version might result in commands like "npm i" and test to fail.
