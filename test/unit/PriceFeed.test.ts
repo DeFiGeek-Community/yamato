@@ -77,10 +77,10 @@ async function setMocks(conf: MockConf){
     mockRoundCount++;
     mockAggregatorV3EthUsd.smocked.decimals.will.return.with(CHAINLINK_DIGITS); // uint8
     mockAggregatorV3EthUsd.smocked.latestRoundData.will.return.with([mockRoundCount,cPriceEthInUsd,now-cDiffEthInUsd,now-cDiffEthInUsd,2]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
-    mockAggregatorV3EthUsd.smocked['getRoundData(uint80)'].will.return.with([mockRoundCount,cPriceEthInUsd,now-cDiffEthInUsd,now-cDiffEthInUsd,mockRoundCount+1]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
+    mockAggregatorV3EthUsd.smocked.getRoundData.will.return.with([mockRoundCount,cPriceEthInUsd,now-cDiffEthInUsd,now-cDiffEthInUsd,mockRoundCount+1]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
     mockAggregatorV3JpyUsd.smocked.decimals.will.return.with(CHAINLINK_DIGITS); // uint8
     mockAggregatorV3JpyUsd.smocked.latestRoundData.will.return.with([mockRoundCount,cPriceJpyInUsd,now-cDiffJpyInUsd,now-cDiffJpyInUsd,2]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
-    mockAggregatorV3JpyUsd.smocked['getRoundData(uint80)'].will.return.with([mockRoundCount,cPriceJpyInUsd,now-cDiffJpyInUsd,now-cDiffJpyInUsd,mockRoundCount+1]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
+    mockAggregatorV3JpyUsd.smocked.getRoundData.will.return.with([mockRoundCount,cPriceJpyInUsd,now-cDiffJpyInUsd,now-cDiffJpyInUsd,mockRoundCount+1]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
     mockTellorCaller.smocked.getTellorCurrentValue.will.return.with([true,tPrice,now-tDiff]); // bool ifRetrieve, uint256 value, uint256 _timestampRetrieved
 }
 describe("PriceFeed", function() {
@@ -122,7 +122,7 @@ describe("PriceFeed", function() {
                 usingChainlinkTellorUntrusted
             }
         */
-        });
+    });
 
     it(`succeeds to get price from Tellor because ChainLink is frozen`, async function() {
         feed.provider.send("evm_increaseTime", [7200])
