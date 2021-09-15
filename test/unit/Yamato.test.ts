@@ -554,4 +554,58 @@ describe("Yamato", function() {
     it.todo(`should run useSweepReserve() of Pool.sol`);
   });
 
+  describe('getStates()', () => {
+    let accounts, MCR, RRR, SRR, GRR;
+
+    beforeEach(async () => {
+      accounts = await getSharedSigners();
+      MCR = await yamato.MCR();
+      RRR = await yamato.RRR();
+      SRR = await yamato.SRR();
+      GRR = await yamato.GRR();
+    })
+
+    it('should return correct values', async () => {
+      const beforeValues = await yamato.getStates();
+
+      betterexpect(beforeValues[0]).toEqBN(0);
+      betterexpect(beforeValues[1]).toEqBN(0);
+
+      await yamato.connect(accounts[0]).deposit({value:10});
+      await yamato.connect(accounts[0]).borrow(1);
+      const afterValues = await yamato.getStates();
+
+      betterexpect(afterValues[0]).toEqBN(10);
+      betterexpect(afterValues[1]).toEqBN(1);
+      betterexpect(afterValues[2]).toBe(MCR);
+      betterexpect(afterValues[3]).toBe(RRR);
+      betterexpect(afterValues[4]).toBe(SRR);
+      betterexpect(afterValues[5]).toBe(GRR);
+    })
+  })
+
+  describe('getIndivisualStates()', () => {
+    let accounts;
+
+    beforeEach(async () => {
+      accounts = await getSharedSigners();
+    })
+
+    it('should return correct values', async () => {
+      const owner = await accounts[0].getAddress();
+
+      const beforeValues = await yamato.getIndivisualStates(owner);
+      
+      betterexpect(beforeValues[0]).toEqBN(0);
+      betterexpect(beforeValues[1]).toEqBN(0);
+
+      await yamato.connect(accounts[0]).deposit({value:10});
+      await yamato.connect(accounts[0]).borrow(1);
+      const afterValues = await yamato.getIndivisualStates(owner);
+
+      betterexpect(afterValues[0]).toEqBN(10);
+      betterexpect(afterValues[1]).toEqBN(1);
+      betterexpect(afterValues[2]).toBe(true);
+    })
+  })
 });
