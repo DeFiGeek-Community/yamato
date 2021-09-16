@@ -3,10 +3,6 @@ const isDebug = !false;
 const { ethers } = require("hardhat");
 import { BigNumber } from 'ethers';
 
-const { waffleJest } = require("@ethereum-waffle/jest");
-expect.extend(waffleJest);
-const betterexpect = (<any>expect); // TODO: better typing for waffleJest
-
 import { summon, create, getSharedProvider, getSharedSigners, 
   parseAddr, parseBool, parseInteger, getLogs,
   encode, decode, increaseTime,

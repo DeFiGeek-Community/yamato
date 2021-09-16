@@ -1,12 +1,8 @@
-      // betterexpect(lastGoodPrice).toBeGtBN(0);
 import { ethers } from 'hardhat'
 import { smockit, smoddit, isMockContract } from 'optimism/packages/smock';
 import { BigNumber, utils } from 'ethers';
 const { AbiCoder, ParamType } = utils;
 
-const { waffleJest } = require("@ethereum-waffle/jest");
-expect.extend(waffleJest);
-const betterexpect = (<any>expect); // TODO: better typing for waffleJest
 import { summon, forge, create, getSharedProvider, getSharedSigners, 
   parseAddr, parseBool, parseInteger, getLogs,
   encode, decode, increaseTime,
@@ -28,7 +24,7 @@ describe("Smock for PriceFeed", function() {
   it(`succeeds to make a mock`, async function() {
     const spec = await ethers.getContractFactory('PriceFeed')
     const mock = await smockit(spec)
-    betterexpect(isMockContract(mock)).toBe(true);
+    expect(isMockContract(mock)).toBe(true);
   });
 });
 
@@ -111,8 +107,8 @@ describe("PriceFeed", function() {
         await (await feed.fetchPrice()).wait()
         const status = await feed.status()
         const lastGoodPrice = await feed.lastGoodPrice();
-        betterexpect(Math.floor(cPriceAtExecInEthUsd/cPriceAtExecInJpyUsd)).toEqBN(`${lastGoodPrice}`.substr(0,6));
-        betterexpect(status).toBe(0);
+        expect(Math.floor(cPriceAtExecInEthUsd/cPriceAtExecInJpyUsd)).toEqBN(`${lastGoodPrice}`.substr(0,6));
+        expect(status).toBe(0);
         /*
             enum Status {
                 chainlinkWorking,
@@ -135,8 +131,8 @@ describe("PriceFeed", function() {
         await (await feed.fetchPrice()).wait()
         const status = await feed.status()
         const lastGoodPrice = await feed.lastGoodPrice();
-        betterexpect(status).toBe(3);
-        betterexpect(BigNumber.from(tPriceAtExecInJpyUsd).mul(BigNumber.from(10).pow(18))).toEqBN(lastGoodPrice);
+        expect(status).toBe(3);
+        expect(BigNumber.from(tPriceAtExecInJpyUsd).mul(BigNumber.from(10).pow(18))).toEqBN(lastGoodPrice);
     });
 
     it(`returns last good price as both oracles are untrusted`, async function() {
@@ -152,8 +148,8 @@ describe("PriceFeed", function() {
         await (await feed.fetchPrice()).wait()
         const status1 = await feed.status();
         const lastGoodPrice1 = await feed.lastGoodPrice();
-        betterexpect(status1).toBe(0);
-        betterexpect(Math.floor(cPriceAtLastTimeInEthUsd/cPriceAtLastTimeInJpyUsd)).toEqBN(`${lastGoodPrice1}`.substr(0,6));
+        expect(status1).toBe(0);
+        expect(Math.floor(cPriceAtLastTimeInEthUsd/cPriceAtLastTimeInJpyUsd)).toEqBN(`${lastGoodPrice1}`.substr(0,6));
 
         // 3. Exec
         let cPriceAtExecInEthUsd = 3204
@@ -163,8 +159,8 @@ describe("PriceFeed", function() {
         await (await feed.fetchPrice()).wait()
         const status2 = await feed.status();
         const lastGoodPrice2 = await feed.lastGoodPrice();
-        betterexpect(status2).toBe(2);
-        betterexpect(Math.floor(cPriceAtLastTimeInEthUsd/cPriceAtLastTimeInJpyUsd)).toEqBN(`${lastGoodPrice2}`.substr(0,6));
+        expect(status2).toBe(2);
+        expect(Math.floor(cPriceAtLastTimeInEthUsd/cPriceAtLastTimeInJpyUsd)).toEqBN(`${lastGoodPrice2}`.substr(0,6));
     });
 
   });
