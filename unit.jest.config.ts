@@ -15,7 +15,7 @@ module.exports = {
     '^@typechainTypes/(.*)$': '<rootDir>/typechain/$1',
   },
   "setupFilesAfterEnv": [
-    "./jest.setup.js"
+    "./jest.setup.ts"
   ],
   "preset": "ts-jest",
   "testEnvironment": "node",
