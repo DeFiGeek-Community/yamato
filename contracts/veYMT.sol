@@ -18,27 +18,25 @@ import "./Yamato.sol";
  * @title veYMT Token
  * @notice Locked YMT. An ERC-20 but w/o transfer()
  */
-contract veYMT is ERC20PresetMinterPauser {
+
+interface IveYMT {
+    function mintableInTimeframe(uint _start, uint _end) external view returns (uint);
+    function balanceOfAt(address _addr, uint _at) external view returns (uint);
+    function totalSupplyAt(uint _at) external view returns (uint);
+}
+
+contract veYMT is IveYMT {
     IYamato yamato = IYamato(address(0));
-    constructor(uint256 initialSupply) ERC20PresetMinterPauser("Yamato", "YMT") {
-        _mint(msg.sender, initialSupply);
+
+    function mintableInTimeframe(uint _start, uint _end) public view override returns (uint) {
+        return 1;
     }
 
-    modifier onlyYamato(){
-        require(msg.sender == address(yamato), "You are not Yamato contract.");
-        _;
+    function balanceOfAt(address _addr, uint _at) public view override returns (uint) {
+        return 1;
     }
 
-    function mint(address to, uint amount) public virtual override onlyYamato() {
-        _mint(to, amount);
+    function totalSupplyAt(uint _at) public view override returns (uint) {
+        return 1;
     }
-
-    function approve(address spender, uint256 amount) public virtual override returns (bool) {
-        require(_msgSender() != spender, "sender and spender shouldn't be the same.");
-        require(amount > 0, "Amount is zero.");
-
-        _approve(_msgSender(), spender, amount);
-        return true;
-    }
-
 }

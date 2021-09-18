@@ -1,4 +1,5 @@
 pragma solidity 0.7.6;
+pragma abicoder v2;
 
 /*
  * SPDX-License-Identifier: GPL-3.0-or-later
@@ -12,12 +13,20 @@ pragma solidity 0.7.6;
 import "./Pool.sol";
 import "./YMT.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "./CurrencyOS.sol";
+import "./CjpyOS.sol";
 import "./PriceFeed.sol";
 import "./IERC20MintableBurnable.sol";
 import "hardhat/console.sol";
 
 interface IYamato {
+    struct Pledge {
+        uint coll;
+        uint debt;
+        bool isCreated;
+        address owner;
+    }
+    function getPledge(address _owner) external view returns (Pledge memory); 
+
 }
 
 
@@ -26,15 +35,9 @@ interface IYamato {
 contract Yamato is IYamato, ReentrancyGuard{
 
     IPool pool;
-    ICurrencyOS cjpyOS;
+    ICjpyOS cjpyOS;
     IPriceFeed feed;
-    struct Pledge {
-        uint coll;
-        uint debt;
-        bool isCreated;
-        address owner;
-    }
-    mapping(address=>Pledge) public pledges;
+    mapping(address=>Pledge) pledges;
     address[] public pledgesIndices;
     mapping(uint=>Pledge[]) private sortedPledges;
     uint public totalColl;
@@ -50,7 +53,7 @@ contract Yamato is IYamato, ReentrancyGuard{
 
     constructor(address _pool, address _cjpyOS){
         pool = IPool(_pool);
-        cjpyOS = ICurrencyOS(_cjpyOS);
+        cjpyOS = ICjpyOS(_cjpyOS);
     }
 
 
@@ -431,6 +434,18 @@ contract Yamato is IYamato, ReentrancyGuard{
         } else {
             _FRpertenk = 10;
         }
+    }
+
+
+    /*
+    ==============================
+        State Getter Function
+    ==============================
+        - getPledge
+    */
+
+    function getPledge(address _owner) public view override returns (Pledge memory) {
+        return pledges[_owner];
     }
 
 }

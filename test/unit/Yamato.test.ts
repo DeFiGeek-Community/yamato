@@ -159,7 +159,7 @@ describe("Yamato", function() {
 
       betterexpect(TCR.toString()).toBe("110");
 
-      const pledge = await yamato.pledges(await yamato.signer.getAddress());
+      const pledge = await yamato.getPledge(await yamato.signer.getAddress());
 
       betterexpect(pledge.coll.toString()).toBe("1000000000000000000");
       betterexpect(pledge.debt.toString()).toBe("236363636363636350000000");
@@ -223,7 +223,7 @@ describe("Yamato", function() {
       const toBorrow = (PRICE * toCollateralize) / MCR;
       await yamato.deposit({value:toERC20(toCollateralize+"")});
       await yamato.borrow(toERC20(toBorrow+""));
-      const pledgeBefore = await yamato.pledges(await yamato.signer.getAddress());
+      const pledgeBefore = await yamato.getPledge(await yamato.signer.getAddress());
 
       betterexpect(pledgeBefore.coll.toString()).toBe("1000000000000000000");
       betterexpect(pledgeBefore.debt.toString()).toBe("236363636363636350000000");
@@ -231,7 +231,7 @@ describe("Yamato", function() {
 
       await yamato.repay(toERC20(toBorrow+""));
 
-      const pledgeAfter = await yamato.pledges(await yamato.signer.getAddress());
+      const pledgeAfter = await yamato.getPledge(await yamato.signer.getAddress());
 
       betterexpect(pledgeAfter.coll.toString()).toBe("1000000000000000000");
       betterexpect(pledgeAfter.debt.toString()).toBe("0");
@@ -319,7 +319,7 @@ describe("Yamato", function() {
       const toBorrow = (PRICE * toCollateralize) / MCR / 10;
       await yamato.deposit({value:toERC20(toCollateralize+"")});
       await yamato.borrow(toERC20(toBorrow+""));
-      const pledgeBefore = await yamato.pledges(await yamato.signer.getAddress());
+      const pledgeBefore = await yamato.getPledge(await yamato.signer.getAddress());
 
       betterexpect(pledgeBefore.coll.toString()).toBe("1000000000000000000");
       betterexpect(pledgeBefore.debt.toString()).toBe("23636363636363636000000");
@@ -329,7 +329,7 @@ describe("Yamato", function() {
 
       await yamato.withdraw(toERC20(toCollateralize/10+""));
 
-      const pledgeAfter = await yamato.pledges(await yamato.signer.getAddress());
+      const pledgeAfter = await yamato.getPledge(await yamato.signer.getAddress());
 
       betterexpect(pledgeAfter.coll.toString()).toBe(toERC20(toCollateralize*9/10+"").toString());
       betterexpect(pledgeAfter.debt.toString()).toBe("23636363636363636000000");
@@ -343,7 +343,7 @@ describe("Yamato", function() {
       const toBorrow = (PRICE * toCollateralize) / MCR / 10;
       await yamato.deposit({value:toERC20(toCollateralize+"")});
       await yamato.borrow(toERC20(toBorrow+""));
-      const pledgeBefore = await yamato.pledges(await yamato.signer.getAddress());
+      const pledgeBefore = await yamato.getPledge(await yamato.signer.getAddress());
 
       betterexpect(pledgeBefore.coll.toString()).toBe("1000000000000000000");
       betterexpect(pledgeBefore.debt.toString()).toBe("0");
@@ -369,7 +369,7 @@ describe("Yamato", function() {
       const toBorrow = (PRICE * toCollateralize) / MCR;
       await yamato.deposit({value:toERC20(toCollateralize+"")});
       await yamato.borrow(toERC20(toBorrow+""));
-      const pledgeBefore = await yamato.pledges(await yamato.signer.getAddress());
+      const pledgeBefore = await yamato.getPledge(await yamato.signer.getAddress());
 
       betterexpect(pledgeBefore.coll.toString()).toBe("1000000000000000000");
       betterexpect(pledgeBefore.debt.toString()).toBe("236363636363636350000000");
@@ -391,7 +391,7 @@ describe("Yamato", function() {
       const toBorrow = (PRICE * toCollateralize) / MCR;
       await yamato.deposit({value:toERC20(toCollateralize+"")});
       await yamato.borrow(toERC20(toBorrow+""));
-      const pledgeBefore = await yamato.pledges(await yamato.signer.getAddress());
+      const pledgeBefore = await yamato.getPledge(await yamato.signer.getAddress());
 
       betterexpect(pledgeBefore.coll.toString()).toBe("1000000000000000000");
       betterexpect(pledgeBefore.debt.toString()).toBe("236363636363636350000000");
@@ -440,13 +440,13 @@ describe("Yamato", function() {
     });
 
     it(`should reduce debt of lowest ICR pledges`, async function() {
-      let p0 = await yamato.pledges(accounts[0].address);
+      let p0 = await yamato.getPledge(accounts[0].address);
       let icr0 = await yamato.getICR(p0.coll.mul(PRICE_AFTER), p0.debt);
       betterexpect(icr0.toString()).toBe("55");
 
       await yamato.connect(accounts[0]).redeem(toERC20(toBorrow+""), false);
 
-      p0 = await yamato.pledges(accounts[0].address);
+      p0 = await yamato.getPledge(accounts[0].address);
       icr0 = await yamato.getICR(p0.coll.mul(PRICE_AFTER), p0.debt);
       betterexpect(icr0.toString()).toBe("0");
     });
