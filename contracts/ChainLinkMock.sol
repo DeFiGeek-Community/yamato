@@ -25,7 +25,7 @@ contract ChainLinkMock is OracleMockBase, AggregatorV3Interface {
     mapping(uint80 => uint256) private prevTimestamps;
     mapping(uint80 => uint80) private prevAnsweredInRounds;
 
-    constructor(string memory _symbol) public {
+    constructor(string memory _symbol) {
         symbol = getSymbolId(_symbol);
         require(symbol > 0, "Only ETH/USD and JPY/USD is supported.");
 
@@ -72,15 +72,6 @@ contract ChainLinkMock is OracleMockBase, AggregatorV3Interface {
         int change = lastPrice / 1000;
         change = change * int(deviation);
         answer = sign ? lastPrice + change : lastPrice - change;
-
-        if (answer == 0) {
-          // Price shouldn't be zero, reset if so
-          setPriceToDefault();
-          answer = lastPrice;
-        } else if (answer < 0) {
-          // Price shouldn't be negative, flip the sign if so
-          answer = answer * -1;
-        }
 
         lastPrice = answer;
         answeredInRound = currentRoundId;

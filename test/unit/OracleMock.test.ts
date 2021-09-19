@@ -154,7 +154,7 @@ describe("TellorCallerMock", function() {
     });
   
     describe("simulatePriceMove()", function() {
-      it (`succeeds to update a price for Chainlink`, async function() {
+      it (`succeeds to update a price for Tellor`, async function() {
         // the price deviation shall be within 1% range.
         await tellorCallerMockEthJpy.simulatePriceMove()
         let [ifRetrieve, ethJpyValue, timestampRetrieved] = await tellorCallerMockEthJpy.getTellorCurrentValue(59)
