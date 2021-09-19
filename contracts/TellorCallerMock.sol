@@ -27,7 +27,7 @@ contract TellorCallerMock is OracleMockBase, ITellorCaller {
         uint256 _lastPrice = uint256(lastPrice);
         uint256 value;
         if (deviation != 0) { // nothing to do if deviation is zero
-            uint change = _lastPrice / 100;
+            uint change = _lastPrice / 1000;
             change = change * deviation;
             value = sign ? _lastPrice + change : _lastPrice - change;
 
