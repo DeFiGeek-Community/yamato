@@ -74,4 +74,9 @@ contract Pool is IPool {
         (bool success,) = payable(recipient).call{value:amount}("");
         require(success, "transfer failed");
     }
+
+    /// @notice Provide the data of public storage.
+    function getStates() public view returns (uint, uint, uint, uint) {
+        return (redemptionReserve, sweepReserve, dividendReserve, lockedCollateral);
+    }
 }

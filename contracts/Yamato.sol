@@ -448,4 +448,22 @@ contract Yamato is IYamato, ReentrancyGuard{
         return pledges[_owner];
     }
 
+    /// @notice Provide the data of public storage.
+    function getStates() public view returns (uint, uint, uint8, uint8, uint8, uint8) {
+        return (totalColl, totalDebt, MCR, RRR, SRR, GRR);
+    }
+
+    /// @notice Provide the data of indivisual pledge.
+    function getIndivisualStates(address owner) public view returns (
+        uint coll,
+        uint debt,
+        bool isCreated,
+        uint withdrawLock,
+        uint depositAndBorrowLock
+    ) {
+        Pledge memory pledge = pledges[owner];
+        withdrawLock = withdrawLocks[owner];
+        depositAndBorrowLock = depositAndBorrowLocks[owner];
+        return (pledge.coll, pledge.debt, pledge.isCreated, withdrawLock, depositAndBorrowLock);
+    }
 }
