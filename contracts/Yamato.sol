@@ -11,6 +11,7 @@ pragma abicoder v2;
 //solhint-disable no-inline-assembly
 
 import "./Pool.sol";
+import "./PriorityRegistry.sol";
 import "./YMT.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "./CjpyOS.sol";
@@ -24,6 +25,7 @@ interface IYamato {
         uint debt;
         bool isCreated;
         address owner;
+        uint lastUpsertedTimeICRpertenk;
     }
     function getPledge(address _owner) external view returns (Pledge memory); 
 
@@ -35,8 +37,13 @@ interface IYamato {
 contract Yamato is IYamato, ReentrancyGuard{
 
     IPool pool;
+    bool poolInitialized = false;
+    IPriorityRegistry priorityRegistry;
+    bool priorityRegistryInitialized = false;
     ICjpyOS cjpyOS;
     IPriceFeed feed;
+    address governance;
+
     mapping(address=>Pledge) pledges;
     address[] public pledgesIndices;
     mapping(uint=>Pledge[]) private sortedPledges;
@@ -51,10 +58,42 @@ contract Yamato is IYamato, ReentrancyGuard{
     uint8 public SRR = 20; // SweepReserveRate
     uint8 public GRR = 1; // GasReserveRate
 
-    constructor(address _pool, address _cjpyOS){
-        pool = IPool(_pool);
+
+    /*
+        ==============================
+            Set-up functions
+        ==============================
+        - setPool
+        - setPriorityRegistry
+    */
+    constructor(address _cjpyOS){
         cjpyOS = ICjpyOS(_cjpyOS);
+        governance = msg.sender;
     }
+    function setPool(address _pool) public onlyGovernance onlyOnceForSetPool {
+        pool = IPool(_pool);
+    }
+    function setPriorityRegistry(address _priorityRegistry) public onlyGovernance onlyOnceForSetPool {
+        priorityRegistry = IPriorityRegistry(_priorityRegistry);
+    }
+    modifier onlyOnceForSetPool() {
+        require(!poolInitialized, "Pool is already initialized.");
+        poolInitialized = true;
+        _;
+    }
+    modifier onlyOnceForSetPriorityRegistry() {
+        require(!priorityRegistryInitialized, "PriorityRegistry is already initialized.");
+        priorityRegistryInitialized = true;
+        _;
+    }
+    modifier onlyGovernance() {
+        require(msg.sender == governance, "You are not the governer.");
+        _;
+    }
+    function removeGovernance() public onlyGovernance {
+        governance = address(0);
+    }
+    
 
 
 

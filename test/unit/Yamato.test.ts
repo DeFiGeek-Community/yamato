@@ -53,9 +53,9 @@ describe("Yamato", function() {
     mockCJPY = await smockit(spec4)
     mockCjpyOS = await smockit(spec5)
     yamato = await (await ethers.getContractFactory('Yamato')).deploy(
-      mockPool.address,
       mockCjpyOS.address
     );
+    await (await yamato.setPool(mockPool.address)).wait()
 
     PRICE = 260000;
     MCR = 1.1;
