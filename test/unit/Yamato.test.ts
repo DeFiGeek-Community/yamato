@@ -27,11 +27,7 @@ describe("Smock for Yamato", function() {
   it(`succeeds to make a mock`, async function() {
     const spec1 = await ethers.getContractFactory('PledgeLib')
     const pledgeMock = await smockit(spec1)
-    const spec2 = await ethers.getContractFactory('Yamato', {
-      libraries: {
-        PledgeLib: pledgeMock.address
-      }
-    })
+    const spec2 = await ethers.getContractFactory('Yamato', { libraries: { PledgeLib: pledgeMock.address } })
     const yamatoMock = await smockit(spec2)
     betterexpect(isMockContract(yamatoMock)).toBe(true);
   });

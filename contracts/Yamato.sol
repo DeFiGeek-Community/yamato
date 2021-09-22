@@ -30,6 +30,7 @@ interface IYamato {
         uint lastUpsertedTimeICRpertenk;
     }
     function getPledge(address _owner) external view returns (Pledge memory); 
+    function getFeed() external view returns (address); 
 
 }
 
@@ -47,6 +48,7 @@ contract Yamato is IYamato, ReentrancyGuard{
     ICjpyOS cjpyOS;
     IPriceFeed feed;
     address governance;
+    address tester;
 
     mapping(address=>Pledge) pledges;
     address[] public pledgesIndices;
@@ -74,6 +76,7 @@ contract Yamato is IYamato, ReentrancyGuard{
     constructor(address _cjpyOS){
         cjpyOS = ICjpyOS(_cjpyOS);
         governance = msg.sender;
+        tester = msg.sender;
     }
     function setPool(address _pool) public onlyGovernance onlyOnceForSetPool {
         pool = IPool(_pool);
@@ -95,8 +98,15 @@ contract Yamato is IYamato, ReentrancyGuard{
         require(msg.sender == governance, "You are not the governer.");
         _;
     }
-    function removeGovernance() public onlyGovernance {
+    modifier onlyTester() {
+        require(msg.sender == tester, "You are not the tester.");
+        _;
+    }
+    function revokeGovernance() public onlyGovernance {
         governance = address(0);
+    }
+    function revokeTester() public onlyGovernance {
+        tester = address(0);
     }
     
 
@@ -487,7 +497,7 @@ contract Yamato is IYamato, ReentrancyGuard{
     }
 
     /// @dev To share feed with PriorityRegistry
-    function getFeed() public view returns (address) {
+    function getFeed() public view override returns (address) {
         return cjpyOS.feed();
     }
 
@@ -515,4 +525,18 @@ contract Yamato is IYamato, ReentrancyGuard{
         depositAndBorrowLock = depositAndBorrowLocks[owner];
         return (pledge.coll, pledge.debt, pledge.isCreated, withdrawLock, depositAndBorrowLock);
     }
+
+
+
+    /*
+    ==============================
+        Testability Helpers
+    ==============================
+        - bypassUpsert()
+    */
+    function bypassUpsert(Pledge calldata _pledge) external onlyTester {
+        priorityRegistry.upsert(_pledge);
+    }
+
+
 }

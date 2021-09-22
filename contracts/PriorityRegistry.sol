@@ -12,6 +12,7 @@ pragma abicoder v2;
 import "./Yamato.sol";
 import "./Dependencies/PledgeLib.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "hardhat/console.sol";
 
 interface IPriorityRegistry {
     function upsert(IYamato.Pledge memory _pledge) external;
@@ -24,10 +25,11 @@ contract PriorityRegistry is IPriorityRegistry {
     using PledgeLib for IYamato.Pledge;
 
     mapping(uint=>IYamato.Pledge[]) sortedPledges; // ICR => [Pledge, Pledge, Pledge, ...]
-    address yamato;
+    uint public pledgeLength = 0;
+    IYamato yamato;
 
     constructor(address _yamato) {
-        yamato = _yamato;
+        yamato = IYamato(_yamato);
     }
 
     /*
@@ -35,24 +37,26 @@ contract PriorityRegistry is IPriorityRegistry {
     */
     function upsert(IYamato.Pledge memory myPledge) public onlyYamato override {
 
-        // uint _oldICRpertenk = myPledge.lastUpsertedTimeICRpertenk;
+        uint _oldICRpertenk = myPledge.lastUpsertedTimeICRpertenk;
 
-        // /* delete current pledge form sorted pledge */
-        // IYamato.Pledge[] memory _arr = sortedPledges[_oldICRpertenk];
+        /* delete current pledge form sorted pledge */
+        IYamato.Pledge[] memory _arr = sortedPledges[_oldICRpertenk];
 
-        // for(uint i = 0; i < _arr.length; i++){
-        //     IYamato.Pledge memory _p = _arr[i];
-        //     if (_p.owner == myPledge.owner){
-        //         delete sortedPledges[_oldICRpertenk][i];
-        //     }
-        // }
+        for(uint i = 0; i < _arr.length; i++){
+            IYamato.Pledge memory _p = _arr[i];
+            if (_p.owner == myPledge.owner){
+                delete sortedPledges[_oldICRpertenk][i];
+                pledgeLength = pledgeLength.sub(1);
+            }
+        }
 
-        // /* insert new pledge */
-        // uint _newICRpertenk = myPledge.getICR(yamato.getFeed());
+        /* insert new pledge */
+        uint _newICRpertenk = myPledge.getICR(yamato.getFeed());
 
-        // myPledge.lastUpsertedTimeICRpertenk = _newICRpertenk;
+        myPledge.lastUpsertedTimeICRpertenk = _newICRpertenk;
 
-        // sortedPledges[_newICRpertenk].push(myPledge);
+        sortedPledges[_newICRpertenk].push(myPledge);
+        pledgeLength = pledgeLength.add(1);
     }
     function remove(IYamato.Pledge memory _pledge) public onlyYamato override {
         // uint _ICRpertenk = _pledge.lastUpsertedTimeICRpertenk;
@@ -62,6 +66,7 @@ contract PriorityRegistry is IPriorityRegistry {
         //         delete sortedPledges[_ICRpertenk][i];
         //     }
         // }
+        // pledgeLength = pledgeLength.sub(1);
     }
     modifier onlyYamato(){
         require(msg.sender == address(yamato), "You are not Yamato contract.");

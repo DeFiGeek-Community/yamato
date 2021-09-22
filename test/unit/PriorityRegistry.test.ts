@@ -25,16 +25,19 @@ import { genABI } from '@src/genABI';
 /* Parameterized Test (Testcases are in /test/parameterizedSpecs.ts) */
 describe("Smock for PriorityRegistry", function() {
   it(`succeeds to make a mock`, async function() {
-    const spec = await ethers.getContractFactory('PriorityRegistry')
+    const PledgeLib = ( await (await ethers.getContractFactory('PledgeLib')).deploy() ).address
+    const spec = await ethers.getContractFactory('PriorityRegistry', { libraries: { PledgeLib } })
     const mock = await smockit(spec)
     betterexpect(isMockContract(mock)).toBe(true);
   });
 });
 
-describe.skip("PriorityRegistry", function() {
+describe("PriorityRegistry", function() {
   let mockYamato;
   let mockCjpyOS;
   let mockFeed;
+  let yamato;
+  let priorityRegistryWithYamatoMock;
   let priorityRegistry;
   let accounts;
 
@@ -47,6 +50,7 @@ describe.skip("PriorityRegistry", function() {
     const spec1 = await ethers.getContractFactory('Yamato', { libraries: { PledgeLib } })
     const spec2 = await ethers.getContractFactory('CjpyOS')
     const spec3 = await ethers.getContractFactory('PriceFeed')
+
     mockYamato = await smockit(spec1)
     mockCjpyOS = await smockit(spec2)
     mockFeed = await smockit(spec3)
@@ -55,16 +59,32 @@ describe.skip("PriorityRegistry", function() {
     mockCjpyOS.smocked.feed.will.return.with(mockFeed.address);
     mockYamato.smocked.getFeed.will.return.with(mockFeed.address);
 
-    priorityRegistry = await (
+
+    /*
+      For unit tests
+    */
+      priorityRegistryWithYamatoMock = await (
       await ethers.getContractFactory('PriorityRegistry', { libraries: { PledgeLib } })
     ).deploy(
         mockYamato.address,
     );
 
+
+    /*
+      For onlyYamato tests
+    */
+    yamato = await spec1.deploy(mockCjpyOS.address);
+    priorityRegistry = await (
+      await ethers.getContractFactory('PriorityRegistry', { libraries: { PledgeLib } })
+    ).deploy(
+        yamato.address,
+    );
+    await ( await yamato.setPriorityRegistry(priorityRegistry.address) ).wait()
+
   });
 
   describe("upsert()", function() {
-    it(`fails.`, async function() {
+    it(`fails due to the call from EOA.`, async function() {
         /*
             struct Pledge {
                 uint coll;
@@ -74,24 +94,20 @@ describe.skip("PriorityRegistry", function() {
                 uint lastUpsertedTimeICRpertenk;        
             }
         */
-        const _types = ["uint256", "uint256", "bool", "address", "uint256"]
-        const _data = [BigNumber.from("100000000000000000"), BigNumber.from("30000100000000000000000"), true, accounts[0], 0]
-        const _pledge = encode(_types, _data);
+        const _pledge = [BigNumber.from("100000000000000000"), BigNumber.from("30000100000000000000000"), true, accounts[0].address, 0]
 
-        await betterexpect( priorityRegistry.connect(accounts[1].address).upsert(_pledge) ).toBeReverted()
+        await betterexpect( priorityRegistryWithYamatoMock.connect(accounts[1]).upsert(_pledge) ).toBeReverted()
     });
 
-    it(`succeeds.`, async function() {
-        const _types = []
-        const _data = []
-        const _pledge = encode(_types, _data);
+    it(`succeeds to be called from Yamato.`, async function() {
+        const pledgeLengthBefore = await priorityRegistry.pledgeLength()
 
-        await priorityRegistry.addYamato(accounts[0].address); // onlyGovernance
-        await priorityRegistry.upsert(_pledge)
+        const _pledge = [BigNumber.from("100000000000000000"), BigNumber.from("30000100000000000000000"), true, accounts[0].address, 0]
+        await ( await yamato.bypassUpsert(_pledge) ).wait()
 
-        const _result = {};
-        const _resultPledge = encode(_types, _result);
-    });
+        const pledgeLengthAfter = await priorityRegistry.pledgeLength()
+
+        betterexpect(pledgeLengthAfter).toEqBN(pledgeLengthBefore.add(1))
+      });
   });
-
 });

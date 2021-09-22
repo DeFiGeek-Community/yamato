@@ -65,7 +65,7 @@ describe("CjpyOS", function() {
 
   describe("addYamato()", function() {
     it(`fails to add new Yamato for non-governer.`, async function() {
-      await betterexpect( cjpyOS.connect(accounts[1].address).addYamato(accounts[1].address) ).toBeReverted()
+      await betterexpect( cjpyOS.connect(accounts[1]).addYamato(accounts[1].address) ).toBeReverted()
     });
 
     it(`succeeds to add new Yamato`, async function() {
