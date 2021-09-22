@@ -17,6 +17,8 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "./CjpyOS.sol";
 import "./PriceFeed.sol";
 import "./IERC20MintableBurnable.sol";
+import "./Dependencies/PledgeLib.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
 import "hardhat/console.sol";
 
 interface IYamato {
@@ -35,6 +37,8 @@ interface IYamato {
 /// @title Yamato Pledge Manager Contract
 /// @author 0xMotoko
 contract Yamato is IYamato, ReentrancyGuard{
+    using SafeMath for uint256;
+    using PledgeLib for IYamato.Pledge;
 
     IPool pool;
     bool poolInitialized = false;
@@ -49,6 +53,7 @@ contract Yamato is IYamato, ReentrancyGuard{
     mapping(uint=>Pledge[]) private sortedPledges;
     uint public totalColl;
     uint public totalDebt;
+    uint public TCR;
 
     mapping(address=>uint) public withdrawLocks;
     mapping(address=>uint) public depositAndBorrowLocks;
@@ -144,8 +149,7 @@ contract Yamato is IYamato, ReentrancyGuard{
             1. Ready
         */
         Pledge storage pledge = pledges[msg.sender];
-        uint jpyPerEth = IPriceFeed(cjpyOS.feed()).fetchPrice();
-        uint _ICRAfter = getICR(pledge.coll * jpyPerEth, pledge.debt + borrowAmountInCjpy);
+        uint _ICRAfter = pledge.toMem().addDebt(borrowAmountInCjpy).getICR(cjpyOS.feed());
 
         /*
             2. Validate
@@ -169,6 +173,7 @@ contract Yamato is IYamato, ReentrancyGuard{
         */
         pledge.debt += borrowAmountInCjpy;
         totalDebt += borrowAmountInCjpy;
+        TCR = getTCR();
 
         /*
             4-2. Cheat guard
@@ -211,6 +216,7 @@ contract Yamato is IYamato, ReentrancyGuard{
         */
         pledge.debt -= cjpyAmount;
         totalDebt -= cjpyAmount;
+        TCR = getTCR();
 
         /*
             3-1. Charge CJPY
@@ -227,26 +233,26 @@ contract Yamato is IYamato, ReentrancyGuard{
         /*
             1. Get feed and pledge
         */
-        uint jpyPerEth = IPriceFeed(cjpyOS.feed()).fetchPrice();
         Pledge storage pledge = pledges[msg.sender];
 
         /*
             2. Validate
         */
         require(withdrawLocks[msg.sender] <= block.timestamp, "Withdrawal is being locked for this sender.");
-        require(getICR(pledge.coll*jpyPerEth,pledge.debt) >= MCR, "Withdrawal failure: ICR is not more than MCR.");
+        require(pledge.toMem().getICR(cjpyOS.feed()) >= MCR, "Withdrawal failure: ICR is not more than MCR.");
 
         /*
             3. Update pledge
         */
         pledge.coll -= ethAmount;
         totalColl -= ethAmount;
+        TCR = getTCR();
 
 
         /*
             4. Validate TCR
         */
-        require(getICR(pledge.coll*jpyPerEth,pledge.debt) >= MCR, "Withdrawal failure: ICR can't be less than MCR after withdrawal.");
+        require(pledge.toMem().getICR(cjpyOS.feed()) >= MCR, "Withdrawal failure: ICR can't be less than MCR after withdrawal.");
 
 
         /*
@@ -288,7 +294,7 @@ contract Yamato is IYamato, ReentrancyGuard{
 
             Pledge memory pledge = pledges[borrower];
             if(pledge.coll > 0){
-                uint ICR = getICR(pledge.coll * jpyPerEth, pledge.debt);
+                uint ICR = pledge.getICR(cjpyOS.feed());
                 if(ICR < MCR){
                     sortedPledges[ICR].push(pledge);
                     sortedPledgesCount += 1;
@@ -331,6 +337,7 @@ contract Yamato is IYamato, ReentrancyGuard{
                     totalDebt -= reducingEthAmount * jpyPerEth;
                     require(totalColl > reducingEthAmount, "totalColl is negative");
                     totalColl -= reducingEthAmount;
+                    TCR = getTCR();
 
                     reserveLeftInEth -= reducingEthAmount;
                 }
@@ -414,6 +421,7 @@ contract Yamato is IYamato, ReentrancyGuard{
                 cjpyOS.burnCJPY(address(pool), _debt);
                 pledge.debt -= _debt;
                 totalDebt -= _debt;
+                TCR = getTCR();
                 pledge.isCreated = (pledge.debt > 0);
             }
 
@@ -435,31 +443,18 @@ contract Yamato is IYamato, ReentrancyGuard{
 
     }
 
-
-    /// @notice Calculate ICR
-    /// @dev (coll*priceInJpy)/debt, if debt==0 then return uint256-max ICR
-    /// @param collInCjpy coll * ethPriceInJpy
-    /// @param debt from pledge
-    /// @return ICR in uint256
-    function getICR(uint collInCjpy, uint debt) public view returns (uint ICR) {
-        if(debt == 0){
-            ICR = 2**256 - 1;
-        } else {
-            ICR = 100 * collInCjpy / debt;
-        }
-    }
-
     /// @notice Calculate TCR
     /// @dev (totalColl*jpyPerEth)/totalDebt
-    /// @param jpyPerEth price of coll
-    /// @return TCR in uint256
-    function getTCR(uint jpyPerEth) public view returns (uint TCR) {
-        TCR = getICR(totalColl*jpyPerEth,totalDebt);
+    /// @return _TCR in uint256
+    function getTCR() public returns (uint _TCR) {
+        Pledge memory _pseudoPledge = Pledge(totalColl, totalDebt, true, msg.sender, 0);
+        _TCR = _pseudoPledge.getICR(cjpyOS.feed());
     }
 
 
     /// @param _ICRpertenk IndividualCollateralRatio per 10k
     /// @dev Three linear fumula there are
+    /// @return _FRpertenk Corresponding fee rate in uint256 per-ten-kilo unit
     function FR(uint _ICRpertenk) public view returns (uint _FRpertenk) {
         require(_ICRpertenk >= 11000, "ICR too low to get fee data.");
         if(11000 <= _ICRpertenk && _ICRpertenk < 13000) {
@@ -481,11 +476,26 @@ contract Yamato is IYamato, ReentrancyGuard{
         State Getter Function
     ==============================
         - getPledge
+        - getFeed
+        - getStates
+        - getIndivisualStates
     */
 
+    /// @dev To give pledge access with using Interface implementation
     function getPledge(address _owner) public view override returns (Pledge memory) {
         return pledges[_owner];
     }
+
+    /// @dev To share feed with PriorityRegistry
+    function getFeed() public view returns (address) {
+        return cjpyOS.feed();
+    }
+
+    /// @dev For test purpose
+    function getICR(uint _coll, uint _debt) external returns (uint) {
+        return Pledge(_coll, _debt, true, msg.sender, 0).getICR(cjpyOS.feed());
+    }
+
 
     /// @notice Provide the data of public storage.
     function getStates() public view returns (uint, uint, uint8, uint8, uint8, uint8) {

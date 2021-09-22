@@ -10,6 +10,7 @@ pragma abicoder v2;
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 import "./Yamato.sol";
+import "./Dependencies/PledgeLib.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
 interface IPriorityRegistry {
@@ -20,6 +21,7 @@ interface IPriorityRegistry {
 
 contract PriorityRegistry is IPriorityRegistry {
     using SafeMath for uint256;
+    using PledgeLib for IYamato.Pledge;
 
     mapping(uint=>IYamato.Pledge[]) sortedPledges; // ICR => [Pledge, Pledge, Pledge, ...]
     address yamato;
@@ -46,7 +48,7 @@ contract PriorityRegistry is IPriorityRegistry {
         // }
 
         // /* insert new pledge */
-        // uint _newICRpertenk = getICR(myPledge.debt, myPledge.coll*ethjpy);
+        // uint _newICRpertenk = myPledge.getICR(yamato.getFeed());
 
         // myPledge.lastUpsertedTimeICRpertenk = _newICRpertenk;
 

@@ -33,15 +33,31 @@ describe("Smock for PriorityRegistry", function() {
 
 describe.skip("PriorityRegistry", function() {
   let mockYamato;
+  let mockCjpyOS;
+  let mockFeed;
   let priorityRegistry;
   let accounts;
 
   beforeEach(async () => {
+    const PRICE = 300000;
     accounts = await getSharedSigners();
-    const spec1 = await ethers.getContractFactory('Yamato')
-    mockYamato = await smockit(spec1)
 
-    priorityRegistry = await (await ethers.getContractFactory('PriorityRegistry')).deploy(
+    const PledgeLib = ( await (await ethers.getContractFactory('PledgeLib')).deploy() ).address
+
+    const spec1 = await ethers.getContractFactory('Yamato', { libraries: { PledgeLib } })
+    const spec2 = await ethers.getContractFactory('CjpyOS')
+    const spec3 = await ethers.getContractFactory('PriceFeed')
+    mockYamato = await smockit(spec1)
+    mockCjpyOS = await smockit(spec2)
+    mockFeed = await smockit(spec3)
+
+    mockFeed.smocked.fetchPrice.will.return.with(PRICE);
+    mockCjpyOS.smocked.feed.will.return.with(mockFeed.address);
+    mockYamato.smocked.getFeed.will.return.with(mockFeed.address);
+
+    priorityRegistry = await (
+      await ethers.getContractFactory('PriorityRegistry', { libraries: { PledgeLib } })
+    ).deploy(
         mockYamato.address,
     );
 
