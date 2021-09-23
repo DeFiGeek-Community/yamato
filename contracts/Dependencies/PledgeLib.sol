@@ -22,18 +22,22 @@ library PledgeLib {
     /// @dev (coll*priceInJpy)/debt, if debt==0 then return uint256-max ICR
     /// @param _pledge having coll and debt
     /// @param _feed Oracle data in decimal=18 padded uint
-    /// @return ICR in uint256
-    function getICR(IYamato.Pledge memory _pledge, address _feed) public returns (uint ICR) {
+    /// @return _ICR in uint256
+    function getICR(IYamato.Pledge memory _pledge, address _feed) public returns (uint _ICR) {
         IPriceFeed feed = IPriceFeed(_feed);
 
-        uint jpyPerEth = feed.fetchPrice();
-        uint collInCjpy = _pledge.coll * jpyPerEth;
-        uint debt = _pledge.debt;
+        uint _jpyPerEth = feed.fetchPrice();
+        uint _collInCjpy = _pledge.coll * _jpyPerEth;
+        uint _coll = _pledge.coll;
+        uint _debt = _pledge.debt;
 
-        if(debt == 0){
-            ICR = 2**256 - 1;
+        if(_coll == 0 && _debt == 0){
+            revert("Arithmetic Error: Yamato doesn't define the ICR of coll=0 debt=0 pledge.");
+        } else if (_debt == 0) {
+            _ICR = 2**256 - 1;
         } else {
-            ICR = 100 * collInCjpy / debt;
+            // Note: ICR is per-ten-k in Yamato
+            _ICR = 10000 * _collInCjpy / _debt;
         }
     }
 

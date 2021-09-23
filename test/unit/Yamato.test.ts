@@ -33,7 +33,7 @@ describe("Smock for Yamato", function() {
   });
 });
 
-describe("Yamato", function() {
+describe("contract Yamato", function() {
   let mockPool;
   let mockFeed;
   let mockYMT;
@@ -162,7 +162,7 @@ describe("Yamato", function() {
       await yamato.borrow(toERC20(toBorrow+""));
       const _TCR = await yamato.TCR();
 
-      betterexpect(_TCR).toEqBN("110");
+      betterexpect(_TCR).toEqBN("11000");
 
       const pledge = await yamato.getPledge(await yamato.signer.getAddress());
 
@@ -273,8 +273,10 @@ describe("Yamato", function() {
       await yamato.borrow(toERC20(toBorrow+""));
  
       mockFeed.smocked.fetchPrice.will.return.with(PRICE/2);
+      // Note: getTCR to update TCR
+      await ( await yamato.updateTCR() ).wait()
       const dumpedTCR = await yamato.TCR();
-      betterexpect(parseInt(dumpedTCR.toString()) < MCR*100).toBe(true);
+      betterexpect(dumpedTCR).toBeLtBN(MCR*10000);
 
       const TCRbefore = await yamato.TCR();
       await yamato.repay(toERC20(toBorrow+""));
@@ -365,7 +367,7 @@ describe("Yamato", function() {
       betterexpect(TCRafter).toBeLtBN(TCRbefore);
 
     });
-    it(`can't be executed in the TCR < MCR`, async function() {
+    it(`can't be executed in the ICR < MCR`, async function() {
       const MCR = 1.1;
       mockFeed.smocked.fetchPrice.will.return.with(PRICE);
       mockPool.smocked['sendETH(address,uint256)'].will.return.with(0);     
@@ -382,7 +384,7 @@ describe("Yamato", function() {
       yamato.provider.send("evm_increaseTime", [60*60*24*3+1])
       yamato.provider.send("evm_mine")
 
-      mockFeed.smocked.fetchPrice.will.return.with(PRICE/2);
+      mockFeed.smocked.fetchPrice.will.return.with(PRICE/4);
 
       await betterexpect( yamato.withdraw(toERC20(toCollateralize/10+"")) ).toBeReverted();
 
@@ -404,9 +406,7 @@ describe("Yamato", function() {
       yamato.provider.send("evm_increaseTime", [60*60*24*3+1])
       yamato.provider.send("evm_mine")
 
-      mockFeed.smocked.fetchPrice.will.return.with(PRICE/2);
-
-      await betterexpect( yamato.withdraw(toERC20(toCollateralize/10+"")) ).toBeReverted();
+      await betterexpect( yamato.withdraw(toERC20(toCollateralize*0.9+"")) ).toBeReverted();
     });
     it.todo(`should run sendETH() of Pool.sol`);
   });

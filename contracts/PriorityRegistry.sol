@@ -35,42 +35,47 @@ contract PriorityRegistry is IPriorityRegistry {
     /*
         @dev The upsert process is  1. update coll/debt  2. upsert and return "upsert-time ICR"  3. update lastUpsertedTimeICRpertenk with the "upsert-time ICR"
     */
-    function upsert(IYamato.Pledge memory myPledge) public onlyYamato override {
-
-        uint _oldICRpertenk = myPledge.lastUpsertedTimeICRpertenk;
+    function upsert(IYamato.Pledge memory _pledge) public onlyYamato override {
+        require( !(_pledge.coll == 0 && _pledge.debt == 0 && _pledge.lastUpsertedTimeICRpertenk != 0) , "Upsert Error: The logless zero pledge cannot be upserted. It should be removed.");
+        uint _oldICRpertenk = _pledge.lastUpsertedTimeICRpertenk;
 
         /* delete current pledge form sorted pledge */
-        IYamato.Pledge[] memory _arr = sortedPledges[_oldICRpertenk];
+        IYamato.Pledge[] storage pledgesInICR = sortedPledges[_oldICRpertenk];
 
-        for(uint i = 0; i < _arr.length; i++){
-            IYamato.Pledge memory _p = _arr[i];
-            if (_p.owner == myPledge.owner){
-                delete sortedPledges[_oldICRpertenk][i];
-                pledgeLength = pledgeLength.sub(1);
-            }
-        }
+        _deletePledge(pledgesInICR, _pledge);
 
         /* insert new pledge */
-        uint _newICRpertenk = myPledge.getICR(yamato.getFeed());
+        uint _newICRpertenk = _pledge.getICR(yamato.getFeed());
 
-        myPledge.lastUpsertedTimeICRpertenk = _newICRpertenk;
+        _pledge.lastUpsertedTimeICRpertenk = _newICRpertenk;
 
-        sortedPledges[_newICRpertenk].push(myPledge);
+        sortedPledges[_newICRpertenk].push(_pledge);
         pledgeLength = pledgeLength.add(1);
+        
+        // TODO: return Pledge to overwrite
     }
     function remove(IYamato.Pledge memory _pledge) public onlyYamato override {
-        // uint _ICRpertenk = _pledge.lastUpsertedTimeICRpertenk;
-        // for(uint i = 0; i < sortedPledges[_ICRpertenk].length; i++){
-        //     IYamato.Pledge _scannedPledge = sortedPledges[_ICRpertenk][i];
-        //     if(_pledge.owner == _scannedPledge.owner) {
-        //         delete sortedPledges[_ICRpertenk][i];
-        //     }
-        // }
-        // pledgeLength = pledgeLength.sub(1);
+        require(_pledge.coll == 0, "Removal Error: coll has to be zero for removal.");
+        require(_pledge.debt == 0, "Removal Error: coll has to be zero for removal.");
+        require(_pledge.lastUpsertedTimeICRpertenk == 0, "Removal Error: coll has to be zero for removal.");
+        uint _removableICRpertenk = 0;
+        IYamato.Pledge[] storage removablePledges = sortedPledges[_removableICRpertenk];
+
+        _deletePledge(removablePledges, _pledge);
     }
     modifier onlyYamato(){
         require(msg.sender == address(yamato), "You are not Yamato contract.");
         _;
+    }
+
+    function _deletePledge(IYamato.Pledge[] storage sPledges, IYamato.Pledge memory _pledge) internal {
+        for(uint i = 0; i < sPledges.length; i++){
+            IYamato.Pledge memory _scannedPledge = sPledges[i];
+            if(_pledge.owner == _scannedPledge.owner) {
+                delete sPledges[i];
+                pledgeLength = pledgeLength.sub(1);
+            }
+        }
     }
 
 

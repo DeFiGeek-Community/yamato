@@ -60,10 +60,10 @@ contract Yamato is IYamato, ReentrancyGuard{
     mapping(address=>uint) public withdrawLocks;
     mapping(address=>uint) public depositAndBorrowLocks;
 
-    uint8 public MCR = 110; // MinimumCollateralizationRatio
-    uint8 public RRR = 80; // RedemptionReserveRate
-    uint8 public SRR = 20; // SweepReserveRate
-    uint8 public GRR = 1; // GasReserveRate
+    uint8 public MCR = 110; // MinimumCollateralizationRatio in pertenk
+    uint8 public RRR = 80; // RedemptionReserveRate in pertenk
+    uint8 public SRR = 20; // SweepReserveRate in pertenk
+    uint8 public GRR = 1; // GasReserveRate in pertenk
 
 
     /*
@@ -166,7 +166,7 @@ contract Yamato is IYamato, ReentrancyGuard{
         */
         require(depositAndBorrowLocks[msg.sender] < block.number, "Borrowing should not be executed within the same block with your deposit.");
         require(pledge.isCreated, "This pledge is not created yet.");
-        require( _ICRAfter >= MCR, "This minting is invalid because of too large borrowing.");
+        require( _ICRAfter >= uint(MCR).mul(100), "This minting is invalid because of too large borrowing.");
 
         /*
             3. Fee
@@ -249,7 +249,7 @@ contract Yamato is IYamato, ReentrancyGuard{
             2. Validate
         */
         require(withdrawLocks[msg.sender] <= block.timestamp, "Withdrawal is being locked for this sender.");
-        require(pledge.toMem().getICR(cjpyOS.feed()) >= MCR, "Withdrawal failure: ICR is not more than MCR.");
+        require(pledge.toMem().getICR(cjpyOS.feed()) >= uint(MCR).mul(100), "Withdrawal failure: ICR is not more than MCR.");
 
         /*
             3. Update pledge
@@ -262,7 +262,7 @@ contract Yamato is IYamato, ReentrancyGuard{
         /*
             4. Validate TCR
         */
-        require(pledge.toMem().getICR(cjpyOS.feed()) >= MCR, "Withdrawal failure: ICR can't be less than MCR after withdrawal.");
+        require(pledge.toMem().getICR(cjpyOS.feed()) >= uint(MCR).mul(100), "Withdrawal failure: ICR can't be less than MCR after withdrawal.");
 
 
         /*
@@ -305,7 +305,7 @@ contract Yamato is IYamato, ReentrancyGuard{
             Pledge memory pledge = pledges[borrower];
             if(pledge.coll > 0){
                 uint ICR = pledge.getICR(cjpyOS.feed());
-                if(ICR < MCR){
+                if(ICR < uint(MCR).mul(100)){
                     sortedPledges[ICR].push(pledge);
                     sortedPledgesCount += 1;
                 }
@@ -322,7 +322,7 @@ contract Yamato is IYamato, ReentrancyGuard{
             4. Update lowest ICR pledges until cjpy exhausted.
         */
         uint reserveLeftInEth = maxRedemptionCjpyAmount/jpyPerEth;
-        for(uint i = 1; i < MCR; i++){
+        for(uint i = 1; i < uint(MCR).mul(100); i++){
             uint ICR = i;
             Pledge[] storage _sortedPledgesPerICR = sortedPledges[ICR];
             for(uint j = 0; j < _sortedPledgesPerICR.length; j++){
@@ -357,7 +357,7 @@ contract Yamato is IYamato, ReentrancyGuard{
         /*
             5. Delete temporal pledges
         */
-        for(uint i = 1; i < MCR; i++){
+        for(uint i = 1; i < uint(MCR).mul(100); i++){
             for(uint j = 1; j < sortedPledges[i].length; j++){
                 delete sortedPledges[i][j];                    
             }
@@ -533,9 +533,17 @@ contract Yamato is IYamato, ReentrancyGuard{
         Testability Helpers
     ==============================
         - bypassUpsert()
+        - bypassRemove()
+        - updateTCR()
     */
     function bypassUpsert(Pledge calldata _pledge) external onlyTester {
         priorityRegistry.upsert(_pledge);
+    }
+    function bypassRemove(Pledge calldata _pledge) external onlyTester {
+        priorityRegistry.remove(_pledge);
+    }
+    function updateTCR() external onlyTester {
+        TCR = getTCR();
     }
 
 

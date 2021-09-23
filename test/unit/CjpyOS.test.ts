@@ -31,7 +31,7 @@ describe("Smock for CjpyOS", function() {
   });
 });
 
-describe("CjpyOS", function() {
+describe("contract CjpyOS", function() {
   let mockCJPY;
   let mockYMT;
   let mockVeYMT;
