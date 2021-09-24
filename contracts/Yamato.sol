@@ -500,6 +500,25 @@ contract Yamato is IYamato, ReentrancyGuard{
         _pledge.owner = address(0);
     }
 
+    /// @notice Use when redemption
+    function _expenseColl(Pledge storage sPledge, uint cjpyAmount) internal returns (uint) {
+        uint priceInEthJpy = feed.fetchPrice();
+        uint collValuation = sPledge.coll.mul(priceInEthJpy);
+        uint redemptionAmount;
+        uint reminder;
+        if ( collValuation < cjpyAmount ) {
+            redemptionAmount = collValuation;
+            reminder = cjpyAmount.sub(collValuation);
+        } else {
+            redemptionAmount = cjpyAmount;
+            reminder = 0;
+        }
+
+        // Note: SafeMath.sub checks full substruction
+        sPledge.coll -= redemptionAmount.div(priceInEthJpy);
+        return reminder;
+    }
+
 
     /// @notice Calculate TCR
     /// @dev (totalColl*jpyPerEth)/totalDebt

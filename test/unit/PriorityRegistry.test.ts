@@ -161,41 +161,150 @@ describe("contract PriorityRegistry", function() {
 
             betterexpect(pledgeLengthAfter).toEqBN(pledgeLengthBefore.add(1))
         });
+        it(`succeeds to update currentLICR`, async function() {
+          // TODO
+        });
+        it(`succeeds to back-scan the very next currentLICR`, async function() {
+          // TODO
+        });
 
   });
 
     describe("remove()", function() {
         it(`fails to remove non-zero pledge`, async function() {
-          const _pledge = [BigNumber.from("2000000000000000000"), BigNumber.from("300001000000000000000000"), true, accounts[0].address, 20000]
-          await betterexpect( yamato.bypassRemove(_pledge) ).toBeReverted()
-        });
-
-        it(`succeeds to remove zero a.k.a. sludge pledge`, async function() {
-
             const _collBefore = BigNumber.from("0")
             const _debtBefore = BigNumber.from("300001000000000000000000")
-            const _lastICR = BigNumber.from("0")
             const _owner = accounts[0].address
 
             // Note: Virtually it was a pledge with ICR=30% and now it had been redeemed. So it should be upserted to ICR=0 area.
             const _sludgePledge = [_collBefore, _debtBefore, true, _owner, 3000]
             await ( await yamato.bypassUpsert(_sludgePledge) ).wait()
 
-            // Note: Sludge pledge is sweeped in the Yamato.sol and now it is "logless zero pledge" in the Yamato.sol-side. So it should be removed.
-            const _sweepedPledge = [_collBefore, BigNumber.from("0"), true, _owner, 0]
+            // Note: Sludge pledge is not swept in the Yamato.sol and now it is "logless zero pledge" in the Yamato.sol-side. So it should be removed.
+            const _nonSweptPledge = [_collBefore, BigNumber.from("0"), true, _owner, 1]
+
+            await betterexpect( yamato.bypassRemove(_nonSweptPledge) ).toBeReverted()
+
+        });
+
+        it(`succeeds to remove zero a.k.a. sludge pledge`, async function() {
+
+            const _collBefore = BigNumber.from("0")
+            const _debtBefore = BigNumber.from("300001000000000000000000")
+            const _owner = accounts[0].address
+
+            // Note: Virtually it was a pledge with ICR=30% and now it had been redeemed. So it should be upserted to ICR=0 area.
+            const _sludgePledge = [_collBefore, _debtBefore, true, _owner, 3000]
+            await ( await yamato.bypassUpsert(_sludgePledge) ).wait()
+
+            // Note: Sludge pledge is swept in the Yamato.sol and now it is "logless zero pledge" in the Yamato.sol-side. So it should be removed.
+            const _sweptPledge = [BigNumber.from("0"), BigNumber.from("0"), true, _owner, 0]
 
             const pledgeLengthBefore = await priorityRegistry.pledgeLength()
-            await ( await yamato.bypassRemove(_sweepedPledge) ).wait()
+            await ( await yamato.bypassRemove(_sweptPledge) ).wait()
             const pledgeLengthAfter = await priorityRegistry.pledgeLength()
 
             betterexpect(pledgeLengthAfter).toEqBN(pledgeLengthBefore.sub(1))
         });      
-    });
+
+        it(`succeeds to remove maxint a.k.a. full-withdrawal pledge`, async function() {
+
+          const _collBefore = BigNumber.from("1000000000000000000")
+          const _debtBefore = BigNumber.from("0")
+          const _owner = accounts[0].address
+
+          // Note: newly deposited
+          const _sludgePledge = [_collBefore, _debtBefore, true, _owner, 0]
+          await ( await yamato.bypassUpsert(_sludgePledge) ).wait()
+
+          // Note: A deposited pledge has just been withdrawn and lastUpsertedTimeICRpertenk is maxint.
+          const _withdrawnPledge = [BigNumber.from("0"), BigNumber.from("0"), true, _owner, BigNumber.from(2).pow(256).sub(1)]
+
+          const pledgeLengthBefore = await priorityRegistry.pledgeLength()
+          await ( await yamato.bypassRemove(_withdrawnPledge) ).wait()
+          const pledgeLengthAfter = await priorityRegistry.pledgeLength()
+
+          betterexpect(pledgeLengthAfter).toEqBN(pledgeLengthBefore.sub(1))
+      });      
+
+      });
 
     describe("getRedeemable()", function() {
+      it(`fails to fetch the zero pledge`, async function() {
+        const _owner1 = accounts[0].address
+        const _coll1 = BigNumber.from("0")
+        const _debt1 = BigNumber.from("300001000000000000000000")
+        const _inputPledge1 = [_coll1, _debt1, true, _owner1, 0]
+        await ( await yamato.bypassUpsert(_inputPledge1) ).wait()
+
+        await betterexpect( priorityRegistry.getRedeemable() ).toBeReverted()
+      })
+      it(`fails to run in the all-sludge state`, async function() {
+        await betterexpect( priorityRegistry.getRedeemable() ).toBeReverted()
+      })
+
+      describe("Context of lastUpsertedTimeICRpertenk", function() {
+        it(`succeeds to get the lowest pledge with lastUpsertedTimeICRpertenk=0`, async function() {
+          const _owner1 = accounts[0].address
+          const _coll1 = BigNumber.from("1000000000000000000")
+          const _debt1 = BigNumber.from("300001000000000000000000")
+          const _owner2 = accounts[1].address
+          const _coll2 = BigNumber.from("2000000000000000000")
+          const _debt2 = BigNumber.from("300001000000000000000000")
+          const _inputPledge1 = [_coll1, _debt1, true, _owner1, 0]
+          const _inputPledge2 = [_coll2, _debt2, true, _owner2, 0]
+
+          await ( await yamato.bypassUpsert(_inputPledge1) ).wait()
+          await ( await yamato.bypassUpsert(_inputPledge2) ).wait()
+
+          const _currentLICRpertenk = await priorityRegistry.currentLICRpertenk();
+
+          const _pledge = await priorityRegistry.getRedeemable()
+
+          betterexpect(_pledge.lastUpsertedTimeICRpertenk).toEqBN(_currentLICRpertenk)
+          betterexpect(_pledge.owner).toBe(_owner1)
+        });
+        it(`succeeds to get the lowest pledge with lastUpsertedTimeICRpertenk\>0`, async function() {
+          const _owner1 = accounts[0].address
+          const _coll1 = BigNumber.from("1000000000000000000")
+          const _debt1 = BigNumber.from("300001000000000000000000")
+          const _owner2 = accounts[1].address
+          const _coll2 = BigNumber.from("2000000000000000000")
+          const _debt2 = BigNumber.from("300001000000000000000000")
+          const _inputPledge1 = [_coll1, _debt1, true, _owner1, 3000]
+          const _inputPledge2 = [_coll2, _debt2, true, _owner2, 3000]
+
+          await ( await yamato.bypassUpsert(_inputPledge1) ).wait()
+          await ( await yamato.bypassUpsert(_inputPledge2) ).wait()
+
+          const _currentLICRpertenk = await priorityRegistry.currentLICRpertenk();
+
+          const _pledge = await priorityRegistry.getRedeemable()
+
+          betterexpect(_pledge.lastUpsertedTimeICRpertenk).toEqBN(_currentLICRpertenk)
+          betterexpect(_pledge.owner).toBe(_owner1)
+        });
+      });
     });
 
     describe("getSweepable()", function() {
+      it(`fails to run if there're no sludge pledge`, async function() {
+        await betterexpect( priorityRegistry.getSweepable() ).toBeReverted()
+      })
+
+      it(`fails to fetch the zero pledge`, async function() {
+        const _owner1 = accounts[0].address
+        const _coll1 = BigNumber.from("0")
+        const _debt1 = BigNumber.from("300001000000000000000000")
+        const _inputPledge1 = [_coll1, _debt1, true, _owner1, 0]
+        await ( await yamato.bypassUpsert(_inputPledge1) ).wait()
+
+        const _sweepablePledge = await priorityRegistry.getSweepable()
+        betterexpect(_sweepablePledge.coll).toEqBN(0)
+        betterexpect(_sweepablePledge.debt).toBeGtBN(0)
+        betterexpect(_sweepablePledge.lastUpsertedTimeICRpertenk).toEqBN(0)
+      })
+
     });
 
   });
