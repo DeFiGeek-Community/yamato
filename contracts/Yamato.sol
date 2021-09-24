@@ -81,7 +81,7 @@ contract Yamato is IYamato, ReentrancyGuard{
     function setPool(address _pool) public onlyGovernance onlyOnceForSetPool {
         pool = IPool(_pool);
     }
-    function setPriorityRegistry(address _priorityRegistry) public onlyGovernance onlyOnceForSetPool {
+    function setPriorityRegistry(address _priorityRegistry) public onlyGovernance onlyOnceForSetPriorityRegistry {
         priorityRegistry = IPriorityRegistry(_priorityRegistry);
     }
     modifier onlyOnceForSetPool() {
@@ -142,7 +142,13 @@ contract Yamato is IYamato, ReentrancyGuard{
         }
 
         /*
-            2. Send ETH to pool
+            2. Update PriorityRegistry
+        */
+        pledge.lastUpsertedTimeICRpertenk = priorityRegistry.upsert(pledge);
+
+
+        /*
+            3. Send ETH to pool
         */
         (bool success,) = payable(address(pool)).call{value:ethAmount}("");
         require(success, "transfer failed");
@@ -175,25 +181,27 @@ contract Yamato is IYamato, ReentrancyGuard{
 
 
         /*
-            4. State transitions
-        */
-
-        /*
-            4-1. Top-up scenario
+            4. Top-up scenario
         */
         pledge.debt += borrowAmountInCjpy;
         totalDebt += borrowAmountInCjpy;
         TCR = getTCR();
 
         /*
-            4-2. Cheat guard
+            5. Update PriorityRegistry
+        */
+        pledge.lastUpsertedTimeICRpertenk = priorityRegistry.upsert(pledge);
+
+
+        /*
+            6. Cheat guard
         */
         withdrawLocks[msg.sender] = block.timestamp + 3 days;
 
         /*
-            4-3. Borrowed fund & fee transfer
+            7. Borrowed fund & fee transfer
         */
-        cjpyOS.mintCJPY(msg.sender, borrowAmountInCjpy-fee); // onlyYamato
+        cjpyOS.mintCJPY(msg.sender, borrowAmountInCjpy.sub(fee)); // onlyYamato
         cjpyOS.mintCJPY(address(pool), fee); // onlyYamato
 
         if(pool.redemptionReserve()/pool.sweepReserve() >= 5){
@@ -229,8 +237,13 @@ contract Yamato is IYamato, ReentrancyGuard{
         TCR = getTCR();
 
         /*
-            3-1. Charge CJPY
-            3-2. Return coll to the redeemer
+            3. Update PriorityRegistry
+        */
+        pledge.lastUpsertedTimeICRpertenk = priorityRegistry.upsert(pledge);
+
+        /*
+            4-1. Charge CJPY
+            4-2. Return coll to the redeemer
         */
         cjpyOS.burnCJPY(msg.sender, cjpyAmount);
     }
@@ -248,21 +261,37 @@ contract Yamato is IYamato, ReentrancyGuard{
         /*
             2. Validate
         */
+        require(ethAmount <= pledge.coll, "Withdrawal amount must be less than equal to the target coll amount.");
+        require(ethAmount <= totalColl, "Withdrawal amount must be less than equal to the total coll amount.");
         require(withdrawLocks[msg.sender] <= block.timestamp, "Withdrawal is being locked for this sender.");
         require(pledge.toMem().getICR(cjpyOS.feed()) >= uint(MCR).mul(100), "Withdrawal failure: ICR is not more than MCR.");
 
         /*
             3. Update pledge
         */
-        pledge.coll -= ethAmount;
-        totalColl -= ethAmount;
+
+        // Note: SafeMath unintentionally checks full withdrawal
+        pledge.coll = pledge.coll - ethAmount;
+        totalColl = totalColl - ethAmount;
+
         TCR = getTCR();
 
-
         /*
-            4. Validate TCR
+            4. Validate and update PriorityRegistry
         */
-        require(pledge.toMem().getICR(cjpyOS.feed()) >= uint(MCR).mul(100), "Withdrawal failure: ICR can't be less than MCR after withdrawal.");
+        if (pledge.coll == 0 && pledge.debt == 0) {
+            /*
+                4-a. Clean full withdrawal
+            */
+            priorityRegistry.remove(pledge);
+            _neutralizePledge(pledge);
+        } else {
+            /*
+                4-b. Reasonable partial withdrawal
+            */
+            require(pledge.toMem().getICR(cjpyOS.feed()) >= uint(MCR).mul(100), "Withdrawal failure: ICR can't be less than MCR after withdrawal.");
+            pledge.lastUpsertedTimeICRpertenk = priorityRegistry.upsert(pledge);
+        }
 
 
         /*
@@ -453,12 +482,35 @@ contract Yamato is IYamato, ReentrancyGuard{
 
     }
 
+
+    /*
+    ==============================
+        Helpers
+    ==============================
+        - _neutralizePledge
+        - getTCR
+        - FR
+    */
+
+
+    /// @notice Use when removing a pledge
+    function _neutralizePledge(Pledge storage _pledge) internal {
+        _pledge.lastUpsertedTimeICRpertenk = 0;
+        _pledge.isCreated = false;
+        _pledge.owner = address(0);
+    }
+
+
     /// @notice Calculate TCR
     /// @dev (totalColl*jpyPerEth)/totalDebt
     /// @return _TCR in uint256
     function getTCR() public returns (uint _TCR) {
         Pledge memory _pseudoPledge = Pledge(totalColl, totalDebt, true, msg.sender, 0);
-        _TCR = _pseudoPledge.getICR(cjpyOS.feed());
+        if (totalColl == 0 && totalColl == 0) {
+            _TCR = 0;
+        } else {
+            _TCR = _pseudoPledge.getICR(cjpyOS.feed());
+        }
     }
 
 
