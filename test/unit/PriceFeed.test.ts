@@ -1,6 +1,7 @@
 // betterexpect(lastGoodPrice).toBeGtBN(0);
 import { ethers } from "hardhat";
-import { smockit, smoddit, isMockContract } from "optimism/packages/smock";
+import { FakeContract, smock } from "@defi-wonderland/smock";
+import chai from "chai";
 import { BigNumber, utils } from "ethers";
 const { AbiCoder, ParamType } = utils;
 
@@ -46,20 +47,21 @@ import { genABI } from "@src/genABI";
 
 const PriceFeed_ABI = genABI("PriceFeed");
 
+chai.use(smock.matchers);
+
 /* Parameterized Test (Testcases are in /test/parameterizedSpecs.ts) */
 describe("Smock for PriceFeed", function () {
   it(`succeeds to make a mock`, async function () {
-    const spec = await ethers.getContractFactory("PriceFeed");
-    const mock = await smockit(spec);
-    betterexpect(isMockContract(mock)).toBe(true);
+    const mock = await smock.fake<PriceFeed>("PriceFeed");
+    // betterexpect(isMockContract(mock)).toBe(true);
   });
 });
 
 let feed;
 let accounts;
-let mockAggregatorV3EthUsd;
-let mockAggregatorV3JpyUsd;
-let mockTellorCaller;
+let mockAggregatorV3EthUsd: FakeContract<ChainLinkMock>;
+let mockAggregatorV3JpyUsd: FakeContract<ChainLinkMock>;
+let mockTellorCaller: FakeContract<TellorCallerMock>;
 let mockRoundCount = 0;
 
 type ChainLinKNumberType = {
@@ -101,51 +103,46 @@ async function setMocks(conf: MockConf) {
   }
 
   mockRoundCount++;
-  mockAggregatorV3EthUsd.smocked.decimals.will.return.with(CHAINLINK_DIGITS); // uint8
-  mockAggregatorV3EthUsd.smocked.latestRoundData.will.return.with([
+  mockAggregatorV3EthUsd.decimals.returns(CHAINLINK_DIGITS); // uint8
+  mockAggregatorV3EthUsd.latestRoundData.returns([
     mockRoundCount,
     cPriceEthInUsd,
     now - cDiffEthInUsd,
     now - cDiffEthInUsd,
     2,
   ]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
-  mockAggregatorV3EthUsd.smocked.getRoundData.will.return.with([
+  mockAggregatorV3EthUsd.getRoundData.returns([
     mockRoundCount,
     cPriceEthInUsd,
     now - cDiffEthInUsd,
     now - cDiffEthInUsd,
     mockRoundCount + 1,
   ]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
-  mockAggregatorV3JpyUsd.smocked.decimals.will.return.with(CHAINLINK_DIGITS); // uint8
-  mockAggregatorV3JpyUsd.smocked.latestRoundData.will.return.with([
+  mockAggregatorV3JpyUsd.decimals.returns(CHAINLINK_DIGITS); // uint8
+  mockAggregatorV3JpyUsd.latestRoundData.returns([
     mockRoundCount,
     cPriceJpyInUsd,
     now - cDiffJpyInUsd,
     now - cDiffJpyInUsd,
     2,
   ]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
-  mockAggregatorV3JpyUsd.smocked.getRoundData.will.return.with([
+  mockAggregatorV3JpyUsd.getRoundData.returns([
     mockRoundCount,
     cPriceJpyInUsd,
     now - cDiffJpyInUsd,
     now - cDiffJpyInUsd,
     mockRoundCount + 1,
   ]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
-  mockTellorCaller.smocked.getTellorCurrentValue.will.return.with([
-    true,
-    tPrice,
-    now - tDiff,
-  ]); // bool ifRetrieve, uint256 value, uint256 _timestampRetrieved
+  mockTellorCaller.getTellorCurrentValue.returns([true, tPrice, now - tDiff]); // bool ifRetrieve, uint256 value, uint256 _timestampRetrieved
 }
 describe("PriceFeed", function () {
   beforeEach(async () => {
     accounts = await getSharedSigners();
-    const spec1 = await ethers.getContractFactory("ChainLinkMock");
-    const spec2 = await ethers.getContractFactory("ChainLinkMock");
-    const spec3 = await ethers.getContractFactory("TellorCallerMock");
-    mockAggregatorV3EthUsd = await smockit(spec1); // https://github.com/liquity/dev/blob/main/packages/contracts/contracts/Dependencies/AggregatorV3Interface.sol
-    mockAggregatorV3JpyUsd = await smockit(spec2);
-    mockTellorCaller = await smockit(spec3); // https://github.com/liquity/dev/blob/main/packages/contracts/contracts/Interfaces/ITellorCaller.sol
+    // https://github.com/liquity/dev/blob/main/packages/contracts/contracts/Dependencies/AggregatorV3Interface.sol
+    mockAggregatorV3EthUsd = await smock.fake<ChainLinkMock>("ChainLinkMock");
+    mockAggregatorV3JpyUsd = await smock.fake<ChainLinkMock>("ChainLinkMock");
+    // https://github.com/liquity/dev/blob/main/packages/contracts/contracts/Interfaces/ITellorCaller.sol
+    mockTellorCaller = await smock.fake<TellorCallerMock>("TellorCallerMock");
 
     await setMocks({
       price: {
