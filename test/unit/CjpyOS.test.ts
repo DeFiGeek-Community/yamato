@@ -6,6 +6,7 @@ const { AbiCoder, ParamType } = utils;
 const { waffleJest } = require("@ethereum-waffle/jest");
 expect.extend(waffleJest);
 const betterexpect = <any>expect; // TODO: better typing for waffleJest
+import chai from "chai";
 import {
   summon,
   forge,
@@ -41,11 +42,14 @@ import {
   YMT,
   VeYMT,
   PriceFeed,
+  CjpyOS__factory,
 } from "../../typechain";
 
 import { genABI } from "@src/genABI";
 
 const CJPY_OS_ABI = genABI("CjpyOS");
+
+chai.use(smock.matchers);
 
 /* Parameterized Test (Testcases are in /test/parameterizedSpecs.ts) */
 describe("Smock for CjpyOS", function () {
@@ -60,7 +64,7 @@ describe("CjpyOS", function () {
   let mockYMT: FakeContract<YMT>;
   let mockVeYMT: FakeContract<VeYMT>;
   let mockFeed: FakeContract<PriceFeed>;
-  let cjpyOS;
+  let cjpyOS: CjpyOS;
   let accounts;
 
   beforeEach(async () => {
@@ -74,9 +78,9 @@ describe("CjpyOS", function () {
       address: accounts[0].address,
     });
 
-    cjpyOS = await (
+    cjpyOS = await (<CjpyOS__factory>(
       await ethers.getContractFactory("CjpyOS")
-    ).deploy(
+    )).deploy(
       mockCJPY.address,
       mockYMT.address,
       mockVeYMT.address,
@@ -112,7 +116,7 @@ describe("CjpyOS", function () {
     it(`succeeds to mint CJPY`, async function () {
       await cjpyOS.addYamato(accounts[0].address); // onlyGovernance
       await cjpyOS.mintCJPY(accounts[0].address, 10000); // onlyYamato
-      betterexpect(mockCJPY.mint).to.be.calledOnce;
+      chai.expect(mockCJPY.mint).to.be.calledOnce;
     });
   });
 
@@ -126,7 +130,7 @@ describe("CjpyOS", function () {
     it(`succeeds to burn CJPY`, async function () {
       await cjpyOS.addYamato(accounts[0].address); // onlyGovernance
       await cjpyOS.burnCJPY(accounts[0].address, 10000); // onlyYamato
-      betterexpect(mockCJPY.burnFrom).to.be.calledOnce;
+      chai.expect(mockCJPY.burnFrom).to.be.calledOnce;
     });
   });
 });
