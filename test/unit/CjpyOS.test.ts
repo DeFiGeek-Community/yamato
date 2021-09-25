@@ -1,5 +1,5 @@
 import { ethers } from "hardhat";
-import { smockit, smoddit, isMockContract } from "optimism/packages/smock";
+import { FakeContract, smock } from "@defi-wonderland/smock";
 import { BigNumber, utils } from "ethers";
 const { AbiCoder, ParamType } = utils;
 
@@ -33,7 +33,15 @@ import { parameterizedSpecs } from "@test/param/paramSpecEntrypoint";
 import { suite, test } from "@testdeck/jest";
 import fs from "fs";
 import { BalanceLogger } from "@src/BalanceLogger";
-import { Yamato, Pool } from "../../typechain";
+import {
+  Yamato,
+  Pool,
+  CjpyOS,
+  CJPY,
+  YMT,
+  VeYMT,
+  PriceFeed,
+} from "../../typechain";
 
 import { genABI } from "@src/genABI";
 
@@ -42,30 +50,29 @@ const CJPY_OS_ABI = genABI("CjpyOS");
 /* Parameterized Test (Testcases are in /test/parameterizedSpecs.ts) */
 describe("Smock for CjpyOS", function () {
   it(`succeeds to make a mock`, async function () {
-    const spec = await ethers.getContractFactory("CjpyOS");
-    const mock = await smockit(spec);
-    betterexpect(isMockContract(mock)).toBe(true);
+    const mock = await smock.fake<CjpyOS>("CjpyOS");
+    // betterexpect(isMockContract(mock)).toBe(true);
   });
 });
 
 describe("CjpyOS", function () {
-  let mockCJPY;
-  let mockYMT;
-  let mockVeYMT;
-  let mockFeed;
+  let mockCJPY: FakeContract<CJPY>;
+  let mockYMT: FakeContract<YMT>;
+  let mockVeYMT: FakeContract<VeYMT>;
+  let mockFeed: FakeContract<PriceFeed>;
   let cjpyOS;
   let accounts;
 
   beforeEach(async () => {
     accounts = await getSharedSigners();
-    const spec1 = await ethers.getContractFactory("CJPY");
-    const spec2 = await ethers.getContractFactory("YMT");
-    const spec3 = await ethers.getContractFactory("veYMT");
-    const spec4 = await ethers.getContractFactory("PriceFeed");
-    mockCJPY = await smockit(spec1);
-    mockYMT = await smockit(spec2);
-    mockVeYMT = await smockit(spec3);
-    mockFeed = await smockit(spec4);
+    mockCJPY = await smock.fake<CJPY>("CJPY", { address: accounts[0].address });
+    mockYMT = await smock.fake<YMT>("YMT", { address: accounts[0].address });
+    mockVeYMT = await smock.fake<VeYMT>("veYMT", {
+      address: accounts[0].address,
+    });
+    mockFeed = await smock.fake<PriceFeed>("PriceFeed", {
+      address: accounts[0].address,
+    });
 
     cjpyOS = await (
       await ethers.getContractFactory("CjpyOS")
@@ -77,8 +84,8 @@ describe("CjpyOS", function () {
       // governance=deployer
     );
 
-    mockCJPY.smocked["mint(address,uint256)"].will.return.with(0);
-    mockCJPY.smocked["burnFrom(address,uint256)"].will.return.with(0);
+    mockCJPY.mint.returns(0);
+    mockCJPY.burnFrom.returns(0);
   });
 
   describe("addYamato()", function () {
@@ -105,9 +112,7 @@ describe("CjpyOS", function () {
     it(`succeeds to mint CJPY`, async function () {
       await cjpyOS.addYamato(accounts[0].address); // onlyGovernance
       await cjpyOS.mintCJPY(accounts[0].address, 10000); // onlyYamato
-      betterexpect(mockCJPY.smocked["mint(address,uint256)"].calls.length).toBe(
-        1
-      );
+      betterexpect(mockCJPY.mint).to.be.calledOnce;
     });
   });
 
@@ -121,9 +126,7 @@ describe("CjpyOS", function () {
     it(`succeeds to burn CJPY`, async function () {
       await cjpyOS.addYamato(accounts[0].address); // onlyGovernance
       await cjpyOS.burnCJPY(accounts[0].address, 10000); // onlyYamato
-      betterexpect(
-        mockCJPY.smocked["burnFrom(address,uint256)"].calls.length
-      ).toBe(1);
+      betterexpect(mockCJPY.burnFrom).to.be.calledOnce;
     });
   });
 });
