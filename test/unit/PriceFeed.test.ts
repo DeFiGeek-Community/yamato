@@ -41,6 +41,7 @@ import {
   ChainLinkMock,
   TellorCallerMock,
   PriceFeed,
+  PriceFeed__factory,
 } from "../../typechain";
 
 import { genABI } from "@src/genABI";
@@ -57,7 +58,7 @@ describe("Smock for PriceFeed", function () {
   });
 });
 
-let feed;
+let feed: PriceFeed;
 let accounts;
 let mockAggregatorV3EthUsd: FakeContract<ChainLinkMock>;
 let mockAggregatorV3JpyUsd: FakeContract<ChainLinkMock>;
@@ -139,10 +140,16 @@ describe("PriceFeed", function () {
   beforeEach(async () => {
     accounts = await getSharedSigners();
     // https://github.com/liquity/dev/blob/main/packages/contracts/contracts/Dependencies/AggregatorV3Interface.sol
-    mockAggregatorV3EthUsd = await smock.fake<ChainLinkMock>("ChainLinkMock");
-    mockAggregatorV3JpyUsd = await smock.fake<ChainLinkMock>("ChainLinkMock");
+    mockAggregatorV3EthUsd = await smock.fake<ChainLinkMock>("ChainLinkMock", {
+      address: accounts[0].address,
+    });
+    mockAggregatorV3JpyUsd = await smock.fake<ChainLinkMock>("ChainLinkMock", {
+      address: accounts[0].address,
+    });
     // https://github.com/liquity/dev/blob/main/packages/contracts/contracts/Interfaces/ITellorCaller.sol
-    mockTellorCaller = await smock.fake<TellorCallerMock>("TellorCallerMock");
+    mockTellorCaller = await smock.fake<TellorCallerMock>("TellorCallerMock", {
+      address: accounts[0].address,
+    });
 
     await setMocks({
       price: {
@@ -155,9 +162,9 @@ describe("PriceFeed", function () {
       },
     });
 
-    feed = await (
+    feed = await (<PriceFeed__factory>(
       await ethers.getContractFactory("PriceFeed")
-    ).deploy(
+    )).deploy(
       mockAggregatorV3EthUsd.address,
       mockAggregatorV3JpyUsd.address,
       mockTellorCaller.address
@@ -201,8 +208,8 @@ describe("PriceFeed", function () {
     });
 
     it(`succeeds to get price from Tellor because ChainLink is frozen`, async function () {
-      feed.provider.send("evm_increaseTime", [7200]);
-      feed.provider.send("evm_mine");
+      (<any>feed.provider).send("evm_increaseTime", [7200]);
+      (<any>feed.provider).send("evm_mine");
 
       let cPriceAtExecInEthUsd = 3202;
       let cPriceAtExecInJpyUsd = 0.0091;
@@ -231,8 +238,8 @@ describe("PriceFeed", function () {
 
     it(`returns last good price as both oracles are untrusted`, async function () {
       // 1. Timeout setting
-      feed.provider.send("evm_increaseTime", [7200]);
-      feed.provider.send("evm_mine");
+      (<any>feed.provider).send("evm_increaseTime", [7200]);
+      (<any>feed.provider).send("evm_mine");
 
       // 2. Set lastGoodPrice
       let cPriceAtLastTimeInEthUsd = 3203;
