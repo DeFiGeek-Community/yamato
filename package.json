@@ -71,6 +71,7 @@
   "scripts": {
     "start": "rollup -c && node index.js",
     "compile?": "[[ ! $(git diff contracts) ]] || hardhat compile",
+    "format": "prettier --write .",
     "test": "npm run test:unit && npm run test:param",
     "test:param": "npm run compile? && jest --projects param.jest.config.ts",
     "test:unit": "npm run compile? && jest --projects unit.jest.config.ts",
