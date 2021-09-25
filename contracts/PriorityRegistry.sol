@@ -17,17 +17,23 @@ import "hardhat/console.sol";
 interface IPriorityRegistry {
     function upsert(IYamato.Pledge memory _pledge) external returns (uint);
     function remove(IYamato.Pledge memory _pledge) external;
-    function getRedeemable() external view returns (IYamato.Pledge memory);
-    function getSweepable() external view returns (IYamato.Pledge memory);
+    function popRedeemable() external returns (IYamato.Pledge memory);
+    function popSweepable() external returns (IYamato.Pledge memory);
+    function currentLICRpertenk() external view returns (uint);
+    function pledgeLength() external view returns (uint);
+    function levelIndice(uint _icr, uint _i) external view returns (address);
+    function nextRedeemable() external view returns (IYamato.Pledge memory);
+    function nextSweepable() external view returns (IYamato.Pledge memory);
 }
 
 contract PriorityRegistry is IPriorityRegistry {
     using SafeMath for uint256;
     using PledgeLib for IYamato.Pledge;
 
-    mapping(uint=>IYamato.Pledge[]) sortedPledges; // ICR => [Pledge, Pledge, Pledge, ...]
-    uint public pledgeLength = 0;
-    uint public currentLICRpertenk = 0; // Note: Lowest ICR
+    mapping(uint=>mapping(address=>IYamato.Pledge)) leveledPledges; // ICR => owner => Pledge
+    mapping(uint=>address[]) public override levelIndice; // ICR => owner[]
+    uint public override pledgeLength = 0;
+    uint public override currentLICRpertenk = 0; // Note: Lowest ICR
     address public yamato;
 
     constructor(address _yamato) {
@@ -56,20 +62,18 @@ contract PriorityRegistry is IPriorityRegistry {
         /*
             1. delete current pledge from sorted pledge and update currentLICRpertenk
         */
-        IYamato.Pledge[] storage pledgesInICR = sortedPledges[_oldICRpertenk];
-        if(pledgesInICR.length > 0) {
-            _deletePledge(pledgesInICR, _pledge);
+        if(
+            !(_pledge.debt == 0 && _pledge.lastUpsertedTimeICRpertenk == 0) /* New pledge doesn't need update  */
+            &&
+            pledgeLength > 0 /* deletePledge can make it minus */
+            &&
+            leveledPledges[_oldICRpertenk][_pledge.owner].isCreated
+            /* if leveledPledges[oldICR] already has that owner's pledge */
+        ) {
+            _deletePledge(_pledge);
         }
 
-        // Note: The _oldICRpertenk is currentLICRpertenk and that ICR-column has just nullified now.
-        if (currentLICRpertenk != 0
-            && _oldICRpertenk == currentLICRpertenk
-            && pledgesInICR.length == 0) {
-            uint i = _oldICRpertenk + 1;
-            while(sortedPledges[i].length > 0) { i++; }
-            currentLICRpertenk = i;
-        }
-
+        _tryLICRBackwardUpdate(_oldICRpertenk);
 
         /* 
             2. insert new pledge
@@ -78,7 +82,9 @@ contract PriorityRegistry is IPriorityRegistry {
 
         _pledge.lastUpsertedTimeICRpertenk = _newICRpertenk;
 
-        sortedPledges[_newICRpertenk].push(_pledge);
+
+        leveledPledges[_newICRpertenk][_pledge.owner] = _pledge;
+        levelIndice[_newICRpertenk].push(_pledge.owner);
         pledgeLength = pledgeLength.add(1);
 
         /*
@@ -88,6 +94,8 @@ contract PriorityRegistry is IPriorityRegistry {
             (_newICRpertenk > 0 && _newICRpertenk < currentLICRpertenk)
             ||
             currentLICRpertenk == 0
+            ||
+            pledgeLength == 1
         ) {
             currentLICRpertenk = _newICRpertenk;
         }
@@ -108,11 +116,7 @@ contract PriorityRegistry is IPriorityRegistry {
         // Note: In full withdrawal scenario, this value is MAX_UINT
         require(_pledge.lastUpsertedTimeICRpertenk == 0 || _pledge.lastUpsertedTimeICRpertenk == 2**256 - 1, "Unintentional lastUpsertedTimeICRpertenk is given to the remove function.");
 
-        uint _removableICRpertenk = _pledge.lastUpsertedTimeICRpertenk;
-
-        IYamato.Pledge[] storage removablePledges = sortedPledges[_removableICRpertenk];
-
-        _deletePledge(removablePledges, _pledge);
+        _deletePledge(_pledge);
     }
 
     modifier onlyYamato(){
@@ -123,36 +127,74 @@ contract PriorityRegistry is IPriorityRegistry {
 
     /*
     ==============================
-        Getters
+        Mutable Getters
     ==============================
-        - getRedeemable
-        - getSweepable
+        - popRedeemable
+        - popSweepable
     */
 
     /*
         @notice currentLICRpertenk-based lowest ICR pledge getter
+        @dev Mutable read function. It pops.
         @return A pledge
     */
-    function getRedeemable() public view override returns (IYamato.Pledge memory) {
-        require(currentLICRpertenk > 0, "");
-        IYamato.Pledge[] storage pledgesLICR = sortedPledges[currentLICRpertenk];
-        if (pledgesLICR.length > 0) {
-            return pledgesLICR[0];
-        } else {
-            revert("The current lowest ICR data is inconsistent with actual sorted pledges.");            
+    function popRedeemable() public onlyYamato override returns (IYamato.Pledge memory) {
+        uint licr = currentLICRpertenk;
+        console.log("=== 1: %s", licr);
+        require(licr > 0, "Need to upsert at least once.");
+        console.log("=== 2: %s", pledgeLength);
+        require(pledgeLength > 0, "Need to upsert at least once.");
+        console.log("=== 3: %s", levelIndice[licr].length);
+        require(levelIndice[licr].length > 0, "The current lowest ICR data is inconsistent with actual sorted pledges.");
+
+        address _addr;
+        console.log("=== 4: %s", levelIndice[licr].length);
+        // Note: Not (Exist AND coll>0) then skip.
+        while(!leveledPledges[licr][_addr].isCreated || leveledPledges[licr][_addr].coll == 0){
+            console.log("=== 5: %s", levelIndice[licr].length);
+
+            _addr = levelIndice[licr][levelIndice[licr].length - 1];
+            levelIndice[licr].pop();
+            // Note: pop() just deletes the item.
+            // Note: Why pop()? Because it's the only way to decrease length.
+            // Note: Hence the array won't be inflated.
+            // Note: But pop() doesn't have return. Do it on your own.
+
         }
+
+        // Note: Don't check LICR, real ICR is the matter.
+        console.log("=== 6: %s", leveledPledges[licr][_addr].getICR(IYamato(yamato).getFeed()));
+
+        require(leveledPledges[licr][_addr].getICR(IYamato(yamato).getFeed()) < uint(IYamato(yamato).MCR()).mul(100), "You can't redeem if redeemable candidate is more than MCR.");
+
+        // Note: popped array and pledge must be deleted
+        _tryLICRBackwardUpdate(leveledPledges[licr][_addr].lastUpsertedTimeICRpertenk);
+
+        console.log("=== 7: %s", leveledPledges[licr][_addr].lastUpsertedTimeICRpertenk);
+        return leveledPledges[licr][_addr];
     }
 
     /*
         @notice zero ICR pledge getter
         @return A pledge
     */
-    function getSweepable() public view override returns (IYamato.Pledge memory) {
-        IYamato.Pledge[] storage sweepablePledges = sortedPledges[0];
-        if (sweepablePledges.length > 0) {
-            return sweepablePledges[0];
+    function popSweepable() public onlyYamato override returns (IYamato.Pledge memory) {
+        if (levelIndice[0].length > 0) {
+            address _addr;
+
+            // Note: Not (Exist AND debt>0) then skip
+            while(!leveledPledges[0][_addr].isCreated || leveledPledges[0][_addr].debt == 0){
+
+                _addr = levelIndice[0][levelIndice[0].length - 1];
+                levelIndice[0].pop();
+                // Note: pop() just deletes the item.
+                // Note: Why pop()? Because it's the only way to decrease length.
+                // Note: Hence the array won't be inflated.
+                // Note: But pop() doesn't have return. Do it on your own.
+
+            }
+            return leveledPledges[0][_addr];
         } else {
-            // TODO: Write regression tests for this flow
             revert("There're no sweepable pledges.");            
         }
     }
@@ -166,14 +208,68 @@ contract PriorityRegistry is IPriorityRegistry {
         - _deletePledge
     */
 
-    function _deletePledge(IYamato.Pledge[] storage sPledges, IYamato.Pledge memory _pledge) internal {
-        for(uint i = 0; i < sPledges.length; i++){
-            IYamato.Pledge memory _scannedPledge = sPledges[i];
-            if(_pledge.owner == _scannedPledge.owner) {
-                delete sPledges[i];
-                pledgeLength = pledgeLength.sub(1);
+    function _deletePledge(IYamato.Pledge memory _pledge) internal {
+        uint icr = _pledge.lastUpsertedTimeICRpertenk;
+        address _owner = _pledge.owner;
+
+        if(leveledPledges[icr][_owner].isCreated){
+            // Note: upsert() requires to maintain the consistency of index
+            for(uint i = 0; i < levelIndice[icr].length; i++){
+                if (levelIndice[icr][i] == _owner) {
+                    delete levelIndice[icr][i];
+                    break;
+                }
             }
+
+            // Note: Delete of pledge is damn simple
+            delete leveledPledges[icr][_owner];
+            pledgeLength -= 1;
+        } else {
+            revert("The delete target is not exist.");
         }
     }
+
+    function _tryLICRBackwardUpdate(uint _icr) internal {
+        // Note: The _oldICRpertenk is currentLICRpertenk and that ICR-column has just nullified now.
+        if (
+            levelIndice[_icr].length == 0 /* Confirm the level is nullified */
+            && _icr == currentLICRpertenk /* Confirm the deleted ICR is lowest  */
+            && pledgeLength > 1 /* Not to scan infinitely */
+            && currentLICRpertenk != 0 /* If 1st take, leave it to the logic in the bottom */
+            ) {
+
+            uint _next = _icr + 1;
+            while(levelIndice[_next].length == 0) { _next++; } // Note: if exist, stop
+            currentLICRpertenk = _next;
+
+        }
+    }
+
+
+
+    /*
+    ==============================
+        Getters
+    ==============================
+        - nextRedeemable
+        - nextSweepable
+    */
+    function nextRedeemable() public view override returns (IYamato.Pledge memory) {
+        if(levelIndice[currentLICRpertenk].length > 0){
+            address _poppedAddr = levelIndice[currentLICRpertenk][levelIndice[currentLICRpertenk].length - 1];
+            return leveledPledges[currentLICRpertenk][_poppedAddr];
+        } else {
+            return IYamato.Pledge(0,0,false,address(0),0);
+        }
+    }
+    function nextSweepable() public view override returns (IYamato.Pledge memory) {
+        if(levelIndice[0].length > 0){
+            address _poppedAddr = levelIndice[0][levelIndice[0].length - 1];
+            return leveledPledges[0][_poppedAddr];
+        } else {
+            return IYamato.Pledge(0,0,false,address(0),0);
+        }
+    }
+    
 
 }

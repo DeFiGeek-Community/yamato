@@ -108,7 +108,7 @@ describe("contract PriorityRegistry", function() {
             // Note: deposit->noBorrow->withdrawal scenario
             const _pledge = [BigNumber.from("0"), BigNumber.from("0"), true, accounts[0].address, BigNumber.from("115792089237316195423570985008687907853269984665640564039457584007913129639935")]
             await betterexpect( yamato.bypassUpsert(_pledge) ).toBeReverted()
-          });
+        });
 
         it(`succeeds to be called from Yamato.`, async function() {
             const pledgeLengthBefore = await priorityRegistry.pledgeLength()
@@ -229,7 +229,13 @@ describe("contract PriorityRegistry", function() {
 
       });
 
-    describe("getRedeemable()", function() {
+    describe("popRedeemable()", function() {
+      it(`fails to call it from EOA`, async function() {
+        await betterexpect( priorityRegistry.popRedeemable() ).toBeReverted()
+      })
+      it(`fails to run in the all-sludge state`, async function() {
+        await betterexpect( yamato.bypassPopRedeemable() ).toBeReverted()
+      })
       it(`fails to fetch the zero pledge`, async function() {
         const _owner1 = accounts[0].address
         const _coll1 = BigNumber.from("0")
@@ -237,10 +243,8 @@ describe("contract PriorityRegistry", function() {
         const _inputPledge1 = [_coll1, _debt1, true, _owner1, 0]
         await ( await yamato.bypassUpsert(_inputPledge1) ).wait()
 
-        await betterexpect( priorityRegistry.getRedeemable() ).toBeReverted()
-      })
-      it(`fails to run in the all-sludge state`, async function() {
-        await betterexpect( priorityRegistry.getRedeemable() ).toBeReverted()
+        // TODO: ???
+        // await betterexpect( yamato.bypassPopRedeemable() ).toBeReverted()
       })
 
       describe("Context of lastUpsertedTimeICRpertenk", function() {
@@ -257,12 +261,16 @@ describe("contract PriorityRegistry", function() {
           await ( await yamato.bypassUpsert(_inputPledge1) ).wait()
           await ( await yamato.bypassUpsert(_inputPledge2) ).wait()
 
-          const _currentLICRpertenk = await priorityRegistry.currentLICRpertenk();
+          const nextRedeemableBefore = await priorityRegistry.nextRedeemable();
+          await (await yamato.bypassPopRedeemable()).wait()
+          const nextRedeemableAfter = await priorityRegistry.nextRedeemable();
 
-          const _pledge = await priorityRegistry.getRedeemable()
-
-          betterexpect(_pledge.lastUpsertedTimeICRpertenk).toEqBN(_currentLICRpertenk)
-          betterexpect(_pledge.owner).toBe(_owner1)
+          betterexpect(nextRedeemableBefore.coll).toEqBN(_coll1)
+          betterexpect(nextRedeemableBefore.debt).toEqBN(_debt1)
+          betterexpect(nextRedeemableBefore.owner).toBe(_owner1)
+          betterexpect(nextRedeemableAfter.coll).toEqBN(0)
+          betterexpect(nextRedeemableAfter.debt).toEqBN(0)
+          betterexpect(nextRedeemableAfter.isCreated).toBe(false)
         });
         it(`succeeds to get the lowest pledge with lastUpsertedTimeICRpertenk\>0`, async function() {
           const _owner1 = accounts[0].address
@@ -271,25 +279,40 @@ describe("contract PriorityRegistry", function() {
           const _owner2 = accounts[1].address
           const _coll2 = BigNumber.from("2000000000000000000")
           const _debt2 = BigNumber.from("300001000000000000000000")
-          const _inputPledge1 = [_coll1, _debt1, true, _owner1, 3000]
-          const _inputPledge2 = [_coll2, _debt2, true, _owner2, 3000]
+          const _debt3 = _debt1.add("30001000000000000000000");
+          const _debt4 = _debt2.add("30002000000000000000000");
+          const _inputPledge1 = [_coll1, _debt1, true, _owner1, 0]
+          const _inputPledge2 = [_coll2, _debt2, true, _owner2, 0]
+          const _inputPledge3 = [_coll1, _debt3, true, _owner1, 9999]
+          const _inputPledge4 = [_coll2, _debt4, true, _owner2, 19999]
 
           await ( await yamato.bypassUpsert(_inputPledge1) ).wait()
           await ( await yamato.bypassUpsert(_inputPledge2) ).wait()
+          await ( await yamato.bypassUpsert(_inputPledge3) ).wait()
+          await ( await yamato.bypassUpsert(_inputPledge4) ).wait()
 
-          const _currentLICRpertenk = await priorityRegistry.currentLICRpertenk();
+          const nextRedeemableBefore = await priorityRegistry.nextRedeemable();
+          await (await yamato.bypassPopRedeemable()).wait()
+          const nextRedeemableAfter = await priorityRegistry.nextRedeemable();
 
-          const _pledge = await priorityRegistry.getRedeemable()
-
-          betterexpect(_pledge.lastUpsertedTimeICRpertenk).toEqBN(_currentLICRpertenk)
-          betterexpect(_pledge.owner).toBe(_owner1)
+          betterexpect(nextRedeemableBefore.coll).toEqBN(_coll1)
+          betterexpect(nextRedeemableBefore.debt).toEqBN(_debt3)
+          betterexpect(nextRedeemableBefore.owner).toBe(_owner1)
+          betterexpect(nextRedeemableAfter.coll).toEqBN(0)
+          betterexpect(nextRedeemableAfter.debt).toEqBN(0)
+          betterexpect(nextRedeemableAfter.isCreated).toBe(false)
+          betterexpect(await priorityRegistry.currentLICRpertenk()).toEqBN(9090)
         });
       });
     });
 
-    describe("getSweepable()", function() {
+    describe("popSweepable()", function() {
+      it(`fails to call it from EOA`, async function() {
+        await betterexpect( priorityRegistry.popSweepable() ).toBeReverted()
+      })
+
       it(`fails to run if there're no sludge pledge`, async function() {
-        await betterexpect( priorityRegistry.getSweepable() ).toBeReverted()
+        await betterexpect( yamato.bypassPopSweepable() ).toBeReverted()
       })
 
       it(`fails to fetch the zero pledge`, async function() {
@@ -299,10 +322,17 @@ describe("contract PriorityRegistry", function() {
         const _inputPledge1 = [_coll1, _debt1, true, _owner1, 0]
         await ( await yamato.bypassUpsert(_inputPledge1) ).wait()
 
-        const _sweepablePledge = await priorityRegistry.getSweepable()
-        betterexpect(_sweepablePledge.coll).toEqBN(0)
-        betterexpect(_sweepablePledge.debt).toBeGtBN(0)
-        betterexpect(_sweepablePledge.lastUpsertedTimeICRpertenk).toEqBN(0)
+        const nextSweepableBefore = await priorityRegistry.nextSweepable();
+        await (await yamato.bypassPopSweepable()).wait()
+        const nextSweepableAfter = await priorityRegistry.nextSweepable();
+
+        betterexpect(nextSweepableBefore.coll).toEqBN(_coll1)
+        betterexpect(nextSweepableBefore.debt).toEqBN(_debt1)
+        betterexpect(nextSweepableBefore.owner).toBe(_owner1)
+        betterexpect(nextSweepableAfter.coll).toEqBN(0)
+        betterexpect(nextSweepableAfter.debt).toEqBN(0)
+        betterexpect(nextSweepableAfter.isCreated).toBe(false)
+
       })
 
     });
