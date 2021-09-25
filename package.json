@@ -58,6 +58,8 @@
     "jest": "^26.4.2",
     "optimism": "0xMotoko/optimism#hotfix/hardhat-v2.4.x",
     "prb-math": "^2.2.0",
+    "prettier": "^2.4.1",
+    "prettier-plugin-solidity": "^1.0.0-beta.18",
     "solc": "^0.8.4",
     "ts-jest": "^26.5.5",
     "ts-node": "^9.1.1",
