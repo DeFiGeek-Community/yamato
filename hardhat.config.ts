@@ -1,6 +1,10 @@
 require('dotenv').config();
 
-import 'tsconfig-paths/register';
+// import 'tsconfig-paths/register';
+/* 
+This module is related to the feature, path mapping, for TypeScript(in this case ts-node).
+Path mapping causes lots of annoying and we should stop using this.
+*/
 
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
