@@ -241,7 +241,7 @@ describe("contract Yamato", function() {
     });
     it(`should run depositSweepReserve when RR is superior to SR`, async function() {
       mockPool.smocked.redemptionReserve.will.return.with(10);
-      mockPool.smocked.sweepReserve.will.return.with(BigNumber.from("99999999000000000000000000"));
+      mockPool.smocked.sweepReserve.will.return.with(BigNumber.from("1"));
       const toCollateralize = 1;
       const toBorrow = (PRICE * toCollateralize) / MCR;
       await yamato.deposit({value:toERC20(toCollateralize+"")});

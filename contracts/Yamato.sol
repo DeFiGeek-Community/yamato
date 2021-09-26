@@ -351,7 +351,7 @@ contract Yamato is IYamato, ReentrancyGuard{
             3. Ditribute colls.
         */
 
-        // require(cjpyAmountStart > maxRedemptionCjpyAmount, "No pledges are redeemed.");
+        require(cjpyAmountStart > maxRedemptionCjpyAmount, "No pledges are redeemed.");
         // Note: This line can be the redemption execution checker
 
         uint totalRedeemedCjpyAmount = redeemStart - pool.redemptionReserve();
@@ -419,8 +419,7 @@ contract Yamato is IYamato, ReentrancyGuard{
 
             } catch { break; } /* Oversweeping Flow */
         }
-        // TODO
-        // require(_maxSweeplableStart > maxSweeplable, "At least a pledge should be swept.");
+        require(_maxSweeplableStart > maxSweeplable, "At least a pledge should be swept.");
 
         /*
             2. Gas compensation
