@@ -1,6 +1,7 @@
 import { ethers } from "hardhat";
 import { FakeContract, smock } from "@defi-wonderland/smock";
 import chai, { expect } from "chai";
+import { solidity } from "ethereum-waffle";
 import { Signer } from "ethers";
 import {
   CjpyOS,
@@ -13,6 +14,7 @@ import {
 import { Address } from "cluster";
 
 chai.use(smock.matchers);
+chai.use(solidity);
 
 describe("CjpyOS", () => {
   let mockCJPY: FakeContract<CJPY>;
@@ -53,21 +55,20 @@ describe("CjpyOS", () => {
 
   describe("addYamato()", function () {
     it(`fails to add new Yamato for non-governer.`, async function () {
-      await expect(
-        cjpyOS.connect(userAddress).addYamato(userAddress)
-      ).toBeReverted();
+      await expect(cjpyOS.connect(userAddress).addYamato(userAddress)).to.be
+        .reverted;
     });
 
     it(`succeeds to add new Yamato`, async function () {
       await cjpyOS.addYamato(ownerAddress); // onlyGovernance
       const _yamato = await cjpyOS.yamatoes(0);
-      expect(_yamato).toBe(ownerAddress);
+      expect(_yamato).to.equal(ownerAddress);
     });
   });
 
   describe("mintCJPY()", function () {
     it(`fails to mint CJPY`, async function () {
-      await expect(cjpyOS.mintCJPY(ownerAddress, 10000)).toBeReverted();
+      await expect(cjpyOS.mintCJPY(ownerAddress, 10000)).to.be.reverted;
     });
 
     it(`succeeds to mint CJPY`, async function () {
@@ -79,7 +80,7 @@ describe("CjpyOS", () => {
 
   describe("burnCJPY()", function () {
     it(`fails to burn CJPY`, async function () {
-      await expect(cjpyOS.burnCJPY(ownerAddress, 10000)).toBeReverted();
+      await expect(cjpyOS.burnCJPY(ownerAddress, 10000)).to.be.reverted;
     });
 
     it(`succeeds to burn CJPY`, async function () {
