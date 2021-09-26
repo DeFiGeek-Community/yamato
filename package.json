@@ -81,6 +81,7 @@
     "test": "npm run test:unit && npm run test:param",
     "test:param": "npm run compile? && jest --projects param.jest.config.ts",
     "test:unit": "npm run compile? && jest --projects unit.jest.config.ts",
+    "test:hardhat": "hardhat test",
     "deploy:testnet": "hardhat deploy --network rinkeby",
     "deploy:localhost": "hardhat deploy --network localhost",
     "cli:fetchPrice": "ts-node -r tsconfig-paths/register src/priceFeedSDK.ts",
