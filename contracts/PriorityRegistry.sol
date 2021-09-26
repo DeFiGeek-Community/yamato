@@ -105,7 +105,6 @@ contract PriorityRegistry is IPriorityRegistry {
         @dev It removes "just full swept" or "just full withdrawn" pledges.
     */
     function remove(IYamato.Pledge memory _pledge) public onlyYamato override {
-
         /*
             1. Delete a valid pledge
         */
@@ -149,6 +148,7 @@ contract PriorityRegistry is IPriorityRegistry {
         while(!leveledPledges[licr][_addr].isCreated || leveledPledges[licr][_addr].coll == 0){
 
             _addr = levelIndice[licr][levelIndice[licr].length - 1];
+
             levelIndice[licr].pop();
             // Note: pop() just deletes the item.
             // Note: Why pop()? Because it's the only way to decrease length.

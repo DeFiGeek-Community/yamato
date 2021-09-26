@@ -321,37 +321,37 @@ contract Yamato is IYamato, ReentrancyGuard{
 
         while(maxRedemptionCjpyAmount > 0) {
             try priorityRegistry.popRedeemable() returns (Pledge memory _redeemablePledge) {
-
-                if (_redeemablePledge.owner == address(0x00)) {
-                    break; // Note: No any more redeemable pledges 
-                }
+                if (!_redeemablePledge.isCreated) break; // Note: No any more redeemable pledges 
+                if (_redeemablePledge.owner == address(0x00)) break; // Note: No any more redeemable pledges 
 
                 Pledge storage sPledge = pledges[_redeemablePledge.owner];
-                if(sPledge.coll == 0) {
-                    break; // Note: A once-redeemed pledge is called twice
-                }
+                if(!sPledge.isCreated) break; // Note: registry-yamato mismatch
+                if(sPledge.coll == 0) break; // Note: A once-redeemed pledge is called twice
+
                 /*
                     1. Expense collateral
                 */
                 maxRedemptionCjpyAmount = _expenseColl(sPledge, maxRedemptionCjpyAmount, jpyPerEth);
 
+
                 /*
                     2. Put the sludge pledge to the queue
                 */
-                sPledge.lastUpsertedTimeICRpertenk = priorityRegistry.upsert(sPledge.toMem());
-            } catch Error(string memory reason) {
-                // Note: Don't revert here because overwhelming "maxRedemptionCjpyAmount" can reach this flow.
-                // console.log("Error: %s", reason); /* Not for prod: performance reason */
-                break;
-            }
+                try priorityRegistry.upsert(sPledge.toMem()) returns (uint _newICR) {
+                    sPledge.lastUpsertedTimeICRpertenk = _newICR;
+                } catch Error(string memory reason) {
+                    // console.log("Error: %s", reason); /* Not for prod: performance reason */
+                    break;
+                }
+            } catch { break; } /* Overredemption Flow */
+            // Note: catch Error(string memory reason) doesn't work here
         }
 
         /*
             3. Ditribute colls.
         */
 
-        uint usedCjpyAmount = cjpyAmountStart - maxRedemptionCjpyAmount;
-        require(usedCjpyAmount > 0, "No pledges are redeemed.");
+        // require(cjpyAmountStart > maxRedemptionCjpyAmount, "No pledges are redeemed.");
         // Note: This line can be the redemption execution checker
 
         uint totalRedeemedCjpyAmount = redeemStart - pool.redemptionReserve();
@@ -391,17 +391,36 @@ contract Yamato is IYamato, ReentrancyGuard{
         uint sweepStart = pool.sweepReserve();
         require(sweepStart > 0, "Sweep failure: sweep reserve is empty.");
         uint maxGasCompensation = sweepStart * (GRR/100);
-        uint maxSweeplable = sweepStart - maxGasCompensation;
+        uint maxSweeplable = sweepStart - maxGasCompensation; //Note: Secure gas compensation
+        uint _maxSweeplableStart = maxSweeplable;
+
+        address third = 0x90F79bf6EB2c4f870365E785982E1f101E93b906;
 
         /*
             1. Sweeping
         */
         while (maxSweeplable > 0) {
-            Pledge memory _sweepablePledge = priorityRegistry.popSweepable();
-            Pledge storage sPledge = pledges[_sweepablePledge.owner];
-            maxSweeplable = _sweepDebt(sPledge, maxSweeplable);
-            priorityRegistry.remove(sPledge.toMem());
+            // if(_maxSweeplableStart > maxSweeplable) { console.log(maxSweeplable); return; }
+            try priorityRegistry.popSweepable() returns (Pledge memory _sweepablePledge) {
+                if (!_sweepablePledge.isCreated) break; // Note: No any more redeemable pledges 
+                if (_sweepablePledge.owner == address(0x00)) break; // Note: No any more redeemable pledges 
+
+                Pledge storage sPledge = pledges[_sweepablePledge.owner];
+
+                if(!sPledge.isCreated) break; // Note: registry-yamato mismatch
+                if(sPledge.debt == 0) break; // Note: A once-swept pledge is called twice
+
+
+                maxSweeplable = _sweepDebt(sPledge, maxSweeplable);
+                priorityRegistry.remove(sPledge.toMem());
+                _neutralizePledge(sPledge);
+                
+
+
+            } catch { break; } /* Oversweeping Flow */
         }
+        // TODO
+        // require(_maxSweeplableStart > maxSweeplable, "At least a pledge should be swept.");
 
         /*
             2. Gas compensation
@@ -491,7 +510,6 @@ contract Yamato is IYamato, ReentrancyGuard{
         sPledge.debt -= sweepingAmount;
         totalDebt -= sweepingAmount;
         TCR = getTCR();
-        _neutralizePledge(sPledge);
 
         /*
             3. Budget reduction

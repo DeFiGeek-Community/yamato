@@ -247,6 +247,22 @@ describe("contract PriorityRegistry", function() {
         // await betterexpect( yamato.bypassPopRedeemable() ).toBeReverted()
       })
 
+      it(`succeeds to fetch even by account 3`, async function() {
+        const _owner1 = accounts[3].address
+        const _coll1 = BigNumber.from("1000000000000000000")
+        const _debt1 = BigNumber.from("300001000000000000000000")
+        const _inputPledge1 = [_coll1, _debt1, true, _owner1, 0]
+
+        await ( await yamato.bypassUpsert(_inputPledge1) ).wait()
+
+        const nextRedeemableBefore = await priorityRegistry.nextRedeemable();
+        await (await yamato.bypassPopRedeemable()).wait()
+
+        betterexpect(nextRedeemableBefore.coll).toEqBN(_coll1)
+        betterexpect(nextRedeemableBefore.debt).toEqBN(_debt1)
+        betterexpect(nextRedeemableBefore.owner).toBe(_owner1)
+      })
+
       describe("Context of lastUpsertedTimeICRpertenk", function() {
         it(`succeeds to get the lowest pledge with lastUpsertedTimeICRpertenk=0`, async function() {
           const _owner1 = accounts[0].address
@@ -268,8 +284,6 @@ describe("contract PriorityRegistry", function() {
           betterexpect(nextRedeemableBefore.coll).toEqBN(_coll1)
           betterexpect(nextRedeemableBefore.debt).toEqBN(_debt1)
           betterexpect(nextRedeemableBefore.owner).toBe(_owner1)
-
-          // TODO: ICR is large. should not be called
           betterexpect(nextRedeemableAfter.coll.mul(PRICE).mul(100).div(nextRedeemableAfter.debt)).toBeGteBN(await yamato.MCR())
         });
         it(`succeeds to get the lowest pledge with lastUpsertedTimeICRpertenk\>0`, async function() {

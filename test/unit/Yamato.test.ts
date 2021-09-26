@@ -86,7 +86,7 @@ describe("contract Yamato", function() {
     mockFeed.smocked.fetchPrice.will.return.with(PRICE);
     await (await yamato.updateTCR() ).wait();
     mockPool.smocked.redemptionReserve.will.return.with(1);
-    mockPool.smocked.sweepReserve.will.return.with(1);
+    mockPool.smocked.sweepReserve.will.return.with(BigNumber.from("99999999000000000000000000"));
     mockCjpyOS.smocked.feed.will.return.with(mockFeed.address);
     mockPriorityRegistry.smocked.yamato.will.return.with(yamato.address);
     mockPriorityRegistry.smocked.upsert.will.return.with(0);
@@ -231,7 +231,7 @@ describe("contract Yamato", function() {
     });
     it(`should run depositRedemptionReserve when RR is inferior to SR`, async function() {
       mockPool.smocked.redemptionReserve.will.return.with(1);
-      mockPool.smocked.sweepReserve.will.return.with(10);
+      mockPool.smocked.sweepReserve.will.return.with(BigNumber.from("99999999000000000000000000"));
       const toCollateralize = 1;
       const toBorrow = (PRICE * toCollateralize) / MCR;
       await yamato.deposit({value:toERC20(toCollateralize+"")});
@@ -241,7 +241,7 @@ describe("contract Yamato", function() {
     });
     it(`should run depositSweepReserve when RR is superior to SR`, async function() {
       mockPool.smocked.redemptionReserve.will.return.with(10);
-      mockPool.smocked.sweepReserve.will.return.with(1);
+      mockPool.smocked.sweepReserve.will.return.with(BigNumber.from("99999999000000000000000000"));
       const toCollateralize = 1;
       const toBorrow = (PRICE * toCollateralize) / MCR;
       await yamato.deposit({value:toERC20(toCollateralize+"")});
@@ -556,8 +556,7 @@ describe("contract Yamato", function() {
     });
     it.skip(`can remain coll=0 debt>0 pledge in the storage`, async function() {
     });
-    it.skip(`doesn't remain any sorted Trove state in the contract`, async function() {
-    });
+    it.todo(`should NOT revert if exessive redemption amount comes in.`)
     it.todo(`should reduce CJPY of successful redeemer`)
     it.todo(`should not reduce CJPY when there're no ICR<MCR && coll>0 pledges`)
 
@@ -575,47 +574,69 @@ describe("contract Yamato", function() {
       mockPool.smocked['lockETH(uint256)'].will.return.with(0);
       mockPool.smocked.sendETH.will.return.with(0);
       mockPool.smocked['useSweepReserve(uint256)'].will.return.with(0);
-      mockPool.smocked.sweepReserve.will.return.with(10000000000000);
+      mockPool.smocked.sweepReserve.will.return.with(BigNumber.from("99999999000000000000000000"));
       mockFeed.smocked.fetchPrice.will.return.with(PRICE);
       await (await yamato.updateTCR() ).wait();
       mockCjpyOS.smocked['burnCJPY(address,uint256)'].will.return.with(0);
-      mockPriorityRegistry.smocked.popSweepable.will.return.with(encode(["uint256","uint256","bool","address","uint256"], [BigNumber.from(0),BigNumber.from("300001000000000000000"),true,await yamato.signer.getAddress(),0]));
 
+      await ( await yamato.setPriorityRegistryInTest(priorityRegistry.address) ).wait()
+
+      /*
+        Set redemption targets
+      */
       toCollateralize = 1;
       toBorrow = (PRICE * toCollateralize) / MCR;
+
       await yamato.connect(accounts[2]).deposit({value:toERC20(toCollateralize+"")});
       await yamato.connect(accounts[2]).borrow(toERC20(toBorrow+""));
       await yamato.connect(accounts[3]).deposit({value:toERC20(toCollateralize+"")});
       await yamato.connect(accounts[3]).borrow(toERC20(toBorrow+""));
 
+      /*
+        Make those undercollateralized
+      */
       mockFeed.smocked.fetchPrice.will.return.with(PRICE_AFTER);
       await (await yamato.updateTCR() ).wait();
 
     });
 
 
-    it(`should improve TCR`, async function() {
+    it(`should improve TCR after sweeping`, async function() {
+      /*
+        Make sludge pledges
+      */
+     const toRedeem = (PRICE_AFTER * toCollateralize*2) / MCR;
+
+      await (
+        await yamato
+          .connect(accounts[0])
+          .redeem(toERC20(toRedeem+""), false)
+      ).wait()
+
+      betterexpect( (await priorityRegistry.nextSweepable()).isCreated).toBe(true);
 
 
-      mockFeed.smocked.fetchPrice.will.return.with(PRICE_AFTER);
-      await (await yamato.updateTCR() ).wait();
-      await yamato.connect(accounts[0]).redeem(toERC20(toBorrow+""), false);
+      /*
+        Sweep it
+      */
+      const _TCRBefore = await yamato.TCR();
+      await (await yamato.connect(accounts[1]).sweep()).wait()
+      const _TCRAfter = await yamato.TCR();
 
-      const debtBefore = await yamato.totalDebt();
-
-      await yamato.connect(accounts[1]).sweep();
-
-      const debtAfter = await yamato.totalDebt();
-
-      betterexpect(debtAfter).toBeLtBN(debtBefore);
-
+      betterexpect(_TCRAfter).toBeGtBN(_TCRBefore);
     });
+
     it.skip(`doesn't care how much TCR is. (compare to MCR)`, async function() {
     });
     it.skip(`should remove coll=0 pledges from the smallest debt`, async function() {
     });
     it.todo(`should run useSweepReserve() of Pool.sol`);
+    it.todo(`should execute partial sweep`);
+    it.todo(`should execute excessive sweep`);
   });
+
+
+
 
   describe('getStates()', () => {
     let accounts, MCR, RRR, SRR, GRR;
@@ -671,4 +692,5 @@ describe("contract Yamato", function() {
       betterexpect(afterValues[2]).toBe(true);
     })
   })
+
 });
