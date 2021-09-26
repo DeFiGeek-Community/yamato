@@ -11,7 +11,6 @@ import {
   PriceFeed,
   CjpyOS__factory,
 } from "../../typechain";
-import { Address } from "cluster";
 
 chai.use(smock.matchers);
 chai.use(solidity);
