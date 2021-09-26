@@ -268,9 +268,9 @@ describe("contract PriorityRegistry", function() {
           betterexpect(nextRedeemableBefore.coll).toEqBN(_coll1)
           betterexpect(nextRedeemableBefore.debt).toEqBN(_debt1)
           betterexpect(nextRedeemableBefore.owner).toBe(_owner1)
-          betterexpect(nextRedeemableAfter.coll).toEqBN(0)
-          betterexpect(nextRedeemableAfter.debt).toEqBN(0)
-          betterexpect(nextRedeemableAfter.isCreated).toBe(false)
+
+          // TODO: ICR is large. should not be called
+          betterexpect(nextRedeemableAfter.coll.mul(PRICE).mul(100).div(nextRedeemableAfter.debt)).toBeGteBN(await yamato.MCR())
         });
         it(`succeeds to get the lowest pledge with lastUpsertedTimeICRpertenk\>0`, async function() {
           const _owner1 = accounts[0].address
@@ -300,8 +300,6 @@ describe("contract PriorityRegistry", function() {
           betterexpect(nextRedeemableBefore.owner).toBe(_owner1)
           betterexpect(nextRedeemableAfter.coll).toEqBN(0)
           betterexpect(nextRedeemableAfter.debt).toEqBN(0)
-          betterexpect(nextRedeemableAfter.isCreated).toBe(false)
-          betterexpect(await priorityRegistry.currentLICRpertenk()).toEqBN(9090)
         });
       });
     });

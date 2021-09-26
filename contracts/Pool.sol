@@ -9,6 +9,7 @@ pragma solidity 0.7.6;
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 import "./Yamato.sol";
+import "hardhat/console.sol";
 
 interface IPool {
     function depositRedemptionReserve(uint amount) external;
@@ -23,17 +24,21 @@ interface IPool {
     function sweepReserve() external view returns (uint);
     function dividendReserve() external view returns (uint);
     function lockedCollateral() external view returns (uint);
+    function yamato() external view returns (IYamato);
 }
 
 
 
 contract Pool is IPool {
-    // TODO: Distribute YMT like provideToSP() in the Liquity
-    IYamato yamato = IYamato(address(0));
+    IYamato public override yamato;
     uint public override redemptionReserve; // Auto redemption pool a.k.a. (kinda) Stability Pool in Liquity
     uint public override sweepReserve; // Protocol Controlling Value (PCV) to remove Pledges(coll=0, debt>0)
     uint public override dividendReserve; // All redeemed Pledges returns coll=ETH to here.
     uint public override lockedCollateral; // All collateralized ETH
+
+    constructor(address _yamato) {
+        yamato = IYamato(_yamato);
+    }
 
     event Received(address, uint);
     receive() external payable {

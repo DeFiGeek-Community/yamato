@@ -322,7 +322,6 @@ contract Yamato is IYamato, ReentrancyGuard{
         while(maxRedemptionCjpyAmount > 0) {
             try priorityRegistry.popRedeemable() returns (Pledge memory _redeemablePledge) {
 
-                console.log("ICR:%s LICR:%s owner:%s", _redeemablePledge.getICR(cjpyOS.feed()), priorityRegistry.currentLICRpertenk(), _redeemablePledge.owner);
                 if (_redeemablePledge.owner == address(0x00)) {
                     break; // Note: No any more redeemable pledges 
                 }
@@ -340,9 +339,9 @@ contract Yamato is IYamato, ReentrancyGuard{
                     2. Put the sludge pledge to the queue
                 */
                 sPledge.lastUpsertedTimeICRpertenk = priorityRegistry.upsert(sPledge.toMem());
-            } catch {
+            } catch Error(string memory reason) {
                 // Note: Don't revert here because overwhelming "maxRedemptionCjpyAmount" can reach this flow.
-                // console.log("===== exhausted."); /* Not for prod: performance reason */
+                // console.log("Error: %s", reason); /* Not for prod: performance reason */
                 break;
             }
         }
@@ -352,17 +351,15 @@ contract Yamato is IYamato, ReentrancyGuard{
         */
 
         uint usedCjpyAmount = cjpyAmountStart - maxRedemptionCjpyAmount;
-        console.log("===1:%s",usedCjpyAmount);
         require(usedCjpyAmount > 0, "No pledges are redeemed.");
         // Note: This line can be the redemption execution checker
 
         uint totalRedeemedCjpyAmount = redeemStart - pool.redemptionReserve();
         uint totalRedeemedEthAmount = totalRedeemedCjpyAmount.div(jpyPerEth);
-        console.log("===2:%s",totalRedeemedEthAmount);
         uint dividendEthAmount = totalRedeemedEthAmount * (100-GRR)/100;
-        console.log("===3:%s",dividendEthAmount);
         address _target = msg.sender;
-        if(isCoreRedemption){
+
+        if (isCoreRedemption) {
             /* 
             [ Core Redemption - Pool Subtotal ]
                 (-) Redemption Reserve (CJPY)
@@ -373,18 +370,18 @@ contract Yamato is IYamato, ReentrancyGuard{
             _target = address(pool);
             pool.useRedemptionReserve(totalRedeemedCjpyAmount);
             pool.accumulateDividendReserve(dividendEthAmount);
-
         }
+
         cjpyOS.burnCJPY(_target, totalRedeemedCjpyAmount);
-        try pool.sendETH(_target, dividendEthAmount * (100-uint(GRR))/100 ) {} catch Error(string memory reason) { console.log("Error: %s",reason); }
+        pool.sendETH(_target, dividendEthAmount * (100-uint(GRR))/100 );
 
 
         /*
             4. Gas compensation
         */
-        // uint gasCompensation = totalRedeemedEthAmount * (uint(GRR)/100);
-        // (bool success,) = payable(msg.sender).call{value:gasCompensation}("");
-        // require(success, "Gas payback has been failed.");
+        uint gasCompensation = totalRedeemedEthAmount * (uint(GRR)/100);
+        (bool success,) = payable(msg.sender).call{value:gasCompensation}("");
+        require(success, "Gas payback has been failed.");
     }
 
 

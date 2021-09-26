@@ -82,7 +82,7 @@ describe("contract Yamato", function() {
     mockPool.smocked['depositRedemptionReserve(uint256)'].will.return.with(0);
     mockPool.smocked['depositSweepReserve(uint256)'].will.return.with(0);
     mockPool.smocked['lockETH(uint256)'].will.return.with(0);
-    mockPool.smocked['sendETH(address,uint256)'].will.return.with(0);
+    mockPool.smocked.sendETH.will.return.with(0);
     mockFeed.smocked.fetchPrice.will.return.with(PRICE);
     await (await yamato.updateTCR() ).wait();
     mockPool.smocked.redemptionReserve.will.return.with(1);
@@ -356,7 +356,7 @@ describe("contract Yamato", function() {
     beforeEach(async function(){
       mockFeed.smocked.fetchPrice.will.return.with(PRICE);
       await (await yamato.updateTCR() ).wait();
-      mockPool.smocked['sendETH(address,uint256)'].will.return.with(0);     
+      mockPool.smocked.sendETH.will.return.with(0);     
     });
 
     it(`should validate locked state`, async function() {
@@ -392,7 +392,7 @@ describe("contract Yamato", function() {
       const MCR = 1.1;
       mockFeed.smocked.fetchPrice.will.return.with(PRICE);
       await (await yamato.updateTCR() ).wait();
-      mockPool.smocked['sendETH(address,uint256)'].will.return.with(0);     
+      mockPool.smocked.sendETH.will.return.with(0);     
 
       const toCollateralize = 1;
       const toBorrow = (PRICE * toCollateralize) / MCR;
@@ -416,7 +416,7 @@ describe("contract Yamato", function() {
       const MCR = 1.1;
       mockFeed.smocked.fetchPrice.will.return.with(PRICE);
       await (await yamato.updateTCR() ).wait();
-      mockPool.smocked['sendETH(address,uint256)'].will.return.with(0);     
+      mockPool.smocked.sendETH.will.return.with(0);     
 
       const toCollateralize = 1;
       const toBorrow = (PRICE * toCollateralize) / MCR;
@@ -458,7 +458,7 @@ describe("contract Yamato", function() {
       mockCjpyOS.smocked.burnCJPY.will.return.with(0);
       mockPool.smocked.useRedemptionReserve.will.return.with(0);
       mockPool.smocked.accumulateDividendReserve.will.return.with(0);
-      mockPool.smocked['sendETH(address,uint256)'].will.return.with(0);
+      mockPool.smocked.sendETH.will.return.with(0);
       mockFeed.smocked.fetchPrice.will.return.with(PRICE);
       mockPool.smocked.redemptionReserve.will.return.with(1000000000000);
       await (await yamato.updateTCR() ).wait();
@@ -548,7 +548,7 @@ describe("contract Yamato", function() {
     });
     it(`should run sendETH\(\) of Pool.sol for successful redeemer`, async function(){
       await yamato.connect(accounts[0]).redeem(toERC20(toBorrow+""), false);
-      betterexpect(mockPool.smocked['sendETH(address,uint256)'].calls.length).toBe(1);
+      betterexpect(mockPool.smocked.sendETH.calls.length).toBe(1);
     });
     it(`should run burnCJPY\(\) of Yamato.sol for successful redeemer`, async function(){
       await yamato.connect(accounts[0]).redeem(toERC20(toBorrow+""), false);
@@ -573,7 +573,7 @@ describe("contract Yamato", function() {
       mockPool.smocked['depositRedemptionReserve(uint256)'].will.return.with(0);
       mockPool.smocked['depositSweepReserve(uint256)'].will.return.with(0);
       mockPool.smocked['lockETH(uint256)'].will.return.with(0);
-      mockPool.smocked['sendETH(address,uint256)'].will.return.with(0);
+      mockPool.smocked.sendETH.will.return.with(0);
       mockPool.smocked['useSweepReserve(uint256)'].will.return.with(0);
       mockPool.smocked.sweepReserve.will.return.with(10000000000000);
       mockFeed.smocked.fetchPrice.will.return.with(PRICE);

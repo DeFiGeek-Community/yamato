@@ -140,18 +140,13 @@ contract PriorityRegistry is IPriorityRegistry {
     */
     function popRedeemable() public onlyYamato override returns (IYamato.Pledge memory) {
         uint licr = currentLICRpertenk;
-        console.log("=== 1: %s", licr);
         require(licr > 0, "Need to upsert at least once.");
-        console.log("=== 2: %s", pledgeLength);
         require(pledgeLength > 0, "Need to upsert at least once.");
-        console.log("=== 3: %s", levelIndice[licr].length);
         require(levelIndice[licr].length > 0, "The current lowest ICR data is inconsistent with actual sorted pledges.");
 
         address _addr;
-        console.log("=== 4: %s", levelIndice[licr].length);
         // Note: Not (Exist AND coll>0) then skip.
         while(!leveledPledges[licr][_addr].isCreated || leveledPledges[licr][_addr].coll == 0){
-            console.log("=== 5: %s", levelIndice[licr].length);
 
             _addr = levelIndice[licr][levelIndice[licr].length - 1];
             levelIndice[licr].pop();
@@ -163,14 +158,11 @@ contract PriorityRegistry is IPriorityRegistry {
         }
 
         // Note: Don't check LICR, real ICR is the matter.
-        console.log("=== 6: %s", leveledPledges[licr][_addr].getICR(IYamato(yamato).getFeed()));
-
         require(leveledPledges[licr][_addr].getICR(IYamato(yamato).getFeed()) < uint(IYamato(yamato).MCR()).mul(100), "You can't redeem if redeemable candidate is more than MCR.");
 
         // Note: popped array and pledge must be deleted
         _tryLICRBackwardUpdate(leveledPledges[licr][_addr].lastUpsertedTimeICRpertenk);
 
-        console.log("=== 7: %s", leveledPledges[licr][_addr].lastUpsertedTimeICRpertenk);
         return leveledPledges[licr][_addr];
     }
 
@@ -255,20 +247,19 @@ contract PriorityRegistry is IPriorityRegistry {
         - nextSweepable
     */
     function nextRedeemable() public view override returns (IYamato.Pledge memory) {
-        if(levelIndice[currentLICRpertenk].length > 0){
-            address _poppedAddr = levelIndice[currentLICRpertenk][levelIndice[currentLICRpertenk].length - 1];
-            return leveledPledges[currentLICRpertenk][_poppedAddr];
-        } else {
+        if(levelIndice[currentLICRpertenk].length == 0){
             return IYamato.Pledge(0,0,false,address(0),0);
         }
+ 
+        address _poppedAddr = levelIndice[currentLICRpertenk][levelIndice[currentLICRpertenk].length - 1];
+        return leveledPledges[currentLICRpertenk][_poppedAddr];
     }
     function nextSweepable() public view override returns (IYamato.Pledge memory) {
-        if(levelIndice[0].length > 0){
-            address _poppedAddr = levelIndice[0][levelIndice[0].length - 1];
-            return leveledPledges[0][_poppedAddr];
-        } else {
+        if(levelIndice[0].length == 0){
             return IYamato.Pledge(0,0,false,address(0),0);
         }
+        address _poppedAddr = levelIndice[0][levelIndice[0].length - 1];
+        return leveledPledges[0][_poppedAddr];
     }
     
 
