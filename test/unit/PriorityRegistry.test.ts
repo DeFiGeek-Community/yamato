@@ -3,7 +3,13 @@ import { FakeContract, smock } from "@defi-wonderland/smock";
 import chai, { expect } from "chai";
 import { solidity } from "ethereum-waffle";
 import { Signer, BigNumber } from "ethers";
-import { CjpyOS, PriceFeed, Yamato } from "../../typechain";
+import {
+  CjpyOS,
+  PledgeLib__factory,
+  PriceFeed,
+  Yamato,
+  Yamato__factory,
+} from "../../typechain";
 
 chai.use(smock.matchers);
 chai.use(solidity);
@@ -24,12 +30,16 @@ describe("contract PriorityRegistry", function () {
     address0 = await accounts[0].getAddress();
 
     const PledgeLib = (
-      await (await ethers.getContractFactory("PledgeLib")).deploy()
+      await (<PledgeLib__factory>(
+        await ethers.getContractFactory("PledgeLib")
+      )).deploy()
     ).address;
-    const spec1 = await ethers.getContractFactory("Yamato", {
-      libraries: { PledgeLib },
-    });
-    mockYamato = await smock.fake<Yamato>(spec1);
+    const YamatoContractFactory = <Yamato__factory>(
+      await ethers.getContractFactory("Yamato", {
+        libraries: { PledgeLib },
+      })
+    );
+    mockYamato = await smock.fake<Yamato>(YamatoContractFactory);
     mockCjpyOS = await smock.fake<CjpyOS>("CjpyOS");
     mockFeed = await smock.fake<PriceFeed>("PriceFeed");
 
@@ -49,7 +59,7 @@ describe("contract PriorityRegistry", function () {
     /*
         For onlyYamato tests
       */
-    yamato = await spec1.deploy(mockCjpyOS.address);
+    yamato = await YamatoContractFactory.deploy(mockCjpyOS.address);
     priorityRegistry = await (
       await ethers.getContractFactory("PriorityRegistry", {
         libraries: { PledgeLib },
