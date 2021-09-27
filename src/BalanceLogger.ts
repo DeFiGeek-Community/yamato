@@ -2,7 +2,7 @@ import { BigNumber, Contract, Signer } from 'ethers';
 import { summon, create, getSharedProvider, getSharedSigners, 
   parseAddr, parseBool, parseInteger, getLogs,
   encode, decode, increaseTime,
-  toERC20, toFloat, onChainNow } from "@test/param/helper";
+  toERC20, toFloat, onChainNow } from "../test/param/helper";
 
 
 export class BalanceLogger{
