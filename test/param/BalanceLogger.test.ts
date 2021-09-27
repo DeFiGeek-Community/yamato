@@ -10,7 +10,7 @@ chai.use(solidity);
 
 describe("BalanceLogger", function () {
   describe(".ltAbsOneBN()", function () {
-    let bl;
+    let bl: BalanceLogger;
     before(() => {
       bl = new BalanceLogger({}, {}, getSharedProvider(), "foo");
     });
