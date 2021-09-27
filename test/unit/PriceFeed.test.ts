@@ -143,9 +143,9 @@ describe("PriceFeed", function () {
       await (await feed.fetchPrice()).wait();
       const status = await feed.status();
       const lastGoodPrice = await feed.lastGoodPrice();
-      expect(Math.floor(cPriceAtExecInEthUsd / cPriceAtExecInJpyUsd)).to.eq(
-        `${lastGoodPrice}`.substr(0, 6)
-      );
+      expect(
+        Math.floor(cPriceAtExecInEthUsd / cPriceAtExecInJpyUsd).toString()
+      ).to.eq(`${lastGoodPrice}`.substr(0, 6));
       expect(status).to.eq(0);
       /*
             enum Status {
@@ -214,7 +214,9 @@ describe("PriceFeed", function () {
       const lastGoodPrice1 = await feed.lastGoodPrice();
       expect(status1).to.eq(0);
       expect(
-        Math.floor(cPriceAtLastTimeInEthUsd / cPriceAtLastTimeInJpyUsd)
+        Math.floor(
+          cPriceAtLastTimeInEthUsd / cPriceAtLastTimeInJpyUsd
+        ).toString()
       ).to.eq(`${lastGoodPrice1}`.substr(0, 6));
 
       // 3. Exec
@@ -239,7 +241,9 @@ describe("PriceFeed", function () {
       const lastGoodPrice2 = await feed.lastGoodPrice();
       expect(status2).to.eq(2);
       expect(
-        Math.floor(cPriceAtLastTimeInEthUsd / cPriceAtLastTimeInJpyUsd)
+        Math.floor(
+          cPriceAtLastTimeInEthUsd / cPriceAtLastTimeInJpyUsd
+        ).toString()
       ).to.eq(`${lastGoodPrice2}`.substr(0, 6));
     });
   });
