@@ -97,16 +97,10 @@ describe("PriceFeed", function () {
     accounts = await ethers.getSigners();
     ownerAddress = await accounts[0].getAddress();
     // https://github.com/liquity/dev/blob/main/packages/contracts/contracts/Dependencies/AggregatorV3Interface.sol
-    mockAggregatorV3EthUsd = await smock.fake<ChainLinkMock>("ChainLinkMock", {
-      address: ownerAddress,
-    });
-    mockAggregatorV3JpyUsd = await smock.fake<ChainLinkMock>("ChainLinkMock", {
-      address: ownerAddress,
-    });
+    mockAggregatorV3EthUsd = await smock.fake<ChainLinkMock>("ChainLinkMock");
+    mockAggregatorV3JpyUsd = await smock.fake<ChainLinkMock>("ChainLinkMock");
     // https://github.com/liquity/dev/blob/main/packages/contracts/contracts/Interfaces/ITellorCaller.sol
-    mockTellorCaller = await smock.fake<TellorCallerMock>("TellorCallerMock", {
-      address: ownerAddress,
-    });
+    mockTellorCaller = await smock.fake<TellorCallerMock>("TellorCallerMock");
 
     await setMocks({
       price: {

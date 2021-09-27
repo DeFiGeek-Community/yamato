@@ -37,15 +37,11 @@ describe("contract Yamato", function () {
     accounts = await ethers.getSigners();
     ownerAddress = await accounts[0].getAddress();
 
-    mockPool = await smock.fake<Pool>("Pool", { address: ownerAddress });
-    mockFeed = await smock.fake<PriceFeed>("PriceFeed", {
-      address: ownerAddress,
-    });
-    mockYMT = await smock.fake<YMT>("YMT", { address: ownerAddress });
-    mockCJPY = await smock.fake<CJPY>("CJPY", { address: ownerAddress });
-    mockCjpyOS = await smock.fake<CjpyOS>("CjpyOS", {
-      address: ownerAddress,
-    });
+    mockPool = await smock.fake<Pool>("Pool");
+    mockFeed = await smock.fake<PriceFeed>("PriceFeed");
+    mockYMT = await smock.fake<YMT>("YMT");
+    mockCJPY = await smock.fake<CJPY>("CJPY");
+    mockCjpyOS = await smock.fake<CjpyOS>("CjpyOS");
 
     const PledgeLib = (
       await (await ethers.getContractFactory("PledgeLib")).deploy()

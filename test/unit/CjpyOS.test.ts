@@ -29,14 +29,10 @@ describe("CjpyOS", () => {
     accounts = await ethers.getSigners();
     ownerAddress = await accounts[0].getAddress();
     userAddress = await accounts[1].getAddress();
-    mockCJPY = await smock.fake<CJPY>("CJPY", { address: ownerAddress });
-    mockYMT = await smock.fake<YMT>("YMT", { address: ownerAddress });
-    mockVeYMT = await smock.fake<VeYMT>("veYMT", {
-      address: ownerAddress,
-    });
-    mockFeed = await smock.fake<PriceFeed>("PriceFeed", {
-      address: ownerAddress,
-    });
+    mockCJPY = await smock.fake<CJPY>("CJPY");
+    mockYMT = await smock.fake<YMT>("YMT");
+    mockVeYMT = await smock.fake<VeYMT>("veYMT");
+    mockFeed = await smock.fake<PriceFeed>("PriceFeed");
 
     cjpyOS = await (<CjpyOS__factory>(
       await ethers.getContractFactory("CjpyOS")
