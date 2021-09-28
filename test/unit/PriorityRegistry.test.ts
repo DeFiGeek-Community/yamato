@@ -34,12 +34,12 @@ describe("contract PriorityRegistry", function () {
         await ethers.getContractFactory("PledgeLib")
       )).deploy()
     ).address;
-    const YamatoContractFactory = <Yamato__factory>(
+    const yamatoContractFactory = <Yamato__factory>(
       await ethers.getContractFactory("Yamato", {
         libraries: { PledgeLib },
       })
     );
-    mockYamato = await smock.fake<Yamato>(YamatoContractFactory);
+    mockYamato = await smock.fake<Yamato>(yamatoContractFactory);
     mockCjpyOS = await smock.fake<CjpyOS>("CjpyOS");
     mockFeed = await smock.fake<PriceFeed>("PriceFeed");
 
@@ -59,7 +59,7 @@ describe("contract PriorityRegistry", function () {
     /*
         For onlyYamato tests
       */
-    yamato = await YamatoContractFactory.deploy(mockCjpyOS.address);
+    yamato = await yamatoContractFactory.deploy(mockCjpyOS.address);
     priorityRegistry = await (
       await ethers.getContractFactory("PriorityRegistry", {
         libraries: { PledgeLib },
