@@ -2,13 +2,12 @@
   "name": "@defigeek/yamato",
   "version": "1.0.0",
   "description": "A stablecoin lender with efficient game-theoretic design.",
-  "main": "scripts/main.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/defigeek/yamato.git"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/defigeek/yamato/issues"
   },
@@ -16,10 +15,7 @@
   "dependencies": {
     "@types/node": "^14.6.4",
     "child-process-promise": "^2.2.1",
-    "commander": "^7.2.0",
-    "npm-which": "^3.0.1",
     "openzeppelin-solidity": "^4.1.0",
-    "package": "^1.0.1",
     "tslib": "^2.0.1",
     "typescript": "^4.0.2"
   },
@@ -64,16 +60,10 @@
     "tsconfig-paths": "^3.10.1",
     "typechain": "^5.0.0"
   },
-  "bin": {},
   "scripts": {
-    "start": "rollup -c && node index.js",
     "compile?": "[[ ! $(git diff contracts) ]] || hardhat compile",
-    "test": "npm run test:unit && npm run test:param",
-    "test:param": "npm run compile? && jest --projects param.jest.config.ts",
     "test:unit": "npm run compile? && jest --projects unit.jest.config.ts",
     "deploy:testnet": "hardhat deploy --network rinkeby",
-    "deploy:localhost": "hardhat deploy --network localhost",
-    "cli:fetchPrice": "ts-node -r tsconfig-paths/register src/priceFeedSDK.ts",
     "verify:testnet": "hardhat verify --network rinkeby"
   }
 }

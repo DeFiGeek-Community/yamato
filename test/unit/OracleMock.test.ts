@@ -1,7 +1,5 @@
 import { ethers } from 'hardhat'
-import { smockit, smoddit, isMockContract } from 'optimism/packages/smock';
-import { BigNumber, utils } from 'ethers';
-const { AbiCoder, ParamType } = utils;
+import { BigNumber } from 'ethers';
 import chai from "chai";
 import { solidity } from "ethereum-waffle";
 chai.use(solidity);
@@ -9,19 +7,6 @@ chai.use(solidity);
 const { waffleJest } = require("@ethereum-waffle/jest");
 expect.extend(waffleJest);
 const betterexpect = (<any>expect); // TODO: better typing for waffleJest
-import { summon, forge, create, getSharedProvider, getSharedSigners, 
-  parseAddr, parseBool, parseInteger, getLogs,
-  encode, decode, increaseTime,
-  toERC20, toFloat, onChainNow } from "@test/param/helper";
-import { getBulksaleAbiArgs, getTokenAbiArgs, sendEther } from "@test/param/scenarioHelper";
-import { State } from '@test/param/parameterizedSpecs';
-import { parameterizedSpecs } from '@test/param/paramSpecEntrypoint';
-import { suite, test } from '@testdeck/jest'
-import fs from 'fs';
-import { BalanceLogger } from '@src/BalanceLogger';
-import { ChainLinkMock, TellorCallerMock } from '../../typechain'; 
-
-import { genABI } from '@src/genABI';
 
 let chainlinkMockEthUsd;
 let chainlinkMockJpyUsd;
