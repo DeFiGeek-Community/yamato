@@ -13,6 +13,9 @@ import '@typechain/hardhat'
 import "@nomiclabs/hardhat-etherscan";
 import 'hardhat-abi-exporter';
 
+if(!process.env.ALCHEMY_URL) throw Error("Get your .env");
+
+
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */
