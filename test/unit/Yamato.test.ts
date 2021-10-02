@@ -1,10 +1,11 @@
 import { ethers } from 'hardhat'
 import { smockit, isMockContract } from 'optimism/packages/smock';
+import { BigNumber } from 'ethers';
 
 const { waffleJest } = require("@ethereum-waffle/jest");
 expect.extend(waffleJest);
 const betterexpect = (<any>expect); // TODO: better typing for waffleJest
-import { getSharedSigners, toERC20 } from "@test/param/helper";
+import { getSharedSigners, toERC20, encode } from "@test/param/helper";
 
 /* Parameterized Test (Testcases are in /test/parameterizedSpecs.ts) */
 describe("Smock for Yamato", function() {
