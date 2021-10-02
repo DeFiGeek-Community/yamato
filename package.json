@@ -63,6 +63,7 @@
     "typescript": "^4.0.2"
   },
   "scripts": {
+    "format": "prettier --write .",
     "compile": "hardhat compile",
     "compile?": "[[ ! $(git diff contracts) ]] || hardhat compile",
     "test:unit": "jest --projects unit.jest.config.ts",
