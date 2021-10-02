@@ -36,7 +36,9 @@ jobs:
           FOUNDATION_PRIVATE_KEY: ${{ secrets.FOUNDATION_PRIVATE_KEY }}
 
       - name: Run unit tests
-        run: npm run test
+        run: npm run test:unit
+        env:
+          ALCHEMY_URL: ${{ secrets.ALCHEMY_URL }}
 
       - name: discord notification（if failure）
         uses: sarisia/actions-status-discord@v1
