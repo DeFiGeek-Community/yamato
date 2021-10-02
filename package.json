@@ -67,5 +67,8 @@
     "test": "npm run compile && npm run test:unit",
     "deploy:testnet": "hardhat deploy --network rinkeby",
     "verify:testnet": "hardhat verify --network rinkeby"
+  },
+  "engines": {
+    "node": ">=14"
   }
 }
