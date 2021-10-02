@@ -30,6 +30,10 @@ jobs:
 
       - name: Compile
         run: npm run compile
+        env:
+          ALCHEMY_URL: ${{ secrets.ALCHEMY_URL }}
+          DEPLOYER_PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
+          FOUNDATION_PRIVATE_KEY: ${{ secrets.FOUNDATION_PRIVATE_KEY }}
 
       - name: Run unit tests
         run: npm run test
