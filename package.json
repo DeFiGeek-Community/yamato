@@ -18,7 +18,9 @@
     "ethers": "^5.4.5",
     "openzeppelin-solidity": "^4.1.0",
     "optimism": "0xMotoko/optimism#hotfix/hardhat-v2.4.x",
-    "prb-math": "^2.2.0"
+    "prb-math": "^2.2.0",
+    "prettier": "^2.4.1",
+    "prettier-plugin-solidity": "^1.0.0-beta.18"
   },
   "devDependencies": {
     "@eth-optimism/core-utils": "^0.5.3",
