@@ -2,23 +2,35 @@
   "name": "@defigeek/yamato",
   "version": "1.0.0",
   "description": "A stablecoin lender with efficient game-theoretic design.",
+  "homepage": "https://github.com/defigeek/yamato#readme",
+  "bugs": {
+    "url": "https://github.com/defigeek/yamato/issues"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/defigeek/yamato.git"
   },
-  "author": "",
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/defigeek/yamato/issues"
+  "author": "",
+  "scripts": {
+    "compile": "hardhat compile",
+    "compile?": "[[ ! $(git diff contracts) ]] || hardhat compile",
+    "deploy:testnet": "hardhat deploy --network rinkeby",
+    "format": "sort-package-json && prettier --write .",
+    "lint:check": "solhint 'contracts/**/*.sol' && prettier --check .",
+    "test": "npm run compile && npm run test:unit",
+    "test:unit": "jest --projects unit.jest.config.ts",
+    "verify:testnet": "hardhat verify --network rinkeby"
   },
-  "homepage": "https://github.com/defigeek/yamato#readme",
   "dependencies": {
     "@openzeppelin/contracts": "v3.4.0-rc.0",
     "child-process-promise": "^2.2.1",
     "ethers": "^5.4.5",
     "openzeppelin-solidity": "^4.1.0",
     "optimism": "0xMotoko/optimism#hotfix/hardhat-v2.4.x",
-    "prb-math": "^2.2.0"
+    "prb-math": "^2.2.0",
+    "prettier": "^2.4.1",
+    "prettier-plugin-solidity": "^1.0.0-beta.18"
   },
   "devDependencies": {
     "@eth-optimism/core-utils": "^0.5.3",
@@ -52,6 +64,9 @@
     "jasmine": "^3.7.0",
     "jest": "^26.4.2",
     "solc": "^0.8.4",
+    "solhint": "^3.3.6",
+    "solhint-plugin-prettier": "0.0.5",
+    "sort-package-json": "^1.52.0",
     "ts-jest": "^26.5.5",
     "ts-node": "^9.1.1",
     "ts-test-decorators": "0.0.6",
@@ -59,14 +74,6 @@
     "tslib": "^2.0.1",
     "typechain": "^5.0.0",
     "typescript": "^4.0.2"
-  },
-  "scripts": {
-    "compile": "hardhat compile",
-    "compile?": "[[ ! $(git diff contracts) ]] || hardhat compile",
-    "test:unit": "jest --projects unit.jest.config.ts",
-    "test": "npm run compile && npm run test:unit",
-    "deploy:testnet": "hardhat deploy --network rinkeby",
-    "verify:testnet": "hardhat verify --network rinkeby"
   },
   "engines": {
     "node": ">=14"

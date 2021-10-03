@@ -1,7 +1,6 @@
-
-import {HardhatRuntimeEnvironment} from 'hardhat/types';
-import {DeployFunction} from 'hardhat-deploy/types';
-import {parseEther} from 'ethers/lib/utils';
+import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { DeployFunction } from "hardhat-deploy/types";
+import { parseEther } from "ethers/lib/utils";
 import {
   deploy,
   goToEmbededMode,
@@ -15,23 +14,22 @@ import {
   isInitMode,
   isEmbeddedMode,
   backToInitMode,
-  sleep
-} from '@src/deployUtil';
-import { Wallet } from 'ethers';
-
+  sleep,
+} from "@src/deployUtil";
+import { Wallet } from "ethers";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await setProvider();
   const { ethers, deployments } = hre;
-  const { getContractFactory, Contract, BigNumber, Signer, getSigners } = ethers;
+  const { getContractFactory, Contract, BigNumber, Signer, getSigners } =
+    ethers;
 
-  const chainlinkJpyUsd = await deploy('ChainLinkMock', {
+  const chainlinkJpyUsd = await deploy("ChainLinkMock", {
     args: ["JPY/USD"],
     getContractFactory,
     deployments,
-    tag: "JpyUsd"
-  }).catch(e=> console.trace(e.message) )
-
+    tag: "JpyUsd",
+  }).catch((e) => console.trace(e.message));
 };
 export default func;
-func.tags = ['ChainLinkMockJpyUsd'];
+func.tags = ["ChainLinkMockJpyUsd"];
