@@ -1,4 +1,7 @@
 {
   "extends": "solhint:recommended",
-  "plugins": ["prettier"]
+  "plugins": ["prettier"],
+  "rules": {
+    "prettier/prettier": "off"
+  }
 }
