@@ -2,16 +2,26 @@
   "name": "@defigeek/yamato",
   "version": "1.0.0",
   "description": "A stablecoin lender with efficient game-theoretic design.",
+  "homepage": "https://github.com/defigeek/yamato#readme",
+  "bugs": {
+    "url": "https://github.com/defigeek/yamato/issues"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/defigeek/yamato.git"
   },
-  "author": "",
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/defigeek/yamato/issues"
+  "author": "",
+  "scripts": {
+    "compile": "hardhat compile",
+    "compile?": "[[ ! $(git diff contracts) ]] || hardhat compile",
+    "deploy:testnet": "hardhat deploy --network rinkeby",
+    "format": "sort-package-json && prettier --write .",
+    "lint:check": "solhint 'contracts/**/*.sol' && prettier --check .",
+    "test": "npm run compile && npm run test:unit",
+    "test:unit": "jest --projects unit.jest.config.ts",
+    "verify:testnet": "hardhat verify --network rinkeby"
   },
-  "homepage": "https://github.com/defigeek/yamato#readme",
   "dependencies": {
     "@openzeppelin/contracts": "v3.4.0-rc.0",
     "child-process-promise": "^2.2.1",
@@ -64,16 +74,6 @@
     "tslib": "^2.0.1",
     "typechain": "^5.0.0",
     "typescript": "^4.0.2"
-  },
-  "scripts": {
-    "format": "prettier --write .",
-    "compile": "hardhat compile",
-    "compile?": "[[ ! $(git diff contracts) ]] || hardhat compile",
-    "test:unit": "jest --projects unit.jest.config.ts",
-    "test": "npm run compile && npm run test:unit",
-    "lint:check": "solhint 'contracts/**/*.sol' && prettier --check .",
-    "deploy:testnet": "hardhat deploy --network rinkeby",
-    "verify:testnet": "hardhat verify --network rinkeby"
   },
   "engines": {
     "node": ">=14"
