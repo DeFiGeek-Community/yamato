@@ -4,8 +4,7 @@ pragma solidity 0.7.6;
  * SPDX-License-Identifier: GPL-3.0-or-later
  * Written by 0xMotoko (0xmotoko@pm.me)
  * Copyright (C) 2021 Yamato Protocol (DeFiGeek Community Japan)
-*/
-
+ */
 
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
@@ -20,23 +19,41 @@ import "./Yamato.sol";
  */
 
 interface IveYMT {
-    function mintableInTimeframe(uint _start, uint _end) external view returns (uint);
-    function balanceOfAt(address _addr, uint _at) external view returns (uint);
-    function totalSupplyAt(uint _at) external view returns (uint);
+    function mintableInTimeframe(uint256 _start, uint256 _end)
+        external
+        view
+        returns (uint256);
+
+    function balanceOfAt(address _addr, uint256 _at)
+        external
+        view
+        returns (uint256);
+
+    function totalSupplyAt(uint256 _at) external view returns (uint256);
 }
 
 contract veYMT is IveYMT {
     IYamato yamato = IYamato(address(0));
 
-    function mintableInTimeframe(uint _start, uint _end) public view override returns (uint) {
+    function mintableInTimeframe(uint256 _start, uint256 _end)
+        public
+        view
+        override
+        returns (uint256)
+    {
         return 1;
     }
 
-    function balanceOfAt(address _addr, uint _at) public view override returns (uint) {
+    function balanceOfAt(address _addr, uint256 _at)
+        public
+        view
+        override
+        returns (uint256)
+    {
         return 1;
     }
 
-    function totalSupplyAt(uint _at) public view override returns (uint) {
+    function totalSupplyAt(uint256 _at) public view override returns (uint256) {
         return 1;
     }
 }

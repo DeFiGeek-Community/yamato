@@ -1,9 +1,7 @@
 {
   "compilerOptions": {
     "target": "es6",
-    "lib": [
-      "es6"
-    ],
+    "lib": ["es6"],
     "module": "commonjs",
     "moduleResolution": "node",
     "declaration": true,
@@ -27,7 +25,7 @@
     "hardhat.config.ts",
     "src/**/*.ts",
     "deploy/**/*.ts",
-		"./node_modules/hardhat/hardhat-ethers/src/type-extensions.d.ts",
+    "./node_modules/hardhat/hardhat-ethers/src/type-extensions.d.ts",
     "./typechain/**/*.ts"
   ]
 }
