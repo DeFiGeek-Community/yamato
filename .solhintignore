@@ -1,0 +1,11 @@
+/.git/
+/.github/
+/abis/
+/artifacts/
+/cache/
+/deploy/
+/deployments/
+/node_modules/
+/src/
+/test/
+/typechain/
