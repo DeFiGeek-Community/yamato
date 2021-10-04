@@ -18,8 +18,7 @@
     "deploy:testnet": "hardhat deploy --network rinkeby",
     "format": "sort-package-json && prettier --write .",
     "lint:check": "solhint 'contracts/**/*.sol' && prettier --check .",
-    "test": "npm run compile && npm run test:unit",
-    "test:unit": "jest --projects unit.jest.config.ts",
+    "test": "hardhat test",
     "verify:testnet": "hardhat verify --network rinkeby"
   },
   "dependencies": {
