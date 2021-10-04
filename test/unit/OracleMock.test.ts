@@ -1,28 +1,32 @@
 import { ethers } from "hardhat";
-import { BigNumber } from "ethers";
-import chai from "chai";
+import { smock } from "@defi-wonderland/smock";
+import chai, { expect } from "chai";
 import { solidity } from "ethereum-waffle";
+import { BigNumber } from "ethers";
+import {
+  ChainLinkMock,
+  ChainLinkMock__factory,
+  TellorCallerMock,
+  TellorCallerMock__factory,
+} from "../../typechain";
+
+chai.use(smock.matchers);
 chai.use(solidity);
 
-const { waffleJest } = require("@ethereum-waffle/jest");
-expect.extend(waffleJest);
-const betterexpect = <any>expect; // TODO: better typing for waffleJest
-
-let chainlinkMockEthUsd;
-let chainlinkMockJpyUsd;
-let tellorCallerMockEthJpy;
+let chainlinkMockEthUsd: ChainLinkMock;
+let chainlinkMockJpyUsd: ChainLinkMock;
+let tellorCallerMockEthJpy: TellorCallerMock;
 let ethUsdDefaultPrice = 300000000000;
 let jpyUsdDefaultPrice = 1000000;
 let ethJpyDefaultPrice = 300000000000;
 let chainlinkInitialRoundId = "30000000000000000001";
 let priceDeviationRange = 0.01;
-let tellorMock;
-let accounts;
-let mockRoundCount = 0;
 
 describe("OracleMockBase", function () {
   beforeEach(async () => {
-    const spec1 = await ethers.getContractFactory("ChainLinkMock");
+    const spec1 = <ChainLinkMock__factory>(
+      await ethers.getContractFactory("ChainLinkMock")
+    );
     chainlinkMockEthUsd = await spec1.deploy("ETH/USD");
   });
 
@@ -32,15 +36,19 @@ describe("OracleMockBase", function () {
       await chainlinkMockEthUsd.setLastPrice(ethUsdLastPrice);
       let [roundId, answerEthUsd, startedAt, updatedAt, answeredInRound] =
         await chainlinkMockEthUsd.latestRoundData();
-      betterexpect(answerEthUsd.toNumber()).toBe(ethUsdLastPrice);
+      expect(answerEthUsd.toNumber()).to.eq(ethUsdLastPrice);
     });
   });
 });
 
 describe("ChainlinkMock", function () {
   beforeEach(async () => {
-    const spec1 = await ethers.getContractFactory("ChainLinkMock");
-    const spec2 = await ethers.getContractFactory("ChainLinkMock");
+    const spec1 = <ChainLinkMock__factory>(
+      await ethers.getContractFactory("ChainLinkMock")
+    );
+    const spec2 = <ChainLinkMock__factory>(
+      await ethers.getContractFactory("ChainLinkMock")
+    );
     chainlinkMockEthUsd = await spec1.deploy("ETH/USD");
     chainlinkMockJpyUsd = await spec2.deploy("JPY/USD");
   });
@@ -49,9 +57,9 @@ describe("ChainlinkMock", function () {
     it(`succeeds to get decimals from Chainlink`, async function () {
       // decimals for both ETH/USD and JPY/USD should be 8
       const decimalsEthUsd = await chainlinkMockEthUsd.decimals();
-      betterexpect(decimalsEthUsd).toBe(8);
+      expect(decimalsEthUsd).to.eq(8);
       const decimalsJpyUsd = await chainlinkMockJpyUsd.decimals();
-      betterexpect(decimalsJpyUsd).toBe(8);
+      expect(decimalsJpyUsd).to.eq(8);
     });
   });
 
@@ -64,8 +72,8 @@ describe("ChainlinkMock", function () {
 
       let [roundId, answerEthUsd, startedAt, updatedAt, answeredInRound] =
         await chainlinkMockEthUsd.latestRoundData();
-      betterexpect(answerEthUsd.toNumber()).toBe(ethUsdDefaultPrice);
-      betterexpect(roundId.toString()).toBe(chainlinkInitialRoundId);
+      expect(answerEthUsd.toNumber()).to.eq(ethUsdDefaultPrice);
+      expect(roundId.toString()).to.eq(chainlinkInitialRoundId);
 
       const jpyUsdLastPrice = 1100000;
       await chainlinkMockJpyUsd.setLastPrice(jpyUsdLastPrice);
@@ -73,8 +81,8 @@ describe("ChainlinkMock", function () {
 
       let [roundId2, answerJpyUsd, startedAt2, updatedAt2, answeredInRound2] =
         await chainlinkMockJpyUsd.latestRoundData();
-      betterexpect(answerJpyUsd.toNumber()).toBe(jpyUsdDefaultPrice);
-      betterexpect(roundId2.toString()).toBe(chainlinkInitialRoundId);
+      expect(answerJpyUsd.toNumber()).to.eq(jpyUsdDefaultPrice);
+      expect(roundId2.toString()).to.eq(chainlinkInitialRoundId);
     });
   });
 
@@ -83,13 +91,13 @@ describe("ChainlinkMock", function () {
       // the prices shall be equal to the default prices
       let [roundId, answerEthUsd, startedAt, updatedAt, answeredInRound] =
         await chainlinkMockEthUsd.latestRoundData();
-      betterexpect(answerEthUsd.toNumber()).toBe(ethUsdDefaultPrice);
-      betterexpect(roundId.toString()).toBe(chainlinkInitialRoundId);
+      expect(answerEthUsd.toNumber()).to.eq(ethUsdDefaultPrice);
+      expect(roundId.toString()).to.eq(chainlinkInitialRoundId);
 
       let [roundId2, answerJpyUsd, startedAt2, updatedAt2, answeredInRound2] =
         await chainlinkMockJpyUsd.latestRoundData();
-      betterexpect(answerJpyUsd.toNumber()).toBe(jpyUsdDefaultPrice);
-      betterexpect(roundId2.toString()).toBe(chainlinkInitialRoundId);
+      expect(answerJpyUsd.toNumber()).to.eq(jpyUsdDefaultPrice);
+      expect(roundId2.toString()).to.eq(chainlinkInitialRoundId);
     });
   });
 
@@ -109,7 +117,7 @@ describe("ChainlinkMock", function () {
       chai
         .expect(answerEthUsd)
         .to.be.within(lowerRangeEthUsd, upperRangeEthUsd);
-      betterexpect(roundId.toString()).toBe(nextRoundId);
+      expect(roundId.toString()).to.eq(nextRoundId);
 
       await chainlinkMockJpyUsd.simulatePriceMove();
       let [roundId2, answerJpyUsd, startedAt2, updatedAt2, answeredInRound2] =
@@ -119,14 +127,16 @@ describe("ChainlinkMock", function () {
       chai
         .expect(answerJpyUsd)
         .to.be.within(lowerRangeJpyUsd, upperRangeJpyUsd);
-      betterexpect(roundId2.toString()).toBe(nextRoundId);
+      expect(roundId2.toString()).to.eq(nextRoundId);
     });
   });
 });
 
 describe("TellorCallerMock", function () {
   beforeEach(async () => {
-    const spec = await ethers.getContractFactory("TellorCallerMock");
+    const spec = <TellorCallerMock__factory>(
+      await ethers.getContractFactory("TellorCallerMock")
+    );
     tellorCallerMockEthJpy = await spec.deploy();
   });
 
@@ -140,7 +150,7 @@ describe("TellorCallerMock", function () {
 
       let [ifRetrieve, ethJpyValue, timestampRetrieved] =
         await tellorCallerMockEthJpy.getTellorCurrentValue(59);
-      betterexpect(ethJpyValue.toNumber()).toBe(ethJpyDefaultPrice);
+      expect(ethJpyValue.toNumber()).to.eq(ethJpyDefaultPrice);
     });
   });
 
@@ -149,7 +159,7 @@ describe("TellorCallerMock", function () {
       // the prices shall be equal to the default prices
       let [ifRetrieve, ethJpyValue, timestampRetrieved] =
         await tellorCallerMockEthJpy.getTellorCurrentValue(59);
-      betterexpect(ethJpyValue.toNumber()).toBe(ethJpyDefaultPrice);
+      expect(ethJpyValue.toNumber()).to.eq(ethJpyDefaultPrice);
     });
   });
 
@@ -161,7 +171,7 @@ describe("TellorCallerMock", function () {
         await tellorCallerMockEthJpy.getTellorCurrentValue(59);
       const lowerRangeEthJpy = ethJpyDefaultPrice * (1 - priceDeviationRange);
       const upperRangeEthJpy = ethJpyDefaultPrice * (1 + priceDeviationRange);
-      chai.expect(ethJpyValue).to.be.within(lowerRangeEthJpy, upperRangeEthJpy);
+      expect(ethJpyValue).to.be.within(lowerRangeEthJpy, upperRangeEthJpy);
     });
   });
 });

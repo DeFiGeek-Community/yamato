@@ -1,42 +1,42 @@
 import { ethers } from "hardhat";
-import { smockit, isMockContract } from "optimism/packages/smock";
+import { FakeContract, smock } from "@defi-wonderland/smock";
+import chai, { expect } from "chai";
+import { solidity } from "ethereum-waffle";
+import { Signer } from "ethers";
+import {
+  CjpyOS,
+  CJPY,
+  YMT,
+  VeYMT,
+  PriceFeed,
+  CjpyOS__factory,
+} from "../../typechain";
 
-const { waffleJest } = require("@ethereum-waffle/jest");
-expect.extend(waffleJest);
-const betterexpect = <any>expect; // TODO: better typing for waffleJest
-import { getSharedSigners } from "@test/param/helper";
+chai.use(smock.matchers);
+chai.use(solidity);
 
-/* Parameterized Test (Testcases are in /test/parameterizedSpecs.ts) */
-describe("Smock for CjpyOS", function () {
-  it(`succeeds to make a mock`, async function () {
-    const spec = await ethers.getContractFactory("CjpyOS");
-    const mock = await smockit(spec);
-    betterexpect(isMockContract(mock)).toBe(true);
-  });
-});
-
-describe("contract CjpyOS", function () {
-  let mockCJPY;
-  let mockYMT;
-  let mockVeYMT;
-  let mockFeed;
-  let cjpyOS;
-  let accounts;
+describe("CjpyOS", () => {
+  let mockCJPY: FakeContract<CJPY>;
+  let mockYMT: FakeContract<YMT>;
+  let mockVeYMT: FakeContract<VeYMT>;
+  let mockFeed: FakeContract<PriceFeed>;
+  let cjpyOS: CjpyOS;
+  let accounts: Signer[];
+  let ownerAddress: string;
+  let userAddress: string;
 
   beforeEach(async () => {
-    accounts = await getSharedSigners();
-    const spec1 = await ethers.getContractFactory("CJPY");
-    const spec2 = await ethers.getContractFactory("YMT");
-    const spec3 = await ethers.getContractFactory("veYMT");
-    const spec4 = await ethers.getContractFactory("PriceFeed");
-    mockCJPY = await smockit(spec1);
-    mockYMT = await smockit(spec2);
-    mockVeYMT = await smockit(spec3);
-    mockFeed = await smockit(spec4);
+    accounts = await ethers.getSigners();
+    ownerAddress = await accounts[0].getAddress();
+    userAddress = await accounts[1].getAddress();
+    mockCJPY = await smock.fake<CJPY>("CJPY");
+    mockYMT = await smock.fake<YMT>("YMT");
+    mockVeYMT = await smock.fake<VeYMT>("veYMT");
+    mockFeed = await smock.fake<PriceFeed>("PriceFeed");
 
-    cjpyOS = await (
+    cjpyOS = await (<CjpyOS__factory>(
       await ethers.getContractFactory("CjpyOS")
-    ).deploy(
+    )).deploy(
       mockCJPY.address,
       mockYMT.address,
       mockVeYMT.address,
@@ -44,53 +44,44 @@ describe("contract CjpyOS", function () {
       // governance=deployer
     );
 
-    mockCJPY.smocked["mint(address,uint256)"].will.return.with(0);
-    mockCJPY.smocked["burnFrom(address,uint256)"].will.return.with(0);
+    mockCJPY.mint.returns(0);
+    mockCJPY.burnFrom.returns(0);
   });
 
   describe("addYamato()", function () {
     it(`fails to add new Yamato for non-governer.`, async function () {
-      await betterexpect(
-        cjpyOS.connect(accounts[1]).addYamato(accounts[1].address)
-      ).toBeReverted();
+      await expect(cjpyOS.connect(userAddress).addYamato(userAddress)).to.be
+        .reverted;
     });
 
     it(`succeeds to add new Yamato`, async function () {
-      await cjpyOS.addYamato(accounts[0].address); // onlyGovernance
+      await cjpyOS.addYamato(ownerAddress); // onlyGovernance
       const _yamato = await cjpyOS.yamatoes(0);
-      betterexpect(_yamato).toBe(accounts[0].address);
+      expect(_yamato).to.equal(ownerAddress);
     });
   });
 
   describe("mintCJPY()", function () {
     it(`fails to mint CJPY`, async function () {
-      await betterexpect(
-        cjpyOS.mintCJPY(accounts[0].address, 10000)
-      ).toBeReverted();
+      await expect(cjpyOS.mintCJPY(ownerAddress, 10000)).to.be.reverted;
     });
 
     it(`succeeds to mint CJPY`, async function () {
-      await cjpyOS.addYamato(accounts[0].address); // onlyGovernance
-      await cjpyOS.mintCJPY(accounts[0].address, 10000); // onlyYamato
-      betterexpect(mockCJPY.smocked["mint(address,uint256)"].calls.length).toBe(
-        1
-      );
+      await cjpyOS.addYamato(ownerAddress); // onlyGovernance
+      await cjpyOS.mintCJPY(ownerAddress, 10000); // onlyYamato
+      expect(mockCJPY.mint).to.be.calledOnce;
     });
   });
 
   describe("burnCJPY()", function () {
     it(`fails to burn CJPY`, async function () {
-      await betterexpect(
-        cjpyOS.burnCJPY(accounts[0].address, 10000)
-      ).toBeReverted();
+      await expect(cjpyOS.burnCJPY(ownerAddress, 10000)).to.be.reverted;
     });
 
     it(`succeeds to burn CJPY`, async function () {
-      await cjpyOS.addYamato(accounts[0].address); // onlyGovernance
-      await cjpyOS.burnCJPY(accounts[0].address, 10000); // onlyYamato
-      betterexpect(
-        mockCJPY.smocked["burnFrom(address,uint256)"].calls.length
-      ).toBe(1);
+      await cjpyOS.addYamato(ownerAddress); // onlyGovernance
+      await cjpyOS.burnCJPY(ownerAddress, 10000); // onlyYamato
+      expect(mockCJPY.burnFrom).to.be.calledOnce;
     });
   });
 });
