@@ -41,7 +41,22 @@ describe("contract PriorityRegistry", function () {
         libraries: { PledgeLib },
       })
     );
+    /* BEGIN DIRTY-FIX
+    !!TODO!!
+    The code that this block contains is
+    for avoiding possible bugs in smock, hardhat-ethers or ethers
+    (I think ethers is suspicious.)
+    and must be as following:
+    ```
     mockYamato = await smock.fake<Yamato>(yamatoContractFactory);
+    ```
+    */
+    const yamatoContract = await yamatoContractFactory.deploy(
+      mockCjpyOS.address
+    );
+    await yamatoContract.deployed();
+    mockYamato = await smock.fake<Yamato>("Yamato");
+    /* END DIRTY-FIX */
 
     mockFeed.fetchPrice.returns(PRICE);
     mockCjpyOS.feed.returns(mockFeed.address);
