@@ -1,5 +1,4 @@
-pragma solidity 0.7.6;
-pragma abicoder v2;
+pragma solidity 0.8.4;
 
 /*
  * SPDX-License-Identifier: GPL-3.0-or-later
@@ -10,9 +9,9 @@ pragma abicoder v2;
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 
-import "../Yamato.sol";
+import "../Interfaces/IYamato.sol";
 import "../PriceFeed.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "./SafeMath.sol";
 
 library PledgeLib {
     using SafeMath for uint256;

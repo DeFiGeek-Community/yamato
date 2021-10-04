@@ -1,4 +1,4 @@
-pragma solidity 0.7.6;
+pragma solidity 0.8.4;
 
 /*
  * SPDX-License-Identifier: GPL-3.0-or-later
@@ -9,5 +9,7 @@ pragma solidity 0.7.6;
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 contract Minter {
-    constructor() {}
+    constructor(){
+        
+    }
 }
