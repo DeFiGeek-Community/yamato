@@ -129,7 +129,7 @@ describe("contract Yamato", function () {
     it(`should run upsert`, async function () {
       const toCollateralize = 1;
       await yamato.deposit({ value: toERC20(toCollateralize + "") });
-      expect(mockPriorityRegistry).to.have.been.called;
+      expect(mockPriorityRegistry.upsert).to.have.been.called;
     });
   });
   describe("FR()", function () {
@@ -234,7 +234,7 @@ describe("contract Yamato", function () {
       const toBorrow = (PRICE * toCollateralize) / MCR;
       await yamato.deposit({ value: toERC20(toCollateralize + "") });
       await yamato.borrow(toERC20(toBorrow + ""));
-      expect(mockPriorityRegistry).to.have.been.called;
+      expect(mockPriorityRegistry.upsert).to.have.been.called;
     });
 
     it(`should run CjpyOS.mintCJPY() of Pool.sol`, async function () {
