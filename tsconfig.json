@@ -13,11 +13,6 @@
     "removeComments": true,
     "noImplicitAny": false,
     "esModuleInterop": true,
-    "paths": {
-      "@src/*": ["./src/*"],
-      "@test/*": ["./test/*"],
-      "*": ["node_modules/*"]
-    },
     "baseUrl": "./",
     "outDir": "dist"
   },
