@@ -33,6 +33,7 @@
     "prettier-plugin-solidity": "^1.0.0-beta.18"
   },
   "devDependencies": {
+    "@defi-wonderland/smock": "^2.0.7",
     "@eth-optimism/core-utils": "^0.5.3",
     "@ethereum-waffle/jest": "^3.2.2",
     "@nomiclabs/ethereumjs-vm": "^4.2.2",
