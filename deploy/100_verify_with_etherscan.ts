@@ -18,7 +18,7 @@ import {
   sleep,
   getDeploymentAddressPath,
   verifyWithEtherscan,
-} from "@src/deployUtil";
+} from "../src/deployUtil";
 import { Wallet } from "ethers";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {

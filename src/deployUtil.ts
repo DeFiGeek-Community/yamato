@@ -1,7 +1,7 @@
 require("dotenv").config();
 import { readFileSync, writeFileSync, unlinkSync, existsSync } from "fs";
 import { Wallet, Signer, getDefaultProvider, Contract } from "ethers";
-import { genABI } from "@src/genABI";
+import { genABI } from "../src/genABI";
 import { isConstructSignatureDeclaration } from "typescript";
 import {
   DeploymentsExtension,

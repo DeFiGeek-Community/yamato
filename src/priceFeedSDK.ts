@@ -8,7 +8,7 @@ import {
   BigNumber,
 } from "ethers";
 
-import { genABI } from "@src/genABI";
+import { genABI } from "../src/genABI";
 
 import {
   deploy,
@@ -23,7 +23,7 @@ import {
   isInitMode,
   isEmbeddedMode,
   backToInitMode,
-} from "@src/deployUtil";
+} from "../src/deployUtil";
 
 const STATUS = [
   "chainlinkWorking",

@@ -17,8 +17,8 @@ import {
   backToInitMode,
   sleep,
   getDeploymentAddressPath,
-} from "@src/deployUtil";
-import { genABI } from "@src/genABI";
+} from "../src/deployUtil";
+import { genABI } from "../src/genABI";
 import { Wallet, Contract } from "ethers";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
