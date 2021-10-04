@@ -1,4 +1,4 @@
-pragma solidity 0.7.6;
+pragma solidity 0.8.4;
 
 /*
  * SPDX-License-Identifier: GPL-3.0-or-later
@@ -10,7 +10,6 @@ pragma solidity 0.7.6;
 //solhint-disable no-inline-assembly
 
 import "./Currency.sol";
-import "./Yamato.sol";
 
 /**
  * @author 0xMotoko
@@ -18,9 +17,7 @@ import "./Yamato.sol";
  * @notice Very stable.
  */
 contract CJPY is Currency {
-    constructor(uint256 initialSupply)
-        Currency("Convertible JPY Token", "CJPY")
-    {
-        _mint(msg.sender, initialSupply);
-    }
+
+    constructor() Currency("Convertible JPY Token","CJPY") {}
+
 }

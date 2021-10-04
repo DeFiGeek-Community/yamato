@@ -1,5 +1,4 @@
-pragma solidity 0.7.6;
-pragma abicoder v2;
+pragma solidity 0.8.4;
 
 /*
  * SPDX-License-Identifier: GPL-3.0-or-later
@@ -10,7 +9,8 @@ pragma abicoder v2;
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 import "./CurrencyOS.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
+// import "@openzeppelin/contracts/math/SafeMath.sol";
+import "./Dependencies/SafeMath.sol";
 
 interface ICjpyOS {
     function mintCJPY(address to, uint256 amount) external;
@@ -20,15 +20,10 @@ interface ICjpyOS {
     function feed() external view returns (address);
 }
 
-contract CjpyOS is CurrencyOS, ICjpyOS {
+contract CjpyOS is ICjpyOS, CurrencyOS {
     using SafeMath for uint256;
 
-    constructor(
-        address cjpyAddr,
-        address ymtAddr,
-        address veYmtAddr,
-        address feedAddr
-    ) CurrencyOS(cjpyAddr, ymtAddr, veYmtAddr, feedAddr) {}
+    constructor(address cjpyAddr, address feedAddr) CurrencyOS(cjpyAddr, feedAddr) {}
 
     function mintCJPY(address to, uint256 amount) public override onlyYamato {
         _mintCurrency(to, amount);

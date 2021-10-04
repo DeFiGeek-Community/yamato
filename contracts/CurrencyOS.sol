@@ -1,5 +1,4 @@
-pragma solidity 0.7.6;
-pragma abicoder v2;
+pragma solidity 0.8.4;
 
 /*
  * SPDX-License-Identifier: GPL-3.0-or-later
@@ -10,38 +9,36 @@ pragma abicoder v2;
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 
-import "./IERC20MintableBurnable.sol";
+import "./Interfaces/ICurrency.sol";
+import "./Interfaces/IYMT.sol";
+import "./veYMT.sol";
 import "./PriceFeed.sol";
-import "./Yamato.sol";
+import "./Interfaces/IYamato.sol";
 import "./YmtOSV1.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "./Dependencies/SafeMath.sol";
+// import "@openzeppelin/contracts/math/SafeMath.sol";
 import "hardhat/console.sol";
 
 contract CurrencyOS {
     using SafeMath for uint256;
 
-    IERC20MintableBurnable public currency;
-    IERC20MintableBurnable public YMT;
-    IERC20MintableBurnable public veYMT;
+    ICurrency public currency;
+    IYMT public YMT;
+    IveYMT public veYMT;
     address _feed;
     address governance;
     address ymtOSProxyAddr;
     address[] public yamatoes;
     bool isYmtOSInitialized = false;
-
-    constructor(
-        address currencyAddr,
-        address ymtAddr,
-        address veYmtAddr,
-        address feedAddr
-    ) {
-        currency = IERC20MintableBurnable(currencyAddr);
-        YMT = IERC20MintableBurnable(ymtAddr);
-        veYMT = IERC20MintableBurnable(veYmtAddr);
+    constructor(address currencyAddr, address feedAddr){
+        currency = ICurrency(currencyAddr);
         _feed = feedAddr;
         governance = msg.sender;
     }
-
+    function setGovernanceTokens(address _ymtAddr, address _veYmtAddr) external onlyGovernance {
+        YMT = IYMT(_ymtAddr);
+        veYMT = IveYMT(_veYmtAddr);
+    }
     function addYamato(address _yamatoAddr) external onlyGovernance {
         yamatoes.push(_yamatoAddr);
         if (ymtOSProxyAddr != address(0)) {
@@ -84,8 +81,8 @@ contract CurrencyOS {
     function _mintCurrency(address to, uint256 amount) internal {
         currency.mint(to, amount);
     }
-
-    function _burnCurrency(address to, uint256 amount) internal {
-        currency.burnFrom(to, amount);
+    function _burnCurrency(address to, uint amount) internal {
+        currency.burn(to, amount);
     }
+
 }

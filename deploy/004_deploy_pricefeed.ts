@@ -1,40 +1,18 @@
-import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { DeployFunction } from "hardhat-deploy/types";
-import { parseEther } from "ethers/lib/utils";
-import { readFileSync } from "fs";
-import {
-  deploy,
-  goToEmbededMode,
-  hardcodeFactoryAddress,
-  singletonProvider,
-  getFoundation,
-  getDeployer,
-  extractEmbeddedFactoryAddress,
-  recoverFactoryAddress,
-  setProvider,
-  isInitMode,
-  isEmbeddedMode,
-  backToInitMode,
-  sleep,
-  getDeploymentAddressPath,
-} from "../src/deployUtil";
-import { genABI } from "../src/genABI";
-import { Wallet, Contract } from "ethers";
+import {HardhatRuntimeEnvironment} from 'hardhat/types';
+import {DeployFunction} from 'hardhat-deploy/types';
+import { readFileSync } from 'fs';
+import { deploy, getFoundation, setProvider, getDeploymentAddressPath, getDeploymentAddressPathWithTag } from '@src/deployUtil';
+import { genABI } from '@src/genABI';
+import { Contract } from 'ethers';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const p = await setProvider();
   const { ethers, deployments } = hre;
-  const { getContractFactory, BigNumber, Signer, getSigners } = ethers;
+  const { getContractFactory } = ethers;
 
-  const ChainLinkEthUsd = readFileSync(
-    getDeploymentAddressPath("ChainLinkMock", "EthUsd")
-  ).toString();
-  const ChainLinkJpyUsd = readFileSync(
-    getDeploymentAddressPath("ChainLinkMock", "JpyUsd")
-  ).toString();
-  const TellorEthJpy = readFileSync(
-    getDeploymentAddressPath("TellorCallerMock", "")
-  ).toString();
+  const ChainLinkEthUsd = readFileSync(getDeploymentAddressPathWithTag('ChainLinkMock', 'EthUsd')).toString()
+  const ChainLinkJpyUsd = readFileSync(getDeploymentAddressPathWithTag('ChainLinkMock', 'JpyUsd')).toString()
+  const TellorEthJpy = readFileSync(getDeploymentAddressPath('TellorCallerMock')).toString()
 
   const chainlinkEthUsd = new Contract(
     ChainLinkEthUsd,
@@ -47,14 +25,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     p
   );
 
-  await (
-    await chainlinkEthUsd.connect(getFoundation()).latestRoundData()
-  ).wait();
-  await (
-    await chainlinkJpyUsd.connect(getFoundation()).latestRoundData()
-  ).wait();
+  await (await chainlinkEthUsd.connect(getFoundation()).simulatePriceMove()).wait()
+  await (await chainlinkJpyUsd.connect(getFoundation()).simulatePriceMove()).wait()
+  await (await chainlinkEthUsd.connect(getFoundation()).simulatePriceMove()).wait()
+  await (await chainlinkJpyUsd.connect(getFoundation()).simulatePriceMove()).wait()
 
-  const feed = await deploy("PriceFeed", {
+  await deploy('PriceFeed', {
     args: [ChainLinkEthUsd, ChainLinkJpyUsd, TellorEthJpy],
     getContractFactory,
     deployments,

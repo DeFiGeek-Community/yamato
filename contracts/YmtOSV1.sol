@@ -1,5 +1,4 @@
-pragma solidity 0.7.6;
-pragma abicoder v2;
+pragma solidity 0.8.4;
 
 /*
  * SPDX-License-Identifier: GPL-3.0-or-later
@@ -11,8 +10,9 @@ pragma abicoder v2;
 //solhint-disable no-inline-assembly
 
 import "./veYMT.sol";
-import "./IERC20MintableBurnable.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "./Interfaces/IYMT.sol";
+import "./Interfaces/IYamato.sol";
+import "./Dependencies/SafeMath.sol";
 import "hardhat/console.sol";
 
 interface IYmtOSV1 {
@@ -39,20 +39,16 @@ contract YmtOSV1 is IYmtOSV1 {
     mapping(address => address) decisions;
     mapping(address => uint256) memScore;
     IveYMT veYMT;
-    IERC20MintableBurnable YMT;
-    uint256 constant CYCLE_SIZE = 100000;
+    IYMT YMT;
+    uint constant CYCLE_SIZE = 100000;
 
     /*
         !!! Admin Caution !!!
         Make sure you've explicitly initialized this contract after deployment; otherwise, someone will do it for her to set am evil governer.
     */
-    function initialize(
-        address _governance,
-        address _YMT,
-        address _veYMT
-    ) public override onlyOnce {
-        governance = _governance;
-        YMT = IERC20MintableBurnable(_YMT);
+    function initialize(address _governance, address _YMT, address _veYMT) public onlyOnce override {
+        governance = _governance;       
+        YMT = IYMT(_YMT);
         veYMT = IveYMT(_veYMT);
     }
 

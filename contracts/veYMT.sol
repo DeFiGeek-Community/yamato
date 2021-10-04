@@ -1,4 +1,4 @@
-pragma solidity 0.7.6;
+pragma solidity 0.8.4;
 
 /*
  * SPDX-License-Identifier: GPL-3.0-or-later
@@ -9,8 +9,8 @@ pragma solidity 0.7.6;
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 
-import "@openzeppelin/contracts/presets/ERC20PresetMinterPauser.sol";
-import "./Yamato.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
+
 
 /**
  * @author 0xMotoko
@@ -33,7 +33,13 @@ interface IveYMT {
 }
 
 contract veYMT is IveYMT {
-    IYamato yamato = IYamato(address(0));
+    string name;
+    string symbol;
+    constructor() {
+        name = "Voting-escrow Yamato";
+        symbol = "veYMT";
+    }
+
 
     function mintableInTimeframe(uint256 _start, uint256 _end)
         public

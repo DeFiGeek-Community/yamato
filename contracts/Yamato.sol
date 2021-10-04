@@ -1,5 +1,4 @@
-pragma solidity 0.7.6;
-pragma abicoder v2;
+pragma solidity 0.8.4;
 
 /*
  * SPDX-License-Identifier: GPL-3.0-or-later
@@ -13,29 +12,14 @@ pragma abicoder v2;
 import "./Pool.sol";
 import "./PriorityRegistry.sol";
 import "./YMT.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./CjpyOS.sol";
 import "./PriceFeed.sol";
-import "./IERC20MintableBurnable.sol";
 import "./Dependencies/PledgeLib.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "./Dependencies/SafeMath.sol";
+import "./Interfaces/IYamato.sol";
 import "hardhat/console.sol";
 
-interface IYamato {
-    struct Pledge {
-        uint256 coll;
-        uint256 debt;
-        bool isCreated;
-        address owner;
-        uint256 lastUpsertedTimeICRpertenk;
-    }
-
-    function getPledge(address _owner) external view returns (Pledge memory);
-
-    function getFeed() external view returns (address);
-
-    function MCR() external view returns (uint8);
-}
 
 /// @title Yamato Pledge Manager Contract
 /// @author 0xMotoko
@@ -706,4 +690,6 @@ contract Yamato is IYamato, ReentrancyGuard {
     {
         priorityRegistry = IPriorityRegistry(_priorityRegistry);
     }
+
+
 }
