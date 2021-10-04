@@ -29,6 +29,8 @@ describe("contract PriorityRegistry", function () {
     accounts = await ethers.getSigners();
     address0 = await accounts[0].getAddress();
 
+    mockFeed = await smock.fake<PriceFeed>("PriceFeed");
+    mockCjpyOS = await smock.fake<CjpyOS>("CjpyOS");
     const PledgeLib = (
       await (<PledgeLib__factory>(
         await ethers.getContractFactory("PledgeLib")
@@ -40,8 +42,6 @@ describe("contract PriorityRegistry", function () {
       })
     );
     mockYamato = await smock.fake<Yamato>(yamatoContractFactory);
-    mockCjpyOS = await smock.fake<CjpyOS>("CjpyOS");
-    mockFeed = await smock.fake<PriceFeed>("PriceFeed");
 
     mockFeed.fetchPrice.returns(PRICE);
     mockCjpyOS.feed.returns(mockFeed.address);

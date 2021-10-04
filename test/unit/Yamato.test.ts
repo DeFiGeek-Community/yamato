@@ -51,13 +51,13 @@ describe("contract Yamato", function () {
         libraries: { PledgeLib },
       })
     );
+    yamato = await (<Yamato__factory>(
+      await ethers.getContractFactory("Yamato", { libraries: { PledgeLib } })
+    )).deploy(mockCjpyOS.address);
     mockPriorityRegistry = await smock.fake<PriorityRegistry>(
       priorityRegistryContractFactory
     );
 
-    yamato = await (<Yamato__factory>(
-      await ethers.getContractFactory("Yamato", { libraries: { PledgeLib } })
-    )).deploy(mockCjpyOS.address);
     await (await yamato.setPool(mockPool.address)).wait();
     await (
       await yamato.setPriorityRegistry(mockPriorityRegistry.address)
