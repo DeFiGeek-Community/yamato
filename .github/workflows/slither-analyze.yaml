@@ -43,6 +43,10 @@ jobs:
           npm run analyze
           npm run analyze:report | tee log
           exit $(awk 'END{ print NR }' log)
+        env:
+          ALCHEMY_URL: ${{ secrets.ALCHEMY_URL }}
+          DEPLOYER_PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
+          FOUNDATION_PRIVATE_KEY: ${{ secrets.FOUNDATION_PRIVATE_KEY }}
 
       - name: discord notification（if failure）
         uses: sarisia/actions-status-discord@v1
