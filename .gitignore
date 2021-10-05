@@ -18,3 +18,4 @@ deployments/rinkeby/*
 !deployments/rinkeby/.chainId
 abis
 test/**/*.js
+/slither-output.json
