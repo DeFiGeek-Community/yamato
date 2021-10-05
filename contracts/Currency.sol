@@ -49,7 +49,7 @@ contract Currency is ERC20Permit, ICurrency {
     function setCurrencyOS(address _currencyOSAddr) public onlyGovernance {
         currencyOS = _currencyOSAddr;
     }
-    function rennounceGovernance() public onlyGovernance {
+    function renounceGovernance() public onlyGovernance {
         governance = address(0);
     }
     modifier onlyGovernance(){

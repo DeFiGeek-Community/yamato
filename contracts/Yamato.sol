@@ -37,18 +37,17 @@ contract Yamato is IYamato, ReentrancyGuard {
     address tester;
 
     mapping(address => Pledge) pledges;
-    address[] public pledgesIndices;
-    uint256 public totalColl;
-    uint256 public totalDebt;
-    uint256 public TCR;
+    uint256 totalColl;
+    uint256 totalDebt;
+    uint256 TCR;
 
-    mapping(address => uint256) public withdrawLocks;
-    mapping(address => uint256) public depositAndBorrowLocks;
+    mapping(address => uint256) withdrawLocks;
+    mapping(address => uint256) depositAndBorrowLocks;
 
     uint8 public override MCR = 110; // MinimumCollateralizationRatio in pertenk
-    uint8 public RRR = 80; // RedemptionReserveRate in pertenk
-    uint8 public SRR = 20; // SweepReserveRate in pertenk
-    uint8 public GRR = 1; // GasReserveRate in pertenk
+    uint8 RRR = 80; // RedemptionReserveRate in pertenk
+    uint8 SRR = 20; // SweepReserveRate in pertenk
+    uint8 GRR = 1; // GasReserveRate in pertenk
 
     /*
         ==============================
@@ -56,6 +55,8 @@ contract Yamato is IYamato, ReentrancyGuard {
         ==============================
         - setPool
         - setPriorityRegistry
+        - revokeGovernance
+        - revokeTester
     */
     constructor(address _cjpyOS) {
         cjpyOS = ICjpyOS(_cjpyOS);
@@ -132,7 +133,6 @@ contract Yamato is IYamato, ReentrancyGuard {
             // new pledge
             pledge.isCreated = true;
             pledge.owner = msg.sender;
-            pledgesIndices.push(msg.sender);
         }
 
         /*
@@ -157,9 +157,14 @@ contract Yamato is IYamato, ReentrancyGuard {
             1. Ready
         */
         Pledge storage pledge = pledges[msg.sender];
-        uint256 _ICRAfter = pledge.toMem().addDebt(borrowAmountInCjpy).getICR(
-            feed
-        );
+
+        uint256 _ICRAfter;
+        try pledge.toMem().addDebt(borrowAmountInCjpy).getICR(feed) returns (uint256 __ICRAfter) {
+            _ICRAfter = __ICRAfter;
+        } catch Error(string memory reason) {
+            revert(reason);
+        }
+        require(_ICRAfter != 0, "getICR is failed");
 
         /*
             2. Validate
@@ -417,8 +422,6 @@ contract Yamato is IYamato, ReentrancyGuard {
         uint256 maxSweeplable = sweepStart - maxGasCompensation; //Note: Secure gas compensation
         uint256 _maxSweeplableStart = maxSweeplable;
 
-        address third = 0x90F79bf6EB2c4f870365E785982E1f101E93b906;
-
         /*
             1. Sweeping
         */
@@ -591,19 +594,19 @@ contract Yamato is IYamato, ReentrancyGuard {
         State Getter Function
     ==============================
         - getPledge
-        - getFeed
         - getStates
         - getIndivisualStates
     */
 
-    /// @dev To give pledge access with using Interface implementation
+    /// @notice To give pledge access to YmtOS
+    /// @dev Interface can't return "struct memory" from public state variable
     function getPledge(address _owner)
         public
         view
         override
         returns (Pledge memory)
     {
-        return pledges[_owner];
+       return pledges[_owner];
     }
 
     /// @notice Provide the data of public storage.

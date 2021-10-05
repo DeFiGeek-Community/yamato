@@ -1,8 +1,8 @@
 import {HardhatRuntimeEnvironment} from 'hardhat/types';
 import {DeployFunction} from 'hardhat-deploy/types';
-import { setProvider, getDeploymentAddressPath } from '@src/deployUtil';
+import { setProvider, getDeploymentAddressPath } from '../src/deployUtil';
 import { readFileSync } from 'fs';
-import { genABI } from '@src/genABI';
+import { genABI } from '../src/genABI';
 import { Contract } from 'ethers';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {

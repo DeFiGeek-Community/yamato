@@ -146,13 +146,15 @@ describe("contract Yamato", function () {
     it(`succeeds to make a pledge and totalCollDiff>0 totalDebtDiff=0`, async function () {
       const toCollateralize = 1;
 
-      const totalCollBefore = await yamato.totalColl();
-      const totalDebtBefore = await yamato.totalDebt();
+      const statesBefore = await yamato.getStates();
+      const totalCollBefore = statesBefore[0];
+      const totalDebtBefore = statesBefore[1];
 
       await yamato.deposit({ value: toERC20(toCollateralize + "") });
 
-      const totalCollAfter = await yamato.totalColl();
-      const totalDebtAfter = await yamato.totalDebt();
+      const statesAfter = await yamato.getStates();
+      const totalCollAfter = statesAfter[0];
+      const totalDebtAfter = statesAfter[1];
 
       expect(totalCollAfter).to.gt(totalCollBefore);
       expect(totalDebtAfter).to.eq(totalDebtBefore);

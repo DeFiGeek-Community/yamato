@@ -1,6 +1,6 @@
 import {HardhatRuntimeEnvironment} from 'hardhat/types';
 import {DeployFunction} from 'hardhat-deploy/types';
-import { deploy, setProvider, getDeploymentAddressPath } from '@src/deployUtil';
+import { deploy, setProvider, getDeploymentAddressPath } from '../src/deployUtil';
 import { readFileSync } from 'fs';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
