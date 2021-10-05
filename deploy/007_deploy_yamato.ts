@@ -19,13 +19,14 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   }).catch(e=> console.trace(e.message) )
 
   const PledgeLib = readFileSync(getDeploymentAddressPath('PledgeLib')).toString()
+  console.log(`PledgeLib: ${PledgeLib}`);
 
 
   await deploy('Yamato', {
     args: [_cjpyosAddr],
     getContractFactory,
     deployments,
-    linkings: {PledgeLib}
+    libraries: { PledgeLib }
   }).catch(e=> console.trace(e.message) )
 
 };

@@ -25,10 +25,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     p
   );
 
-  await (await chainlinkEthUsd.connect(getFoundation()).simulatePriceMove()).wait()
-  await (await chainlinkJpyUsd.connect(getFoundation()).simulatePriceMove()).wait()
-  await (await chainlinkEthUsd.connect(getFoundation()).simulatePriceMove()).wait()
-  await (await chainlinkJpyUsd.connect(getFoundation()).simulatePriceMove()).wait()
+  await (await chainlinkEthUsd.connect(getFoundation()).simulatePriceMove({gasLimit: 200000})).wait()
+  await (await chainlinkJpyUsd.connect(getFoundation()).simulatePriceMove({gasLimit: 200000})).wait()
+  await (await chainlinkEthUsd.connect(getFoundation()).simulatePriceMove({gasLimit: 200000})).wait()
+  await (await chainlinkJpyUsd.connect(getFoundation()).simulatePriceMove({gasLimit: 200000})).wait()
 
   await deploy('PriceFeed', {
     args: [ChainLinkEthUsd, ChainLinkJpyUsd, TellorEthJpy],
