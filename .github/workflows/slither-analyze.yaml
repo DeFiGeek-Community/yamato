@@ -41,7 +41,7 @@ jobs:
       - name: Run slither analyze
         run: |
           npm run analyze || :
-          exit $(npm run analyze:resultRet)
+          exit $(npm run analyze:resultRet|tail -n1)
 
         env:
           ALCHEMY_URL: ${{ secrets.ALCHEMY_URL }}
