@@ -39,15 +39,15 @@ contract Yamato is IYamato, ReentrancyGuard {
     mapping(address => Pledge) pledges;
     uint256 totalColl;
     uint256 totalDebt;
-    uint256 TCR;
+    uint256 public TCR;
 
     mapping(address => uint256) withdrawLocks;
     mapping(address => uint256) depositAndBorrowLocks;
 
     uint8 public override MCR = 110; // MinimumCollateralizationRatio in pertenk
-    uint8 RRR = 80; // RedemptionReserveRate in pertenk
-    uint8 SRR = 20; // SweepReserveRate in pertenk
-    uint8 GRR = 1; // GasReserveRate in pertenk
+    uint8 public RRR = 80; // RedemptionReserveRate in pertenk
+    uint8 public SRR = 20; // SweepReserveRate in pertenk
+    uint8 public GRR = 1; // GasReserveRate in pertenk
 
     /*
         ==============================
