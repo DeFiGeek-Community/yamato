@@ -41,8 +41,8 @@ jobs:
       - name: Run slither analyze
         run: |
           npm run analyze || :
-          npm run analyze:report | tee log
-          exit $(awk 'END{ print NR }' log)
+          npm run analyze:resultRet
+
         env:
           ALCHEMY_URL: ${{ secrets.ALCHEMY_URL }}
           DEPLOYER_PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
