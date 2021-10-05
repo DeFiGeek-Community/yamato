@@ -89,7 +89,7 @@ describe("contract PriorityRegistry", function () {
 
       await expect(
         priorityRegistryWithYamatoMock.connect(accounts[1]).upsert(_pledge)
-      ).to.be.reverted;
+      ).to.be.revertedWith("You are not Yamato contract.");
     });
 
     it(`fails to upsert logless \(coll=0 debt=0 lastUpsertedTimeICRpertenk=0\) pledge`, async function () {
@@ -100,7 +100,9 @@ describe("contract PriorityRegistry", function () {
         address0,
         0,
       ];
-      await expect(yamato.bypassUpsert(_pledge)).to.be.reverted;
+      await expect(yamato.bypassUpsert(_pledge)).to.be.revertedWith(
+        "Arithmetic Error: Yamato doesn't define the ICR of coll=0 debt=0 pledge."
+      );
     });
 
     it(`fails to upsert logful \(coll=0 debt=0 lastUpsertedTimeICRpertenk/=0\) pledge because such full-withdrawn pledge has to be removed`, async function () {
@@ -114,7 +116,9 @@ describe("contract PriorityRegistry", function () {
           "115792089237316195423570985008687907853269984665640564039457584007913129639935"
         ),
       ];
-      await expect(yamato.bypassUpsert(_pledge)).to.be.reverted;
+      await expect(yamato.bypassUpsert(_pledge)).to.be.revertedWith(
+        "Upsert Error: The logless zero pledge cannot be upserted. It should be removed."
+      );
     });
 
     it(`succeeds to be called from Yamato.`, async function () {
@@ -219,7 +223,9 @@ describe("contract PriorityRegistry", function () {
         1,
       ];
 
-      await expect(yamato.bypassRemove(_nonSweptPledge)).to.be.reverted;
+      await expect(yamato.bypassRemove(_nonSweptPledge)).to.be.revertedWith(
+        "Unintentional lastUpsertedTimeICRpertenk is given to the remove function."
+      );
     });
 
     it(`succeeds to remove zero a.k.a. sludge pledge`, async function () {
@@ -275,10 +281,14 @@ describe("contract PriorityRegistry", function () {
 
   describe("popRedeemable()", function () {
     it(`fails to call it from EOA`, async function () {
-      await expect(priorityRegistry.popRedeemable()).to.be.reverted;
+      await expect(priorityRegistry.popRedeemable()).to.be.revertedWith(
+        "You are not Yamato contract."
+      );
     });
     it(`fails to run in the all-sludge state`, async function () {
-      await expect(yamato.bypassPopRedeemable()).to.be.reverted;
+      await expect(yamato.bypassPopRedeemable()).to.be.revertedWith(
+        "Need to upsert at least once."
+      );
     });
     it(`fails to fetch the zero pledge`, async function () {
       const _owner1 = address0;
@@ -369,11 +379,15 @@ describe("contract PriorityRegistry", function () {
 
   describe("popSweepable()", function () {
     it(`fails to call it from EOA`, async function () {
-      await expect(priorityRegistry.popSweepable()).to.be.reverted;
+      await expect(priorityRegistry.popSweepable()).to.be.revertedWith(
+        "You are not Yamato contract."
+      );
     });
 
     it(`fails to run if there're no sludge pledge`, async function () {
-      await expect(yamato.bypassPopSweepable()).to.be.reverted;
+      await expect(yamato.bypassPopSweepable()).to.be.revertedWith(
+        "There're no sweepable pledges."
+      );
     });
 
     it(`fails to fetch the zero pledge`, async function () {
