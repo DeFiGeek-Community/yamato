@@ -67,13 +67,14 @@ describe("contract Yamato", function () {
     ```
 
     The bugs are that some of the hardhat-ethers methods, like getContractFactory,
-    return bad ethers objects and the smock library can not handle that bad object and raises an error.
+    return wrong ethers objects, and the smock library can not handle that wrong object and raises an error.
     That reproduces when using library linking.
 
-    The smock library falls in error when it runs the code after [this line](
+    The smock library falls in error when it runs the code following [this line](
     https://github.com/defi-wonderland/smock/blob/v2.0.7/src/factories/ethers-interface.ts#L22).
-    To avoid reaching that line of code, this patch allows the function to return from that function from [this line](
-    https://github.com/defi-wonderland/smock/blob/v2.0.7/src/factories/ethers-interface.ts#L16).
+    This patch allows the function to return from [this line](
+    https://github.com/defi-wonderland/smock/blob/v2.0.7/src/factories/ethers-interface.ts#L16)
+    before falling error.
 
     */
     const priorityRegistryContract =
