@@ -616,23 +616,23 @@ contract Yamato is IYamato, ReentrancyGuard {
     }
 
     /// @notice Provide the data of public storage.
-    // function getStates() public view returns (uint, uint, uint8, uint8, uint8, uint8) {
-    //     return (totalColl, totalDebt, MCR, RRR, SRR, GRR);
-    // }
+    function getStates() public view returns (uint, uint, uint8, uint8, uint8, uint8) {
+        return (totalColl, totalDebt, MCR, RRR, SRR, GRR);
+    }
 
-    // /// @notice Provide the data of indivisual pledge.
-    // function getIndivisualStates(address owner) public view returns (
-    //     uint coll,
-    //     uint debt,
-    //     bool isCreated,
-    //     uint withdrawLock,
-    //     uint depositAndBorrowLock
-    // ) {
-    //     Pledge memory pledge = pledges[owner];
-    //     withdrawLock = withdrawLocks[owner];
-    //     depositAndBorrowLock = depositAndBorrowLocks[owner];
-    //     return (pledge.coll, pledge.debt, pledge.isCreated, withdrawLock, depositAndBorrowLock);
-    // }
+    /// @notice Provide the data of indivisual pledge.
+    function getIndivisualStates(address owner) public view returns (
+        uint coll,
+        uint debt,
+        bool isCreated,
+        uint withdrawLock,
+        uint depositAndBorrowLock
+    ) {
+        Pledge memory pledge = pledges[owner];
+        withdrawLock = withdrawLocks[owner];
+        depositAndBorrowLock = depositAndBorrowLocks[owner];
+        return (pledge.coll, pledge.debt, pledge.isCreated, withdrawLock, depositAndBorrowLock);
+    }
 
     /*
     ==============================
@@ -643,24 +643,24 @@ contract Yamato is IYamato, ReentrancyGuard {
         - updateTCR()
         - setPriorityRegistryInTest()
     */
-    // function bypassUpsert(Pledge calldata _pledge) external onlyTester {
-    //     priorityRegistry.upsert(_pledge);
-    // }
-    // function bypassRemove(Pledge calldata _pledge) external onlyTester {
-    //     priorityRegistry.remove(_pledge);
-    // }
-    // function bypassPopRedeemable() external onlyTester {
-    //     priorityRegistry.popRedeemable();
-    // }
-    // function bypassPopSweepable() external onlyTester {
-    //     priorityRegistry.popSweepable();
-    // }
-    // function updateTCR() external onlyTester {
-    //     TCR = getTCR();
-    // }
-    // function setPriorityRegistryInTest(address _priorityRegistry) external onlyTester {
-    //     priorityRegistry = IPriorityRegistry(_priorityRegistry);
-    // }
+    function bypassUpsert(Pledge calldata _pledge) external onlyTester {
+        priorityRegistry.upsert(_pledge);
+    }
+    function bypassRemove(Pledge calldata _pledge) external onlyTester {
+        priorityRegistry.remove(_pledge);
+    }
+    function bypassPopRedeemable() external onlyTester {
+        priorityRegistry.popRedeemable();
+    }
+    function bypassPopSweepable() external onlyTester {
+        priorityRegistry.popSweepable();
+    }
+    function updateTCR() external onlyTester {
+        TCR = getTCR();
+    }
+    function setPriorityRegistryInTest(address _priorityRegistry) external onlyTester {
+        priorityRegistry = IPriorityRegistry(_priorityRegistry);
+    }
 
 
 }
