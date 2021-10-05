@@ -21,6 +21,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install solc
 
+      - name: Install slither
+        run: sudo pip install slither-analyzer
+
       - name: Run slither analyze
         run: |
           npm run analyze
