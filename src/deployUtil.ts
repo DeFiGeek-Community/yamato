@@ -79,7 +79,7 @@ type Options = {
   signer?: Signer|undefined;
   ABI?:any|undefined;
   args?:Array<any>|undefined;
-  linkings?:{[key in LibraryList]?:string}|undefined;
+  libraries?:{[key in LibraryList]?:string}|undefined;
   log?: boolean|undefined;
   getContractFactory: any;
   deployments: DeploymentsExtension;
@@ -181,7 +181,8 @@ export async function deploy(contractName:string, opts:Options){
       signer: opts.signer
     }
 
-    if(opts.linkings) _opt.linkings = { libraries: opts.linkings }
+    if(opts.libraries) _opt.libraries = opts.libraries
+
 
     const _Factory = await opts.getContractFactory(contractName, _opt);
 

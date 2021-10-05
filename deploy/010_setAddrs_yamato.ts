@@ -1,6 +1,6 @@
 import {HardhatRuntimeEnvironment} from 'hardhat/types';
 import {DeployFunction} from 'hardhat-deploy/types';
-import { setProvider, getDeploymentAddressPath } from '@src/deployUtil';
+import { setProvider, getDeploymentAddressPath, getFoundation } from '@src/deployUtil';
 import { readFileSync } from 'fs';
 import { genABI } from '@src/genABI';
 import { Contract } from 'ethers';
@@ -16,8 +16,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const _poolAddr = readFileSync(getDeploymentAddressPath('Pool')).toString()
   const _priorityRegistryAddr = readFileSync(getDeploymentAddressPath('PriorityRegistry')).toString()
-  await (await Yamato.setPool(_poolAddr)).wait()
-  await (await Yamato.setPriorityRegistry(_priorityRegistryAddr)).wait()
+  await (await Yamato.connect(getFoundation()).setPool(_poolAddr)).wait()
+  console.log(`log: Yamato.setPool() executed.`);
+  await (await Yamato.connect(getFoundation()).setPriorityRegistry(_priorityRegistryAddr)).wait()
+  console.log(`log: Yamato.setPriorityRegistry() executed.`);
+
 
 };
 export default func;

@@ -16,7 +16,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     args: [_yamatoAddr],
     getContractFactory,
     deployments,
-    linkings: {PledgeLib}
+    libraries: { PledgeLib }
   }).catch(e=> console.trace(e.message) )
 
 };

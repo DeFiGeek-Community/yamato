@@ -8,13 +8,12 @@ import { Contract } from 'ethers';
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const p = await setProvider();
 
-  const _cjpyosAddr = readFileSync(getDeploymentAddressPath('CjpyOS')).toString()
-  const CjpyOS = new Contract(_cjpyosAddr, genABI("CjpyOS"), p);
-
   const _yamatoAddr = readFileSync(getDeploymentAddressPath('Yamato')).toString()
-  await (await CjpyOS.connect(getFoundation()).addYamato(_yamatoAddr)).wait()
+  const Yamato = new Contract(_yamatoAddr, genABI("Yamato"), p);
 
-  console.log(`log: CjpyOS.addYamato() executed.`);
+  await (await Yamato.connect(getFoundation()).revokeTester()).wait()
+
+  console.log(`log: Yamato.revokeTester() executed.`);
 };
 export default func;
 func.tags = [''];
