@@ -49,6 +49,8 @@ contract Yamato is IYamato, ReentrancyGuard {
     uint8 public SRR = 20; // SweepReserveRate in pertenk
     uint8 public GRR = 1; // GasReserveRate in pertenk
 
+    event Borrowed(uint256 ICRAfter);
+
     /*
         ==============================
             Set-up functions
@@ -158,13 +160,7 @@ contract Yamato is IYamato, ReentrancyGuard {
         */
         Pledge storage pledge = pledges[msg.sender];
 
-        uint256 _ICRAfter;
-        try pledge.toMem().addDebt(borrowAmountInCjpy).getICR(feed) returns (uint256 __ICRAfter) {
-            _ICRAfter = __ICRAfter;
-        } catch Error(string memory reason) {
-            revert(reason);
-        }
-        require(_ICRAfter != 0, "getICR is failed");
+        uint256 _ICRAfter = pledge.toMem().addDebt(borrowAmountInCjpy).getICR(feed);
 
         /*
             2. Validate
@@ -174,6 +170,7 @@ contract Yamato is IYamato, ReentrancyGuard {
             "Borrowing should not be executed within the same block with your deposit."
         );
         require(pledge.isCreated, "This pledge is not created yet.");
+        emit Borrowed(_ICRAfter);
         require(
             _ICRAfter >= uint256(MCR).mul(100),
             "This minting is invalid because of too large borrowing."
