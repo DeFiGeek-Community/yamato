@@ -238,10 +238,10 @@ export function verifyWithEtherscan(){
   execSync(`npm run verify:testnet -- --contract contracts/TellorCallerMock.sol:TellorCallerMock ${Tellor}`)
   execSync(`npm run verify:testnet -- --contract contracts/PriceFeed.sol:PriceFeed ${PriceFeed} ${ChainLinkEthUsd} ${ChainLinkJpyUsd} ${Tellor}`)
   execSync(`npm run verify:testnet -- --contract contracts/CJPY.sol:CJPY ${CJPY}`)
-  execSync(`npm run verify:testnet -- --contract contracts/CjpyOS.sol:CjpyOS ${CjpyOS}`)
-  execSync(`npm run verify:testnet -- --contract contracts/Yamato.sol:Yamato ${Yamato}`)
-  execSync(`npm run verify:testnet -- --contract contracts/Pool.sol:Pool ${Pool}`)
-  execSync(`npm run verify:testnet -- --contract contracts/PriorityRegistry.sol:PriorityRegistry ${PriorityRegistry}`)
+  execSync(`npm run verify:testnet -- --contract contracts/CjpyOS.sol:CjpyOS ${CjpyOS} ${CJPY} ${PriceFeed}`)
+  execSync(`npm run verify:testnet -- --contract contracts/Yamato.sol:Yamato ${Yamato} ${CjpyOS}`)
+  execSync(`npm run verify:testnet -- --contract contracts/Pool.sol:Pool ${Pool} ${Yamato}`)
+  execSync(`npm run verify:testnet -- --contract contracts/PriorityRegistry.sol:PriorityRegistry ${PriorityRegistry} ${Yamato}`)
 
 }
 
