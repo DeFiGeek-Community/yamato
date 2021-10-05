@@ -1,0 +1,34 @@
+name: Slither Analyze
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  unit-tests:
+    name: Slither Analyze
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - name: Install solc compiler
+        run: |
+          add-apt-repository ppa:ethereum/ethereum
+          apt-get update
+          apt-get install solc
+
+      - name: Run slither analyze
+        run: |
+          npm run analyze
+          npm run analyze:report | tee log
+          exit $(awk 'END{ print NR }' log)
+
+      - name: discord notification（if failure）
+        uses: sarisia/actions-status-discord@v1
+        if: ${{ failure() }}
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
