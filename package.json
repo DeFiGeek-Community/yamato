@@ -13,7 +13,9 @@
   "license": "MIT",
   "author": "",
   "scripts": {
-    "analyze": "slither --filter-paths node_modules --json slither-output.json .",
+    "analyze": "rm slither-output.json && slither --filter-paths node_modules --json slither-output.json .",
+    "analyze:report": "jq -r '.results.detectors|map(select(\"High\"==.impact and 0<(.elements|length))|.markdown)|.[]' slither-output.json",
+    "analyze:summary": "rm slither-output.json && slither --filter-paths node_modules --print human-summary --json slither-output.json .",
     "compile": "hardhat compile",
     "compile?": "[[ ! $(git diff contracts) ]] || hardhat compile",
     "deploy:testnet": "hardhat deploy --network rinkeby",
