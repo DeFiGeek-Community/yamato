@@ -50,8 +50,9 @@ describe("CjpyOS", () => {
 
   describe("addYamato()", function () {
     it(`fails to add new Yamato for non-governer.`, async function () {
-      await expect(cjpyOS.connect(userAddress).addYamato(userAddress)).to.be
-        .reverted;
+      await expect(
+        cjpyOS.connect(accounts[1]).addYamato(await accounts[1].getAddress())
+      ).to.be.revertedWith("You are not the governer.");
     });
 
     it(`succeeds to add new Yamato`, async function () {
@@ -63,7 +64,10 @@ describe("CjpyOS", () => {
 
   describe("mintCJPY()", function () {
     it(`fails to mint CJPY`, async function () {
-      await expect(cjpyOS.mintCJPY(ownerAddress, 10000)).to.be.reverted;
+      // await cjpyOS.mintCJPY(ownerAddress, 10000);
+      await expect(cjpyOS.mintCJPY(ownerAddress, 10000)).to.be.revertedWith(
+        "No Yamato is registered."
+      );
     });
 
     it(`succeeds to mint CJPY`, async function () {
@@ -75,7 +79,9 @@ describe("CjpyOS", () => {
 
   describe("burnCJPY()", function () {
     it(`fails to burn CJPY`, async function () {
-      await expect(cjpyOS.burnCJPY(ownerAddress, 10000)).to.be.reverted;
+      await expect(cjpyOS.burnCJPY(ownerAddress, 10000)).to.be.revertedWith(
+        "No Yamato is registered."
+      );
     });
 
     it(`succeeds to burn CJPY`, async function () {
