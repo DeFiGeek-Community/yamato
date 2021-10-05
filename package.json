@@ -18,8 +18,7 @@
     "deploy:testnet": "hardhat deploy --network rinkeby",
     "format": "sort-package-json && prettier --write .",
     "lint:check": "solhint 'contracts/**/*.sol' && prettier --check .",
-    "test": "npm run compile && npm run test:unit",
-    "test:unit": "jest --projects unit.jest.config.ts",
+    "test": "hardhat test",
     "verify:testnet": "hardhat verify --network rinkeby"
   },
   "dependencies": {
@@ -33,8 +32,8 @@
     "prettier-plugin-solidity": "^1.0.0-beta.18"
   },
   "devDependencies": {
+    "@defi-wonderland/smock": "^2.0.7",
     "@eth-optimism/core-utils": "^0.5.3",
-    "@ethereum-waffle/jest": "^3.2.2",
     "@nomiclabs/ethereumjs-vm": "^4.2.2",
     "@nomiclabs/hardhat-ethers": "^2.0.2",
     "@nomiclabs/hardhat-etherscan": "^2.1.5",
@@ -46,11 +45,10 @@
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^9.0.0",
     "@rollup/plugin-typescript": "^6.0.0",
-    "@testdeck/jest": "^0.1.2",
     "@testdeck/mocha": "^0.1.2",
     "@typechain/ethers-v5": "^7.0.0",
     "@typechain/hardhat": "^2.0.1",
-    "@types/jest": "^26.0.22",
+    "@types/mocha": "^9.0.0",
     "@types/node": "^14.6.4",
     "chai": "^4.3.4",
     "chalk": "^4.1.1",
@@ -62,15 +60,12 @@
     "hardhat-deploy-ethers": "0xMotoko/hardhat-deploy-ethers#main",
     "hardhat-tracer": "^1.0.0-alpha.6",
     "jasmine": "^3.7.0",
-    "jest": "^26.4.2",
     "solc": "^0.8.4",
     "solhint": "^3.3.6",
     "solhint-plugin-prettier": "0.0.5",
     "sort-package-json": "^1.52.0",
-    "ts-jest": "^26.5.5",
     "ts-node": "^9.1.1",
     "ts-test-decorators": "0.0.6",
-    "tsconfig-paths": "^3.10.1",
     "tslib": "^2.0.1",
     "typechain": "^5.0.0",
     "typescript": "^4.0.2"

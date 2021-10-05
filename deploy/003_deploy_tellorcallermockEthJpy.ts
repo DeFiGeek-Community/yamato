@@ -15,7 +15,7 @@ import {
   isEmbeddedMode,
   backToInitMode,
   sleep,
-} from "@src/deployUtil";
+} from "../src/deployUtil";
 import { Wallet } from "ethers";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {

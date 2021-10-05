@@ -1,27 +1,24 @@
-// betterexpect(lastGoodPrice).toBeGtBN(0);
 import { ethers } from "hardhat";
-import { smockit, isMockContract } from "optimism/packages/smock";
-import { BigNumber } from "ethers";
+import { FakeContract, smock } from "@defi-wonderland/smock";
+import chai, { expect } from "chai";
+import { solidity } from "ethereum-waffle";
+import { Signer, BigNumber } from "ethers";
+import {
+  ChainLinkMock,
+  PriceFeed,
+  PriceFeed__factory,
+  TellorCallerMock,
+} from "../../typechain";
 
-const { waffleJest } = require("@ethereum-waffle/jest");
-expect.extend(waffleJest);
-const betterexpect = <any>expect; // TODO: better typing for waffleJest
-import { getSharedSigners } from "@test/param/helper";
+chai.use(smock.matchers);
+chai.use(solidity);
 
-/* Parameterized Test (Testcases are in /test/parameterizedSpecs.ts) */
-describe("Smock for PriceFeed", function () {
-  it(`succeeds to make a mock`, async function () {
-    const spec = await ethers.getContractFactory("PriceFeed");
-    const mock = await smockit(spec);
-    betterexpect(isMockContract(mock)).toBe(true);
-  });
-});
-
-let feed;
-let accounts;
-let mockAggregatorV3EthUsd;
-let mockAggregatorV3JpyUsd;
-let mockTellorCaller;
+let feed: PriceFeed;
+let accounts: Signer[];
+let ownerAddress: string;
+let mockAggregatorV3EthUsd: FakeContract<ChainLinkMock>;
+let mockAggregatorV3JpyUsd: FakeContract<ChainLinkMock>;
+let mockTellorCaller: FakeContract<TellorCallerMock>;
 let mockRoundCount = 0;
 
 type ChainLinKNumberType = {
@@ -63,51 +60,47 @@ async function setMocks(conf: MockConf) {
   }
 
   mockRoundCount++;
-  mockAggregatorV3EthUsd.smocked.decimals.will.return.with(CHAINLINK_DIGITS); // uint8
-  mockAggregatorV3EthUsd.smocked.latestRoundData.will.return.with([
+  mockAggregatorV3EthUsd.decimals.returns(CHAINLINK_DIGITS); // uint8
+  mockAggregatorV3EthUsd.latestRoundData.returns([
     mockRoundCount,
     cPriceEthInUsd,
     now - cDiffEthInUsd,
     now - cDiffEthInUsd,
     2,
   ]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
-  mockAggregatorV3EthUsd.smocked.getRoundData.will.return.with([
+  mockAggregatorV3EthUsd.getRoundData.returns([
     mockRoundCount,
     cPriceEthInUsd,
     now - cDiffEthInUsd,
     now - cDiffEthInUsd,
     mockRoundCount + 1,
   ]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
-  mockAggregatorV3JpyUsd.smocked.decimals.will.return.with(CHAINLINK_DIGITS); // uint8
-  mockAggregatorV3JpyUsd.smocked.latestRoundData.will.return.with([
+  mockAggregatorV3JpyUsd.decimals.returns(CHAINLINK_DIGITS); // uint8
+  mockAggregatorV3JpyUsd.latestRoundData.returns([
     mockRoundCount,
     cPriceJpyInUsd,
     now - cDiffJpyInUsd,
     now - cDiffJpyInUsd,
     2,
   ]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
-  mockAggregatorV3JpyUsd.smocked.getRoundData.will.return.with([
+  mockAggregatorV3JpyUsd.getRoundData.returns([
     mockRoundCount,
     cPriceJpyInUsd,
     now - cDiffJpyInUsd,
     now - cDiffJpyInUsd,
     mockRoundCount + 1,
   ]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
-  mockTellorCaller.smocked.getTellorCurrentValue.will.return.with([
-    true,
-    tPrice,
-    now - tDiff,
-  ]); // bool ifRetrieve, uint256 value, uint256 _timestampRetrieved
+  mockTellorCaller.getTellorCurrentValue.returns([true, tPrice, now - tDiff]); // bool ifRetrieve, uint256 value, uint256 _timestampRetrieved
 }
 describe("PriceFeed", function () {
   beforeEach(async () => {
-    accounts = await getSharedSigners();
-    const spec1 = await ethers.getContractFactory("ChainLinkMock");
-    const spec2 = await ethers.getContractFactory("ChainLinkMock");
-    const spec3 = await ethers.getContractFactory("TellorCallerMock");
-    mockAggregatorV3EthUsd = await smockit(spec1); // https://github.com/liquity/dev/blob/main/packages/contracts/contracts/Dependencies/AggregatorV3Interface.sol
-    mockAggregatorV3JpyUsd = await smockit(spec2);
-    mockTellorCaller = await smockit(spec3); // https://github.com/liquity/dev/blob/main/packages/contracts/contracts/Interfaces/ITellorCaller.sol
+    accounts = await ethers.getSigners();
+    ownerAddress = await accounts[0].getAddress();
+    // https://github.com/liquity/dev/blob/main/packages/contracts/contracts/Dependencies/AggregatorV3Interface.sol
+    mockAggregatorV3EthUsd = await smock.fake<ChainLinkMock>("ChainLinkMock");
+    mockAggregatorV3JpyUsd = await smock.fake<ChainLinkMock>("ChainLinkMock");
+    // https://github.com/liquity/dev/blob/main/packages/contracts/contracts/Interfaces/ITellorCaller.sol
+    mockTellorCaller = await smock.fake<TellorCallerMock>("TellorCallerMock");
 
     await setMocks({
       price: {
@@ -120,9 +113,9 @@ describe("PriceFeed", function () {
       },
     });
 
-    feed = await (
+    feed = await (<PriceFeed__factory>(
       await ethers.getContractFactory("PriceFeed")
-    ).deploy(
+    )).deploy(
       mockAggregatorV3EthUsd.address,
       mockAggregatorV3JpyUsd.address,
       mockTellorCaller.address
@@ -150,10 +143,10 @@ describe("PriceFeed", function () {
       await (await feed.fetchPrice()).wait();
       const status = await feed.status();
       const lastGoodPrice = await feed.lastGoodPrice();
-      betterexpect(
-        Math.floor(cPriceAtExecInEthUsd / cPriceAtExecInJpyUsd)
-      ).toEqBN(`${lastGoodPrice}`.substr(0, 6));
-      betterexpect(status).toBe(0);
+      expect(
+        Math.floor(cPriceAtExecInEthUsd / cPriceAtExecInJpyUsd).toString()
+      ).to.eq(`${lastGoodPrice}`.substr(0, 6));
+      expect(status).to.eq(0);
       /*
             enum Status {
                 chainlinkWorking,
@@ -166,8 +159,8 @@ describe("PriceFeed", function () {
     });
 
     it(`succeeds to get price from Tellor because ChainLink is frozen`, async function () {
-      feed.provider.send("evm_increaseTime", [7200]);
-      feed.provider.send("evm_mine");
+      (<any>feed.provider).send("evm_increaseTime", [7200]);
+      (<any>feed.provider).send("evm_mine");
 
       let cPriceAtExecInEthUsd = 3202;
       let cPriceAtExecInJpyUsd = 0.0091;
@@ -188,16 +181,16 @@ describe("PriceFeed", function () {
       await (await feed.fetchPrice()).wait();
       const status = await feed.status();
       const lastGoodPrice = await feed.lastGoodPrice();
-      betterexpect(status).toBe(3);
-      betterexpect(
+      expect(status).to.eq(3);
+      expect(
         BigNumber.from(tPriceAtExecInJpyUsd).mul(BigNumber.from(10).pow(18))
-      ).toEqBN(lastGoodPrice);
+      ).to.eq(lastGoodPrice);
     });
 
     it(`returns last good price as both oracles are untrusted`, async function () {
       // 1. Timeout setting
-      feed.provider.send("evm_increaseTime", [7200]);
-      feed.provider.send("evm_mine");
+      (<any>feed.provider).send("evm_increaseTime", [7200]);
+      (<any>feed.provider).send("evm_mine");
 
       // 2. Set lastGoodPrice
       let cPriceAtLastTimeInEthUsd = 3203;
@@ -219,10 +212,12 @@ describe("PriceFeed", function () {
       await (await feed.fetchPrice()).wait();
       const status1 = await feed.status();
       const lastGoodPrice1 = await feed.lastGoodPrice();
-      betterexpect(status1).toBe(0);
-      betterexpect(
-        Math.floor(cPriceAtLastTimeInEthUsd / cPriceAtLastTimeInJpyUsd)
-      ).toEqBN(`${lastGoodPrice1}`.substr(0, 6));
+      expect(status1).to.eq(0);
+      expect(
+        Math.floor(
+          cPriceAtLastTimeInEthUsd / cPriceAtLastTimeInJpyUsd
+        ).toString()
+      ).to.eq(`${lastGoodPrice1}`.substr(0, 6));
 
       // 3. Exec
       let cPriceAtExecInEthUsd = 3204;
@@ -244,10 +239,12 @@ describe("PriceFeed", function () {
       await (await feed.fetchPrice()).wait();
       const status2 = await feed.status();
       const lastGoodPrice2 = await feed.lastGoodPrice();
-      betterexpect(status2).toBe(2);
-      betterexpect(
-        Math.floor(cPriceAtLastTimeInEthUsd / cPriceAtLastTimeInJpyUsd)
-      ).toEqBN(`${lastGoodPrice2}`.substr(0, 6));
+      expect(status2).to.eq(2);
+      expect(
+        Math.floor(
+          cPriceAtLastTimeInEthUsd / cPriceAtLastTimeInJpyUsd
+        ).toString()
+      ).to.eq(`${lastGoodPrice2}`.substr(0, 6));
     });
   });
 });
