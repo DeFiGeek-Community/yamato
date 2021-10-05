@@ -16,6 +16,7 @@ import "hardhat-deploy-ethers";
 import "@typechain/hardhat";
 import "@nomiclabs/hardhat-etherscan";
 import "hardhat-abi-exporter";
+import "hardhat-contract-sizer";
 
 if (!process.env.ALCHEMY_URL) throw Error("Get your .env");
 
@@ -106,4 +107,10 @@ module.exports = {
     except: ["Dependencies", "Interfaces", "mock"],
     spacing: 2,
   },
+  contractSizer: {
+    alphaSort: true,
+    disambiguatePaths: false,
+    runOnCompile: true,
+    strict: true,
+  }
 };
