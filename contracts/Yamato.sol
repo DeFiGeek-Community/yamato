@@ -610,57 +610,59 @@ contract Yamato is IYamato, ReentrancyGuard {
         return cjpyOS.feed();
     }
 
-    /// @dev For test purpose
-    function getICR(uint256 _coll, uint256 _debt) external returns (uint256) {
-        return Pledge(_coll, _debt, true, msg.sender, 0).getICR(cjpyOS.feed());
-    }
 
-    /// @notice Provide the data of public storage.
-    function getStates() public view returns (uint, uint, uint8, uint8, uint8, uint8) {
-        return (totalColl, totalDebt, MCR, RRR, SRR, GRR);
-    }
+    // /// @notice Provide the data of public storage.
+    // function getStates() public view returns (uint, uint, uint8, uint8, uint8, uint8) {
+    //     return (totalColl, totalDebt, MCR, RRR, SRR, GRR);
+    // }
 
-    /// @notice Provide the data of indivisual pledge.
-    function getIndivisualStates(address owner) public view returns (
-        uint coll,
-        uint debt,
-        bool isCreated,
-        uint withdrawLock,
-        uint depositAndBorrowLock
-    ) {
-        Pledge memory pledge = pledges[owner];
-        withdrawLock = withdrawLocks[owner];
-        depositAndBorrowLock = depositAndBorrowLocks[owner];
-        return (pledge.coll, pledge.debt, pledge.isCreated, withdrawLock, depositAndBorrowLock);
-    }
+    // /// @notice Provide the data of indivisual pledge.
+    // function getIndivisualStates(address owner) public view returns (
+    //     uint coll,
+    //     uint debt,
+    //     bool isCreated,
+    //     uint withdrawLock,
+    //     uint depositAndBorrowLock
+    // ) {
+    //     Pledge memory pledge = pledges[owner];
+    //     withdrawLock = withdrawLocks[owner];
+    //     depositAndBorrowLock = depositAndBorrowLocks[owner];
+    //     return (pledge.coll, pledge.debt, pledge.isCreated, withdrawLock, depositAndBorrowLock);
+    // }
 
-    /*
-    ==============================
-        Testability Helpers
-    ==============================
-        - bypassUpsert()
-        - bypassRemove()
-        - updateTCR()
-        - setPriorityRegistryInTest()
-    */
-    function bypassUpsert(Pledge calldata _pledge) external onlyTester {
-        priorityRegistry.upsert(_pledge);
-    }
-    function bypassRemove(Pledge calldata _pledge) external onlyTester {
-        priorityRegistry.remove(_pledge);
-    }
-    function bypassPopRedeemable() external onlyTester {
-        priorityRegistry.popRedeemable();
-    }
-    function bypassPopSweepable() external onlyTester {
-        priorityRegistry.popSweepable();
-    }
-    function updateTCR() external onlyTester {
-        TCR = getTCR();
-    }
-    function setPriorityRegistryInTest(address _priorityRegistry) external onlyTester {
-        priorityRegistry = IPriorityRegistry(_priorityRegistry);
-    }
+
+
+    // /*
+    // ==============================
+    //     Testability Helpers
+    // ==============================
+    //     - bypassUpsert()
+    //     - bypassRemove()
+    //     - updateTCR()
+    //     - setPriorityRegistryInTest()
+    //     - getICR()
+    // */
+    // function bypassUpsert(Pledge calldata _pledge) external onlyTester {
+    //     priorityRegistry.upsert(_pledge);
+    // }
+    // function bypassRemove(Pledge calldata _pledge) external onlyTester {
+    //     priorityRegistry.remove(_pledge);
+    // }
+    // function bypassPopRedeemable() external onlyTester {
+    //     priorityRegistry.popRedeemable();
+    // }
+    // function bypassPopSweepable() external onlyTester {
+    //     priorityRegistry.popSweepable();
+    // }
+    // function updateTCR() external onlyTester {
+    //     TCR = getTCR();
+    // }
+    // function setPriorityRegistryInTest(address _priorityRegistry) external onlyTester {
+    //     priorityRegistry = IPriorityRegistry(_priorityRegistry);
+    // }
+    // function getICR(uint _coll, uint _debt) external returns (uint) {
+    //     return Pledge(_coll, _debt, true, msg.sender, 0).getICR(cjpyOS.feed());
+    // }
 
 
 }
