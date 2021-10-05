@@ -40,7 +40,7 @@ jobs:
 
       - name: Run slither analyze
         run: |
-          npm run analyze
+          npm run analyze || :
           npm run analyze:report | tee log
           exit $(awk 'END{ print NR }' log)
         env:
