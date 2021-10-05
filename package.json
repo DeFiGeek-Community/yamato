@@ -13,6 +13,7 @@
   "license": "MIT",
   "author": "",
   "scripts": {
+    "analyze": "slither --filter-paths node_modules --json slither-output.json .",
     "compile": "hardhat compile",
     "compile?": "[[ ! $(git diff contracts) ]] || hardhat compile",
     "deploy:testnet": "hardhat deploy --network rinkeby",
