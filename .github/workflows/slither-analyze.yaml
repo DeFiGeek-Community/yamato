@@ -17,9 +17,9 @@ jobs:
       - uses: actions/setup-python@v2
       - name: Install solc compiler
         run: |
-          add-apt-repository ppa:ethereum/ethereum
-          apt-get update
-          apt-get install solc
+          sudo add-apt-repository ppa:ethereum/ethereum
+          sudo apt-get update
+          sudo apt-get install solc
 
       - name: Run slither analyze
         run: |
