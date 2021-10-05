@@ -57,14 +57,24 @@ describe("contract Yamato", function () {
     /* BEGIN DIRTY-FIX
     !!TODO!!
     The code that this block contains is
-    for avoiding possible bugs in smock, hardhat-ethers or ethers
+    for avoiding bugs of smock, hardhat-ethers or ethers
     (I think ethers is suspicious.)
-    and must be as following:
+    and must be as following if there is no bug:
     ```
     mockPriorityRegistry = await smock.fake<PriorityRegistry>(
       priorityRegistryContractFactory
     );
     ```
+
+    The bugs are that some of the hardhat-ethers methods, like getContractFactory,
+    return bad ethers objects and the smock library can not handle that bad object and raises an error.
+    That reproduces when using library linking.
+
+    The smock library falls in error when it runs the code after [this line](
+    https://github.com/defi-wonderland/smock/blob/v2.0.7/src/factories/ethers-interface.ts#L22).
+    To avoid reaching that line of code, this patch allows the function to return from that function from [this line](
+    https://github.com/defi-wonderland/smock/blob/v2.0.7/src/factories/ethers-interface.ts#L16).
+
     */
     const priorityRegistryContract =
       await priorityRegistryContractFactory.deploy(yamato.address);
