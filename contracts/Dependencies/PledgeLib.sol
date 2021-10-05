@@ -25,6 +25,7 @@ library PledgeLib {
         public
         returns (uint256 _ICR)
     {
+        require(_feed != address(0), "Feed is null address.");
         IPriceFeed feed = IPriceFeed(_feed);
 
         uint256 _jpyPerEth = feed.fetchPrice();

@@ -71,7 +71,7 @@ describe("contract PriorityRegistry", function () {
 
     mockFeed.fetchPrice.returns(PRICE);
     mockCjpyOS.feed.returns(mockFeed.address);
-    mockYamato.getFeed.returns(mockFeed.address);
+    mockYamato.feed.returns(mockFeed.address);
 
     /*
         For unit tests

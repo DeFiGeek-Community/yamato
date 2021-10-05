@@ -94,7 +94,7 @@ contract PriorityRegistry is IPriorityRegistry {
         /* 
             2. insert new pledge
         */
-        _newICRpertenk = _pledge.getICR(IYamato(yamato).getFeed());
+        _newICRpertenk = _pledge.getICR(IYamato(yamato).feed());
 
         _pledge.lastUpsertedTimeICRpertenk = _newICRpertenk;
 
@@ -190,7 +190,7 @@ contract PriorityRegistry is IPriorityRegistry {
 
         // Note: Don't check LICR, real ICR is the matter.
         require(
-            leveledPledges[licr][_addr].getICR(IYamato(yamato).getFeed()) <
+            leveledPledges[licr][_addr].getICR(IYamato(yamato).feed()) <
                 uint256(IYamato(yamato).MCR()).mul(100),
             "You can't redeem if redeemable candidate is more than MCR."
         );

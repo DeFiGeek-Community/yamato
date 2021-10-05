@@ -18,6 +18,6 @@ interface IYamato {
         uint lastUpsertedTimeICRpertenk;
     }
     function getPledge(address _owner) external view returns (Pledge memory); 
-    function getFeed() external view returns (address); 
+    function feed() external view returns (address); 
     function MCR() external view returns (uint8);
 }

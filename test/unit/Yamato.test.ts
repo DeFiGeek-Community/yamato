@@ -51,6 +51,10 @@ describe("contract Yamato", function () {
         libraries: { PledgeLib },
       })
     );
+
+    // Note: Yamato's constructor needs this mock and so the line below has to be called here.
+    mockCjpyOS.feed.returns(mockFeed.address);
+
     yamato = await (<Yamato__factory>(
       await ethers.getContractFactory("Yamato", { libraries: { PledgeLib } })
     )).deploy(mockCjpyOS.address);
@@ -85,6 +89,7 @@ describe("contract Yamato", function () {
     );
     /* END DIRTY-FIX */
 
+
     await (await yamato.setPool(mockPool.address)).wait();
     await (
       await yamato.setPriorityRegistry(mockPriorityRegistry.address)
@@ -108,7 +113,6 @@ describe("contract Yamato", function () {
     await (await yamato.updateTCR()).wait();
     mockPool.redemptionReserve.returns(1);
     mockPool.sweepReserve.returns(BigNumber.from("99999999000000000000000000"));
-    mockCjpyOS.feed.returns(mockFeed.address);
     mockPriorityRegistry.yamato.returns(yamato.address);
     mockPriorityRegistry.upsert.returns(0);
     mockPriorityRegistry.remove.returns(0);
