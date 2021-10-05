@@ -359,14 +359,18 @@ describe("contract Yamato", function () {
       const toBorrow = (PRICE * toCollateralize) / MCR;
       await yamato.deposit({ value: toERC20(toCollateralize + "") });
       await yamato.borrow(toERC20(toBorrow + ""));
-      await expect(yamato.repay(toERC20(0 + ""))).to.reverted;
+      await expect(yamato.repay(toERC20(0 + ""))).to.revertedWith(
+        "cjpyAmount is zero"
+      );
     });
     it(`fails for no-debt pledge`, async function () {
       const MCR = 1.1;
       const toCollateralize = 1;
       const toBorrow = (PRICE * toCollateralize) / MCR;
       await yamato.deposit({ value: toERC20(toCollateralize + "") });
-      await expect(yamato.repay(toERC20(toBorrow + ""))).to.reverted;
+      await expect(yamato.repay(toERC20(toBorrow + ""))).to.revertedWith(
+        "pledge.debt is zero"
+      );
     });
 
     // TODO: Have a attack contract to recursively calls the deposit and borrow function
@@ -387,8 +391,9 @@ describe("contract Yamato", function () {
       const toBorrow = (PRICE * toCollateralize) / MCR / 10;
       await yamato.deposit({ value: toERC20(toCollateralize + "") });
       await yamato.borrow(toERC20(toBorrow + ""));
-      await expect(yamato.withdraw(toERC20(toCollateralize / 10 + ""))).to
-        .reverted;
+      await expect(
+        yamato.withdraw(toERC20(toCollateralize / 10 + ""))
+      ).to.revertedWith("Withdrawal is being locked for this sender.");
     });
     it(`should reduce coll`, async function () {
       const MCR = 1.1;
@@ -440,8 +445,9 @@ describe("contract Yamato", function () {
       mockFeed.fetchPrice.returns(PRICE / 4);
       await (await yamato.updateTCR()).wait();
 
-      await expect(yamato.withdraw(toERC20(toCollateralize / 10 + ""))).to
-        .reverted;
+      await expect(
+        yamato.withdraw(toERC20(toCollateralize / 10 + ""))
+      ).to.revertedWith("Withdrawal failure: ICR is not more than MCR.");
     });
     it(`can't make ICR < MCR by this withdrawal`, async function () {
       const MCR = 1.1;
@@ -463,8 +469,11 @@ describe("contract Yamato", function () {
       (<any>yamato.provider).send("evm_increaseTime", [60 * 60 * 24 * 3 + 1]);
       (<any>yamato.provider).send("evm_mine");
 
-      await expect(yamato.withdraw(toERC20(toCollateralize * 0.9 + ""))).to
-        .reverted;
+      await expect(
+        yamato.withdraw(toERC20(toCollateralize * 0.9 + ""))
+      ).to.revertedWith(
+        "Withdrawal failure: ICR can't be less than MCR after withdrawal."
+      );
     });
     it(`should neutralize a pledge if clean full withdrawal happens`, async function () {
       const MCR = 1.1;
@@ -586,7 +595,7 @@ describe("contract Yamato", function () {
       await (await yamato.updateTCR()).wait();
       await expect(
         yamato.connect(accounts[0]).redeem(toERC20(toBorrow + ""), false)
-      ).to.reverted;
+      ).to.revertedWith("No pledges are redeemed.");
     });
     it(`should NOT run useRedemptionReserve\(\) of Pool.sol when isCoreRedemption=false`, async function () {
       await yamato.connect(accounts[0]).redeem(toERC20(toBorrow + ""), false);
