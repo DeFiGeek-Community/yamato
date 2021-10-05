@@ -5,3 +5,4 @@
 /node_modules/
 /typechain/
 /package-lock.json
+/slither-output.json
