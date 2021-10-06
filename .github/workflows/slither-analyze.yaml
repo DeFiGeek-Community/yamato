@@ -1,0 +1,58 @@
+name: Slither Analyze
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  unit-tests:
+    name: Slither Analyze
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 14.x
+          registry-url: https://registry.npmjs.org
+      - uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - name: Install dependencies
+        run: npm ci
+
+      - uses: actions/setup-python@v2
+      - name: Install solc compiler
+        run: |
+          sudo add-apt-repository ppa:ethereum/ethereum
+          sudo apt-get update
+          sudo apt-get install solc
+
+      - name: Install slither
+        run: sudo pip install slither-analyzer
+
+      - name: Run slither analyze
+        run: |
+          npm run analyze || :
+          npm run analyze:resultRet
+          # exit $(npm run analyze:resultRet|tail -n1)
+          echo $(npm run analyze:resultRet|tail -n1) problems found
+          echo but I ignore them in this time.
+
+        env:
+          ALCHEMY_URL: ${{ secrets.ALCHEMY_URL }}
+          DEPLOYER_PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
+          FOUNDATION_PRIVATE_KEY: ${{ secrets.FOUNDATION_PRIVATE_KEY }}
+
+      - name: discord notification（if failure）
+        uses: sarisia/actions-status-discord@v1
+        if: ${{ failure() }}
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
