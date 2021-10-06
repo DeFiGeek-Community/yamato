@@ -77,7 +77,7 @@ describe("MintCJPY :: contract Yamato", () => {
 });
 
   describe("borrow()", function () {
-    it.only(`should mint CJPY`, async function () {
+    it(`should mint CJPY`, async function () {
         const MCR = BigNumber.from(110)
         const toCollateralize = 1;
         const toBorrow = PRICE.mul(toCollateralize).mul(100).div(MCR).div(1e18+"");
