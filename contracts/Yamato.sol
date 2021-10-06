@@ -179,7 +179,7 @@ contract Yamato is IYamato, ReentrancyGuard {
         /*
             3. Fee
         */
-        uint256 fee = (borrowAmountInCjpy * FR(_ICRAfter * 100)) / 10000;
+        uint256 fee = (borrowAmountInCjpy * FR(_ICRAfter)) / 10000;
 
         /*
             4. Top-up scenario
@@ -204,11 +204,11 @@ contract Yamato is IYamato, ReentrancyGuard {
         cjpyOS.mintCJPY(msg.sender, borrowAmountInCjpy.sub(fee)); // onlyYamato
         cjpyOS.mintCJPY(address(pool), fee); // onlyYamato
 
-        if (pool.redemptionReserve() / pool.sweepReserve() >= 5) {
-            pool.depositSweepReserve(fee);
-        } else {
-            pool.depositRedemptionReserve(fee);
-        }
+        // if (pool.redemptionReserve() / pool.sweepReserve() >= 5) {
+        //     pool.depositSweepReserve(fee);
+        // } else {
+        //     pool.depositRedemptionReserve(fee);
+        // }
     }
 
     /// @notice Recover the collateral of one's pledge.
