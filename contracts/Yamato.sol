@@ -204,11 +204,13 @@ contract Yamato is IYamato, ReentrancyGuard {
         cjpyOS.mintCJPY(msg.sender, borrowAmountInCjpy.sub(fee)); // onlyYamato
         cjpyOS.mintCJPY(address(pool), fee); // onlyYamato
 
-        // if (pool.redemptionReserve() / pool.sweepReserve() >= 5) {
-        //     pool.depositSweepReserve(fee);
-        // } else {
-        //     pool.depositRedemptionReserve(fee);
-        // }
+        if (
+            pool.redemptionReserve() / 5 <= pool.sweepReserve()
+        ) {
+            pool.depositRedemptionReserve(fee);
+        } else {
+            pool.depositSweepReserve(fee);
+        }
     }
 
     /// @notice Recover the collateral of one's pledge.
