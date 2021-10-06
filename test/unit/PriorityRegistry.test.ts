@@ -23,7 +23,7 @@ describe("contract PriorityRegistry", function () {
   let priorityRegistry;
   let accounts: Signer[];
   let address0: string;
-  const PRICE = 300000;
+  const PRICE = BigNumber.from(300000).mul(1e18+"");
 
   beforeEach(async () => {
     accounts = await ethers.getSigners();
@@ -170,7 +170,7 @@ describe("contract PriorityRegistry", function () {
       const _collBefore = BigNumber.from("100000000000000000");
       const _debtBefore = BigNumber.from("30000100000000000000000");
       const _ICRDefault = BigNumber.from("0");
-      const _ICRBefore = _collBefore.mul(PRICE).mul(10000).div(_debtBefore);
+      const _ICRBefore = _collBefore.mul(PRICE).mul(10000).div(_debtBefore).div(1e18+"");
       expect(_ICRBefore).to.eq("9999");
       const _pledgeBefore = [
         _collBefore,

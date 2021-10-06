@@ -218,7 +218,6 @@ contract Yamato is IYamato, ReentrancyGuard {
         /*
             1. Get feed and Pledge
         */
-        uint256 jpyPerEth = IPriceFeed(feed).fetchPrice();
         Pledge storage pledge = pledges[msg.sender];
 
         /*
@@ -359,8 +358,7 @@ contract Yamato is IYamato, ReentrancyGuard {
                     uint256 _newICR
                 ) {
                     sPledge.lastUpsertedTimeICRpertenk = _newICR;
-                } catch Error(string memory reason) {
-                    // console.log("Error: %s", reason); /* Not for prod: performance reason */
+                } catch {
                     break;
                 }
             } catch {
@@ -373,6 +371,7 @@ contract Yamato is IYamato, ReentrancyGuard {
             3. Ditribute colls.
         */
 
+
         require(
             cjpyAmountStart > maxRedemptionCjpyAmount,
             "No pledges are redeemed."
@@ -381,7 +380,7 @@ contract Yamato is IYamato, ReentrancyGuard {
 
         uint256 totalRedeemedCjpyAmount = redeemStart -
             pool.redemptionReserve();
-        uint256 totalRedeemedEthAmount = totalRedeemedCjpyAmount.div(jpyPerEth);
+        uint256 totalRedeemedEthAmount = totalRedeemedCjpyAmount.div(jpyPerEth).mul(1e18);
         uint256 dividendEthAmount = (totalRedeemedEthAmount * (100 - GRR)) /
             100;
         address _target = msg.sender;
@@ -481,7 +480,7 @@ contract Yamato is IYamato, ReentrancyGuard {
         uint256 jpyPerEth
     ) internal returns (uint256) {
         require(sPledge.coll > 0, "Can't expense zero pledge.");
-        uint256 collValuation = sPledge.coll.mul(jpyPerEth);
+        uint256 collValuation = sPledge.coll.mul(jpyPerEth).div(1e18);
 
         /*
             1. Calc reminder
@@ -500,7 +499,7 @@ contract Yamato is IYamato, ReentrancyGuard {
             2. Calc expense collateral
         */
         // Note: SafeMath.sub checks full substruction
-        uint256 ethToBeExpensed = redemptionAmount.div(jpyPerEth);
+        uint256 ethToBeExpensed = redemptionAmount.div(jpyPerEth).mul(1e18);
         sPledge.coll -= ethToBeExpensed;
 
         /*
