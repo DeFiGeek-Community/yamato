@@ -95,7 +95,7 @@ contract PriorityRegistry is IPriorityRegistry {
             _deletePledge(_pledge);
         }
 
-        _tryLICRBackwardUpdate(_oldICRpertenk);
+        _traverseToNextLICR(_oldICRpertenk);
 
         /* 
             2. insert new pledge
@@ -203,7 +203,7 @@ contract PriorityRegistry is IPriorityRegistry {
 
         // Note: popped array and pledge must be deleted
         // Note: Traversing to the ICR=MAX_UINT256-ish pledges are validated, don't worry.
-        _tryLICRBackwardUpdate(
+        _traverseToNextLICR(
             leveledPledges[licr][_addr].lastUpsertedTimeICRpertenk
         );
 
@@ -269,8 +269,8 @@ contract PriorityRegistry is IPriorityRegistry {
         }
     }
 
-    function _tryLICRBackwardUpdate(uint256 _icr) internal {
-        // Note: The _oldICRpertenk is currentLICRpertenk and that ICR-column has just nullified now.
+    function _traverseToNextLICR(uint256 _icr) internal {
+        // Note: The _oldICRpertenk == currentLICRpertenk now, and that former LICR-level has just been nullified. New licr is needed.
         if (
             levelIndice[_icr].length == 0 && /* Confirm the level is nullified */
             _icr == currentLICRpertenk && /* Confirm the deleted ICR is lowest  */
@@ -279,9 +279,12 @@ contract PriorityRegistry is IPriorityRegistry {
             pledgeLength - levelIndice[0].length > levelIndice[2**256-1].length /* if only new pledges, don't traverse the list! */
         ) {
             uint256 _next = _icr + 1;
-            while (levelIndice[_next].length == 0) {
+            while (
+                levelIndice[_next].length == 0 /* this level is empty! */
+                && _next < uint256(IYamato(yamato).MCR()).mul(100) /* this level is redeemable! */
+            ) {
                 _next++;
-            } // Note: if exist, stop
+            } // Note: if exist or out-of-range, stop it and set that level as the LICR
             currentLICRpertenk = _next;
         }
     }
