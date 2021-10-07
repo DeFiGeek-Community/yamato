@@ -154,9 +154,13 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
       it(`should redeem a lowest pledge w/o infinite traversing.`, async function () {
           let redeemerAddr = await redeemer.getAddress();
+          let redeemeeAddr = await redeemee.getAddress();
+
           const totalSupplyBefore = await CJPY.totalSupply();
-          const eoaCJPYBalanceBefore = await CJPY.balanceOf(redeemerAddr);
-          const eoaETHBalanceBefore = await Yamato.provider.getBalance(redeemerAddr);
+          const redeemerCJPYBalanceBefore = await CJPY.balanceOf(redeemerAddr);
+          const redeemerETHBalanceBefore = await Yamato.provider.getBalance(redeemerAddr);
+
+          const redeemedPledgeBefore = await Yamato.getPledge(redeemeeAddr)
 
           const txReceipt = await (
               await Yamato
@@ -164,13 +168,17 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
               .redeem(toERC20(toBorrow.mul(2) + ""), false)
           ).wait()
 
+          const redeemedPledgeAfter = await Yamato.getPledge(redeemeeAddr)
+
           const totalSupplyAfter = await CJPY.totalSupply();
-          const eoaCJPYBalanceAfter = await CJPY.balanceOf(redeemerAddr);
-          const eoaETHBalanceAfter = await Yamato.provider.getBalance(redeemerAddr);
+          const redeemerCJPYBalanceAfter = await CJPY.balanceOf(redeemerAddr);
+          const redeemerETHBalanceAfter = await Yamato.provider.getBalance(redeemerAddr);
 
           expect(totalSupplyAfter).to.be.lt(totalSupplyBefore)
-          expect(eoaCJPYBalanceAfter).to.be.lt(eoaCJPYBalanceBefore)
-          expect(eoaETHBalanceAfter.add(txReceipt.gasUsed)).to.be.gt(eoaETHBalanceBefore)//gas?
+          expect(redeemerCJPYBalanceAfter).to.be.lt(redeemerCJPYBalanceBefore)
+          expect(redeemerETHBalanceAfter.add(txReceipt.gasUsed)).to.be.gt(redeemerETHBalanceBefore)//gas?
+          expect(redeemedPledgeAfter.coll).to.be.eq(0)
+          expect(redeemedPledgeAfter.lastUpsertedTimeICRpertenk).to.be.eq(0)
 
       });
     });

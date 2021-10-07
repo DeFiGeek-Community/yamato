@@ -349,11 +349,13 @@ contract Yamato is IYamato, ReentrancyGuard {
                 /*
                     1. Expense collateral
                 */
+                uint256 _collBefore = sPledge.coll;
                 maxRedemptionCjpyAmount = _expenseColl(
                     sPledge,
                     maxRedemptionCjpyAmount,
                     jpyPerEth
                 );
+                require(sPledge.coll < _collBefore, "Expense error: This redemption failed to reduce coll.");
 
                 /*
                     2. Put the sludge pledge to the queue
@@ -426,7 +428,6 @@ contract Yamato is IYamato, ReentrancyGuard {
             1. Sweeping
         */
         while (maxSweeplable > 0) {
-            // if(_maxSweeplableStart > maxSweeplable) { console.log(maxSweeplable); return; }
             try priorityRegistry.popSweepable() returns (
                 Pledge memory _sweepablePledge
             ) {
@@ -503,8 +504,11 @@ contract Yamato is IYamato, ReentrancyGuard {
             2. Calc expense collateral
         */
         // Note: SafeMath.sub checks full substruction
-        uint256 ethToBeExpensed = redemptionAmount.div(jpyPerEth).mul(1e18);
+        uint256 ethToBeExpensed = redemptionAmount.mul(1e18).div(jpyPerEth);
         sPledge.coll -= ethToBeExpensed;
+        /*
+            Note: storage variable in the internal func doesn't change state!
+        */
 
         /*
             3. Update macro state
