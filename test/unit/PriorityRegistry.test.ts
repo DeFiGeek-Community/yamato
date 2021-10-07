@@ -23,7 +23,7 @@ describe("contract PriorityRegistry", function () {
   let priorityRegistry;
   let accounts: Signer[];
   let address0: string;
-  const PRICE = BigNumber.from(300000).mul(1e18+"");
+  const PRICE = BigNumber.from(300000).mul(1e18 + "");
 
   beforeEach(async () => {
     accounts = await ethers.getSigners();
@@ -170,7 +170,11 @@ describe("contract PriorityRegistry", function () {
       const _collBefore = BigNumber.from("100000000000000000");
       const _debtBefore = BigNumber.from("30000100000000000000000");
       const _ICRDefault = BigNumber.from("1");
-      const _ICRBefore = _collBefore.mul(PRICE).mul(10000).div(_debtBefore).div(1e18+"");
+      const _ICRBefore = _collBefore
+        .mul(PRICE)
+        .mul(10000)
+        .div(_debtBefore)
+        .div(1e18 + "");
       expect(_ICRBefore).to.eq("9999");
       const _pledgeBefore = [
         _collBefore,
@@ -325,7 +329,9 @@ describe("contract PriorityRegistry", function () {
 
       expect(await priorityRegistry.pledgeLength()).to.eq(1);
 
-      await expect( yamato.bypassPopRedeemable() ).to.be.revertedWith("licr=0 :: Need to upsert at least once.")
+      await expect(yamato.bypassPopRedeemable()).to.be.revertedWith(
+        "licr=0 :: Need to upsert at least once."
+      );
     });
 
     it(`succeeds to fetch even by account 3`, async function () {
@@ -351,7 +357,9 @@ describe("contract PriorityRegistry", function () {
         const _debt1 = BigNumber.from("300001000000000000000000");
         const _inputPledge1 = [_coll1, _debt1, true, _owner1, 0];
 
-        await expect( yamato.bypassUpsert(_inputPledge1) ).to.be.revertedWith("Upsert Error: Such a pledge can't exist!")
+        await expect(yamato.bypassUpsert(_inputPledge1)).to.be.revertedWith(
+          "Upsert Error: Such a pledge can't exist!"
+        );
       });
 
       it(`fails to get the lowest but MAX_INT pledge \(=new pledge / coll>0 debt=0 lastUpsertedTimeICRpertenk=0\)`, async function () {
@@ -362,8 +370,9 @@ describe("contract PriorityRegistry", function () {
 
         await (await yamato.bypassUpsert(_inputPledge1)).wait();
 
-
-        await expect( yamato.bypassPopRedeemable() ).to.be.revertedWith("You can't redeem if redeemable candidate is more than MCR.")
+        await expect(yamato.bypassPopRedeemable()).to.be.revertedWith(
+          "You can't redeem if redeemable candidate is more than MCR."
+        );
       });
       it(`succeeds to get the lowest pledge with lastUpsertedTimeICRpertenk\>0`, async function () {
         const _owner1 = address0;

@@ -20,7 +20,7 @@ import {
   CJPY__factory,
   Yamato__factory,
   Pool__factory,
-  PriorityRegistry__factory
+  PriorityRegistry__factory,
 } from "../../typechain";
 
 chai.use(smock.matchers);
@@ -34,7 +34,7 @@ describe("MintCJPY :: contract Yamato", () => {
   let CJPY: CJPY;
   let CjpyOS: CjpyOS;
   let Yamato: Yamato;
-  let Pool : Pool;
+  let Pool: Pool;
   let PriorityRegistry: PriorityRegistry;
   let accounts: Signer[];
   let ownerAddress: string;
@@ -45,7 +45,6 @@ describe("MintCJPY :: contract Yamato", () => {
     ownerAddress = await accounts[0].getAddress();
     userAddress = await accounts[1].getAddress();
 
-
     ChainLinkEthUsd = await (<ChainLinkMock__factory>(
       await ethers.getContractFactory("ChainLinkMock")
     )).deploy("ETH/USD");
@@ -53,29 +52,38 @@ describe("MintCJPY :: contract Yamato", () => {
       await ethers.getContractFactory("ChainLinkMock")
     )).deploy("JPY/USD");
 
-    await (await ChainLinkEthUsd.connect(accounts[0]).simulatePriceMove({gasLimit: 200000})).wait()
-    await (await ChainLinkUsdJpy.connect(accounts[0]).simulatePriceMove({gasLimit: 200000})).wait()
-    await (await ChainLinkEthUsd.connect(accounts[0]).simulatePriceMove({gasLimit: 200000})).wait()
-    await (await ChainLinkUsdJpy.connect(accounts[0]).simulatePriceMove({gasLimit: 200000})).wait()
-  
+    await (
+      await ChainLinkEthUsd.connect(accounts[0]).simulatePriceMove({
+        gasLimit: 200000,
+      })
+    ).wait();
+    await (
+      await ChainLinkUsdJpy.connect(accounts[0]).simulatePriceMove({
+        gasLimit: 200000,
+      })
+    ).wait();
+    await (
+      await ChainLinkEthUsd.connect(accounts[0]).simulatePriceMove({
+        gasLimit: 200000,
+      })
+    ).wait();
+    await (
+      await ChainLinkUsdJpy.connect(accounts[0]).simulatePriceMove({
+        gasLimit: 200000,
+      })
+    ).wait();
+
     Tellor = await (<TellorCallerMock__factory>(
       await ethers.getContractFactory("TellorCallerMock")
     )).deploy();
-    
 
     PriceFeed = await (<PriceFeed__factory>(
       await ethers.getContractFactory("PriceFeed")
-    )).deploy(
-      ChainLinkEthUsd.address,
-      ChainLinkUsdJpy.address,
-      Tellor.address
-    );
-
+    )).deploy(ChainLinkEthUsd.address, ChainLinkUsdJpy.address, Tellor.address);
 
     CJPY = await (<CJPY__factory>(
       await ethers.getContractFactory("CJPY")
     )).deploy();
-  
 
     CjpyOS = await (<CjpyOS__factory>(
       await ethers.getContractFactory("CjpyOS")
@@ -88,57 +96,52 @@ describe("MintCJPY :: contract Yamato", () => {
     const PledgeLib = (
       await (await ethers.getContractFactory("PledgeLib")).deploy()
     ).address;
-  
-    Yamato = await (<Yamato__factory>(
-      await ethers.getContractFactory("Yamato", {
-        libraries: { PledgeLib }
-      })
-    )).deploy(
-      CjpyOS.address
-    );
+
+    Yamato = await (<Yamato__factory>await ethers.getContractFactory("Yamato", {
+      libraries: { PledgeLib },
+    })).deploy(CjpyOS.address);
 
     Pool = await (<Pool__factory>(
       await ethers.getContractFactory("Pool")
     )).deploy(Yamato.address);
-      
+
     PriorityRegistry = await (<PriorityRegistry__factory>(
       await ethers.getContractFactory("PriorityRegistry", {
         libraries: { PledgeLib },
       })
     )).deploy(Yamato.address);
 
-    await (await Yamato.setPool(Pool.address)).wait()
-    await (await Yamato.setPriorityRegistry(PriorityRegistry.address)).wait()
-    await (await CjpyOS.addYamato(Yamato.address)).wait()
-    await (await CJPY.setCurrencyOS(CjpyOS.address)).wait()
-});
+    await (await Yamato.setPool(Pool.address)).wait();
+    await (await Yamato.setPriorityRegistry(PriorityRegistry.address)).wait();
+    await (await CjpyOS.addYamato(Yamato.address)).wait();
+    await (await CJPY.setCurrencyOS(CjpyOS.address)).wait();
+  });
 
   describe("borrow()", function () {
     it(`should mint CJPY`, async function () {
-        const PRICE = await PriceFeed.lastGoodPrice()
+      const PRICE = await PriceFeed.lastGoodPrice();
 
-        const MCR = BigNumber.from(110)
-        const toCollateralize = 1;
-        const toBorrow = PRICE.mul(toCollateralize).mul(100).div(MCR).div(1e18+"");
-        await Yamato.deposit({ value: toERC20(toCollateralize + "") });
+      const MCR = BigNumber.from(110);
+      const toCollateralize = 1;
+      const toBorrow = PRICE.mul(toCollateralize)
+        .mul(100)
+        .div(MCR)
+        .div(1e18 + "");
+      await Yamato.deposit({ value: toERC20(toCollateralize + "") });
 
+      const totalSupplyBefore = await CJPY.totalSupply();
+      await Yamato.borrow(toERC20(toBorrow + ""));
+      const totalSupplyAfter = await CJPY.totalSupply();
 
+      expect(totalSupplyAfter).to.be.gt(totalSupplyBefore);
 
-        const totalSupplyBefore = await CJPY.totalSupply();
-        await Yamato.borrow(toERC20(toBorrow + ""));
-        const totalSupplyAfter = await CJPY.totalSupply();
+      const eoaBalance = await CJPY.balanceOf(await accounts[0].getAddress());
+      expect(eoaBalance).to.be.gt(0);
 
-        expect(totalSupplyAfter).to.be.gt(totalSupplyBefore)
+      const caBalance = await CJPY.balanceOf(Pool.address);
+      expect(caBalance).to.be.gt(0);
 
-        const eoaBalance = await CJPY.balanceOf(await accounts[0].getAddress());
-        expect(eoaBalance).to.be.gt(0)
-
-        const caBalance = await CJPY.balanceOf(Pool.address);
-        expect(caBalance).to.be.gt(0)
-
-        expect(eoaBalance.add(caBalance)).to.eq(toBorrow.mul(1e18+""))
-
+      expect(eoaBalance.add(caBalance)).to.eq(toBorrow.mul(1e18 + ""));
     });
   });
 });
-

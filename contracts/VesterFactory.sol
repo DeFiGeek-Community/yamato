@@ -9,7 +9,5 @@ pragma solidity 0.8.4;
 import "./Vester.sol";
 
 contract VesterFactory {
-    constructor(){
-        
-    }
+    constructor() {}
 }

@@ -11,7 +11,6 @@ pragma solidity 0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 
-
 /**
  * @author 0xMotoko
  * @title veYMT Token
@@ -35,11 +34,11 @@ interface IveYMT {
 contract veYMT is IveYMT {
     string name;
     string symbol;
+
     constructor() {
         name = "Voting-escrow Yamato";
         symbol = "veYMT";
     }
-
 
     function mintableInTimeframe(uint256 _start, uint256 _end)
         public

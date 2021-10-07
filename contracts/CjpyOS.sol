@@ -24,7 +24,9 @@ interface ICjpyOS {
 contract CjpyOS is ICjpyOS, CurrencyOS {
     using SafeMath for uint256;
 
-    constructor(address cjpyAddr, address feedAddr) CurrencyOS(cjpyAddr, feedAddr) {}
+    constructor(address cjpyAddr, address feedAddr)
+        CurrencyOS(cjpyAddr, feedAddr)
+    {}
 
     function mintCJPY(address to, uint256 amount) public override onlyYamato {
         _mintCurrency(to, amount);

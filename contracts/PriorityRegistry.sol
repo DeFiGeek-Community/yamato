@@ -172,7 +172,10 @@ contract PriorityRegistry is IPriorityRegistry {
         returns (IYamato.Pledge memory)
     {
         uint256 licr = currentLICRpertenk;
-        require(pledgeLength > 0, "pledgeLength=0 :: Need to upsert at least once.");
+        require(
+            pledgeLength > 0,
+            "pledgeLength=0 :: Need to upsert at least once."
+        );
         require(licr > 0, "licr=0 :: Need to upsert at least once.");
         require(
             levelIndice[licr].length > 0,
@@ -276,12 +279,13 @@ contract PriorityRegistry is IPriorityRegistry {
             _icr == currentLICRpertenk && /* Confirm the deleted ICR is lowest  */
             pledgeLength > 1 && /* Not to scan infinitely */
             currentLICRpertenk != 0 && /* If 1st take, leave it to the logic in the bottom */
-            pledgeLength - levelIndice[0].length > levelIndice[2**256-1].length /* if only new pledges, don't traverse the list! */
+            pledgeLength - levelIndice[0].length >
+            levelIndice[2**256 - 1].length /* if only new pledges, don't traverse the list! */
         ) {
             uint256 _next = _icr + 1;
             while (
-                levelIndice[_next].length == 0 /* this level is empty! */
-                && _next < uint256(IYamato(yamato).MCR()).mul(100) /* this level is redeemable! */
+                levelIndice[_next].length == 0 && /* this level is empty! */
+                _next < uint256(IYamato(yamato).MCR()).mul(100) /* this level is redeemable! */
             ) {
                 _next++;
             } // Note: if exist or out-of-range, stop it and set that level as the LICR

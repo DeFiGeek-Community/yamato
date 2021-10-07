@@ -30,15 +30,21 @@ contract CurrencyOS {
     address ymtOSProxyAddr;
     address[] public yamatoes;
     bool isYmtOSInitialized = false;
-    constructor(address currencyAddr, address feedAddr){
+
+    constructor(address currencyAddr, address feedAddr) {
         currency = ICurrency(currencyAddr);
         _feed = feedAddr;
         governance = msg.sender;
     }
-    function setGovernanceTokens(address _ymtAddr, address _veYmtAddr) external onlyGovernance {
+
+    function setGovernanceTokens(address _ymtAddr, address _veYmtAddr)
+        external
+        onlyGovernance
+    {
         YMT = IYMT(_ymtAddr);
         veYMT = IveYMT(_veYmtAddr);
     }
+
     function addYamato(address _yamatoAddr) external onlyGovernance {
         yamatoes.push(_yamatoAddr);
         if (ymtOSProxyAddr != address(0)) {
@@ -81,8 +87,8 @@ contract CurrencyOS {
     function _mintCurrency(address to, uint256 amount) internal {
         currency.mint(to, amount);
     }
-    function _burnCurrency(address to, uint amount) internal {
+
+    function _burnCurrency(address to, uint256 amount) internal {
         currency.burn(to, amount);
     }
-
 }

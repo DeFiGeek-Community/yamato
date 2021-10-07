@@ -19,17 +19,26 @@ import "./Interfaces/IYMT.sol";
  */
 contract YMT is IYMT, ERC20Permit {
     address ymtOSProxy;
-    constructor(uint256 initialSupply, address _ymtOSProxy) ERC20Permit("Yamato") ERC20("Yamato", "YMT") {
+
+    constructor(uint256 initialSupply, address _ymtOSProxy)
+        ERC20Permit("Yamato")
+        ERC20("Yamato", "YMT")
+    {
         _mint(msg.sender, initialSupply);
         ymtOSProxy = _ymtOSProxy;
     }
 
-    modifier onlyYmtOSProxy(){
+    modifier onlyYmtOSProxy() {
         require(msg.sender == ymtOSProxy, "You are not Yamato contract.");
         _;
     }
 
-    function mint(address to, uint amount) public virtual override onlyYmtOSProxy() {
+    function mint(address to, uint256 amount)
+        public
+        virtual
+        override
+        onlyYmtOSProxy
+    {
         _mint(to, amount);
     }
 

@@ -40,14 +40,18 @@ contract YmtOSV1 is IYmtOSV1 {
     mapping(address => uint256) memScore;
     IveYMT veYMT;
     IYMT YMT;
-    uint constant CYCLE_SIZE = 100000;
+    uint256 constant CYCLE_SIZE = 100000;
 
     /*
         !!! Admin Caution !!!
         Make sure you've explicitly initialized this contract after deployment; otherwise, someone will do it for her to set am evil governer.
     */
-    function initialize(address _governance, address _YMT, address _veYMT) public onlyOnce override {
-        governance = _governance;       
+    function initialize(
+        address _governance,
+        address _YMT,
+        address _veYMT
+    ) public override onlyOnce {
+        governance = _governance;
         YMT = IYMT(_YMT);
         veYMT = IveYMT(_veYMT);
     }

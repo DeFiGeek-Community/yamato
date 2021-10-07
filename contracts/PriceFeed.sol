@@ -722,7 +722,14 @@ contract PriceFeed is Ownable, BaseMath, IPriceFeed {
         chainlinkResponse.decimals = uint8(TARGET_DIGITS);
         chainlinkResponse.answer = int256(
             uint256(ethChainlinkResponseInUSD.answer)
-                .mul(pow(10, TARGET_DIGITS - ethChainlinkResponseInUSD.decimals + jpyChainlinkResponseInUSD.decimals))
+                .mul(
+                    pow(
+                        10,
+                        TARGET_DIGITS -
+                            ethChainlinkResponseInUSD.decimals +
+                            jpyChainlinkResponseInUSD.decimals
+                    )
+                )
                 .div(uint256(jpyChainlinkResponseInUSD.answer))
         );
         chainlinkResponse.timestamp = ethChainlinkResponseInUSD.timestamp;
@@ -755,8 +762,15 @@ contract PriceFeed is Ownable, BaseMath, IPriceFeed {
             prevChainlinkResponse.roundId = roundId;
             prevChainlinkResponse.answer = int256(
                 uint256(answer)
-                .mul(pow(10, TARGET_DIGITS - _currentDecimals + _jpyOracleDecimals))
-                .div(uint256(_jpyInUSD))
+                    .mul(
+                        pow(
+                            10,
+                            TARGET_DIGITS -
+                                _currentDecimals +
+                                _jpyOracleDecimals
+                        )
+                    )
+                    .div(uint256(_jpyInUSD))
             );
             prevChainlinkResponse.timestamp = timestamp;
             prevChainlinkResponse.decimals = _currentDecimals;

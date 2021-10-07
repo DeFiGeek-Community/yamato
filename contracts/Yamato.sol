@@ -20,7 +20,6 @@ import "./Dependencies/SafeMath.sol";
 import "./Interfaces/IYamato.sol";
 import "hardhat/console.sol";
 
-
 /// @title Yamato Pledge Manager Contract
 /// @author 0xMotoko
 contract Yamato is IYamato, ReentrancyGuard {
@@ -159,7 +158,9 @@ contract Yamato is IYamato, ReentrancyGuard {
             1. Ready
         */
         Pledge storage pledge = pledges[msg.sender];
-        uint256 _ICRAfter = pledge.toMem().addDebt(borrowAmountInCjpy).getICR(feed);
+        uint256 _ICRAfter = pledge.toMem().addDebt(borrowAmountInCjpy).getICR(
+            feed
+        );
         uint256 fee = (borrowAmountInCjpy * FR(_ICRAfter)) / 10000;
         uint256 returnableCJPY = borrowAmountInCjpy.sub(fee);
 
@@ -201,9 +202,7 @@ contract Yamato is IYamato, ReentrancyGuard {
         cjpyOS.mintCJPY(msg.sender, returnableCJPY); // onlyYamato
         cjpyOS.mintCJPY(address(pool), fee); // onlyYamato
 
-        if (
-            pool.redemptionReserve() / 5 <= pool.sweepReserve()
-        ) {
+        if (pool.redemptionReserve() / 5 <= pool.sweepReserve()) {
             pool.depositRedemptionReserve(fee);
         } else {
             pool.depositSweepReserve(fee);
@@ -228,7 +227,10 @@ contract Yamato is IYamato, ReentrancyGuard {
             2. Check repayability
         */
         require(cjpyAmount > 0, "You are repaying no CJPY");
-        require(pledge.debt >= cjpyAmount, "You are repaying more than you are owing.");
+        require(
+            pledge.debt >= cjpyAmount,
+            "You are repaying more than you are owing."
+        );
 
         /*
             2-1. Update pledge and the global variable
@@ -355,7 +357,10 @@ contract Yamato is IYamato, ReentrancyGuard {
                     maxRedemptionCjpyAmount,
                     jpyPerEth
                 );
-                require(sPledge.coll < _collBefore, "Expense error: This redemption failed to reduce coll.");
+                require(
+                    sPledge.coll < _collBefore,
+                    "Expense error: This redemption failed to reduce coll."
+                );
 
                 /*
                     2. Put the sludge pledge to the queue
@@ -377,16 +382,17 @@ contract Yamato is IYamato, ReentrancyGuard {
             3. Ditribute colls.
         */
 
-
         require(
             cjpyAmountStart > maxRedemptionCjpyAmount,
             "No pledges are redeemed."
         );
         // Note: This line can be the redemption execution checker
 
-
-        uint256 totalRedeemedCjpyAmount = cjpyAmountStart - maxRedemptionCjpyAmount;
-        uint256 totalRedeemedEthAmount = totalRedeemedCjpyAmount.div(jpyPerEth).mul(1e18);
+        uint256 totalRedeemedCjpyAmount = cjpyAmountStart -
+            maxRedemptionCjpyAmount;
+        uint256 totalRedeemedEthAmount = totalRedeemedCjpyAmount
+            .div(jpyPerEth)
+            .mul(1e18);
         uint256 dividendEthAmount = (totalRedeemedEthAmount * (100 - GRR)) /
             100;
         address _target = msg.sender;
@@ -610,29 +616,48 @@ contract Yamato is IYamato, ReentrancyGuard {
         override
         returns (Pledge memory)
     {
-       return pledges[_owner];
+        return pledges[_owner];
     }
 
     /// @notice Provide the data of public storage.
-    function getStates() public view returns (uint, uint, uint8, uint8, uint8, uint8) {
+    function getStates()
+        public
+        view
+        returns (
+            uint256,
+            uint256,
+            uint8,
+            uint8,
+            uint8,
+            uint8
+        )
+    {
         return (totalColl, totalDebt, MCR, RRR, SRR, GRR);
     }
 
     /// @notice Provide the data of indivisual pledge.
-    function getIndivisualStates(address owner) public view returns (
-        uint coll,
-        uint debt,
-        bool isCreated,
-        uint withdrawLock,
-        uint depositAndBorrowLock
-    ) {
+    function getIndivisualStates(address owner)
+        public
+        view
+        returns (
+            uint256 coll,
+            uint256 debt,
+            bool isCreated,
+            uint256 withdrawLock,
+            uint256 depositAndBorrowLock
+        )
+    {
         Pledge memory pledge = pledges[owner];
         withdrawLock = withdrawLocks[owner];
         depositAndBorrowLock = depositAndBorrowLocks[owner];
-        return (pledge.coll, pledge.debt, pledge.isCreated, withdrawLock, depositAndBorrowLock);
+        return (
+            pledge.coll,
+            pledge.debt,
+            pledge.isCreated,
+            withdrawLock,
+            depositAndBorrowLock
+        );
     }
-
-
 
     /*
     ==============================
@@ -647,24 +672,31 @@ contract Yamato is IYamato, ReentrancyGuard {
     function bypassUpsert(Pledge calldata _pledge) external onlyTester {
         priorityRegistry.upsert(_pledge);
     }
+
     function bypassRemove(Pledge calldata _pledge) external onlyTester {
         priorityRegistry.remove(_pledge);
     }
+
     function bypassPopRedeemable() external onlyTester {
         priorityRegistry.popRedeemable();
     }
+
     function bypassPopSweepable() external onlyTester {
         priorityRegistry.popSweepable();
     }
+
     function updateTCR() external onlyTester {
         TCR = getTCR();
     }
-    function setPriorityRegistryInTest(address _priorityRegistry) external onlyTester {
+
+    function setPriorityRegistryInTest(address _priorityRegistry)
+        external
+        onlyTester
+    {
         priorityRegistry = IPriorityRegistry(_priorityRegistry);
     }
-    function getICR(uint _coll, uint _debt) external returns (uint) {
+
+    function getICR(uint256 _coll, uint256 _debt) external returns (uint256) {
         return Pledge(_coll, _debt, true, msg.sender, 0).getICR(feed);
     }
-
-
 }

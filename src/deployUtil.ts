@@ -75,119 +75,157 @@ export function extractEmbeddedFactoryAddress(filename) {
 
 type LibraryList = "PledgeLib" | "SafeMath";
 type Options = {
-  from?: Signer|undefined;
-  signer?: Signer|undefined;
-  ABI?:any|undefined;
-  args?:Array<any>|undefined;
-  libraries?:{[key in LibraryList]?:string}|undefined;
-  log?: boolean|undefined;
+  from?: Signer | undefined;
+  signer?: Signer | undefined;
+  ABI?: any | undefined;
+  args?: Array<any> | undefined;
+  libraries?: { [key in LibraryList]?: string } | undefined;
+  log?: boolean | undefined;
   getContractFactory: any;
   deployments: DeploymentsExtension;
-  gasLimit?: number|undefined;
-  gasPrice?: number|undefined;
-  maxPriorityFeePerGas?: number|undefined;
-  maxFeePerGas?: number|undefined;
-  nonce?: number|undefined;
-  tag?: string|undefined;
-  isDependency?: boolean|undefined;
-}
+  gasLimit?: number | undefined;
+  gasPrice?: number | undefined;
+  maxPriorityFeePerGas?: number | undefined;
+  maxFeePerGas?: number | undefined;
+  nonce?: number | undefined;
+  tag?: string | undefined;
+  isDependency?: boolean | undefined;
+};
 
 export function getCurrentNetwork() {
   return process.argv[4]; // node hardhat deploy --network <network>
 }
-export function setProvider(){
-    const provider = getDefaultProvider('rinkeby', {
-        etherscan: process.env.ETHERSCAN_API_KEY,
-        infura: process.env.INFURA_API_TOKEN,
-        alchemy: process.env.ALCHEMY_API_TOKEN,
-    });
-    return singletonProvider(provider);
+export function setProvider() {
+  const provider = getDefaultProvider("rinkeby", {
+    etherscan: process.env.ETHERSCAN_API_KEY,
+    infura: process.env.INFURA_API_TOKEN,
+    alchemy: process.env.ALCHEMY_API_TOKEN,
+  });
+  return singletonProvider(provider);
 }
-export async function deploy(contractName:string, opts:Options){
-    const foundation:Signer = getFoundation();
-    const deployer:Signer = getDeployer();
+export async function deploy(contractName: string, opts: Options) {
+  const foundation: Signer = getFoundation();
+  const deployer: Signer = getDeployer();
 
-    if(!opts.from) opts.from = foundation;
-    if(!opts.signer) opts.signer = opts.from;
-    if(!opts.args) opts.args = [];
-    if(!opts.log) opts.log = true;
-    if(!opts.gasLimit) opts.gasLimit = 15000000; // Yay, after London!
-    if(!opts.gasPrice) opts.gasPrice = 20;
-    if(!opts.maxPriorityFeePerGas) opts.maxPriorityFeePerGas = 100;
-    if(!opts.maxFeePerGas) opts.maxFeePerGas = 2000;
-    if(!opts.nonce) opts.nonce = await opts.from.getTransactionCount("pending");
-    if(!opts.tag) opts.tag = "";
-    if(!opts.isDependency) opts.isDependency = false;
-    if(!opts.ABI) opts.ABI = genABI(contractName, opts.isDependency);
+  if (!opts.from) opts.from = foundation;
+  if (!opts.signer) opts.signer = opts.from;
+  if (!opts.args) opts.args = [];
+  if (!opts.log) opts.log = true;
+  if (!opts.gasLimit) opts.gasLimit = 15000000; // Yay, after London!
+  if (!opts.gasPrice) opts.gasPrice = 20;
+  if (!opts.maxPriorityFeePerGas) opts.maxPriorityFeePerGas = 100;
+  if (!opts.maxFeePerGas) opts.maxFeePerGas = 2000;
+  if (!opts.nonce) opts.nonce = await opts.from.getTransactionCount("pending");
+  if (!opts.tag) opts.tag = "";
+  if (!opts.isDependency) opts.isDependency = false;
+  if (!opts.ABI) opts.ABI = genABI(contractName, opts.isDependency);
 
-    
-    let _opt:any = {
-      signer: opts.signer
-    }
+  let _opt: any = {
+    signer: opts.signer,
+  };
 
-    if(opts.libraries) _opt.libraries = opts.libraries
+  if (opts.libraries) _opt.libraries = opts.libraries;
 
+  const _Factory = await opts.getContractFactory(contractName, _opt);
 
-    const _Factory = await opts.getContractFactory(contractName, _opt);
+  const _Contract: Contract = await _Factory.deploy(...opts.args, {
+    gasLimit: opts.gasLimit,
+    // maxPriorityFeePerGas: opts.maxPriorityFeePerGas,
+    // maxFeePerGas: opts.maxFeePerGas,
+    // nonce: opts.nonce
+  });
+  const tx = _Contract.deployTransaction;
+  console.log(`Waiting for ${contractName} deployTx...`);
+  let res = await tx.wait().catch((e) => console.trace(e.message));
+  if (!res) throw new Error(`The deployment of ${contractName} is failed.`);
 
+  writeFileSync(
+    getDeploymentAddressPathWithTag(contractName, opts.tag),
+    _Contract.address
+  );
 
-    
-    const _Contract:Contract = await _Factory.deploy(...opts.args, {
-      gasLimit: opts.gasLimit
-      // maxPriorityFeePerGas: opts.maxPriorityFeePerGas,
-      // maxFeePerGas: opts.maxFeePerGas,
-      // nonce: opts.nonce
-    });
-    const tx = _Contract.deployTransaction
-    console.log(`Waiting for ${contractName} deployTx...`);
-    let res = await tx.wait().catch(e=> console.trace(e.message) );
-    if(!res) throw new Error(`The deployment of ${contractName} is failed.`)
+  let contract: Contract = new Contract(_Contract.address, opts.ABI, provider);
 
-    
+  if (opts.log)
+    console.log(
+      `${contractName} is deployed as ${
+        _Contract.address
+      } by ${await _Contract.signer.getAddress()} on ${
+        (await provider.getNetwork()).name
+      } at ${await provider.getBlockNumber()} and nonce ${opts.nonce}`
+    );
 
-    writeFileSync(getDeploymentAddressPathWithTag(contractName, opts.tag), _Contract.address)
-    
-    let contract:Contract = new Contract(_Contract.address, opts.ABI, provider);
+  let _signedContract: Contract = contract.connect(<Signer>opts.signer);
 
-    if(opts.log) console.log(`${contractName} is deployed as ${_Contract.address} by ${await _Contract.signer.getAddress()} on ${(await provider.getNetwork()).name} at ${await provider.getBlockNumber()} and nonce ${opts.nonce}`);
-
-    let _signedContract:Contract = contract.connect(<Signer>opts.signer);
-
-    return _signedContract;
-
+  return _signedContract;
 }
-function _getDeploymentAddressPathWithTag(contractName:string, tag:string){
+function _getDeploymentAddressPathWithTag(contractName: string, tag: string) {
   return `./deployments/${getCurrentNetwork()}/${contractName}${tag}`;
 }
-export function getDeploymentAddressPath(contractName:string){
+export function getDeploymentAddressPath(contractName: string) {
   return _getDeploymentAddressPathWithTag(contractName, "");
 }
-export function getDeploymentAddressPathWithTag(contractName:string, tag:string){
+export function getDeploymentAddressPathWithTag(
+  contractName: string,
+  tag: string
+) {
   return _getDeploymentAddressPathWithTag(contractName, tag);
 }
 
-export function verifyWithEtherscan(){
-  let ChainLinkEthUsd = readFileSync(getDeploymentAddressPathWithTag('ChainLinkMock', 'EthUsd')).toString()
-  let ChainLinkJpyUsd = readFileSync(getDeploymentAddressPathWithTag('ChainLinkMock', 'JpyUsd')).toString()
-  let Tellor = readFileSync(getDeploymentAddressPath('TellorCallerMock')).toString()
-  let PriceFeed = readFileSync(getDeploymentAddressPath('PriceFeed')).toString()
-  let CJPY = readFileSync(getDeploymentAddressPath('CJPY')).toString()
-  let CjpyOS = readFileSync(getDeploymentAddressPath('CjpyOS')).toString()
-  let Yamato = readFileSync(getDeploymentAddressPath('Yamato')).toString()
-  let Pool = readFileSync(getDeploymentAddressPath('Pool')).toString()
-  let PriorityRegistry = readFileSync(getDeploymentAddressPath('PriorityRegistry')).toString()
-  let PledgeLib = readFileSync(getDeploymentAddressPath('PledgeLib')).toString()
+export function verifyWithEtherscan() {
+  let ChainLinkEthUsd = readFileSync(
+    getDeploymentAddressPathWithTag("ChainLinkMock", "EthUsd")
+  ).toString();
+  let ChainLinkJpyUsd = readFileSync(
+    getDeploymentAddressPathWithTag("ChainLinkMock", "JpyUsd")
+  ).toString();
+  let Tellor = readFileSync(
+    getDeploymentAddressPath("TellorCallerMock")
+  ).toString();
+  let PriceFeed = readFileSync(
+    getDeploymentAddressPath("PriceFeed")
+  ).toString();
+  let CJPY = readFileSync(getDeploymentAddressPath("CJPY")).toString();
+  let CjpyOS = readFileSync(getDeploymentAddressPath("CjpyOS")).toString();
+  let Yamato = readFileSync(getDeploymentAddressPath("Yamato")).toString();
+  let Pool = readFileSync(getDeploymentAddressPath("Pool")).toString();
+  let PriorityRegistry = readFileSync(
+    getDeploymentAddressPath("PriorityRegistry")
+  ).toString();
+  let PledgeLib = readFileSync(
+    getDeploymentAddressPath("PledgeLib")
+  ).toString();
 
-  execSync(`npm run verify:testnet -- --contract contracts/ChainLinkMock.sol:ChainLinkMock ${ChainLinkEthUsd} ETH/USD`)
-  execSync(`npm run verify:testnet -- --contract contracts/ChainLinkMock.sol:ChainLinkMock ${ChainLinkJpyUsd} JPY/USD`)
-  execSync(`npm run verify:testnet -- --contract contracts/TellorCallerMock.sol:TellorCallerMock ${Tellor}`)
-  execSync(`npm run verify:testnet -- --contract contracts/PriceFeed.sol:PriceFeed ${PriceFeed} ${ChainLinkEthUsd} ${ChainLinkJpyUsd} ${Tellor}`)
-  execSync(`npm run verify:testnet -- --contract contracts/CJPY.sol:CJPY ${CJPY}`)
-  execSync(`npm run verify:testnet -- --contract contracts/CjpyOS.sol:CjpyOS ${CjpyOS} ${CJPY} ${PriceFeed}`)
-  execSync(`npm run verify:testnet -- --contract contracts/Yamato.sol:Yamato ${Yamato} ${CjpyOS}`)
-  execSync(`npm run verify:testnet -- --contract contracts/Pool.sol:Pool ${Pool} ${Yamato}`)
-  execSync(`npm run verify:testnet -- --contract contracts/PriorityRegistry.sol:PriorityRegistry ${PriorityRegistry} ${Yamato}`)
-  execSync(`npm run verify:testnet -- --contract contracts/Dependencies/PledgeLib.sol:PledgeLib ${PledgeLib}`)
+  execSync(
+    `npm run verify:testnet -- --contract contracts/ChainLinkMock.sol:ChainLinkMock ${ChainLinkEthUsd} ETH/USD`
+  );
+  execSync(
+    `npm run verify:testnet -- --contract contracts/ChainLinkMock.sol:ChainLinkMock ${ChainLinkJpyUsd} JPY/USD`
+  );
+  execSync(
+    `npm run verify:testnet -- --contract contracts/TellorCallerMock.sol:TellorCallerMock ${Tellor}`
+  );
+  execSync(
+    `npm run verify:testnet -- --contract contracts/PriceFeed.sol:PriceFeed ${PriceFeed} ${ChainLinkEthUsd} ${ChainLinkJpyUsd} ${Tellor}`
+  );
+  execSync(
+    `npm run verify:testnet -- --contract contracts/CJPY.sol:CJPY ${CJPY}`
+  );
+  execSync(
+    `npm run verify:testnet -- --contract contracts/CjpyOS.sol:CjpyOS ${CjpyOS} ${CJPY} ${PriceFeed}`
+  );
+  execSync(
+    `npm run verify:testnet -- --contract contracts/Yamato.sol:Yamato ${Yamato} ${CjpyOS}`
+  );
+  execSync(
+    `npm run verify:testnet -- --contract contracts/Pool.sol:Pool ${Pool} ${Yamato}`
+  );
+  execSync(
+    `npm run verify:testnet -- --contract contracts/PriorityRegistry.sol:PriorityRegistry ${PriorityRegistry} ${Yamato}`
+  );
+  execSync(
+    `npm run verify:testnet -- --contract contracts/Dependencies/PledgeLib.sol:PledgeLib ${PledgeLib}`
+  );
 }
 
 let provider;

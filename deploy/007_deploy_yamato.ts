@@ -1,34 +1,39 @@
-import {HardhatRuntimeEnvironment} from 'hardhat/types';
-import {DeployFunction} from 'hardhat-deploy/types';
-import { deploy, setProvider, getDeploymentAddressPath } from '../src/deployUtil';
-import { readFileSync } from 'fs';
+import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { DeployFunction } from "hardhat-deploy/types";
+import {
+  deploy,
+  setProvider,
+  getDeploymentAddressPath,
+} from "../src/deployUtil";
+import { readFileSync } from "fs";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const p = await setProvider();
   const { ethers, deployments } = hre;
   const { getContractFactory } = ethers;
 
-  const _cjpyosAddr = readFileSync(getDeploymentAddressPath('CjpyOS')).toString()
+  const _cjpyosAddr = readFileSync(
+    getDeploymentAddressPath("CjpyOS")
+  ).toString();
 
-
-  await deploy('PledgeLib', {
+  await deploy("PledgeLib", {
     args: [],
     getContractFactory,
     deployments,
-    isDependency:true
-  }).catch(e=> console.trace(e.message) )
+    isDependency: true,
+  }).catch((e) => console.trace(e.message));
 
-  const PledgeLib = readFileSync(getDeploymentAddressPath('PledgeLib')).toString()
+  const PledgeLib = readFileSync(
+    getDeploymentAddressPath("PledgeLib")
+  ).toString();
   console.log(`PledgeLib: ${PledgeLib}`);
 
-
-  await deploy('Yamato', {
+  await deploy("Yamato", {
     args: [_cjpyosAddr],
     getContractFactory,
     deployments,
-    libraries: { PledgeLib }
-  }).catch(e=> console.trace(e.message) )
-
+    libraries: { PledgeLib },
+  }).catch((e) => console.trace(e.message));
 };
 export default func;
-func.tags = ['Yamato'];
+func.tags = ["Yamato"];

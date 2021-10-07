@@ -17,7 +17,5 @@ import "./Currency.sol";
  * @notice Very stable.
  */
 contract CJPY is Currency {
-
-    constructor() Currency("Convertible JPY Token","CJPY") {}
-
+    constructor() Currency("Convertible JPY Token", "CJPY") {}
 }

@@ -143,9 +143,14 @@ describe("PriceFeed", function () {
       await (await feed.fetchPrice()).wait();
       const status = await feed.status();
       const lastGoodPrice = await feed.lastGoodPrice();
-      const localPrice = BigNumber.from(cPriceAtExecInEthUsd).mul(BigNumber.from(10).pow(18 - CHAINLINK_DIGITS + CHAINLINK_DIGITS)).div(BigNumber.from(cPriceAtExecInJpyUsd*10000)).mul(10000);
+      const localPrice = BigNumber.from(cPriceAtExecInEthUsd)
+        .mul(BigNumber.from(10).pow(18 - CHAINLINK_DIGITS + CHAINLINK_DIGITS))
+        .div(BigNumber.from(cPriceAtExecInJpyUsd * 10000))
+        .mul(10000);
       expect(status).to.eq(0);
-      expect(lastGoodPrice.toString().length).to.eq(localPrice.toString().length)
+      expect(lastGoodPrice.toString().length).to.eq(
+        localPrice.toString().length
+      );
       expect(`${localPrice}`.slice(0, 6)).to.eq(`${lastGoodPrice}`.slice(0, 6));
       /*
             enum Status {
@@ -182,9 +187,9 @@ describe("PriceFeed", function () {
       const status = await feed.status();
       const lastGoodPrice = await feed.lastGoodPrice();
       expect(status).to.eq(3);
-      expect(
-        BigNumber.from(tPriceAtExecInJpyUsd).mul(1e18+"")
-      ).to.eq(lastGoodPrice);
+      expect(BigNumber.from(tPriceAtExecInJpyUsd).mul(1e18 + "")).to.eq(
+        lastGoodPrice
+      );
     });
 
     it(`returns last good price as both oracles are untrusted`, async function () {

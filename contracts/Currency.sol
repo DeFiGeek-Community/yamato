@@ -21,25 +21,35 @@ contract Currency is ERC20Permit, ICurrency {
     address currencyOS;
     address governance;
 
-    constructor(string memory name, string memory symbol) ERC20Permit(name) ERC20(name, symbol) {
+    constructor(string memory name, string memory symbol)
+        ERC20Permit(name)
+        ERC20(name, symbol)
+    {
         governance = msg.sender;
     }
 
-    modifier onlyCurrencyOS(){
+    modifier onlyCurrencyOS() {
         require(msg.sender == currencyOS, "You are not CurrencyOS contract.");
         _;
     }
 
-    function mint(address to, uint amount) public override onlyCurrencyOS() {
+    function mint(address to, uint256 amount) public override onlyCurrencyOS {
         _mint(to, amount);
     }
-    function burn(address to, uint amount) public override onlyCurrencyOS() {
+
+    function burn(address to, uint256 amount) public override onlyCurrencyOS {
         _burn(to, amount);
     }
 
-
-    function approve(address spender, uint256 amount) public override returns (bool) {
-        require(_msgSender() != spender, "sender and spender shouldn't be the same.");
+    function approve(address spender, uint256 amount)
+        public
+        override
+        returns (bool)
+    {
+        require(
+            _msgSender() != spender,
+            "sender and spender shouldn't be the same."
+        );
         require(amount > 0, "Amount is zero.");
 
         _approve(_msgSender(), spender, amount);
@@ -49,12 +59,13 @@ contract Currency is ERC20Permit, ICurrency {
     function setCurrencyOS(address _currencyOSAddr) public onlyGovernance {
         currencyOS = _currencyOSAddr;
     }
+
     function renounceGovernance() public onlyGovernance {
         governance = address(0);
     }
-    modifier onlyGovernance(){
+
+    modifier onlyGovernance() {
         require(msg.sender == governance, "You are not the governer.");
         _;
     }
-
 }

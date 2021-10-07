@@ -2,5 +2,5 @@
 pragma solidity 0.8.4;
 
 contract BaseMath {
-    uint constant public DECIMAL_PRECISION = 1e18;
+    uint256 public constant DECIMAL_PRECISION = 1e18;
 }

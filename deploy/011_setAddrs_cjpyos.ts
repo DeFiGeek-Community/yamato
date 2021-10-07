@@ -1,14 +1,16 @@
-import {HardhatRuntimeEnvironment} from 'hardhat/types';
-import {DeployFunction} from 'hardhat-deploy/types';
-import { setProvider, getDeploymentAddressPath } from '../src/deployUtil';
-import { readFileSync } from 'fs';
-import { genABI } from '../src/genABI';
-import { Contract } from 'ethers';
+import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { DeployFunction } from "hardhat-deploy/types";
+import { setProvider, getDeploymentAddressPath } from "../src/deployUtil";
+import { readFileSync } from "fs";
+import { genABI } from "../src/genABI";
+import { Contract } from "ethers";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const p = await setProvider();
 
-  const _cjpyosAddr = readFileSync(getDeploymentAddressPath('CjpyOS')).toString()
+  const _cjpyosAddr = readFileSync(
+    getDeploymentAddressPath("CjpyOS")
+  ).toString();
   const CjpyOS = new Contract(_cjpyosAddr, genABI("CjpyOS"), p);
 
   // const _ymtOSProxyAddr = readFileSync(getDeploymentAddressPath('YmtOSProxy')).toString()
@@ -19,7 +21,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   // console.log(`log: CjpyOS.setYmtOSProxy() executed.`);
   // console.log(`log: CjpyOS.setGovernanceTokens() executed.`);
-
 };
 export default func;
-func.tags = [''];
+func.tags = [""];
