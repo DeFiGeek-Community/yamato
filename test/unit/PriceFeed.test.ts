@@ -37,9 +37,9 @@ type MockConf = {
   price: PriceType;
   silentFor: SilenceType;
 };
+const CHAINLINK_DIGITS = 8;
+const TELLOR_DIGITS = 6;
 async function setMocks(conf: MockConf) {
-  const CHAINLINK_DIGITS = 8;
-  const TELLOR_DIGITS = 6;
   let cPriceEthInUsd = BigNumber.from(conf.price.chainlink.ethInUsd).mul(
     BigNumber.from(10).pow(CHAINLINK_DIGITS)
   );
@@ -123,7 +123,7 @@ describe("PriceFeed", function () {
   });
 
   describe("fetchPrice()", function () {
-    it(`succeeds to get price from ChainLink`, async function () {
+    it(`succeeds to get dec18 price from ChainLink`, async function () {
       let cPriceAtExecInEthUsd = 3201;
       let cPriceAtExecInJpyUsd = 0.0091;
       let tPriceAtExecInJpyUsd = 351649;
@@ -143,10 +143,15 @@ describe("PriceFeed", function () {
       await (await feed.fetchPrice()).wait();
       const status = await feed.status();
       const lastGoodPrice = await feed.lastGoodPrice();
-      expect(
-        Math.floor(cPriceAtExecInEthUsd / cPriceAtExecInJpyUsd).toString()
-      ).to.eq(`${lastGoodPrice}`.substr(0, 6));
+      const localPrice = BigNumber.from(cPriceAtExecInEthUsd)
+        .mul(BigNumber.from(10).pow(18 - CHAINLINK_DIGITS + CHAINLINK_DIGITS))
+        .div(BigNumber.from(cPriceAtExecInJpyUsd * 10000))
+        .mul(10000);
       expect(status).to.eq(0);
+      expect(lastGoodPrice.toString().length).to.eq(
+        localPrice.toString().length
+      );
+      expect(`${localPrice}`.slice(0, 6)).to.eq(`${lastGoodPrice}`.slice(0, 6));
       /*
             enum Status {
                 chainlinkWorking,
@@ -182,9 +187,9 @@ describe("PriceFeed", function () {
       const status = await feed.status();
       const lastGoodPrice = await feed.lastGoodPrice();
       expect(status).to.eq(3);
-      expect(
-        BigNumber.from(tPriceAtExecInJpyUsd).mul(BigNumber.from(10).pow(18))
-      ).to.eq(lastGoodPrice);
+      expect(BigNumber.from(tPriceAtExecInJpyUsd).mul(1e18 + "")).to.eq(
+        lastGoodPrice
+      );
     });
 
     it(`returns last good price as both oracles are untrusted`, async function () {

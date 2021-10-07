@@ -1,4 +1,4 @@
-pragma solidity 0.7.6;
+pragma solidity 0.8.4;
 
 /*
  * SPDX-License-Identifier: GPL-3.0-or-later
@@ -12,8 +12,8 @@ pragma solidity 0.7.6;
 import "./Interfaces/IPriceFeed.sol";
 import "./Interfaces/ITellorCaller.sol";
 import "./Dependencies/AggregatorV3Interface.sol";
-// import "./Dependencies/SafeMath.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "./Dependencies/SafeMath.sol";
+// import "@openzeppelin/contracts/math/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/BaseMath.sol";
 import "./Dependencies/LiquityMath.sol";
@@ -44,6 +44,8 @@ contract PriceFeed is Ownable, BaseMath, IPriceFeed {
 
     // Use to convert a price answer to an 18-digit precision uint
     uint256 public constant TARGET_DIGITS = 18;
+    uint8 constant ETHUSD_DIGITS = 8;
+    uint8 constant USDJPY_DIGITS = 8;
     uint256 public constant TELLOR_DIGITS = 6;
 
     // Maximum time period allowed since Chainlink's latest round data timestamp, beyond which Chainlink is considered frozen.
@@ -114,7 +116,7 @@ contract PriceFeed is Ownable, BaseMath, IPriceFeed {
         ChainlinkResponse
             memory prevChainlinkResponse = _getPrevChainlinkResponse(
                 chainlinkResponse.roundId,
-                chainlinkResponse.decimals,
+                ETHUSD_DIGITS,
                 chainlinkResponse.subAnswer,
                 chainlinkResponse.subDecimal
             );
@@ -151,7 +153,7 @@ contract PriceFeed is Ownable, BaseMath, IPriceFeed {
         ChainlinkResponse
             memory prevChainlinkResponse = _getPrevChainlinkResponse(
                 chainlinkResponse.roundId,
-                chainlinkResponse.decimals,
+                ETHUSD_DIGITS,
                 chainlinkResponse.subAnswer,
                 chainlinkResponse.subDecimal
             );
@@ -717,9 +719,17 @@ contract PriceFeed is Ownable, BaseMath, IPriceFeed {
         }
 
         chainlinkResponse.roundId = ethChainlinkResponseInUSD.roundId;
+        chainlinkResponse.decimals = uint8(TARGET_DIGITS);
         chainlinkResponse.answer = int256(
             uint256(ethChainlinkResponseInUSD.answer)
-                .mul(pow(10, jpyChainlinkResponseInUSD.decimals))
+                .mul(
+                    pow(
+                        10,
+                        TARGET_DIGITS -
+                            ethChainlinkResponseInUSD.decimals +
+                            jpyChainlinkResponseInUSD.decimals
+                    )
+                )
                 .div(uint256(jpyChainlinkResponseInUSD.answer))
         );
         chainlinkResponse.timestamp = ethChainlinkResponseInUSD.timestamp;
@@ -751,9 +761,16 @@ contract PriceFeed is Ownable, BaseMath, IPriceFeed {
             // If call to Chainlink succeeds, return the response and success = true
             prevChainlinkResponse.roundId = roundId;
             prevChainlinkResponse.answer = int256(
-                uint256(answer).mul(pow(10, uint256(_jpyOracleDecimals))).div(
-                    uint256(_jpyInUSD)
-                )
+                uint256(answer)
+                    .mul(
+                        pow(
+                            10,
+                            TARGET_DIGITS -
+                                _currentDecimals +
+                                _jpyOracleDecimals
+                        )
+                    )
+                    .div(uint256(_jpyInUSD))
             );
             prevChainlinkResponse.timestamp = timestamp;
             prevChainlinkResponse.decimals = _currentDecimals;

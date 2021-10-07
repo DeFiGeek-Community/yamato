@@ -23,7 +23,7 @@ describe("contract PriorityRegistry", function () {
   let priorityRegistry;
   let accounts: Signer[];
   let address0: string;
-  const PRICE = 300000;
+  const PRICE = BigNumber.from(300000).mul(1e18 + "");
 
   beforeEach(async () => {
     accounts = await ethers.getSigners();
@@ -71,7 +71,7 @@ describe("contract PriorityRegistry", function () {
 
     mockFeed.fetchPrice.returns(PRICE);
     mockCjpyOS.feed.returns(mockFeed.address);
-    mockYamato.getFeed.returns(mockFeed.address);
+    mockYamato.feed.returns(mockFeed.address);
 
     /*
         For unit tests
@@ -152,7 +152,7 @@ describe("contract PriorityRegistry", function () {
 
       const _pledge = [
         BigNumber.from("100000000000000000"),
-        BigNumber.from("30000100000000000000000"),
+        BigNumber.from("0"),
         true,
         address0,
         0,
@@ -169,8 +169,12 @@ describe("contract PriorityRegistry", function () {
 
       const _collBefore = BigNumber.from("100000000000000000");
       const _debtBefore = BigNumber.from("30000100000000000000000");
-      const _ICRDefault = BigNumber.from("0");
-      const _ICRBefore = _collBefore.mul(PRICE).mul(10000).div(_debtBefore);
+      const _ICRDefault = BigNumber.from("1");
+      const _ICRBefore = _collBefore
+        .mul(PRICE)
+        .mul(10000)
+        .div(_debtBefore)
+        .div(1e18 + "");
       expect(_ICRBefore).to.eq("9999");
       const _pledgeBefore = [
         _collBefore,
@@ -313,25 +317,28 @@ describe("contract PriorityRegistry", function () {
     });
     it(`fails to run in the all-sludge state`, async function () {
       await expect(yamato.bypassPopRedeemable()).to.be.revertedWith(
-        "Need to upsert at least once."
+        "pledgeLength=0 :: Need to upsert at least once."
       );
     });
-    it(`fails to fetch the zero pledge`, async function () {
+    it(`fails to pop the zero pledge because it isn't redeemable.`, async function () {
       const _owner1 = address0;
       const _coll1 = BigNumber.from("0");
       const _debt1 = BigNumber.from("300001000000000000000000");
       const _inputPledge1 = [_coll1, _debt1, true, _owner1, 0];
       await (await yamato.bypassUpsert(_inputPledge1)).wait();
 
-      // TODO: ???
-      // await expect( yamato.bypassPopRedeemable() ).toBeReverted()
+      expect(await priorityRegistry.pledgeLength()).to.eq(1);
+
+      await expect(yamato.bypassPopRedeemable()).to.be.revertedWith(
+        "licr=0 :: Need to upsert at least once."
+      );
     });
 
     it(`succeeds to fetch even by account 3`, async function () {
       const _owner1 = await accounts[3].getAddress();
       const _coll1 = BigNumber.from("1000000000000000000");
       const _debt1 = BigNumber.from("300001000000000000000000");
-      const _inputPledge1 = [_coll1, _debt1, true, _owner1, 0];
+      const _inputPledge1 = [_coll1, _debt1, true, _owner1, 1];
 
       await (await yamato.bypassUpsert(_inputPledge1)).wait();
 
@@ -344,32 +351,28 @@ describe("contract PriorityRegistry", function () {
     });
 
     describe("Context of lastUpsertedTimeICRpertenk", function () {
-      it(`succeeds to get the lowest pledge with lastUpsertedTimeICRpertenk=0`, async function () {
+      it(`fails to get the lowest pledge with coll>0 debt>0 lastUpsertedTimeICRpertenk=0`, async function () {
         const _owner1 = address0;
         const _coll1 = BigNumber.from("1000000000000000000");
         const _debt1 = BigNumber.from("300001000000000000000000");
-        const _owner2 = await accounts[1].getAddress();
-        const _coll2 = BigNumber.from("2000000000000000000");
-        const _debt2 = BigNumber.from("300001000000000000000000");
         const _inputPledge1 = [_coll1, _debt1, true, _owner1, 0];
-        const _inputPledge2 = [_coll2, _debt2, true, _owner2, 0];
+
+        await expect(yamato.bypassUpsert(_inputPledge1)).to.be.revertedWith(
+          "Upsert Error: Such a pledge can't exist!"
+        );
+      });
+
+      it(`fails to get the lowest but MAX_INT pledge \(=new pledge / coll>0 debt=0 lastUpsertedTimeICRpertenk=0\)`, async function () {
+        const _owner1 = address0;
+        const _coll1 = BigNumber.from("1000000000000000000");
+        const _debt1 = BigNumber.from("0");
+        const _inputPledge1 = [_coll1, _debt1, true, _owner1, 0];
 
         await (await yamato.bypassUpsert(_inputPledge1)).wait();
-        await (await yamato.bypassUpsert(_inputPledge2)).wait();
 
-        const nextRedeemableBefore = await priorityRegistry.nextRedeemable();
-        await (await yamato.bypassPopRedeemable()).wait();
-        const nextRedeemableAfter = await priorityRegistry.nextRedeemable();
-
-        expect(nextRedeemableBefore.coll).to.eq(_coll1);
-        expect(nextRedeemableBefore.debt).to.eq(_debt1);
-        expect(nextRedeemableBefore.owner).to.eq(_owner1);
-        expect(
-          nextRedeemableAfter.coll
-            .mul(PRICE)
-            .mul(100)
-            .div(nextRedeemableAfter.debt)
-        ).to.gte(await yamato.MCR());
+        await expect(yamato.bypassPopRedeemable()).to.be.revertedWith(
+          "You can't redeem if redeemable candidate is more than MCR."
+        );
       });
       it(`succeeds to get the lowest pledge with lastUpsertedTimeICRpertenk\>0`, async function () {
         const _owner1 = address0;
@@ -380,8 +383,8 @@ describe("contract PriorityRegistry", function () {
         const _debt2 = BigNumber.from("300001000000000000000000");
         const _debt3 = _debt1.add("30001000000000000000000");
         const _debt4 = _debt2.add("30002000000000000000000");
-        const _inputPledge1 = [_coll1, _debt1, true, _owner1, 0];
-        const _inputPledge2 = [_coll2, _debt2, true, _owner2, 0];
+        const _inputPledge1 = [_coll1, _debt1, true, _owner1, 1];
+        const _inputPledge2 = [_coll2, _debt2, true, _owner2, 1];
         const _inputPledge3 = [_coll1, _debt3, true, _owner1, 9999];
         const _inputPledge4 = [_coll2, _debt4, true, _owner2, 19999];
 

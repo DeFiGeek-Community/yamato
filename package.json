@@ -25,18 +25,16 @@
     "verify:testnet": "hardhat verify --network rinkeby"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "v3.4.0-rc.0",
+    "@openzeppelin/contracts": "v4.3.0-rc.0",
     "child-process-promise": "^2.2.1",
     "ethers": "^5.4.5",
     "openzeppelin-solidity": "^4.1.0",
-    "optimism": "0xMotoko/optimism#hotfix/hardhat-v2.4.x",
     "prb-math": "^2.2.0",
     "prettier": "^2.4.1",
     "prettier-plugin-solidity": "^1.0.0-beta.18"
   },
   "devDependencies": {
     "@defi-wonderland/smock": "^2.0.7",
-    "@eth-optimism/core-utils": "^0.5.3",
     "@nomiclabs/ethereumjs-vm": "^4.2.2",
     "@nomiclabs/hardhat-ethers": "^2.0.2",
     "@nomiclabs/hardhat-etherscan": "^2.1.5",
@@ -59,8 +57,10 @@
     "ethereum-waffle": "^3.4.0",
     "hardhat": "^2.4.3",
     "hardhat-abi-exporter": "^2.2.1",
+    "hardhat-contract-sizer": "^2.1.1",
     "hardhat-deploy": "^0.9.0",
     "hardhat-deploy-ethers": "0xMotoko/hardhat-deploy-ethers#main",
+    "hardhat-gas-reporter": "^1.0.4",
     "hardhat-tracer": "^1.0.0-alpha.6",
     "jasmine": "^3.7.0",
     "solc": "^0.8.4",

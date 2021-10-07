@@ -73,12 +73,13 @@ export function extractEmbeddedFactoryAddress(filename) {
   return `0x${group[1]}`;
 }
 
+type LibraryList = "PledgeLib" | "SafeMath";
 type Options = {
   from?: Signer | undefined;
   signer?: Signer | undefined;
   ABI?: any | undefined;
   args?: Array<any> | undefined;
-  linkings?: Array<string> | undefined;
+  libraries?: { [key in LibraryList]?: string } | undefined;
   log?: boolean | undefined;
   getContractFactory: any;
   deployments: DeploymentsExtension;
@@ -88,6 +89,7 @@ type Options = {
   maxFeePerGas?: number | undefined;
   nonce?: number | undefined;
   tag?: string | undefined;
+  isDependency?: boolean | undefined;
 };
 
 export function getCurrentNetwork() {
@@ -107,9 +109,7 @@ export async function deploy(contractName: string, opts: Options) {
 
   if (!opts.from) opts.from = foundation;
   if (!opts.signer) opts.signer = opts.from;
-  if (!opts.ABI) opts.ABI = genABI(contractName);
   if (!opts.args) opts.args = [];
-  if (!opts.linkings) opts.linkings = [];
   if (!opts.log) opts.log = true;
   if (!opts.gasLimit) opts.gasLimit = 15000000; // Yay, after London!
   if (!opts.gasPrice) opts.gasPrice = 20;
@@ -117,15 +117,21 @@ export async function deploy(contractName: string, opts: Options) {
   if (!opts.maxFeePerGas) opts.maxFeePerGas = 2000;
   if (!opts.nonce) opts.nonce = await opts.from.getTransactionCount("pending");
   if (!opts.tag) opts.tag = "";
+  if (!opts.isDependency) opts.isDependency = false;
+  if (!opts.ABI) opts.ABI = genABI(contractName, opts.isDependency);
 
-  const _Factory = await opts.getContractFactory(contractName, {
+  let _opt: any = {
     signer: opts.signer,
-  });
+  };
+
+  if (opts.libraries) _opt.libraries = opts.libraries;
+
+  const _Factory = await opts.getContractFactory(contractName, _opt);
 
   const _Contract: Contract = await _Factory.deploy(...opts.args, {
     gasLimit: opts.gasLimit,
     // maxPriorityFeePerGas: opts.maxPriorityFeePerGas,
-    //  maxFeePerGas: opts.maxFeePerGas,
+    // maxFeePerGas: opts.maxFeePerGas,
     // nonce: opts.nonce
   });
   const tx = _Contract.deployTransaction;
@@ -134,7 +140,7 @@ export async function deploy(contractName: string, opts: Options) {
   if (!res) throw new Error(`The deployment of ${contractName} is failed.`);
 
   writeFileSync(
-    getDeploymentAddressPath(contractName, opts.tag),
+    getDeploymentAddressPathWithTag(contractName, opts.tag),
     _Contract.address
   );
 
@@ -153,22 +159,43 @@ export async function deploy(contractName: string, opts: Options) {
 
   return _signedContract;
 }
-export function getDeploymentAddressPath(contractName, tag) {
+function _getDeploymentAddressPathWithTag(contractName: string, tag: string) {
   return `./deployments/${getCurrentNetwork()}/${contractName}${tag}`;
 }
+export function getDeploymentAddressPath(contractName: string) {
+  return _getDeploymentAddressPathWithTag(contractName, "");
+}
+export function getDeploymentAddressPathWithTag(
+  contractName: string,
+  tag: string
+) {
+  return _getDeploymentAddressPathWithTag(contractName, tag);
+}
+
 export function verifyWithEtherscan() {
   let ChainLinkEthUsd = readFileSync(
-    getDeploymentAddressPath("ChainLinkMock", "EthUsd")
+    getDeploymentAddressPathWithTag("ChainLinkMock", "EthUsd")
   ).toString();
   let ChainLinkJpyUsd = readFileSync(
-    getDeploymentAddressPath("ChainLinkMock", "JpyUsd")
+    getDeploymentAddressPathWithTag("ChainLinkMock", "JpyUsd")
   ).toString();
   let Tellor = readFileSync(
-    getDeploymentAddressPath("TellorCallerMock", "")
+    getDeploymentAddressPath("TellorCallerMock")
   ).toString();
   let PriceFeed = readFileSync(
-    getDeploymentAddressPath("PriceFeed", "")
+    getDeploymentAddressPath("PriceFeed")
   ).toString();
+  let CJPY = readFileSync(getDeploymentAddressPath("CJPY")).toString();
+  let CjpyOS = readFileSync(getDeploymentAddressPath("CjpyOS")).toString();
+  let Yamato = readFileSync(getDeploymentAddressPath("Yamato")).toString();
+  let Pool = readFileSync(getDeploymentAddressPath("Pool")).toString();
+  let PriorityRegistry = readFileSync(
+    getDeploymentAddressPath("PriorityRegistry")
+  ).toString();
+  let PledgeLib = readFileSync(
+    getDeploymentAddressPath("PledgeLib")
+  ).toString();
+
   execSync(
     `npm run verify:testnet -- --contract contracts/ChainLinkMock.sol:ChainLinkMock ${ChainLinkEthUsd} ETH/USD`
   );
@@ -180,6 +207,24 @@ export function verifyWithEtherscan() {
   );
   execSync(
     `npm run verify:testnet -- --contract contracts/PriceFeed.sol:PriceFeed ${PriceFeed} ${ChainLinkEthUsd} ${ChainLinkJpyUsd} ${Tellor}`
+  );
+  execSync(
+    `npm run verify:testnet -- --contract contracts/CJPY.sol:CJPY ${CJPY}`
+  );
+  execSync(
+    `npm run verify:testnet -- --contract contracts/CjpyOS.sol:CjpyOS ${CjpyOS} ${CJPY} ${PriceFeed}`
+  );
+  execSync(
+    `npm run verify:testnet -- --contract contracts/Yamato.sol:Yamato ${Yamato} ${CjpyOS}`
+  );
+  execSync(
+    `npm run verify:testnet -- --contract contracts/Pool.sol:Pool ${Pool} ${Yamato}`
+  );
+  execSync(
+    `npm run verify:testnet -- --contract contracts/PriorityRegistry.sol:PriorityRegistry ${PriorityRegistry} ${Yamato}`
+  );
+  execSync(
+    `npm run verify:testnet -- --contract contracts/Dependencies/PledgeLib.sol:PledgeLib ${PledgeLib}`
   );
 }
 

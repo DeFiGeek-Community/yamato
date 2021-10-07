@@ -1,5 +1,4 @@
-pragma solidity 0.7.6;
-pragma abicoder v2;
+pragma solidity 0.8.4;
 
 /*
  * SPDX-License-Identifier: GPL-3.0-or-later
@@ -11,7 +10,7 @@ pragma abicoder v2;
 //solhint-disable no-inline-assembly
 import "./Yamato.sol";
 import "./Dependencies/PledgeLib.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "./Dependencies/SafeMath.sol";
 import "hardhat/console.sol";
 
 interface IPriorityRegistry {
@@ -76,6 +75,12 @@ contract PriorityRegistry is IPriorityRegistry {
                 _pledge.lastUpsertedTimeICRpertenk != 0),
             "Upsert Error: The logless zero pledge cannot be upserted. It should be removed."
         );
+        require(
+            !(_pledge.coll > 0 &&
+                _pledge.debt > 0 &&
+                _pledge.lastUpsertedTimeICRpertenk == 0),
+            "Upsert Error: Such a pledge can't exist!"
+        );
         uint256 _oldICRpertenk = _pledge.lastUpsertedTimeICRpertenk;
 
         /*
@@ -90,12 +95,12 @@ contract PriorityRegistry is IPriorityRegistry {
             _deletePledge(_pledge);
         }
 
-        _tryLICRBackwardUpdate(_oldICRpertenk);
+        _traverseToNextLICR(_oldICRpertenk);
 
         /* 
             2. insert new pledge
         */
-        _newICRpertenk = _pledge.getICR(IYamato(yamato).getFeed());
+        _newICRpertenk = _pledge.getICR(IYamato(yamato).feed());
 
         _pledge.lastUpsertedTimeICRpertenk = _newICRpertenk;
 
@@ -167,8 +172,11 @@ contract PriorityRegistry is IPriorityRegistry {
         returns (IYamato.Pledge memory)
     {
         uint256 licr = currentLICRpertenk;
-        require(licr > 0, "Need to upsert at least once.");
-        require(pledgeLength > 0, "Need to upsert at least once.");
+        require(
+            pledgeLength > 0,
+            "pledgeLength=0 :: Need to upsert at least once."
+        );
+        require(licr > 0, "licr=0 :: Need to upsert at least once.");
         require(
             levelIndice[licr].length > 0,
             "The current lowest ICR data is inconsistent with actual sorted pledges."
@@ -191,13 +199,14 @@ contract PriorityRegistry is IPriorityRegistry {
 
         // Note: Don't check LICR, real ICR is the matter.
         require(
-            leveledPledges[licr][_addr].getICR(IYamato(yamato).getFeed()) <
+            leveledPledges[licr][_addr].getICR(IYamato(yamato).feed()) <
                 uint256(IYamato(yamato).MCR()).mul(100),
             "You can't redeem if redeemable candidate is more than MCR."
         );
 
         // Note: popped array and pledge must be deleted
-        _tryLICRBackwardUpdate(
+        // Note: Traversing to the ICR=MAX_UINT256-ish pledges are validated, don't worry.
+        _traverseToNextLICR(
             leveledPledges[licr][_addr].lastUpsertedTimeICRpertenk
         );
 
@@ -263,18 +272,23 @@ contract PriorityRegistry is IPriorityRegistry {
         }
     }
 
-    function _tryLICRBackwardUpdate(uint256 _icr) internal {
-        // Note: The _oldICRpertenk is currentLICRpertenk and that ICR-column has just nullified now.
+    function _traverseToNextLICR(uint256 _icr) internal {
+        // Note: The _oldICRpertenk == currentLICRpertenk now, and that former LICR-level has just been nullified. New licr is needed.
         if (
             levelIndice[_icr].length == 0 && /* Confirm the level is nullified */
             _icr == currentLICRpertenk && /* Confirm the deleted ICR is lowest  */
             pledgeLength > 1 && /* Not to scan infinitely */
-            currentLICRpertenk != 0 /* If 1st take, leave it to the logic in the bottom */
+            currentLICRpertenk != 0 && /* If 1st take, leave it to the logic in the bottom */
+            pledgeLength - levelIndice[0].length >
+            levelIndice[2**256 - 1].length /* if only new pledges, don't traverse the list! */
         ) {
             uint256 _next = _icr + 1;
-            while (levelIndice[_next].length == 0) {
+            while (
+                levelIndice[_next].length == 0 && /* this level is empty! */
+                _next < uint256(IYamato(yamato).MCR()).mul(100) /* this level is redeemable! */
+            ) {
                 _next++;
-            } // Note: if exist, stop
+            } // Note: if exist or out-of-range, stop it and set that level as the LICR
             currentLICRpertenk = _next;
         }
     }

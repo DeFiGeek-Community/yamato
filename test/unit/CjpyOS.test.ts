@@ -30,22 +30,18 @@ describe("CjpyOS", () => {
     ownerAddress = await accounts[0].getAddress();
     userAddress = await accounts[1].getAddress();
     mockCJPY = await smock.fake<CJPY>("CJPY");
-    mockYMT = await smock.fake<YMT>("YMT");
-    mockVeYMT = await smock.fake<VeYMT>("veYMT");
     mockFeed = await smock.fake<PriceFeed>("PriceFeed");
 
     cjpyOS = await (<CjpyOS__factory>(
       await ethers.getContractFactory("CjpyOS")
     )).deploy(
       mockCJPY.address,
-      mockYMT.address,
-      mockVeYMT.address,
       mockFeed.address
       // governance=deployer
     );
 
     mockCJPY.mint.returns(0);
-    mockCJPY.burnFrom.returns(0);
+    mockCJPY.burn.returns(0);
   });
 
   describe("addYamato()", function () {
@@ -87,7 +83,7 @@ describe("CjpyOS", () => {
     it(`succeeds to burn CJPY`, async function () {
       await cjpyOS.addYamato(ownerAddress); // onlyGovernance
       await cjpyOS.burnCJPY(ownerAddress, 10000); // onlyYamato
-      expect(mockCJPY.burnFrom).to.be.calledOnce;
+      expect(mockCJPY.burn).to.be.calledOnce;
     });
   });
 });

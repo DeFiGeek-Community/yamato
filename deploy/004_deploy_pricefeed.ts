@@ -1,39 +1,29 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
-import { parseEther } from "ethers/lib/utils";
 import { readFileSync } from "fs";
 import {
   deploy,
-  goToEmbededMode,
-  hardcodeFactoryAddress,
-  singletonProvider,
   getFoundation,
-  getDeployer,
-  extractEmbeddedFactoryAddress,
-  recoverFactoryAddress,
   setProvider,
-  isInitMode,
-  isEmbeddedMode,
-  backToInitMode,
-  sleep,
   getDeploymentAddressPath,
+  getDeploymentAddressPathWithTag,
 } from "../src/deployUtil";
 import { genABI } from "../src/genABI";
-import { Wallet, Contract } from "ethers";
+import { Contract } from "ethers";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const p = await setProvider();
   const { ethers, deployments } = hre;
-  const { getContractFactory, BigNumber, Signer, getSigners } = ethers;
+  const { getContractFactory } = ethers;
 
   const ChainLinkEthUsd = readFileSync(
-    getDeploymentAddressPath("ChainLinkMock", "EthUsd")
+    getDeploymentAddressPathWithTag("ChainLinkMock", "EthUsd")
   ).toString();
   const ChainLinkJpyUsd = readFileSync(
-    getDeploymentAddressPath("ChainLinkMock", "JpyUsd")
+    getDeploymentAddressPathWithTag("ChainLinkMock", "JpyUsd")
   ).toString();
   const TellorEthJpy = readFileSync(
-    getDeploymentAddressPath("TellorCallerMock", "")
+    getDeploymentAddressPath("TellorCallerMock")
   ).toString();
 
   const chainlinkEthUsd = new Contract(
@@ -48,13 +38,27 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   );
 
   await (
-    await chainlinkEthUsd.connect(getFoundation()).latestRoundData()
+    await chainlinkEthUsd
+      .connect(getFoundation())
+      .simulatePriceMove({ gasLimit: 200000 })
   ).wait();
   await (
-    await chainlinkJpyUsd.connect(getFoundation()).latestRoundData()
+    await chainlinkJpyUsd
+      .connect(getFoundation())
+      .simulatePriceMove({ gasLimit: 200000 })
+  ).wait();
+  await (
+    await chainlinkEthUsd
+      .connect(getFoundation())
+      .simulatePriceMove({ gasLimit: 200000 })
+  ).wait();
+  await (
+    await chainlinkJpyUsd
+      .connect(getFoundation())
+      .simulatePriceMove({ gasLimit: 200000 })
   ).wait();
 
-  const feed = await deploy("PriceFeed", {
+  await deploy("PriceFeed", {
     args: [ChainLinkEthUsd, ChainLinkJpyUsd, TellorEthJpy],
     getContractFactory,
     deployments,
