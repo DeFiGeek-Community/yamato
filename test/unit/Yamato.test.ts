@@ -322,7 +322,7 @@ describe("contract Yamato", function () {
       );
 
       expect(pledgeBefore.coll.toString()).to.eq("1000000000000000000");
-      expect(pledgeBefore.debt.toString()).to.eq("236363000000000000000000");
+      expect(pledgeBefore.debt.toString()).to.eq(toERC20(toBorrow + ""));
 
       await yamato.repay(toERC20(toBorrow + ""));
 
@@ -395,7 +395,7 @@ describe("contract Yamato", function () {
       await yamato.deposit({ value: toERC20(toCollateralize + "") });
       await yamato.borrow(toERC20(toBorrow + ""));
       await expect(yamato.repay(toERC20(0 + ""))).to.revertedWith(
-        "cjpyAmount is zero"
+        "You are repaying no CJPY"
       );
     });
     it(`fails for no-debt pledge`, async function () {
@@ -404,7 +404,7 @@ describe("contract Yamato", function () {
       const toBorrow = PRICE.mul(toCollateralize).mul(100).div(MCR).div(1e18+"");
       await yamato.deposit({ value: toERC20(toCollateralize + "") });
       await expect(yamato.repay(toERC20(toBorrow + ""))).to.revertedWith(
-        "pledge.debt is zero"
+        "You are repaying more than you are owing."
       );
     });
 

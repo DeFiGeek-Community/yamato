@@ -11,6 +11,7 @@ pragma solidity 0.8.4;
 import "./CurrencyOS.sol";
 // import "@openzeppelin/contracts/math/SafeMath.sol";
 import "./Dependencies/SafeMath.sol";
+import "hardhat/console.sol";
 
 interface ICjpyOS {
     function mintCJPY(address to, uint256 amount) external;

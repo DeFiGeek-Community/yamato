@@ -17,6 +17,7 @@ import "@typechain/hardhat";
 import "@nomiclabs/hardhat-etherscan";
 import "hardhat-abi-exporter";
 import "hardhat-contract-sizer";
+import "hardhat-gas-reporter";
 
 if (!process.env.ALCHEMY_URL) throw Error("Get your .env");
 
@@ -26,27 +27,6 @@ if (!process.env.ALCHEMY_URL) throw Error("Get your .env");
 module.exports = {
   solidity: {
     compilers: [
-      {
-        version: "0.7.6",
-        settings: {
-          outputSelection: {
-            "*": {
-              "*": ["storageLayout"],
-            },
-          },
-        },
-      },
-
-      {
-        version: "0.8.3",
-        settings: {
-          outputSelection: {
-            "*": {
-              "*": ["storageLayout"],
-            },
-          },
-        },
-      },
       {
         version: "0.8.4",
         settings: {
@@ -112,5 +92,9 @@ module.exports = {
     disambiguatePaths: false,
     runOnCompile: true,
     strict: true,
-  }
+  },
+  gasReporter: {
+    currency: 'USD',
+    gasPrice: 100
+  }  
 };

@@ -159,8 +159,9 @@ contract Yamato is IYamato, ReentrancyGuard {
             1. Ready
         */
         Pledge storage pledge = pledges[msg.sender];
-
         uint256 _ICRAfter = pledge.toMem().addDebt(borrowAmountInCjpy).getICR(feed);
+        uint256 fee = (borrowAmountInCjpy * FR(_ICRAfter)) / 10000;
+        uint256 returnableCJPY = borrowAmountInCjpy.sub(fee);
 
         /*
             2. Validate
@@ -170,38 +171,34 @@ contract Yamato is IYamato, ReentrancyGuard {
             "Borrowing should not be executed within the same block with your deposit."
         );
         require(pledge.isCreated, "This pledge is not created yet.");
-        emit Borrowed(_ICRAfter);
         require(
             _ICRAfter >= uint256(MCR).mul(100),
             "This minting is invalid because of too large borrowing."
         );
+        require(fee > 0, "fee must be more than zero.");
+        require(returnableCJPY > 0, "(borrow - fee) must be more than zero.");
 
         /*
-            3. Fee
-        */
-        uint256 fee = (borrowAmountInCjpy * FR(_ICRAfter)) / 10000;
-
-        /*
-            4. Top-up scenario
+            3. Top-up scenario
         */
         pledge.debt += borrowAmountInCjpy;
         totalDebt += borrowAmountInCjpy;
         TCR = getTCR();
 
         /*
-            5. Update PriorityRegistry
+            4. Update PriorityRegistry
         */
         pledge.lastUpsertedTimeICRpertenk = priorityRegistry.upsert(pledge);
 
         /*
-            6. Cheat guard
+            5. Cheat guard
         */
         withdrawLocks[msg.sender] = block.timestamp + 3 days;
 
         /*
-            7. Borrowed fund & fee transfer
+            6. Borrowed fund & fee transfer
         */
-        cjpyOS.mintCJPY(msg.sender, borrowAmountInCjpy.sub(fee)); // onlyYamato
+        cjpyOS.mintCJPY(msg.sender, returnableCJPY); // onlyYamato
         cjpyOS.mintCJPY(address(pool), fee); // onlyYamato
 
         if (
@@ -211,6 +208,11 @@ contract Yamato is IYamato, ReentrancyGuard {
         } else {
             pool.depositSweepReserve(fee);
         }
+
+        /*
+            7. Event
+        */
+        emit Borrowed(_ICRAfter);
     }
 
     /// @notice Recover the collateral of one's pledge.
@@ -225,8 +227,8 @@ contract Yamato is IYamato, ReentrancyGuard {
         /*
             2. Check repayability
         */
-        require(cjpyAmount > 0, "cjpyAmount is zero");
-        require(pledge.debt > 0, "pledge.debt is zero");
+        require(cjpyAmount > 0, "You are repaying no CJPY");
+        require(pledge.debt >= cjpyAmount, "You are repaying more than you are owing.");
 
         /*
             2-1. Update pledge and the global variable
@@ -380,8 +382,8 @@ contract Yamato is IYamato, ReentrancyGuard {
         );
         // Note: This line can be the redemption execution checker
 
-        uint256 totalRedeemedCjpyAmount = redeemStart -
-            pool.redemptionReserve();
+
+        uint256 totalRedeemedCjpyAmount = cjpyAmountStart - maxRedemptionCjpyAmount;
         uint256 totalRedeemedEthAmount = totalRedeemedCjpyAmount.div(jpyPerEth).mul(1e18);
         uint256 dividendEthAmount = (totalRedeemedEthAmount * (100 - GRR)) /
             100;
