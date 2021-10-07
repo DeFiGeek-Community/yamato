@@ -313,18 +313,19 @@ describe("contract PriorityRegistry", function () {
     });
     it(`fails to run in the all-sludge state`, async function () {
       await expect(yamato.bypassPopRedeemable()).to.be.revertedWith(
-        "Need to upsert at least once."
+        "pledgeLength=0 :: Need to upsert at least once."
       );
     });
-    it(`fails to fetch the zero pledge`, async function () {
+    it(`fails to pop the zero pledge because it isn't redeemable.`, async function () {
       const _owner1 = address0;
       const _coll1 = BigNumber.from("0");
       const _debt1 = BigNumber.from("300001000000000000000000");
       const _inputPledge1 = [_coll1, _debt1, true, _owner1, 0];
       await (await yamato.bypassUpsert(_inputPledge1)).wait();
 
-      // TODO: ???
-      // await expect( yamato.bypassPopRedeemable() ).toBeReverted()
+      expect(await priorityRegistry.pledgeLength()).to.eq(1);
+
+      await expect( yamato.bypassPopRedeemable() ).to.be.revertedWith("licr=0 :: Need to upsert at least once.")
     });
 
     it(`succeeds to fetch even by account 3`, async function () {

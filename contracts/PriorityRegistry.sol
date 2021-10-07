@@ -166,8 +166,8 @@ contract PriorityRegistry is IPriorityRegistry {
         returns (IYamato.Pledge memory)
     {
         uint256 licr = currentLICRpertenk;
-        require(licr > 0, "Need to upsert at least once.");
-        require(pledgeLength > 0, "Need to upsert at least once.");
+        require(pledgeLength > 0, "pledgeLength=0 :: Need to upsert at least once.");
+        require(licr > 0, "licr=0 :: Need to upsert at least once.");
         require(
             levelIndice[licr].length > 0,
             "The current lowest ICR data is inconsistent with actual sorted pledges."
