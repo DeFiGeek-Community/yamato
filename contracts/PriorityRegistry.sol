@@ -75,6 +75,12 @@ contract PriorityRegistry is IPriorityRegistry {
                 _pledge.lastUpsertedTimeICRpertenk != 0),
             "Upsert Error: The logless zero pledge cannot be upserted. It should be removed."
         );
+        require(
+            !(_pledge.coll > 0 &&
+                _pledge.debt > 0 &&
+                _pledge.lastUpsertedTimeICRpertenk == 0),
+            "Upsert Error: Such a pledge can't exist!"
+        );
         uint256 _oldICRpertenk = _pledge.lastUpsertedTimeICRpertenk;
 
         /*
@@ -196,6 +202,7 @@ contract PriorityRegistry is IPriorityRegistry {
         );
 
         // Note: popped array and pledge must be deleted
+        // Note: Traversing to the ICR=MAX_UINT256-ish pledges are validated, don't worry.
         _tryLICRBackwardUpdate(
             leveledPledges[licr][_addr].lastUpsertedTimeICRpertenk
         );
@@ -268,7 +275,8 @@ contract PriorityRegistry is IPriorityRegistry {
             levelIndice[_icr].length == 0 && /* Confirm the level is nullified */
             _icr == currentLICRpertenk && /* Confirm the deleted ICR is lowest  */
             pledgeLength > 1 && /* Not to scan infinitely */
-            currentLICRpertenk != 0 /* If 1st take, leave it to the logic in the bottom */
+            currentLICRpertenk != 0 && /* If 1st take, leave it to the logic in the bottom */
+            pledgeLength - levelIndice[0].length > levelIndice[2**256-1].length /* if only new pledges, don't traverse the list! */
         ) {
             uint256 _next = _icr + 1;
             while (levelIndice[_next].length == 0) {
