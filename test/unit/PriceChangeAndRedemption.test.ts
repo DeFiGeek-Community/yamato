@@ -288,6 +288,23 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         const addrBefore = await PriorityRegistry.getLevelIndice(licrBefore, 0);
         const pledgeBefore = await Yamato.getPledge(addrBefore);
 
+        console.log(
+          await Promise.all(
+            ( await Promise.all(
+              ( await Promise.all(
+                accounts.map(async (el)=>{
+                  return await el.getAddress()
+                })
+              ) )
+              .map(async addr=>{
+                return await Yamato.getPledge(addr); 
+              })
+            ) ).map(async p=>{
+              return `owner:${p.owner} lastUpsertedTimeICRpertenk:${p.lastUpsertedTimeICRpertenk} icr:${p.debt.isZero ? 'inf' : p.coll.mul(await PriceFeed.lastGoodPrice()).div(p.debt).mul(10000)}`
+            })
+          )
+        )
+
         toBorrow = (await PriceFeed.lastGoodPrice())
           .mul(toCollateralize)
           .mul(100)

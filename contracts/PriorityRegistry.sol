@@ -93,7 +93,6 @@ contract PriorityRegistry is IPriorityRegistry {
             /* whether delete target exists */
         ) {
             if (_oldICRpertenk == 2**256 - 1)
-                console.log("fresh-borrow deleting");
             _deletePledge(_pledge);
         }
 
@@ -309,20 +308,26 @@ contract PriorityRegistry is IPriorityRegistry {
         if (
             levelIndice[_icr].length == 0 && /* Confirm the level is nullified */
             _icr == currentLICRpertenk && /* Confirm the deleted ICR is lowest  */
+
+            // Bug: don't stop there
             currentLICRpertenk < _mcr &&
             pledgeLength > 1 && /* Not to scan infinitely */
             currentLICRpertenk != 0 && /* If 1st take, leave it to the logic in the bottom */
-            pledgeLength - levelIndice[0].length >
-            levelIndice[2**256 - 1].length /* if new pledges only there are, don't traverse the list! */
+            pledgeLength != levelIndice[0].length + levelIndice[2**256 - 1].length /* To avoid inf loop */
         ) {
             uint256 _next = _icr + 1;
             while (
-                levelIndice[_next].length == 0 && /* this level is empty! */
-                _next < _mcr /* this level is redeemable! */
+                levelIndice[_next].length == 0 /* this level is empty! */
+
+                // Bug: don't stop there
+                && _next < _mcr /* this level is redeemable! */
             ) {
                 _next++;
             } // Note: if exist or out-of-range, stop it and set that level as the LICR
             currentLICRpertenk = _next;
+        } else if (pledgeLength == levelIndice[0].length + levelIndice[2**256 - 1].length) {
+            // Note: Okie you avoided inf loop but make suredon't redeem ICR=MCR pledge
+            currentLICRpertenk = _mcr - 1; // Note: Don't redeem ICR=MCR pledge
         }
     }
 
