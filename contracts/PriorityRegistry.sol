@@ -26,7 +26,7 @@ interface IPriorityRegistry {
 
     function pledgeLength() external view returns (uint256);
 
-    function levelIndice(uint256 _icr, uint256 _i)
+    function getLevelIndice(uint256 _icr, uint256 _i)
         external
         view
         returns (address);
@@ -41,7 +41,7 @@ contract PriorityRegistry is IPriorityRegistry {
     using PledgeLib for IYamato.Pledge;
 
     mapping(uint256 => mapping(address => IYamato.Pledge)) leveledPledges; // ICR => owner => Pledge
-    mapping(uint256 => address[]) public override levelIndice; // ICR => owner[]
+    mapping(uint256 => address[]) private levelIndice; // ICR => owner[]
     uint256 public override pledgeLength = 0;
     uint256 public override currentLICRpertenk = 0; // Note: Lowest ICR
     address public yamato;
@@ -87,11 +87,13 @@ contract PriorityRegistry is IPriorityRegistry {
             1. delete current pledge from sorted pledge and update currentLICRpertenk
         */
         if (
-            !(_pledge.debt == 0 && _pledge.lastUpsertedTimeICRpertenk == 0) && /* New pledge doesn't need update  */
-            pledgeLength > 0 && /* deletePledge can make it minus */
+            !(_pledge.debt == 0 && _oldICRpertenk == 0) && /* Exclude "new pledge" */
+            pledgeLength > 0 && /* Avoid overflow */
             leveledPledges[_oldICRpertenk][_pledge.owner].isCreated
-            /* if leveledPledges[oldICR] already has that owner's pledge */
+            /* whether delete target exists */
         ) {
+            if (_oldICRpertenk == 2**256 - 1)
+                console.log("fresh-borrow deleting");
             _deletePledge(_pledge);
         }
 
@@ -249,8 +251,14 @@ contract PriorityRegistry is IPriorityRegistry {
         Internal Function
     ==============================
         - _deletePledge
+        - _traverseToNextLICR
     */
 
+    /*
+        @dev delete of "address[] storage" causes gap in the list.
+             For reasonably gas-saved delete, you must swap target with tail then delete it.
+        @param _pledge the delete target
+    */
     function _deletePledge(IYamato.Pledge memory _pledge) internal {
         uint256 icr = _pledge.lastUpsertedTimeICRpertenk;
         address _owner = _pledge.owner;
@@ -259,7 +267,10 @@ contract PriorityRegistry is IPriorityRegistry {
             // Note: upsert() requires to maintain the consistency of index
             for (uint256 i = 0; i < levelIndice[icr].length; i++) {
                 if (levelIndice[icr][i] == _owner) {
-                    delete levelIndice[icr][i];
+                    levelIndice[icr][i] = levelIndice[icr][
+                        levelIndice[icr].length - 1
+                    ];
+                    levelIndice[icr].pop();
                     break;
                 }
             }
@@ -273,19 +284,41 @@ contract PriorityRegistry is IPriorityRegistry {
     }
 
     function _traverseToNextLICR(uint256 _icr) internal {
+        uint256 _mcr = uint256(IYamato(yamato).MCR()).mul(100);
         // Note: The _oldICRpertenk == currentLICRpertenk now, and that former LICR-level has just been nullified. New licr is needed.
+
+        console.log("---------");
+        console.log("_icr: %s", _icr);
+        console.log("currentLICRpertenk: %s", currentLICRpertenk);
+        console.log("pledgeLength: %s", pledgeLength);
+        console.log("levelIndice[0].length: %s", levelIndice[0].length);
+        console.log("levelIndice[_icr].length: %s", levelIndice[_icr].length);
+        console.log(
+            "levelIndice[2**256 - 1].length: %s",
+            levelIndice[2**256 - 1].length
+        );
+        console.log(
+            levelIndice[_icr].length == 0 && /* Confirm the level is nullified */
+                _icr == currentLICRpertenk && /* Confirm the deleted ICR is lowest  */
+                currentLICRpertenk < _mcr &&
+                pledgeLength > 1 && /* Not to scan infinitely */
+                currentLICRpertenk != 0 && /* If 1st take, leave it to the logic in the bottom */
+                pledgeLength - levelIndice[0].length >
+                levelIndice[2**256 - 1].length
+        );
         if (
             levelIndice[_icr].length == 0 && /* Confirm the level is nullified */
             _icr == currentLICRpertenk && /* Confirm the deleted ICR is lowest  */
+            currentLICRpertenk < _mcr &&
             pledgeLength > 1 && /* Not to scan infinitely */
             currentLICRpertenk != 0 && /* If 1st take, leave it to the logic in the bottom */
             pledgeLength - levelIndice[0].length >
-            levelIndice[2**256 - 1].length /* if only new pledges, don't traverse the list! */
+            levelIndice[2**256 - 1].length /* if new pledges only there are, don't traverse the list! */
         ) {
             uint256 _next = _icr + 1;
             while (
                 levelIndice[_next].length == 0 && /* this level is empty! */
-                _next < uint256(IYamato(yamato).MCR()).mul(100) /* this level is redeemable! */
+                _next < _mcr /* this level is redeemable! */
             ) {
                 _next++;
             } // Note: if exist or out-of-range, stop it and set that level as the LICR
@@ -327,5 +360,22 @@ contract PriorityRegistry is IPriorityRegistry {
         }
         address _poppedAddr = levelIndice[0][levelIndice[0].length - 1];
         return leveledPledges[0][_poppedAddr];
+    }
+
+    function getLevelIndice(uint256 icr, uint256 i)
+        public
+        view
+        override
+        returns (address)
+    {
+        uint256 _mcr = uint256(IYamato(yamato).MCR()).mul(100);
+        if (
+            icr == _mcr &&
+            icr == currentLICRpertenk &&
+            levelIndice[icr].length == 0
+        ) {
+            return address(0);
+        }
+        return levelIndice[icr][i];
     }
 }
