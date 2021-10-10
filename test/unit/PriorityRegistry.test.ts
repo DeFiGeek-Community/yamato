@@ -385,7 +385,7 @@ describe("contract PriorityRegistry", function () {
           "You can't redeem if redeemable candidate is more than MCR."
         );
       });
-      it.only(`succeeds to get the lowest pledge with lastUpsertedTimeICRpertenk\>0`, async function () {
+      it(`succeeds to get the lowest pledge with lastUpsertedTimeICRpertenk\>0`, async function () {
         const _owner1 = address0;
         const _coll1 = BigNumber.from("1000000000000000000");
         const _debt1 = BigNumber.from("300001000000000000000000");
@@ -411,8 +411,8 @@ describe("contract PriorityRegistry", function () {
         expect(nextRedeemableBefore.coll).to.eq(_coll1);
         expect(nextRedeemableBefore.debt).to.eq(_debt3);
         expect(nextRedeemableBefore.owner).to.eq(_owner1);
-        expect(nextRedeemableAfter.coll).to.eq(0);
-        expect(nextRedeemableAfter.debt).to.eq(0);
+        expect(nextRedeemableAfter.coll).to.eq(_coll2);
+        expect(nextRedeemableAfter.debt).to.eq(_debt4);
       });
     });
   });

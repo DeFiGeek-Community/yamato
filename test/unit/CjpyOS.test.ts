@@ -11,7 +11,7 @@ import {
   VeYMT,
   PriceFeed,
   CjpyOS__factory,
-  FeePoolProxy__factory
+  FeePoolProxy__factory,
 } from "../../typechain";
 
 chai.use(smock.matchers);

@@ -9,7 +9,6 @@ import {
   TellorCallerMock,
   PriceFeed,
   FeePool,
-  FeePoolProxy,
   CjpyOS,
   CJPY,
   Yamato,
@@ -22,7 +21,7 @@ import {
   CJPY__factory,
   Yamato__factory,
   Pool__factory,
-  FeePoolProxy__factory,
+  FeePool__factory,
   PriorityRegistry__factory,
 } from "../../typechain";
 
@@ -35,7 +34,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
   let Tellor: TellorCallerMock;
   let PriceFeed: PriceFeed;
   let CJPY: CJPY;
-  let FeePoolProxy;
+  let FeePool:FeePool;
   let CjpyOS: CjpyOS;
   let Yamato: Yamato;
   let Pool: Pool;
@@ -89,8 +88,8 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       await ethers.getContractFactory("CJPY")
     )).deploy();
 
-    FeePoolProxy = await (<FeePoolProxy__factory>(
-      await ethers.getContractFactory("FeePoolProxy")
+    FeePool = await (<FeePool__factory>(
+      await ethers.getContractFactory("FeePool")
     )).deploy();
 
     CjpyOS = await (<CjpyOS__factory>(
@@ -98,7 +97,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
     )).deploy(
       CJPY.address,
       PriceFeed.address,
-      FeePoolProxy.address
+      FeePool.address
       // governance=deployer
     );
 
@@ -284,7 +283,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         await (await Tellor.setLastPrice("100000000000")).wait(); //dec8
       });
 
-      it.only(`should redeem without making LICR broken`, async function () {
+      it(`should redeem without making LICR broken`, async function () {
         toBorrow = (await PriceFeed.lastGoodPrice())
           .mul(toCollateralize)
           .mul(100)
@@ -300,6 +299,10 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         const redeemerETHBalanceBefore = await Yamato.provider.getBalance(
           redeemerAddr
         );
+        const poolETHBalanceBefore = await Yamato.provider.getBalance(
+          Pool.address
+        );
+        const poolCollateralBefore = await Pool.lockedCollateral();
         const redeemedPledgeBefore = await Yamato.getPledge(targetRedeemee);
 
         const txReceipt = await (
@@ -316,6 +319,10 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         const redeemerETHBalanceAfter = await Yamato.provider.getBalance(
           redeemerAddr
         );
+        const poolETHBalanceAfter = await Yamato.provider.getBalance(
+          Pool.address
+        );
+        const poolCollateralAfter = await Pool.lockedCollateral();
 
         expect(totalSupplyAfter).to.be.lt(totalSupplyBefore);
         expect(redeemerCJPYBalanceAfter).to.be.lt(redeemerCJPYBalanceBefore);

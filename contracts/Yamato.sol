@@ -410,9 +410,9 @@ contract Yamato is IYamato, ReentrancyGuard {
         */
         uint256 totalRedeemedCjpyAmount = cjpyAmountStart -
             maxRedemptionCjpyAmount;
-        uint256 totalRedeemedEthAmount = totalRedeemedCjpyAmount
-            .div(jpyPerEth)
-            .mul(1e18);
+        uint256 totalRedeemedEthAmount = totalRedeemedCjpyAmount.mul(1e18).div(
+            jpyPerEth
+        );
         uint256 dividendEthAmount = (totalRedeemedEthAmount * (100 - GRR)) /
             100;
         address _redemptionBearer;
@@ -430,14 +430,12 @@ contract Yamato is IYamato, ReentrancyGuard {
             _dividendDestination = address(feePool);
             pool.useRedemptionReserve(totalRedeemedCjpyAmount);
             pool.accumulateDividendReserve(dividendEthAmount);
-            pool.sendETH(_dividendDestination, dividendEthAmount);
-            cjpyOS.burnCJPY(_redemptionBearer, totalRedeemedCjpyAmount);
         } else {
             _redemptionBearer = msg.sender;
-            _dividendDestination = address(feePool);
-            pool.sendETH(_dividendDestination, dividendEthAmount);
-            cjpyOS.burnCJPY(_redemptionBearer, totalRedeemedCjpyAmount);
+            _dividendDestination = msg.sender;
         }
+        pool.sendETH(_dividendDestination, dividendEthAmount);
+        cjpyOS.burnCJPY(_redemptionBearer, totalRedeemedCjpyAmount);
 
         /*
             4. Gas compensation

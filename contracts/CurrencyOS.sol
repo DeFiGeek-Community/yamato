@@ -32,7 +32,11 @@ contract CurrencyOS {
     address[] public yamatoes;
     bool isYmtOSInitialized = false;
 
-    constructor(address currencyAddr, address feedAddr, address feePoolProxy) {
+    constructor(
+        address currencyAddr,
+        address feedAddr,
+        address feePoolProxy
+    ) {
         currency = ICurrency(currencyAddr);
         _feed = feedAddr;
         _feePoolProxy = feePoolProxy;

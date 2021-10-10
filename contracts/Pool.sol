@@ -106,9 +106,9 @@ contract Pool is IPool {
         override
         onlyYamato
     {
-        lockedCollateral -= amount;
-        (bool success, ) = payable(recipient).call{value: amount}("");
+        (bool success,) = payable(recipient).call{value: amount}("");
         require(success, "transfer failed");
+        lockedCollateral -= amount;
     }
 
     /// @notice Provide the data of public storage.
