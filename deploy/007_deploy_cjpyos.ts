@@ -13,12 +13,13 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { getContractFactory } = ethers;
 
   const cjpyAddr = readFileSync(getDeploymentAddressPath("CJPY")).toString();
+  const feePoolAddr = readFileSync(getDeploymentAddressPath("FeePool")).toString();
   const feedAddr = readFileSync(
     getDeploymentAddressPath("PriceFeed")
   ).toString();
 
   await deploy("CjpyOS", {
-    args: [cjpyAddr, feedAddr],
+    args: [cjpyAddr, feedAddr, feePoolAddr],
     getContractFactory,
     deployments,
   }).catch((e) => console.trace(e.message));
