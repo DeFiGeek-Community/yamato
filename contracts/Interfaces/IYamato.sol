@@ -15,7 +15,7 @@ interface IYamato {
         uint256 debt;
         bool isCreated;
         address owner;
-        uint256 lastUpsertedTimeICRpertenk;
+        uint256 priority;
     }
 
     function getPledge(address _owner) external view returns (Pledge memory);

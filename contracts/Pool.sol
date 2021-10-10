@@ -106,7 +106,7 @@ contract Pool is IPool {
         override
         onlyYamato
     {
-        (bool success,) = payable(recipient).call{value: amount}("");
+        (bool success, ) = payable(recipient).call{value: amount}("");
         require(success, "transfer failed");
         lockedCollateral -= amount;
     }

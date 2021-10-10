@@ -34,7 +34,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
   let Tellor: TellorCallerMock;
   let PriceFeed: PriceFeed;
   let CJPY: CJPY;
-  let FeePool:FeePool;
+  let FeePool: FeePool;
   let CjpyOS: CjpyOS;
   let Yamato: Yamato;
   let Pool: Pool;
@@ -197,7 +197,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
           )
         ).to.be.gt(redeemerETHBalanceBefore);
         expect(redeemedPledgeAfter.coll).to.be.eq(0);
-        expect(redeemedPledgeAfter.lastUpsertedTimeICRpertenk).to.be.eq(0);
+        expect(redeemedPledgeAfter.priority).to.be.eq(0);
       });
     });
 
@@ -290,7 +290,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
           .div(MCR)
           .div(1e18 + "");
 
-        const licr = await PriorityRegistry.currentLICRpertenk();
+        const licr = await PriorityRegistry.LICR();
         const redeemerAddr = await redeemer.getAddress();
         const targetRedeemee = await PriorityRegistry.getLevelIndice(licr, 0);
 
@@ -332,7 +332,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
           )
         ).to.be.gt(redeemerETHBalanceBefore);
         expect(redeemedPledgeAfter.coll).to.be.eq(0);
-        expect(redeemedPledgeAfter.lastUpsertedTimeICRpertenk).to.be.eq(0);
+        expect(redeemedPledgeAfter.priority).to.be.eq(0);
       });
     });
   });
@@ -359,8 +359,8 @@ async function logPledges(Yamato, PriceFeed, accounts) {
             })
         )
       ).map(async (p) => {
-        return `owner:${p.owner} lastUpsertedTimeICRpertenk:${
-          p.lastUpsertedTimeICRpertenk
+        return `owner:${p.owner} priority:${
+          p.priority
         } coll:${p.coll} debt:${p.debt} icr:${await getICR(p, PriceFeed)}`;
       })
     )
@@ -374,7 +374,7 @@ async function getICR(p, PriceFeed) {
     ? "inf"
     : p.coll
         .mul(price)
-        .mul(10000)
+        .mul(100)
         .div(p.debt)
         .div(1e18 + "");
 }

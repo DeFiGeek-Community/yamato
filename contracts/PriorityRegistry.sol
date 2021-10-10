@@ -22,7 +22,7 @@ interface IPriorityRegistry {
 
     function popSweepable() external returns (IYamato.Pledge memory);
 
-    function currentLICRpertenk() external view returns (uint256);
+    function LICR() external view returns (uint256);
 
     function pledgeLength() external view returns (uint256);
 
@@ -36,6 +36,9 @@ interface IPriorityRegistry {
     function nextSweepable() external view returns (IYamato.Pledge memory);
 }
 
+
+
+// @dev For gas saving reason, we use percent denominated ICR only in this contract.
 contract PriorityRegistry is IPriorityRegistry {
     using SafeMath for uint256;
     using PledgeLib for IYamato.Pledge;
@@ -43,7 +46,7 @@ contract PriorityRegistry is IPriorityRegistry {
     mapping(uint256 => mapping(address => IYamato.Pledge)) leveledPledges; // ICR => owner => Pledge
     mapping(uint256 => address[]) private levelIndice; // ICR => owner[]
     uint256 public override pledgeLength = 0;
-    uint256 public override currentLICRpertenk = 0; // Note: Lowest ICR
+    uint256 public override LICR = 0; // Note: Lowest ICR in percent
     address public yamato;
 
     constructor(address _yamato) {
@@ -59,65 +62,62 @@ contract PriorityRegistry is IPriorityRegistry {
     */
 
     /*
-        @notice The upsert process is  1. update coll/debt  2. upsert and return "upsert-time ICR"  3. update lastUpsertedTimeICRpertenk with the "upsert-time ICR"
+        @notice The upsert process is  1. update coll/debt  2. upsert and return "upsert-time ICR"  3. update priority with the "upsert-time ICR"
         @dev It upserts "deposited", "borrowed", "repayed", "partially withdrawn", "redeemed", or "partially swept" pledges.
-        @return _newICRpertenk is for overwriting Yamato.sol's pledge info
+        @return _newICRpercent is for overwriting Yamato.sol's pledge info
     */
     function upsert(IYamato.Pledge memory _pledge)
         public
         override
         onlyYamato
-        returns (uint256 _newICRpertenk)
+        returns (uint256 _newICRpercent)
     {
         require(
-            !(_pledge.coll == 0 &&
-                _pledge.debt == 0 &&
-                _pledge.lastUpsertedTimeICRpertenk != 0),
+            !(_pledge.coll == 0 && _pledge.debt == 0 && _pledge.priority != 0),
             "Upsert Error: The logless zero pledge cannot be upserted. It should be removed."
         );
         require(
-            !(_pledge.coll > 0 &&
-                _pledge.debt > 0 &&
-                _pledge.lastUpsertedTimeICRpertenk == 0),
+            !(_pledge.coll > 0 && _pledge.debt > 0 && _pledge.priority == 0),
             "Upsert Error: Such a pledge can't exist!"
         );
-        uint256 _oldICRpertenk = _pledge.lastUpsertedTimeICRpertenk;
+        uint256 _oldICRpercent = _pledge.priority;
 
         /*
-            1. delete current pledge from sorted pledge and update currentLICRpertenk
+            1. delete current pledge from sorted pledge and update LICR
         */
         if (
-            !(_pledge.debt == 0 && _oldICRpertenk == 0) && /* Exclude "new pledge" */
+            !(_pledge.debt == 0 && _oldICRpercent == 0) && /* Exclude "new pledge" */
             pledgeLength > 0 && /* Avoid overflow */
-            leveledPledges[_oldICRpertenk][_pledge.owner].isCreated
+            leveledPledges[_oldICRpercent][_pledge.owner].isCreated
             /* whether delete target exists */
         ) {
             _deletePledge(_pledge);
         }
 
         // Bug: accessing to the out-of-bound index
-        _traverseToNextLICR(_oldICRpertenk);
+        _traverseToNextLICR(_oldICRpercent);
 
         /* 
             2. insert new pledge
         */
-        _newICRpertenk = _pledge.getICR(IYamato(yamato).feed());
+        _newICRpercent = floor(_pledge.getICR(IYamato(yamato).feed()));
+        require(_newICRpercent <= floor(2**256-1), "priority can't be that big.");
 
-        _pledge.lastUpsertedTimeICRpertenk = _newICRpertenk;
+        _pledge.priority = _newICRpercent;
 
-        leveledPledges[_newICRpertenk][_pledge.owner] = _pledge;
-        levelIndice[_newICRpertenk].push(_pledge.owner);
+        leveledPledges[_newICRpercent][_pledge.owner] = _pledge;
+        levelIndice[_newICRpercent].push(_pledge.owner);
         pledgeLength = pledgeLength.add(1);
 
         /*
-            3. Update currentLICRpertenk
+            3. Update LICR
         */
         if (
-            (_newICRpertenk > 0 && _newICRpertenk < currentLICRpertenk) ||
-            currentLICRpertenk == 0 ||
+            (_newICRpercent > 0 && _newICRpercent < LICR) ||
+            LICR == 0 ||
             pledgeLength == 1
         ) {
-            currentLICRpertenk = _newICRpertenk;
+            LICR = _newICRpercent;
         }
     }
 
@@ -137,12 +137,15 @@ contract PriorityRegistry is IPriorityRegistry {
             _pledge.debt == 0,
             "Removal Error: coll has to be zero for removal."
         );
+        require(
+            _pledge.priority <= floor(2**256 - 1),
+            "Such big priority is not supported by PriorityRegistry."
+        );
 
         // Note: In full withdrawal scenario, this value is MAX_UINT
         require(
-            _pledge.lastUpsertedTimeICRpertenk == 0 ||
-                _pledge.lastUpsertedTimeICRpertenk == 2**256 - 1,
-            "Unintentional lastUpsertedTimeICRpertenk is given to the remove function."
+            _pledge.priority == 0 || _pledge.priority == floor(2**256 - 1),
+            "Unintentional priority is given to the remove function."
         );
 
         _deletePledge(_pledge);
@@ -162,7 +165,7 @@ contract PriorityRegistry is IPriorityRegistry {
     */
 
     /*
-        @notice currentLICRpertenk-based lowest ICR pledge getter
+        @notice LICR-based lowest ICR pledge getter
         @dev Mutable read function. It pops.
         @return A pledge
     */
@@ -172,46 +175,45 @@ contract PriorityRegistry is IPriorityRegistry {
         onlyYamato
         returns (IYamato.Pledge memory)
     {
-        uint256 licr = currentLICRpertenk;
         require(
             pledgeLength > 0,
             "pledgeLength=0 :: Need to upsert at least once."
         );
-        require(licr > 0, "licr=0 :: Need to upsert at least once.");
+        require(LICR > 0, "licr=0 :: Need to upsert at least once.");
         require(
-            levelIndice[licr].length > 0,
+            levelIndice[LICR].length > 0,
             "The current lowest ICR data is inconsistent with actual sorted pledges."
         );
 
         address _addr;
         // Note: Not (Exist AND coll>0) then skip.
         while (
-            !leveledPledges[licr][_addr].isCreated ||
-            leveledPledges[licr][_addr].coll == 0
+            !leveledPledges[LICR][_addr].isCreated ||
+            leveledPledges[LICR][_addr].coll == 0
         ) {
-            _addr = levelIndice[licr][levelIndice[licr].length - 1];
+            _addr = levelIndice[LICR][levelIndice[LICR].length - 1];
 
-            levelIndice[licr].pop();
+            levelIndice[LICR].pop();
             // Note: pop() just deletes the item.
             // Note: Why pop()? Because it's the only way to decrease length.
             // Note: Hence the array won't be inflated.
             // Note: But pop() doesn't have return. Do it on your own.
         }
+        IYamato.Pledge memory poppedPledge = leveledPledges[LICR][_addr];
 
         // Note: Don't check LICR, real ICR is the matter.
         require(
-            leveledPledges[licr][_addr].getICR(IYamato(yamato).feed()) <
-                uint256(IYamato(yamato).MCR()).mul(100),
+            floor(poppedPledge.getICR(IYamato(yamato).feed())) <
+                uint256(IYamato(yamato).MCR()),
             "You can't redeem if redeemable candidate is more than MCR."
         );
 
         // Note: popped array and pledge must be deleted
-        // Note: Traversing to the ICR=MAX_UINT256-ish pledges are validated, don't worry.
-        _traverseToNextLICR(
-            leveledPledges[licr][_addr].lastUpsertedTimeICRpertenk
-        );
+        // Note: Traversing to the ICR=MAX_UINT256 pledges are validated, don't worry about gas.
+        // Note: LICR is state variable and it will be undated here.
+        _traverseToNextLICR(poppedPledge.priority);
 
-        return leveledPledges[licr][_addr];
+        return poppedPledge;
     }
 
     /*
@@ -259,7 +261,7 @@ contract PriorityRegistry is IPriorityRegistry {
         @param _pledge the delete target
     */
     function _deletePledge(IYamato.Pledge memory _pledge) internal {
-        uint256 icr = _pledge.lastUpsertedTimeICRpertenk;
+        uint256 icr = _pledge.priority;
         address _owner = _pledge.owner;
 
         if (leveledPledges[icr][_owner].isCreated) {
@@ -283,20 +285,20 @@ contract PriorityRegistry is IPriorityRegistry {
     }
 
     function _traverseToNextLICR(uint256 _icr) internal {
-        uint256 _mcr = uint256(IYamato(yamato).MCR()).mul(100);
+        uint256 _mcr = uint256(IYamato(yamato).MCR());
         bool infLoopish = pledgeLength ==
-            levelIndice[0].length + levelIndice[2**256 - 1].length;
-        // Note: The _oldICRpertenk == currentLICRpertenk now, and that former LICR-level has just been nullified. New licr is needed.
+            levelIndice[0].length + levelIndice[floor(2**256 - 1)].length;
+        // Note: The _oldICRpercent == LICR now, and that former LICR-level has just been nullified. New licr is needed.
 
         if (
             levelIndice[_icr].length == 0 && /* Confirm the level is nullified */
-            _icr == currentLICRpertenk && /* Confirm the deleted ICR is lowest  */
+            _icr == LICR && /* Confirm the deleted ICR is lowest  */
             pledgeLength > 1 && /* Not to scan infinitely */
-            currentLICRpertenk != 0 /* If 1st take, leave it to the logic in the bottom */
+            LICR != 0 /* If 1st take, leave it to the logic in the bottom */
         ) {
             if (infLoopish) {
                 // Note: Okie you avoided inf loop but make sure you don't redeem ICR=MCR pledge
-                currentLICRpertenk = _mcr - 1;
+                LICR = _mcr - 1;
             } else {
                 // TODO: Out-of-gas fail safe
                 uint256 _next = _icr + 1;
@@ -305,7 +307,7 @@ contract PriorityRegistry is IPriorityRegistry {
                 ) {
                     _next++;
                 } // Note: if exist or out-of-range, stop it and set that level as the LICR
-                currentLICRpertenk = _next;
+                LICR = _next;
             }
         }
     }
@@ -323,14 +325,12 @@ contract PriorityRegistry is IPriorityRegistry {
         override
         returns (IYamato.Pledge memory)
     {
-        if (levelIndice[currentLICRpertenk].length == 0) {
+        if (levelIndice[LICR].length == 0) {
             return IYamato.Pledge(0, 0, false, address(0), 0);
         }
 
-        address _poppedAddr = levelIndice[currentLICRpertenk][
-            levelIndice[currentLICRpertenk].length - 1
-        ];
-        return leveledPledges[currentLICRpertenk][_poppedAddr];
+        address _poppedAddr = levelIndice[LICR][levelIndice[LICR].length - 1];
+        return leveledPledges[LICR][_poppedAddr];
     }
 
     function nextSweepable()
@@ -352,14 +352,14 @@ contract PriorityRegistry is IPriorityRegistry {
         override
         returns (address)
     {
-        uint256 _mcr = uint256(IYamato(yamato).MCR()).mul(100);
-        if (
-            icr == _mcr &&
-            icr == currentLICRpertenk &&
-            levelIndice[icr].length == 0
-        ) {
+        uint256 _mcr = uint256(IYamato(yamato).MCR());
+        if (icr == _mcr && icr == LICR && levelIndice[icr].length == 0) {
             return address(0);
         }
         return levelIndice[icr][i];
+    }
+
+    function floor(uint256 _ICRpertenk) internal returns (uint256) {
+        return _ICRpertenk / 100;
     }
 }

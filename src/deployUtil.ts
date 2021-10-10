@@ -187,7 +187,9 @@ export function verifyWithEtherscan() {
   ).toString();
   let CJPY = readFileSync(getDeploymentAddressPath("CJPY")).toString();
   let FeePool = readFileSync(getDeploymentAddressPath("FeePool")).toString();
-  let FeePoolProxy = readFileSync(getDeploymentAddressPath("FeePoolProxy")).toString();
+  let FeePoolProxy = readFileSync(
+    getDeploymentAddressPath("FeePoolProxy")
+  ).toString();
   let CjpyOS = readFileSync(getDeploymentAddressPath("CjpyOS")).toString();
   let Yamato = readFileSync(getDeploymentAddressPath("Yamato")).toString();
   let Pool = readFileSync(getDeploymentAddressPath("Pool")).toString();
