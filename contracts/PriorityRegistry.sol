@@ -92,10 +92,10 @@ contract PriorityRegistry is IPriorityRegistry {
             leveledPledges[_oldICRpertenk][_pledge.owner].isCreated
             /* whether delete target exists */
         ) {
-            if (_oldICRpertenk == 2**256 - 1)
             _deletePledge(_pledge);
         }
 
+        // Bug: accessing to the out-of-bound index
         _traverseToNextLICR(_oldICRpertenk);
 
         /* 
@@ -284,50 +284,29 @@ contract PriorityRegistry is IPriorityRegistry {
 
     function _traverseToNextLICR(uint256 _icr) internal {
         uint256 _mcr = uint256(IYamato(yamato).MCR()).mul(100);
+        bool infLoopish = pledgeLength ==
+            levelIndice[0].length + levelIndice[2**256 - 1].length;
         // Note: The _oldICRpertenk == currentLICRpertenk now, and that former LICR-level has just been nullified. New licr is needed.
 
-        console.log("---------");
-        console.log("_icr: %s", _icr);
-        console.log("currentLICRpertenk: %s", currentLICRpertenk);
-        console.log("pledgeLength: %s", pledgeLength);
-        console.log("levelIndice[0].length: %s", levelIndice[0].length);
-        console.log("levelIndice[_icr].length: %s", levelIndice[_icr].length);
-        console.log(
-            "levelIndice[2**256 - 1].length: %s",
-            levelIndice[2**256 - 1].length
-        );
-        console.log(
-            levelIndice[_icr].length == 0 && /* Confirm the level is nullified */
-                _icr == currentLICRpertenk && /* Confirm the deleted ICR is lowest  */
-                currentLICRpertenk < _mcr &&
-                pledgeLength > 1 && /* Not to scan infinitely */
-                currentLICRpertenk != 0 && /* If 1st take, leave it to the logic in the bottom */
-                pledgeLength - levelIndice[0].length >
-                levelIndice[2**256 - 1].length
-        );
         if (
             levelIndice[_icr].length == 0 && /* Confirm the level is nullified */
             _icr == currentLICRpertenk && /* Confirm the deleted ICR is lowest  */
-
-            // Bug: don't stop there
-            currentLICRpertenk < _mcr &&
             pledgeLength > 1 && /* Not to scan infinitely */
-            currentLICRpertenk != 0 && /* If 1st take, leave it to the logic in the bottom */
-            pledgeLength != levelIndice[0].length + levelIndice[2**256 - 1].length /* To avoid inf loop */
+            currentLICRpertenk != 0 /* If 1st take, leave it to the logic in the bottom */
         ) {
-            uint256 _next = _icr + 1;
-            while (
-                levelIndice[_next].length == 0 /* this level is empty! */
-
-                // Bug: don't stop there
-                && _next < _mcr /* this level is redeemable! */
-            ) {
-                _next++;
-            } // Note: if exist or out-of-range, stop it and set that level as the LICR
-            currentLICRpertenk = _next;
-        } else if (pledgeLength == levelIndice[0].length + levelIndice[2**256 - 1].length) {
-            // Note: Okie you avoided inf loop but make suredon't redeem ICR=MCR pledge
-            currentLICRpertenk = _mcr - 1; // Note: Don't redeem ICR=MCR pledge
+            if (infLoopish) {
+                // Note: Okie you avoided inf loop but make sure you don't redeem ICR=MCR pledge
+                currentLICRpertenk = _mcr - 1;
+            } else {
+                // TODO: Out-of-gas fail safe
+                uint256 _next = _icr + 1;
+                while (
+                    levelIndice[_next].length == 0 /* this level is empty! */
+                ) {
+                    _next++;
+                } // Note: if exist or out-of-range, stop it and set that level as the LICR
+                currentLICRpertenk = _next;
+            }
         }
     }
 

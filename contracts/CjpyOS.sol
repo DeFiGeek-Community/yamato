@@ -19,13 +19,14 @@ interface ICjpyOS {
     function burnCJPY(address to, uint256 amount) external;
 
     function feed() external view returns (address);
+    function feePoolProxy() external view returns (address);
 }
 
 contract CjpyOS is ICjpyOS, CurrencyOS {
     using SafeMath for uint256;
 
-    constructor(address cjpyAddr, address feedAddr)
-        CurrencyOS(cjpyAddr, feedAddr)
+    constructor(address cjpyAddr, address feedAddr, address feePoolProxy)
+        CurrencyOS(cjpyAddr, feedAddr, feePoolProxy)
     {}
 
     function mintCJPY(address to, uint256 amount) public override onlyYamato {
@@ -38,5 +39,8 @@ contract CjpyOS is ICjpyOS, CurrencyOS {
 
     function feed() public view override returns (address) {
         return _feed;
+    }
+    function feePoolProxy() public view override returns (address) {
+        return _feePoolProxy;
     }
 }
