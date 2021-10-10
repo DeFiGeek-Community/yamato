@@ -305,7 +305,7 @@ describe("contract PriorityRegistry", function () {
 
       // Note: A deposited pledge has just been withdrawn and priority is maxint.
       const maxIntStr = BigNumber.from(2).pow(256).sub(1).toString();
-      const maxPriority = maxIntStr.slice(0,maxIntStr.length-2);
+      const maxPriority = maxIntStr.slice(0, maxIntStr.length - 2);
       const _withdrawnPledge = [
         BigNumber.from("0"),
         BigNumber.from("0"),

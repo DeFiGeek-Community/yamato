@@ -36,8 +36,6 @@ interface IPriorityRegistry {
     function nextSweepable() external view returns (IYamato.Pledge memory);
 }
 
-
-
 // @dev For gas saving reason, we use percent denominated ICR only in this contract.
 contract PriorityRegistry is IPriorityRegistry {
     using SafeMath for uint256;
@@ -101,7 +99,10 @@ contract PriorityRegistry is IPriorityRegistry {
             2. insert new pledge
         */
         _newICRpercent = floor(_pledge.getICR(IYamato(yamato).feed()));
-        require(_newICRpercent <= floor(2**256-1), "priority can't be that big.");
+        require(
+            _newICRpercent <= floor(2**256 - 1),
+            "priority can't be that big."
+        );
 
         _pledge.priority = _newICRpercent;
 

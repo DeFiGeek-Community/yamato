@@ -134,7 +134,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
     let redeemee;
     let anotherRedeemee;
 
-    describe("Context - with dump", function () {
+    describe.only("Context - with dump", function () {
       beforeEach(async () => {
         redeemer = accounts[0];
         redeemee = accounts[1];
@@ -162,7 +162,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         await (await Tellor.setLastPrice("203000000000")).wait(); //dec8
       });
 
-      it(`should redeem a lowest pledge w/o infinite traversing nor no pledges redeemed.`, async function () {
+      it(`should redeem a lowest pledge w/o infinite traversing nor no pledges redeemed but w/ reasonable gas.`, async function () {
         let redeemerAddr = await redeemer.getAddress();
         let redeemeeAddr = await redeemee.getAddress();
 
@@ -173,6 +173,11 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         );
 
         const redeemedPledgeBefore = await Yamato.getPledge(redeemeeAddr);
+        const gasEstimation = await Yamato.connect(redeemer).estimateGas.redeem(
+          toERC20(toBorrow.mul(1) + ""),
+          false
+        );
+        expect(gasEstimation).to.be.lte(1500000);
 
         const txReceipt = await (
           await Yamato.connect(redeemer).redeem(
@@ -283,7 +288,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         await (await Tellor.setLastPrice("100000000000")).wait(); //dec8
       });
 
-      it(`should redeem without making LICR broken`, async function () {
+      it(`should redeem w/o making LICR broken and w/ reasonable gas`, async function () {
         toBorrow = (await PriceFeed.lastGoodPrice())
           .mul(toCollateralize)
           .mul(100)
@@ -359,9 +364,9 @@ async function logPledges(Yamato, PriceFeed, accounts) {
             })
         )
       ).map(async (p) => {
-        return `owner:${p.owner} priority:${
-          p.priority
-        } coll:${p.coll} debt:${p.debt} icr:${await getICR(p, PriceFeed)}`;
+        return `owner:${p.owner} priority:${p.priority} coll:${p.coll} debt:${
+          p.debt
+        } icr:${await getICR(p, PriceFeed)}`;
       })
     )
   );
