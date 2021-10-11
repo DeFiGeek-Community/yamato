@@ -134,13 +134,12 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
     let redeemee;
     let anotherRedeemee;
 
-    describe.only("Context - with dump", function () {
+    describe("Context - with dump", function () {
       beforeEach(async () => {
         redeemer = accounts[0];
         redeemee = accounts[1];
-        PRICE = await PriceFeed.lastGoodPrice();
         toCollateralize = 1;
-        toBorrow = PRICE.mul(toCollateralize)
+        toBorrow = (await PriceFeed.lastGoodPrice()).mul(toCollateralize)
           .mul(100)
           .div(MCR)
           .div(1e18 + "");
@@ -162,7 +161,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         await (await Tellor.setLastPrice("203000000000")).wait(); //dec8
       });
 
-      it(`should redeem a lowest pledge w/o infinite traversing nor no pledges redeemed but w/ reasonable gas.`, async function () {
+      it(`should full-redeem a lowest pledge w/o infinite traversing nor no pledges redeemed but w/ reasonable gas.`, async function () {
         let redeemerAddr = await redeemer.getAddress();
         let redeemeeAddr = await redeemee.getAddress();
 
@@ -172,7 +171,11 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
           redeemerAddr
         );
 
-        const redeemedPledgeBefore = await Yamato.getPledge(redeemeeAddr);
+        toBorrow = (await PriceFeed.lastGoodPrice()).mul(toCollateralize)
+          .mul(100)
+          .div(MCR)
+          .div(1e18 + "");
+
         const gasEstimation = await Yamato.connect(redeemer).estimateGas.redeem(
           toERC20(toBorrow.mul(1) + ""),
           false
@@ -193,6 +196,8 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         const redeemerETHBalanceAfter = await Yamato.provider.getBalance(
           redeemerAddr
         );
+        const nextRedeemable = await PriorityRegistry.nextRedeemable()
+        expect(nextRedeemable.isCreated).to.be.true
 
         expect(totalSupplyAfter).to.be.lt(totalSupplyBefore);
         expect(redeemerCJPYBalanceAfter).to.be.lt(redeemerCJPYBalanceBefore);

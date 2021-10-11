@@ -11,6 +11,7 @@ pragma solidity 0.8.4;
 import "./Yamato.sol";
 import "./Dependencies/PledgeLib.sol";
 import "./Dependencies/SafeMath.sol";
+import "./Dependencies/LiquityMath.sol";
 import "hardhat/console.sol";
 
 interface IPriorityRegistry {
@@ -92,9 +93,6 @@ contract PriorityRegistry is IPriorityRegistry {
             _deletePledge(_pledge);
         }
 
-        // Bug: accessing to the out-of-bound index
-        _traverseToNextLICR(_oldICRpercent);
-
         /* 
             2. insert new pledge
         */
@@ -111,7 +109,7 @@ contract PriorityRegistry is IPriorityRegistry {
         pledgeLength = pledgeLength.add(1);
 
         /*
-            3. Update LICR
+            3. Update LICR for new ICR data
         */
         if (
             (_newICRpercent > 0 && _newICRpercent < LICR) ||
@@ -120,6 +118,27 @@ contract PriorityRegistry is IPriorityRegistry {
         ) {
             LICR = _newICRpercent;
         }
+
+        /*  
+            2-2. Traverse from min(oldICR,newICR) to fill the loss of popRedeemable
+        */
+        // Note: All deletions could cause traverse.
+        // Note: Traversing to the ICR=MAX_UINT256 pledges are validated, don't worry about gas.
+        // Note: LICR is state variable and it will be undated here.
+        uint _traverseStartICR;
+        if (_oldICRpercent > 0 && _newICRpercent > 0 ) {
+            _traverseStartICR = LiquityMath._min(
+            _oldICRpercent,
+            _newICRpercent
+        );
+        } else if (_oldICRpercent > 0) {
+            _traverseStartICR = _oldICRpercent;
+        } else if (_newICRpercent > 0) {
+            _traverseStartICR = _newICRpercent;
+        }
+
+        if(_traverseStartICR>0) _traverseToNextLICR(_traverseStartICR);
+
     }
 
     /*
@@ -209,10 +228,11 @@ contract PriorityRegistry is IPriorityRegistry {
             "You can't redeem if redeemable candidate is more than MCR."
         );
 
-        // Note: popped array and pledge must be deleted
+
+        // Note: pop is deletion. So traverse could be needed.
         // Note: Traversing to the ICR=MAX_UINT256 pledges are validated, don't worry about gas.
         // Note: LICR is state variable and it will be undated here.
-        _traverseToNextLICR(poppedPledge.priority);
+        // _traverseToNextLICR(poppedPledge.priority);
 
         return poppedPledge;
     }
@@ -302,7 +322,7 @@ contract PriorityRegistry is IPriorityRegistry {
                 LICR = _mcr - 1;
             } else {
                 // TODO: Out-of-gas fail safe
-                uint256 _next = _icr + 1;
+                uint256 _next = _icr;
                 while (
                     levelIndice[_next].length == 0 /* this level is empty! */
                 ) {

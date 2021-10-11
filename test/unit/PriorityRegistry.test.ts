@@ -413,8 +413,9 @@ describe("contract PriorityRegistry", function () {
         expect(nextRedeemableBefore.coll).to.eq(_coll1);
         expect(nextRedeemableBefore.debt).to.eq(_debt3);
         expect(nextRedeemableBefore.owner).to.eq(_owner1);
-        expect(nextRedeemableAfter.coll).to.eq(_coll2);
-        expect(nextRedeemableAfter.debt).to.eq(_debt4);
+        expect(nextRedeemableAfter.isCreated).to.be.false;
+        expect(nextRedeemableAfter.coll).to.eq(0);
+        expect(nextRedeemableAfter.debt).to.eq(0);
       });
     });
   });
