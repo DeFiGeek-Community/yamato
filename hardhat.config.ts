@@ -87,6 +87,9 @@ module.exports = {
     except: ["Dependencies", "Interfaces", "mock"],
     spacing: 2,
   },
+  mocha: {
+    timeout: 40000,
+  },
   contractSizer: {
     alphaSort: true,
     disambiguatePaths: false,

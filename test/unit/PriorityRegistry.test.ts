@@ -5,10 +5,12 @@ import { solidity } from "ethereum-waffle";
 import { Signer, BigNumber } from "ethers";
 import {
   CjpyOS,
+  FeePool,
   PledgeLib__factory,
   PriceFeed,
   Yamato,
   Yamato__factory,
+  FeePool__factory,
 } from "../../typechain";
 
 chai.use(smock.matchers);
@@ -17,6 +19,7 @@ chai.use(solidity);
 describe("contract PriorityRegistry", function () {
   let mockYamato: FakeContract<Yamato>;
   let mockCjpyOS: FakeContract<CjpyOS>;
+  let mockFeePoolProxy: FakeContract<FeePool>;
   let mockFeed: FakeContract<PriceFeed>;
   let yamato;
   let priorityRegistryWithYamatoMock;
@@ -30,6 +33,7 @@ describe("contract PriorityRegistry", function () {
     address0 = await accounts[0].getAddress();
 
     mockFeed = await smock.fake<PriceFeed>("PriceFeed");
+    mockFeePoolProxy = await smock.fake<FeePool>("FeePoolProxy");
     mockCjpyOS = await smock.fake<CjpyOS>("CjpyOS");
     const PledgeLib = (
       await (<PledgeLib__factory>(
@@ -71,6 +75,7 @@ describe("contract PriorityRegistry", function () {
 
     mockFeed.fetchPrice.returns(PRICE);
     mockCjpyOS.feed.returns(mockFeed.address);
+    mockCjpyOS.feePoolProxy.returns(mockFeePoolProxy.address);
     mockYamato.feed.returns(mockFeed.address);
 
     /*
@@ -102,7 +107,7 @@ describe("contract PriorityRegistry", function () {
                       uint debt;
                       bool isCreated;
                       address owner;
-                      uint lastUpsertedTimeICRpertenk;
+                      uint priority;
                   }
               */
       const _pledge = [
@@ -118,7 +123,7 @@ describe("contract PriorityRegistry", function () {
       ).to.be.revertedWith("You are not Yamato contract.");
     });
 
-    it(`fails to upsert logless \(coll=0 debt=0 lastUpsertedTimeICRpertenk=0\) pledge`, async function () {
+    it(`fails to upsert logless \(coll=0 debt=0 priority=0\) pledge`, async function () {
       const _pledge = [
         BigNumber.from("0"),
         BigNumber.from("0"),
@@ -131,7 +136,7 @@ describe("contract PriorityRegistry", function () {
       );
     });
 
-    it(`fails to upsert logful \(coll=0 debt=0 lastUpsertedTimeICRpertenk/=0\) pledge because such full-withdrawn pledge has to be removed`, async function () {
+    it(`fails to upsert logful \(coll=0 debt=0 priority/=0\) pledge because such full-withdrawn pledge has to be removed`, async function () {
       // Note: deposit->noBorrow->withdrawal scenario
       const _pledge = [
         BigNumber.from("0"),
@@ -139,7 +144,7 @@ describe("contract PriorityRegistry", function () {
         true,
         address0,
         BigNumber.from(
-          "115792089237316195423570985008687907853269984665640564039457584007913129639935"
+          "1157920892373161954235709850086879078532699846656405640394575840079131296399"
         ),
       ];
       await expect(yamato.bypassUpsert(_pledge)).to.be.revertedWith(
@@ -165,17 +170,15 @@ describe("contract PriorityRegistry", function () {
     });
 
     it(`succeeds to replace an existing item with ICR=0.`, async function () {
-      const pledgeLengthBefore = await priorityRegistry.pledgeLength();
-
       const _collBefore = BigNumber.from("100000000000000000");
       const _debtBefore = BigNumber.from("30000100000000000000000");
       const _ICRDefault = BigNumber.from("1");
       const _ICRBefore = _collBefore
         .mul(PRICE)
-        .mul(10000)
+        .mul(100)
         .div(_debtBefore)
         .div(1e18 + "");
-      expect(_ICRBefore).to.eq("9999");
+      expect(_ICRBefore).to.eq("99");
       const _pledgeBefore = [
         _collBefore,
         _debtBefore,
@@ -183,16 +186,24 @@ describe("contract PriorityRegistry", function () {
         address0,
         _ICRDefault,
       ];
+      const pledgeLength1 = await priorityRegistry.pledgeLength();
       await (await yamato.bypassUpsert(_pledgeBefore)).wait();
+      const pledgeLength2 = await priorityRegistry.pledgeLength();
+      expect(pledgeLength2).to.eq(pledgeLength1.add(1));
 
       const _collAfter = BigNumber.from("0");
       const _debtAfter = _debtBefore;
       const _pledgeAfter = [_collAfter, _debtAfter, true, address0, _ICRBefore]; // Note: Have the very last ICR here
       await (await yamato.bypassUpsert(_pledgeAfter)).wait();
 
-      const pledgeLengthAfter = await priorityRegistry.pledgeLength();
+      await expect(
+        priorityRegistry.getLevelIndice(_ICRBefore, 0)
+      ).to.be.revertedWith(
+        "reverted with panic code 0x32 (Array accessed at an out-of-bounds or negative index)"
+      );
 
-      expect(pledgeLengthAfter).to.eq(pledgeLengthBefore.add(1));
+      const pledgeLength3 = await priorityRegistry.pledgeLength();
+      expect(pledgeLength3).to.equal(pledgeLength2);
     });
     it(`succeeds to upsert coll=0 debt/=0 pledge`, async function () {
       const pledgeLengthBefore = await priorityRegistry.pledgeLength();
@@ -226,10 +237,10 @@ describe("contract PriorityRegistry", function () {
 
       expect(pledgeLengthAfter).to.eq(pledgeLengthBefore.add(1));
     });
-    it(`succeeds to update currentLICR`, async function () {
+    it(`succeeds to update current LICR`, async function () {
       // TODO
     });
-    it(`succeeds to back-scan the very next currentLICR`, async function () {
+    it(`succeeds to back-scan the very next current LICR`, async function () {
       // TODO
     });
   });
@@ -254,7 +265,7 @@ describe("contract PriorityRegistry", function () {
       ];
 
       await expect(yamato.bypassRemove(_nonSweptPledge)).to.be.revertedWith(
-        "Unintentional lastUpsertedTimeICRpertenk is given to the remove function."
+        "Unintentional priority is given to the remove function."
       );
     });
 
@@ -264,7 +275,7 @@ describe("contract PriorityRegistry", function () {
       const _owner = address0;
 
       // Note: Virtually it was a pledge with ICR=30% and now it had been redeemed. So it should be upserted to ICR=0 area.
-      const _sludgePledge = [_collBefore, _debtBefore, true, _owner, 3000];
+      const _sludgePledge = [_collBefore, _debtBefore, true, _owner, 30];
       await (await yamato.bypassUpsert(_sludgePledge)).wait();
 
       // Note: Sludge pledge is swept in the Yamato.sol and now it is "logless zero pledge" in the Yamato.sol-side. So it should be removed.
@@ -292,13 +303,15 @@ describe("contract PriorityRegistry", function () {
       const _sludgePledge = [_collBefore, _debtBefore, true, _owner, 0];
       await (await yamato.bypassUpsert(_sludgePledge)).wait();
 
-      // Note: A deposited pledge has just been withdrawn and lastUpsertedTimeICRpertenk is maxint.
+      // Note: A deposited pledge has just been withdrawn and priority is maxint.
+      const maxIntStr = BigNumber.from(2).pow(256).sub(1).toString();
+      const maxPriority = maxIntStr.slice(0, maxIntStr.length - 2);
       const _withdrawnPledge = [
         BigNumber.from("0"),
         BigNumber.from("0"),
         true,
         _owner,
-        BigNumber.from(2).pow(256).sub(1),
+        maxPriority,
       ];
 
       const pledgeLengthBefore = await priorityRegistry.pledgeLength();
@@ -350,8 +363,8 @@ describe("contract PriorityRegistry", function () {
       expect(nextRedeemableBefore.owner).to.eq(_owner1);
     });
 
-    describe("Context of lastUpsertedTimeICRpertenk", function () {
-      it(`fails to get the lowest pledge with coll>0 debt>0 lastUpsertedTimeICRpertenk=0`, async function () {
+    describe("Context of priority", function () {
+      it(`fails to get the lowest pledge with coll>0 debt>0 priority=0`, async function () {
         const _owner1 = address0;
         const _coll1 = BigNumber.from("1000000000000000000");
         const _debt1 = BigNumber.from("300001000000000000000000");
@@ -362,7 +375,7 @@ describe("contract PriorityRegistry", function () {
         );
       });
 
-      it(`fails to get the lowest but MAX_INT pledge \(=new pledge / coll>0 debt=0 lastUpsertedTimeICRpertenk=0\)`, async function () {
+      it(`fails to get the lowest but MAX_INT pledge \(=new pledge / coll>0 debt=0 priority=0\)`, async function () {
         const _owner1 = address0;
         const _coll1 = BigNumber.from("1000000000000000000");
         const _debt1 = BigNumber.from("0");
@@ -374,7 +387,7 @@ describe("contract PriorityRegistry", function () {
           "You can't redeem if redeemable candidate is more than MCR."
         );
       });
-      it(`succeeds to get the lowest pledge with lastUpsertedTimeICRpertenk\>0`, async function () {
+      it(`succeeds to get the lowest pledge with priority\>0`, async function () {
         const _owner1 = address0;
         const _coll1 = BigNumber.from("1000000000000000000");
         const _debt1 = BigNumber.from("300001000000000000000000");
@@ -385,8 +398,8 @@ describe("contract PriorityRegistry", function () {
         const _debt4 = _debt2.add("30002000000000000000000");
         const _inputPledge1 = [_coll1, _debt1, true, _owner1, 1];
         const _inputPledge2 = [_coll2, _debt2, true, _owner2, 1];
-        const _inputPledge3 = [_coll1, _debt3, true, _owner1, 9999];
-        const _inputPledge4 = [_coll2, _debt4, true, _owner2, 19999];
+        const _inputPledge3 = [_coll1, _debt3, true, _owner1, 99];
+        const _inputPledge4 = [_coll2, _debt4, true, _owner2, 199];
 
         await (await yamato.bypassUpsert(_inputPledge1)).wait();
         await (await yamato.bypassUpsert(_inputPledge2)).wait();
@@ -400,6 +413,7 @@ describe("contract PriorityRegistry", function () {
         expect(nextRedeemableBefore.coll).to.eq(_coll1);
         expect(nextRedeemableBefore.debt).to.eq(_debt3);
         expect(nextRedeemableBefore.owner).to.eq(_owner1);
+        expect(nextRedeemableAfter.isCreated).to.be.false;
         expect(nextRedeemableAfter.coll).to.eq(0);
         expect(nextRedeemableAfter.debt).to.eq(0);
       });

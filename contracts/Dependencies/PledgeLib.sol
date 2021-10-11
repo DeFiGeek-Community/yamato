@@ -56,7 +56,7 @@ library PledgeLib {
                 _pledge.debt,
                 _pledge.isCreated,
                 _pledge.owner,
-                _pledge.lastUpsertedTimeICRpertenk
+                _pledge.priority
             );
     }
 
@@ -71,7 +71,7 @@ library PledgeLib {
                 _pledge.debt.add(_adder),
                 _pledge.isCreated,
                 _pledge.owner,
-                _pledge.lastUpsertedTimeICRpertenk
+                _pledge.priority
             );
     }
 }

@@ -186,6 +186,10 @@ export function verifyWithEtherscan() {
     getDeploymentAddressPath("PriceFeed")
   ).toString();
   let CJPY = readFileSync(getDeploymentAddressPath("CJPY")).toString();
+  let FeePool = readFileSync(getDeploymentAddressPath("FeePool")).toString();
+  let FeePoolProxy = readFileSync(
+    getDeploymentAddressPath("FeePoolProxy")
+  ).toString();
   let CjpyOS = readFileSync(getDeploymentAddressPath("CjpyOS")).toString();
   let Yamato = readFileSync(getDeploymentAddressPath("Yamato")).toString();
   let Pool = readFileSync(getDeploymentAddressPath("Pool")).toString();
@@ -212,7 +216,13 @@ export function verifyWithEtherscan() {
     `npm run verify:testnet -- --contract contracts/CJPY.sol:CJPY ${CJPY}`
   );
   execSync(
-    `npm run verify:testnet -- --contract contracts/CjpyOS.sol:CjpyOS ${CjpyOS} ${CJPY} ${PriceFeed}`
+    `npm run verify:testnet -- --contract contracts/FeePool.sol:FeePool ${FeePool}`
+  );
+  execSync(
+    `npm run verify:testnet -- --contract contracts/FeePoolProxy.sol:FeePoolProxy ${FeePoolProxy}`
+  );
+  execSync(
+    `npm run verify:testnet -- --contract contracts/CjpyOS.sol:CjpyOS ${CjpyOS} ${CJPY} ${PriceFeed} ${FeePool}`
   );
   execSync(
     `npm run verify:testnet -- --contract contracts/Yamato.sol:Yamato ${Yamato} ${CjpyOS}`

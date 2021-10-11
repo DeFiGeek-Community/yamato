@@ -8,6 +8,7 @@ import {
   ChainLinkMock,
   TellorCallerMock,
   PriceFeed,
+  FeePoolProxy,
   CjpyOS,
   CJPY,
   Yamato,
@@ -16,6 +17,7 @@ import {
   ChainLinkMock__factory,
   TellorCallerMock__factory,
   PriceFeed__factory,
+  FeePoolProxy__factory,
   CjpyOS__factory,
   CJPY__factory,
   Yamato__factory,
@@ -32,6 +34,7 @@ describe("BurnCJPY :: contract Yamato", () => {
   let Tellor: TellorCallerMock;
   let PriceFeed: PriceFeed;
   let CJPY: CJPY;
+  let FeePoolProxy: FeePoolProxy;
   let CjpyOS: CjpyOS;
   let Yamato: Yamato;
   let Pool: Pool;
@@ -85,11 +88,16 @@ describe("BurnCJPY :: contract Yamato", () => {
       await ethers.getContractFactory("CJPY")
     )).deploy();
 
+    FeePoolProxy = await (<FeePoolProxy__factory>(
+      await ethers.getContractFactory("FeePoolProxy")
+    )).deploy();
+
     CjpyOS = await (<CjpyOS__factory>(
       await ethers.getContractFactory("CjpyOS")
     )).deploy(
       CJPY.address,
-      PriceFeed.address
+      PriceFeed.address,
+      FeePoolProxy.address
       // governance=deployer
     );
 

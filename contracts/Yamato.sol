@@ -18,6 +18,7 @@ import "./PriceFeed.sol";
 import "./Dependencies/PledgeLib.sol";
 import "./Dependencies/SafeMath.sol";
 import "./Interfaces/IYamato.sol";
+import "./Interfaces/IFeePool.sol";
 import "hardhat/console.sol";
 
 /// @title Yamato Pledge Manager Contract
@@ -31,6 +32,7 @@ contract Yamato is IYamato, ReentrancyGuard {
     IPriorityRegistry priorityRegistry;
     bool priorityRegistryInitialized = false;
     ICjpyOS cjpyOS;
+    IFeePool feePool;
     address public override feed;
     address governance;
     address tester;
@@ -63,6 +65,7 @@ contract Yamato is IYamato, ReentrancyGuard {
         cjpyOS = ICjpyOS(_cjpyOS);
         governance = msg.sender;
         tester = msg.sender;
+        feePool = IFeePool(cjpyOS.feePoolProxy());
         feed = cjpyOS.feed();
     }
 
@@ -139,7 +142,7 @@ contract Yamato is IYamato, ReentrancyGuard {
         /*
             2. Update PriorityRegistry
         */
-        pledge.lastUpsertedTimeICRpertenk = priorityRegistry.upsert(pledge);
+        pledge.priority = priorityRegistry.upsert(pledge);
 
         /*
             3. Send ETH to pool
@@ -189,7 +192,7 @@ contract Yamato is IYamato, ReentrancyGuard {
         /*
             4. Update PriorityRegistry
         */
-        pledge.lastUpsertedTimeICRpertenk = priorityRegistry.upsert(pledge);
+        pledge.priority = priorityRegistry.upsert(pledge);
 
         /*
             5. Cheat guard
@@ -242,7 +245,7 @@ contract Yamato is IYamato, ReentrancyGuard {
         /*
             3. Update PriorityRegistry
         */
-        pledge.lastUpsertedTimeICRpertenk = priorityRegistry.upsert(pledge);
+        pledge.priority = priorityRegistry.upsert(pledge);
 
         /*
             4-1. Charge CJPY
@@ -307,7 +310,7 @@ contract Yamato is IYamato, ReentrancyGuard {
                 pledge.toMem().getICR(feed) >= uint256(MCR).mul(100),
                 "Withdrawal failure: ICR can't be less than MCR after withdrawal."
             );
-            pledge.lastUpsertedTimeICRpertenk = priorityRegistry.upsert(pledge);
+            pledge.priority = priorityRegistry.upsert(pledge);
         }
 
         /*
@@ -341,12 +344,19 @@ contract Yamato is IYamato, ReentrancyGuard {
             try priorityRegistry.popRedeemable() returns (
                 Pledge memory _redeemablePledge
             ) {
-                if (!_redeemablePledge.isCreated) break; // Note: No any more redeemable pledges
-                if (_redeemablePledge.owner == address(0x00)) break; // Note: No any more redeemable pledges
-
+                if (
+                    !_redeemablePledge.isCreated ||
+                    _redeemablePledge.owner == address(0x00)
+                ) {
+                    break;
+                }
                 Pledge storage sPledge = pledges[_redeemablePledge.owner];
-                if (!sPledge.isCreated) break; // Note: registry-yamato mismatch
-                if (sPledge.coll == 0) break; // Note: A once-redeemed pledge is called twice
+                if (!sPledge.isCreated) {
+                    break;
+                }
+                if (sPledge.coll == 0) {
+                    break;
+                }
 
                 /*
                     1. Expense collateral
@@ -366,21 +376,16 @@ contract Yamato is IYamato, ReentrancyGuard {
                     2. Put the sludge pledge to the queue
                 */
                 try priorityRegistry.upsert(sPledge.toMem()) returns (
-                    uint256 _newICR
+                    uint256 _newICRpercent
                 ) {
-                    sPledge.lastUpsertedTimeICRpertenk = _newICR;
+                    sPledge.priority = _newICRpercent;
                 } catch {
                     break;
                 }
             } catch {
                 break;
-            } /* Overredemption Flow */
-            // Note: catch Error(string memory reason) doesn't work here
+            } /* Over-redemption Flow */
         }
-
-        /*
-            3. Ditribute colls.
-        */
 
         require(
             cjpyAmountStart > maxRedemptionCjpyAmount,
@@ -388,14 +393,18 @@ contract Yamato is IYamato, ReentrancyGuard {
         );
         // Note: This line can be the redemption execution checker
 
+        /*
+            3. Ditribute colls.
+        */
         uint256 totalRedeemedCjpyAmount = cjpyAmountStart -
             maxRedemptionCjpyAmount;
-        uint256 totalRedeemedEthAmount = totalRedeemedCjpyAmount
-            .div(jpyPerEth)
-            .mul(1e18);
+        uint256 totalRedeemedEthAmount = totalRedeemedCjpyAmount.mul(1e18).div(
+            jpyPerEth
+        );
         uint256 dividendEthAmount = (totalRedeemedEthAmount * (100 - GRR)) /
             100;
-        address _target = msg.sender;
+        address _redemptionBearer;
+        address _dividendDestination;
 
         if (isCoreRedemption) {
             /* 
@@ -405,13 +414,16 @@ contract Yamato is IYamato, ReentrancyGuard {
                             v
                 (+)  Dividend Reserve (ETH)
             */
-            _target = address(pool);
+            _redemptionBearer = address(pool);
+            _dividendDestination = address(feePool);
             pool.useRedemptionReserve(totalRedeemedCjpyAmount);
             pool.accumulateDividendReserve(dividendEthAmount);
+        } else {
+            _redemptionBearer = msg.sender;
+            _dividendDestination = msg.sender;
         }
-
-        cjpyOS.burnCJPY(_target, totalRedeemedCjpyAmount);
-        pool.sendETH(_target, (dividendEthAmount * (100 - uint256(GRR))) / 100);
+        pool.sendETH(_dividendDestination, dividendEthAmount);
+        cjpyOS.burnCJPY(_redemptionBearer, totalRedeemedCjpyAmount);
 
         /*
             4. Gas compensation
@@ -479,7 +491,7 @@ contract Yamato is IYamato, ReentrancyGuard {
 
     /// @notice Use when removing a pledge
     function _neutralizePledge(Pledge storage _pledge) internal {
-        _pledge.lastUpsertedTimeICRpertenk = 0;
+        _pledge.priority = 0;
         _pledge.isCreated = false;
         _pledge.owner = address(0);
     }
@@ -498,30 +510,22 @@ contract Yamato is IYamato, ReentrancyGuard {
         */
         uint256 redemptionAmount;
         uint256 reminder;
+        uint256 ethToBeExpensed;
         if (collValuation < cjpyAmount) {
             redemptionAmount = collValuation;
-            reminder = cjpyAmount.sub(collValuation);
+            ethToBeExpensed = sPledge.coll;
+            reminder = cjpyAmount - collValuation;
         } else {
             redemptionAmount = cjpyAmount;
+            ethToBeExpensed = redemptionAmount.mul(1e18).div(jpyPerEth);
             reminder = 0;
         }
 
         /*
-            2. Calc expense collateral
-        */
-        // Note: SafeMath.sub checks full substruction
-        uint256 ethToBeExpensed = redemptionAmount.mul(1e18).div(jpyPerEth);
-        sPledge.coll -= ethToBeExpensed;
-        /*
-            Note: storage variable in the internal func doesn't change state!
-        */
-
-        /*
             3. Update macro state
         */
-        require(totalDebt > redemptionAmount, "totalDebt is negative");
+        sPledge.coll -= ethToBeExpensed; // Note: storage variable in the internal func doesn't change state!
         totalDebt -= redemptionAmount;
-        require(totalColl > ethToBeExpensed, "totalColl is negative");
         totalColl -= ethToBeExpensed;
         TCR = getTCR();
 
