@@ -139,7 +139,8 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         redeemer = accounts[0];
         redeemee = accounts[1];
         toCollateralize = 1;
-        toBorrow = (await PriceFeed.lastGoodPrice()).mul(toCollateralize)
+        toBorrow = (await PriceFeed.lastGoodPrice())
+          .mul(toCollateralize)
           .mul(100)
           .div(MCR)
           .div(1e18 + "");
@@ -171,7 +172,8 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
           redeemerAddr
         );
 
-        toBorrow = (await PriceFeed.lastGoodPrice()).mul(toCollateralize)
+        toBorrow = (await PriceFeed.lastGoodPrice())
+          .mul(toCollateralize)
           .mul(100)
           .div(MCR)
           .div(1e18 + "");
@@ -196,8 +198,8 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         const redeemerETHBalanceAfter = await Yamato.provider.getBalance(
           redeemerAddr
         );
-        const nextRedeemable = await PriorityRegistry.nextRedeemable()
-        expect(nextRedeemable.isCreated).to.be.true
+        const nextRedeemable = await PriorityRegistry.nextRedeemable();
+        expect(nextRedeemable.isCreated).to.be.true;
 
         expect(totalSupplyAfter).to.be.lt(totalSupplyBefore);
         expect(redeemerCJPYBalanceAfter).to.be.lt(redeemerCJPYBalanceBefore);
@@ -352,7 +354,8 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         redeemee = accounts[1];
         anotherRedeemee = accounts[2];
         toCollateralize = 1;
-        toBorrow = (await PriceFeed.lastGoodPrice()).mul(toCollateralize)
+        toBorrow = (await PriceFeed.lastGoodPrice())
+          .mul(toCollateralize)
           .mul(100)
           .div(MCR)
           .div(1e18 + "");
@@ -365,21 +368,23 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
         /* Set the only and to-be-lowest ICR */
         await Yamato.connect(redeemee).deposit({
-          value: toERC20(toCollateralize*20 + ""),
+          value: toERC20(toCollateralize * 20 + ""),
         });
         await Yamato.connect(redeemee).borrow(toERC20(toBorrow.mul(20) + ""));
 
         await Yamato.connect(anotherRedeemee).deposit({
-          value: toERC20(toCollateralize*20.1 + ""),
+          value: toERC20(toCollateralize * 20.1 + ""),
         });
-        await Yamato.connect(anotherRedeemee).borrow(toERC20(toBorrow.mul(20) + ""));
-
+        await Yamato.connect(anotherRedeemee).borrow(
+          toERC20(toBorrow.mul(20) + "")
+        );
 
         /* Market Dump */
         await (await ChainLinkEthUsd.setLastPrice("204000000000")).wait(); //dec8
         await (await Tellor.setLastPrice("203000000000")).wait(); //dec8
 
-        toBorrow = (await PriceFeed.lastGoodPrice()).mul(toCollateralize)
+        toBorrow = (await PriceFeed.lastGoodPrice())
+          .mul(toCollateralize)
           .mul(100)
           .div(MCR)
           .div(1e18 + "");
@@ -396,14 +401,13 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
             false
           )
         ).wait();
-
       });
 
       it.only(`should run core redemption`, async function () {
-        const redeemerAddr = await redeemer.getAddress()
+        const redeemerAddr = await redeemer.getAddress();
 
-        const redeemablePledge = await PriorityRegistry.nextRedeemable()
-        const cjpyBalanceBefore = await CJPY.balanceOf(redeemerAddr)
+        const redeemablePledge = await PriorityRegistry.nextRedeemable();
+        const cjpyBalanceBefore = await CJPY.balanceOf(redeemerAddr);
 
         const txReceipt = await (
           await Yamato.connect(redeemer).redeem(
@@ -411,11 +415,11 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
             true
           )
         ).wait();
-        const redeemedPledge = await Yamato.getPledge(redeemablePledge.owner)
-        const cjpyBalanceAfter = await CJPY.balanceOf(redeemerAddr)
+        const redeemedPledge = await Yamato.getPledge(redeemablePledge.owner);
+        const cjpyBalanceAfter = await CJPY.balanceOf(redeemerAddr);
 
-        expect(cjpyBalanceAfter).to.equal(cjpyBalanceBefore)
-        expect(redeemedPledge.coll).to.be.lt(redeemablePledge.coll)
+        expect(cjpyBalanceAfter).to.equal(cjpyBalanceBefore);
+        expect(redeemedPledge.coll).to.be.lt(redeemablePledge.coll);
       });
     });
   });
