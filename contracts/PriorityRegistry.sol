@@ -125,20 +125,19 @@ contract PriorityRegistry is IPriorityRegistry {
         // Note: All deletions could cause traverse.
         // Note: Traversing to the ICR=MAX_UINT256 pledges are validated, don't worry about gas.
         // Note: LICR is state variable and it will be undated here.
-        uint _traverseStartICR;
-        if (_oldICRpercent > 0 && _newICRpercent > 0 ) {
+        uint256 _traverseStartICR;
+        if (_oldICRpercent > 0 && _newICRpercent > 0) {
             _traverseStartICR = LiquityMath._min(
-            _oldICRpercent,
-            _newICRpercent
-        );
+                _oldICRpercent,
+                _newICRpercent
+            );
         } else if (_oldICRpercent > 0) {
             _traverseStartICR = _oldICRpercent;
         } else if (_newICRpercent > 0) {
             _traverseStartICR = _newICRpercent;
         }
 
-        if(_traverseStartICR>0) _traverseToNextLICR(_traverseStartICR);
-
+        if (_traverseStartICR > 0) _traverseToNextLICR(_traverseStartICR);
     }
 
     /*
@@ -227,7 +226,6 @@ contract PriorityRegistry is IPriorityRegistry {
                 uint256(IYamato(yamato).MCR()),
             "You can't redeem if redeemable candidate is more than MCR."
         );
-
 
         // Note: pop is deletion. So traverse could be needed.
         // Note: Traversing to the ICR=MAX_UINT256 pledges are validated, don't worry about gas.

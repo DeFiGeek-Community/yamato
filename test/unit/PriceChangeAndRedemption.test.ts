@@ -345,6 +345,79 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         expect(redeemedPledgeAfter.priority).to.be.eq(0);
       });
     });
+
+    describe("Context - core redemption", function () {
+      beforeEach(async () => {
+        redeemer = accounts[0];
+        redeemee = accounts[1];
+        anotherRedeemee = accounts[2];
+        toCollateralize = 1;
+        toBorrow = (await PriceFeed.lastGoodPrice()).mul(toCollateralize)
+          .mul(100)
+          .div(MCR)
+          .div(1e18 + "");
+
+        /* Get redemption budget by her own */
+        await Yamato.connect(redeemer).deposit({
+          value: toERC20(toCollateralize * 20.2 + ""),
+        });
+        await Yamato.connect(redeemer).borrow(toERC20(toBorrow.mul(20) + ""));
+
+        /* Set the only and to-be-lowest ICR */
+        await Yamato.connect(redeemee).deposit({
+          value: toERC20(toCollateralize*20 + ""),
+        });
+        await Yamato.connect(redeemee).borrow(toERC20(toBorrow.mul(20) + ""));
+
+        await Yamato.connect(anotherRedeemee).deposit({
+          value: toERC20(toCollateralize*20.1 + ""),
+        });
+        await Yamato.connect(anotherRedeemee).borrow(toERC20(toBorrow.mul(20) + ""));
+
+
+        /* Market Dump */
+        await (await ChainLinkEthUsd.setLastPrice("204000000000")).wait(); //dec8
+        await (await Tellor.setLastPrice("203000000000")).wait(); //dec8
+
+        toBorrow = (await PriceFeed.lastGoodPrice()).mul(toCollateralize)
+          .mul(100)
+          .div(MCR)
+          .div(1e18 + "");
+
+        await (
+          await Yamato.connect(redeemer).redeem(
+            toERC20(toBorrow.mul(5) + ""),
+            false
+          )
+        ).wait();
+        await (
+          await Yamato.connect(redeemer).redeem(
+            toERC20(toBorrow.mul(5) + ""),
+            false
+          )
+        ).wait();
+
+      });
+
+      it.only(`should run core redemption`, async function () {
+        const redeemerAddr = await redeemer.getAddress()
+
+        const redeemablePledge = await PriorityRegistry.nextRedeemable()
+        const cjpyBalanceBefore = await CJPY.balanceOf(redeemerAddr)
+
+        const txReceipt = await (
+          await Yamato.connect(redeemer).redeem(
+            toERC20(toBorrow.mul(1) + ""),
+            true
+          )
+        ).wait();
+        const redeemedPledge = await Yamato.getPledge(redeemablePledge.owner)
+        const cjpyBalanceAfter = await CJPY.balanceOf(redeemerAddr)
+
+        expect(cjpyBalanceAfter).to.equal(cjpyBalanceBefore)
+        expect(redeemedPledge.coll).to.be.lt(redeemablePledge.coll)
+      });
+    });
   });
 });
 
