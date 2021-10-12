@@ -178,7 +178,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
           .div(MCR)
           .div(1e18 + "");
 
-        // traversing redemption must be cheap
+        // pledge loop and traversing redemption must be cheap
         expect(
           await Yamato.estimateGas.redeem(toERC20(toBorrow.mul(1) + ""), false)
         ).to.be.lt(1500000);
@@ -419,6 +419,58 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
         expect(cjpyBalanceAfter).to.equal(cjpyBalanceBefore);
         expect(redeemedPledge.coll).to.be.lt(redeemablePledge.coll);
+      });
+    });
+
+    describe.only("Context - A very large redemption", function () {
+      beforeEach(async () => {
+        redeemer = accounts[0];
+
+        toCollateralize = 1;
+        toBorrow = (await PriceFeed.lastGoodPrice())
+          .mul(toCollateralize)
+          .mul(100)
+          .div(MCR)
+          .div(1e18 + "");
+
+        /* A huge whale */
+        await Yamato.connect(redeemer).deposit({
+          value: toERC20(toCollateralize * 210 + ""),
+        });
+        await Yamato.connect(redeemer).borrow(toERC20(toBorrow.mul(200) + ""));
+
+        /* Tiny retail investors */
+        for (var i = 1; i < accounts.length; i++) {
+          let redeemee = accounts[i];
+          await (
+            await Yamato.connect(redeemee).deposit({
+              value: toERC20(toCollateralize * 5 + ""),
+            })
+          ).wait();
+          await (
+            await Yamato.connect(redeemee).borrow(toERC20(toBorrow.mul(5) + ""))
+          ).wait();
+        }
+
+        /* Market Dump */
+        await (await ChainLinkEthUsd.setLastPrice("204000000000")).wait(); //dec8
+        await (await Tellor.setLastPrice("203000000000")).wait(); //dec8
+
+        toBorrow = (await PriceFeed.lastGoodPrice())
+          .mul(toCollateralize)
+          .mul(100)
+          .div(MCR)
+          .div(1e18 + "");
+      });
+
+      it(`should run core redemption`, async function () {
+        // pledge loop and traversing redemption must be cheap
+        expect(
+          await Yamato.estimateGas.redeem(
+            toERC20(toBorrow.mul(100) + ""),
+            false
+          )
+        ).to.be.lt(7020000);
       });
     });
   });
