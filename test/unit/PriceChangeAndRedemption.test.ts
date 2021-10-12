@@ -179,7 +179,9 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
           .div(1e18 + "");
 
         // traversing redemption must be cheap
-        expect(await Yamato.estimateGas.redeem(toERC20(toBorrow.mul(1) + ""), false)).to.be.lt(1500000)
+        expect(
+          await Yamato.estimateGas.redeem(toERC20(toBorrow.mul(1) + ""), false)
+        ).to.be.lt(1500000);
 
         const txReceipt = await (
           await Yamato.connect(redeemer).redeem(
@@ -433,7 +435,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       redeemer = accounts[0];
       redeemee = accounts[1];
       anotherRedeemee = accounts[2];
-      yetAnotherRedeemee = accounts[3]
+      yetAnotherRedeemee = accounts[3];
       toCollateralize = 1;
       toBorrow = (await PriceFeed.lastGoodPrice())
         .mul(toCollateralize)
@@ -465,8 +467,6 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       await Yamato.connect(yetAnotherRedeemee).borrow(
         toERC20(toBorrow.mul(20) + "")
       );
-
-
 
       /* Market Dump */
       await (await ChainLinkEthUsd.setLastPrice("204000000000")).wait(); //dec8
@@ -535,14 +535,39 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
         const sweepablePledge = await PriorityRegistry.nextSweepable();
         const poolCjpyBalanceBefore = await CJPY.balanceOf(Pool.address);
-        
-        await ( await CJPY.connect(redeemer).transfer(sweepablePledge.owner, await CJPY.balanceOf(redeemerAddr)) ).wait()
-        await ( await CJPY.connect(anotherRedeemee).transfer(sweepablePledge.owner, await CJPY.balanceOf(await anotherRedeemee.getAddress())) ).wait()
-        await ( await CJPY.connect(yetAnotherRedeemee).transfer(sweepablePledge.owner, await CJPY.balanceOf(await yetAnotherRedeemee.getAddress())) ).wait()
 
-        let matched = await Promise.all(accounts.map(async (acc)=> await acc.getAddress() == sweepablePledge.owner ? acc : null ))
-        matched = matched.filter(el=> !!el );
-        await (await Yamato.connect(matched[0]).repay(sweepablePledge.debt.mul((100000000000-1)+"").div(100000000000+""))).wait();
+        await (
+          await CJPY.connect(redeemer).transfer(
+            sweepablePledge.owner,
+            await CJPY.balanceOf(redeemerAddr)
+          )
+        ).wait();
+        await (
+          await CJPY.connect(anotherRedeemee).transfer(
+            sweepablePledge.owner,
+            await CJPY.balanceOf(await anotherRedeemee.getAddress())
+          )
+        ).wait();
+        await (
+          await CJPY.connect(yetAnotherRedeemee).transfer(
+            sweepablePledge.owner,
+            await CJPY.balanceOf(await yetAnotherRedeemee.getAddress())
+          )
+        ).wait();
+
+        let matched = await Promise.all(
+          accounts.map(async (acc) =>
+            (await acc.getAddress()) == sweepablePledge.owner ? acc : null
+          )
+        );
+        matched = matched.filter((el) => !!el);
+        await (
+          await Yamato.connect(matched[0]).repay(
+            sweepablePledge.debt
+              .mul(100000000000 - 1 + "")
+              .div(100000000000 + "")
+          )
+        ).wait();
 
         await (await Yamato.connect(redeemer).sweep()).wait();
         const sweptPledge = await Yamato.getPledge(sweepablePledge.owner);
