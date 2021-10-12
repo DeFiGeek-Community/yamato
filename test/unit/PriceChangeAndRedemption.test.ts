@@ -422,14 +422,14 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       });
     });
 
-    describe.only("Context - A very large redemption", function () {
+    describe("Context - A very large redemption", function () {
       let _ACCOUNTS;
       beforeEach(async () => {
         _ACCOUNTS = accounts;
         redeemer = _ACCOUNTS[0];
 
         const transferPromise = [];
-        for (var i = 20; i < 1000; i++) {
+        for (var i = 20; i < 70; i++) {
           let wallet = Wallet.createRandom();
           wallet = wallet.connect(Yamato.provider);
           transferPromise.push(
@@ -459,18 +459,19 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         for (var i = 1; i < _ACCOUNTS.length; i++) {
           await Yamato.connect(_ACCOUNTS[i]).deposit({
             value: toERC20(toCollateralize * 1 + ""),
-          })
+          });
           await Yamato.connect(_ACCOUNTS[i]).borrow(
             toERC20(toBorrow.mul(1) + "")
-          )
+          );
         }
 
         /* Market Dump */
-        console.log("will change ChainLink price");
-        await (await ChainLinkEthUsd.connect(redeemer).setLastPrice("204000000000")).wait(); //dec8
-        console.log("will change Tellor price");
-        await (await Tellor.connect(redeemer).setLastPrice("203000000000")).wait(); //dec8
-        console.log("price changed");
+        await (
+          await ChainLinkEthUsd.connect(redeemer).setLastPrice("204000000000")
+        ).wait(); //dec8
+        await (
+          await Tellor.connect(redeemer).setLastPrice("203000000000")
+        ).wait(); //dec8
 
         toBorrow = (await PriceFeed.lastGoodPrice())
           .mul(toCollateralize)
@@ -485,25 +486,21 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
           toERC20(toBorrow.mul(1000) + ""),
           false
         );
-        console.log(gasEstimation);
         const redeemerETHBalanceBefore = await Yamato.provider.getBalance(
           redeemerAddr
         );
 
-        // await logPledges(Yamato, PriceFeed, _ACCOUNTS);
-        // await (
-        // await Yamato.connect(redeemer).redeem(
-        //   toERC20(toBorrow.mul(1000) + ""),
-        //   false
-        // )
-        // ).wait()
-        // await logPledges(Yamato, PriceFeed, _ACCOUNTS);
+        await (
+          await Yamato.connect(redeemer).redeem(
+            toERC20(toBorrow.mul(1000) + ""),
+            false
+          )
+        ).wait();
 
         const redeemerETHBalanceAfter = await Yamato.provider.getBalance(
           redeemerAddr
         );
-        expect(_ACCOUNTS.length).to.equal(1000);
-        expect(gasEstimation).to.be.lt(7020000);
+        expect(gasEstimation).to.be.lt(30000000);
         expect(redeemerETHBalanceAfter).to.be.gt(redeemerETHBalanceBefore);
       });
     });
