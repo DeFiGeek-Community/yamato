@@ -154,7 +154,7 @@ contract PriorityRegistry is IPriorityRegistry {
         );
         require(
             _pledge.debt == 0,
-            "Removal Error: coll has to be zero for removal."
+            "Removal Error: debt has to be zero for removal."
         );
         require(
             _pledge.priority <= floor(2**256 - 1),

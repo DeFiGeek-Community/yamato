@@ -458,8 +458,10 @@ contract Yamato is IYamato, ReentrancyGuard {
                 if (sPledge.debt == 0) break; // Note: A once-swept pledge is called twice
 
                 maxSweeplable = _sweepDebt(sPledge, maxSweeplable);
-                priorityRegistry.remove(sPledge.toMem());
-                _neutralizePledge(sPledge);
+                if (maxSweeplable > 0) {
+                    priorityRegistry.remove(sPledge.toMem());
+                    _neutralizePledge(sPledge);
+                }
             } catch {
                 break;
             } /* Oversweeping Flow */
