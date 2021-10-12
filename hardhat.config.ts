@@ -88,7 +88,7 @@ module.exports = {
     spacing: 2,
   },
   mocha: {
-    timeout: 60000,
+    timeout: 600000,
   },
   contractSizer: {
     alphaSort: true,
