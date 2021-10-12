@@ -2,7 +2,7 @@ import { ethers } from "hardhat";
 import { smock } from "@defi-wonderland/smock";
 import chai, { expect } from "chai";
 import { solidity } from "ethereum-waffle";
-import { Signer, BigNumber } from "ethers";
+import { Signer, BigNumber, Wallet } from "ethers";
 import { toERC20 } from "../param/helper";
 import {
   ChainLinkMock,
@@ -422,9 +422,25 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       });
     });
 
-    describe.only("Context - A very large redemption", function () {
+    describe("Context - A very large redemption", function () {
+      let _ACCOUNTS;
       beforeEach(async () => {
-        redeemer = accounts[0];
+        _ACCOUNTS = accounts;
+        redeemer = _ACCOUNTS[0];
+
+        const transferPromise = [];
+        for (var i = 20; i < 70; i++) {
+          let wallet = Wallet.createRandom();
+          wallet = wallet.connect(Yamato.provider);
+          transferPromise.push(
+            redeemer.sendTransaction({
+              to: wallet.address,
+              value: BigNumber.from(1.1e18 + ""),
+            })
+          );
+          _ACCOUNTS.push(wallet);
+        }
+        await Promise.all(transferPromise);
 
         toCollateralize = 1;
         toBorrow = (await PriceFeed.lastGoodPrice())
@@ -435,26 +451,27 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
         /* A huge whale */
         await Yamato.connect(redeemer).deposit({
-          value: toERC20(toCollateralize * 210 + ""),
+          value: toERC20(toCollateralize * 2100 + ""),
         });
-        await Yamato.connect(redeemer).borrow(toERC20(toBorrow.mul(200) + ""));
+        await Yamato.connect(redeemer).borrow(toERC20(toBorrow.mul(2000) + ""));
 
         /* Tiny retail investors */
-        for (var i = 1; i < accounts.length; i++) {
-          let redeemee = accounts[i];
-          await (
-            await Yamato.connect(redeemee).deposit({
-              value: toERC20(toCollateralize * 5 + ""),
-            })
-          ).wait();
-          await (
-            await Yamato.connect(redeemee).borrow(toERC20(toBorrow.mul(5) + ""))
-          ).wait();
+        for (var i = 1; i < _ACCOUNTS.length; i++) {
+          await Yamato.connect(_ACCOUNTS[i]).deposit({
+            value: toERC20(toCollateralize * 1 + ""),
+          });
+          await Yamato.connect(_ACCOUNTS[i]).borrow(
+            toERC20(toBorrow.mul(1) + "")
+          );
         }
 
         /* Market Dump */
-        await (await ChainLinkEthUsd.setLastPrice("204000000000")).wait(); //dec8
-        await (await Tellor.setLastPrice("203000000000")).wait(); //dec8
+        await (
+          await ChainLinkEthUsd.connect(redeemer).setLastPrice("204000000000")
+        ).wait(); //dec8
+        await (
+          await Tellor.connect(redeemer).setLastPrice("203000000000")
+        ).wait(); //dec8
 
         toBorrow = (await PriceFeed.lastGoodPrice())
           .mul(toCollateralize)
@@ -463,14 +480,28 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
           .div(1e18 + "");
       });
 
-      it(`should run core redemption`, async function () {
-        // pledge loop and traversing redemption must be cheap
-        expect(
-          await Yamato.estimateGas.redeem(
-            toERC20(toBorrow.mul(100) + ""),
+      it(`should be runnable in a block`, async function () {
+        const redeemerAddr = await redeemer.getAddress();
+        const gasEstimation = await Yamato.estimateGas.redeem(
+          toERC20(toBorrow.mul(1000) + ""),
+          false
+        );
+        const redeemerETHBalanceBefore = await Yamato.provider.getBalance(
+          redeemerAddr
+        );
+
+        await (
+          await Yamato.connect(redeemer).redeem(
+            toERC20(toBorrow.mul(1000) + ""),
             false
           )
-        ).to.be.lt(7020000);
+        ).wait();
+
+        const redeemerETHBalanceAfter = await Yamato.provider.getBalance(
+          redeemerAddr
+        );
+        expect(gasEstimation).to.be.lt(30000000);
+        expect(redeemerETHBalanceAfter).to.be.gt(redeemerETHBalanceBefore);
       });
     });
   });
