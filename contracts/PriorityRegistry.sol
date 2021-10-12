@@ -71,6 +71,7 @@ contract PriorityRegistry is IPriorityRegistry {
         onlyYamato
         returns (uint256 _newICRpercent)
     {
+        // uint256 gasStart = gasleft();
         require(
             !(_pledge.coll == 0 && _pledge.debt == 0 && _pledge.priority != 0),
             "Upsert Error: The logless zero pledge cannot be upserted. It should be removed."
@@ -138,6 +139,7 @@ contract PriorityRegistry is IPriorityRegistry {
         }
 
         if (_traverseStartICR > 0) _traverseToNextLICR(_traverseStartICR);
+        // console.log("gasUsed:upsert(): %s", gasStart - gasleft());
     }
 
     /*
