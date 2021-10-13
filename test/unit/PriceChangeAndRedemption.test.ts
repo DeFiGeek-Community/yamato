@@ -423,7 +423,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
     });
 
     describe("Context - A very large redemption", function () {
-      const COUNT = 145;
+      const COUNT = 100;
       let _ACCOUNTS;
       beforeEach(async () => {
         _ACCOUNTS = accounts;
