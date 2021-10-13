@@ -114,6 +114,7 @@ describe("contract Yamato", function () {
     mockPool.lockETH.returns(0);
     mockPool.sendETH.returns(0);
     mockFeed.fetchPrice.returns(PRICE);
+    mockFeed.lastGoodPrice.returns(PRICE);
     await (await yamato.updateTCR()).wait();
     mockPool.redemptionReserve.returns(1);
     mockPool.sweepReserve.returns(BigNumber.from("99999999000000000000000000"));
@@ -333,6 +334,7 @@ describe("contract Yamato", function () {
     beforeEach(async function () {
       mockCjpyOS.burnCJPY.returns(0);
       mockFeed.fetchPrice.returns(PRICE);
+      mockFeed.lastGoodPrice.returns(PRICE);
       await (await yamato.updateTCR()).wait();
     });
 
@@ -417,6 +419,7 @@ describe("contract Yamato", function () {
       await yamato.borrow(toERC20(toBorrow + ""));
 
       mockFeed.fetchPrice.returns(PRICE.div(2));
+      mockFeed.lastGoodPrice.returns(PRICE.div(2));
       // Note: update TCR
       await (await yamato.updateTCR()).wait();
       const dumpedTCR = await yamato.TCR();
@@ -462,6 +465,7 @@ describe("contract Yamato", function () {
     const PRICE = BigNumber.from(260000).mul(1e18 + "");
     beforeEach(async function () {
       mockFeed.fetchPrice.returns(PRICE);
+      mockFeed.lastGoodPrice.returns(PRICE);
       await (await yamato.updateTCR()).wait();
       mockPool.sendETH.returns(0);
     });
@@ -513,6 +517,7 @@ describe("contract Yamato", function () {
     it(`can't be executed in the ICR < MCR`, async function () {
       const MCR = BigNumber.from(110);
       mockFeed.fetchPrice.returns(PRICE);
+      mockFeed.lastGoodPrice.returns(PRICE);
       await (await yamato.updateTCR()).wait();
       mockPool.sendETH.returns(0);
 
@@ -534,6 +539,7 @@ describe("contract Yamato", function () {
       (<any>yamato.provider).send("evm_mine");
 
       mockFeed.fetchPrice.returns(PRICE.div(4));
+      mockFeed.lastGoodPrice.returns(PRICE.div(4));
       await (await yamato.updateTCR()).wait();
 
       await expect(
@@ -543,6 +549,7 @@ describe("contract Yamato", function () {
     it(`can't make ICR < MCR by this withdrawal`, async function () {
       const MCR = BigNumber.from(110);
       mockFeed.fetchPrice.returns(PRICE);
+      mockFeed.lastGoodPrice.returns(PRICE);
       await (await yamato.updateTCR()).wait();
       mockPool.sendETH.returns(0);
 
@@ -603,6 +610,7 @@ describe("contract Yamato", function () {
       mockPool.accumulateDividendReserve.returns(0);
       mockPool.sendETH.returns(0);
       mockFeed.fetchPrice.returns(PRICE);
+      mockFeed.lastGoodPrice.returns(PRICE);
       mockPool.redemptionReserve.returns(1000000000000);
       await (await yamato.updateTCR()).wait();
 
@@ -632,6 +640,7 @@ describe("contract Yamato", function () {
 
       // TODO: lower ICR must be less than 11000
       mockFeed.fetchPrice.returns(PRICE_AFTER);
+      mockFeed.lastGoodPrice.returns(PRICE_AFTER);
       await (await yamato.updateTCR()).wait();
 
       /* Set higher ICR */
@@ -671,6 +680,7 @@ describe("contract Yamato", function () {
     it(`should improve TCR when TCR \> 1`, async function () {
       const PRICE_A_BIT_DUMPED = PRICE.mul(65).div(100);
       mockFeed.fetchPrice.returns(PRICE_A_BIT_DUMPED);
+      mockFeed.lastGoodPrice.returns(PRICE_A_BIT_DUMPED);
 
       const TCRBefore = await yamato.TCR();
       await yamato.connect(accounts[0]).redeem(toERC20(toBorrow + ""), false);
@@ -680,6 +690,7 @@ describe("contract Yamato", function () {
     });
     it(`should shrink TCR when TCR \< 1`, async function () {
       mockFeed.fetchPrice.returns(PRICE_AFTER.div(2));
+      mockFeed.lastGoodPrice.returns(PRICE_AFTER.div(2));
       await (await yamato.updateTCR()).wait();
       const TCRBefore = await yamato.TCR();
       await yamato.connect(accounts[0]).redeem(toERC20(toBorrow + ""), false);
@@ -689,6 +700,7 @@ describe("contract Yamato", function () {
     });
     it(`should not run if there are no ICR \< MCR pledges`, async function () {
       mockFeed.fetchPrice.returns(PRICE.mul(3));
+      mockFeed.lastGoodPrice.returns(PRICE.mul(3));
       await (await yamato.updateTCR()).wait();
       await expect(
         yamato.connect(accounts[0]).redeem(toERC20(toBorrow + ""), false)
@@ -742,6 +754,7 @@ describe("contract Yamato", function () {
         BigNumber.from("99999999000000000000000000")
       );
       mockFeed.fetchPrice.returns(PRICE);
+      mockFeed.lastGoodPrice.returns(PRICE);
       await (await yamato.updateTCR()).wait();
       mockCjpyOS.burnCJPY.returns(0);
 
@@ -771,6 +784,7 @@ describe("contract Yamato", function () {
           Make those undercollateralized
         */
       mockFeed.fetchPrice.returns(PRICE_AFTER);
+      mockFeed.lastGoodPrice.returns(PRICE_AFTER);
       await (await yamato.updateTCR()).wait();
     });
 

@@ -124,6 +124,7 @@ contract Yamato is IYamato, ReentrancyGuard {
     /// @notice Make a Pledge with ETH. "Top-up" supported.
     /// @dev We haven't supported ERC-20 pledges and pool
     function deposit() public payable nonReentrant {
+        IPriceFeed(feed).fetchPrice();
         uint256 ethAmount = msg.value;
 
         /*
@@ -160,6 +161,7 @@ contract Yamato is IYamato, ReentrancyGuard {
         /*
             1. Ready
         */
+        IPriceFeed(feed).fetchPrice();
         Pledge storage pledge = pledges[msg.sender];
         uint256 _ICRAfter = pledge.toMem().addDebt(borrowAmountInCjpy).getICR(
             feed
@@ -224,6 +226,7 @@ contract Yamato is IYamato, ReentrancyGuard {
         /*
             1. Get feed and Pledge
         */
+        IPriceFeed(feed).fetchPrice();
         Pledge storage pledge = pledges[msg.sender];
 
         /*
@@ -261,6 +264,7 @@ contract Yamato is IYamato, ReentrancyGuard {
         /*
             1. Get feed and pledge
         */
+        IPriceFeed(feed).fetchPrice();
         Pledge storage pledge = pledges[msg.sender];
 
         /*
@@ -336,8 +340,8 @@ contract Yamato is IYamato, ReentrancyGuard {
         public
         nonReentrant
     {
-        uint256 redeemStart = pool.redemptionReserve();
         uint256 jpyPerEth = IPriceFeed(feed).fetchPrice();
+        uint256 redeemStart = pool.redemptionReserve();
         uint256 cjpyAmountStart = maxRedemptionCjpyAmount;
 
         while (maxRedemptionCjpyAmount > 0) {
@@ -361,15 +365,10 @@ contract Yamato is IYamato, ReentrancyGuard {
                 /*
                     1. Expense collateral
                 */
-                uint256 _collBefore = sPledge.coll;
                 maxRedemptionCjpyAmount = _expenseColl(
                     sPledge,
                     maxRedemptionCjpyAmount,
                     jpyPerEth
-                );
-                require(
-                    sPledge.coll < _collBefore,
-                    "Expense error: This redemption failed to reduce coll."
                 );
 
                 /*
@@ -391,10 +390,9 @@ contract Yamato is IYamato, ReentrancyGuard {
             cjpyAmountStart > maxRedemptionCjpyAmount,
             "No pledges are redeemed."
         );
-        // Note: This line can be the redemption execution checker
 
         /*
-            3. Ditribute colls.
+            3. Update global state and ditribute colls.
         */
         uint256 totalRedeemedCjpyAmount = cjpyAmountStart -
             maxRedemptionCjpyAmount;
@@ -405,6 +403,10 @@ contract Yamato is IYamato, ReentrancyGuard {
             100;
         address _redemptionBearer;
         address _dividendDestination;
+
+        totalDebt -= totalRedeemedCjpyAmount;
+        totalColl -= totalRedeemedEthAmount;
+        TCR = getTCR();
 
         if (isCoreRedemption) {
             /* 
@@ -436,6 +438,7 @@ contract Yamato is IYamato, ReentrancyGuard {
     /// @notice Initialize all pledges such that ICR is 0 (= (0*price)/debt )
     /// @dev Will be run by incentivised DAO member. Scan all pledges and filter debt>0, coll=0. Pay gas compensation from the 1% of SweepReserve at most, and as same as 1% of the actual sweeping amount.
     function sweep() public nonReentrant {
+        IPriceFeed(feed).fetchPrice();
         uint256 sweepStart = pool.sweepReserve();
         require(sweepStart > 0, "Sweep failure: sweep reserve is empty.");
         uint256 maxGasCompensation = sweepStart * (GRR / 100);
@@ -527,10 +530,6 @@ contract Yamato is IYamato, ReentrancyGuard {
             3. Update macro state
         */
         sPledge.coll -= ethToBeExpensed; // Note: storage variable in the internal func doesn't change state!
-        totalDebt -= redemptionAmount;
-        totalColl -= ethToBeExpensed;
-        TCR = getTCR();
-
         return reminder;
     }
 
@@ -573,6 +572,7 @@ contract Yamato is IYamato, ReentrancyGuard {
     /// @dev (totalColl*jpyPerEth)/totalDebt
     /// @return _TCR in uint256
     function getTCR() public returns (uint256 _TCR) {
+        IPriceFeed(feed).fetchPrice();
         Pledge memory _pseudoPledge = Pledge(
             totalColl,
             totalDebt,
