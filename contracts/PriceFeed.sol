@@ -61,7 +61,8 @@ contract PriceFeed is Ownable, BaseMath, IPriceFeed {
     uint256 public constant MAX_PRICE_DIFFERENCE_BETWEEN_ORACLES = 5e16; // 5%
 
     // The last good price seen from an oracle by Liquity
-    uint256 public lastGoodPrice;
+    uint256 public override lastGoodPrice;
+    uint256 lastSeen;
 
     struct ChainlinkResponse {
         uint80 roundId;
@@ -147,6 +148,11 @@ contract PriceFeed is Ownable, BaseMath, IPriceFeed {
      *
      */
     function fetchPrice() external override returns (uint256) {
+        /*
+            The early quit by 0xMotoko (Oct 13, 2021)
+        */
+        if (lastSeen == block.number) return lastGoodPrice;
+
         // Get current and previous price data from Chainlink, and current price data from Tellor
         ChainlinkResponse
             memory chainlinkResponse = _getCurrentChainlinkResponse();
@@ -610,6 +616,7 @@ contract PriceFeed is Ownable, BaseMath, IPriceFeed {
 
     function _storePrice(uint256 _currentPrice) internal {
         lastGoodPrice = _currentPrice;
+        lastSeen = block.number;
         emit LastGoodPriceUpdated(_currentPrice);
     }
 

@@ -28,7 +28,7 @@ library PledgeLib {
         require(_feed != address(0), "Feed is null address.");
         IPriceFeed feed = IPriceFeed(_feed);
 
-        uint256 _jpyPerEth = feed.fetchPrice(); // dec18
+        uint256 _jpyPerEth = feed.lastGoodPrice(); // dec18
         uint256 _coll = _pledge.coll; // dec18
         uint256 _debt = _pledge.debt; // dec18
         uint256 _collInCjpy = (_coll * _jpyPerEth) / 1e18; // dec18 * dec18 / dec18 = dec18

@@ -74,6 +74,7 @@ describe("contract PriorityRegistry", function () {
     /* END DIRTY-FIX */
 
     mockFeed.fetchPrice.returns(PRICE);
+    mockFeed.lastGoodPrice.returns(PRICE);
     mockCjpyOS.feed.returns(mockFeed.address);
     mockCjpyOS.feePoolProxy.returns(mockFeePoolProxy.address);
     mockYamato.feed.returns(mockFeed.address);

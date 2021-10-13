@@ -423,13 +423,14 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
     });
 
     describe("Context - A very large redemption", function () {
+      const COUNT = 145;
       let _ACCOUNTS;
       beforeEach(async () => {
         _ACCOUNTS = accounts;
         redeemer = _ACCOUNTS[0];
 
         const transferPromise = [];
-        for (var i = 20; i < 70; i++) {
+        for (var i = 20; i < COUNT; i++) {
           let wallet = Wallet.createRandom();
           wallet = wallet.connect(Yamato.provider);
           transferPromise.push(
@@ -484,7 +485,8 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         const redeemerAddr = await redeemer.getAddress();
         const gasEstimation = await Yamato.estimateGas.redeem(
           toERC20(toBorrow.mul(1000) + ""),
-          false
+          false,
+          { gasLimit: 30000000 }
         );
         const redeemerETHBalanceBefore = await Yamato.provider.getBalance(
           redeemerAddr
@@ -493,7 +495,8 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         await (
           await Yamato.connect(redeemer).redeem(
             toERC20(toBorrow.mul(1000) + ""),
-            false
+            false,
+            { gasLimit: 30000000 }
           )
         ).wait();
 
