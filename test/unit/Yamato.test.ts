@@ -12,7 +12,9 @@ import {
   PriorityRegistry,
   PriorityRegistry__factory,
   Yamato,
+  YamatoDummy,
   Yamato__factory,
+  YamatoDummy__factory,
   FeePool__factory,
   YMT,
 } from "../../typechain";
@@ -30,6 +32,7 @@ describe("contract Yamato", function () {
   let mockCjpyOS: FakeContract<CjpyOS>;
   let mockPriorityRegistry: FakeContract<PriorityRegistry>;
   let yamato: Yamato;
+  let yamatoDummy: YamatoDummy;
   let priorityRegistry: PriorityRegistry;
   let PRICE: BigNumber;
   let MCR: BigNumber;
@@ -63,6 +66,13 @@ describe("contract Yamato", function () {
     yamato = await (<Yamato__factory>(
       await ethers.getContractFactory("Yamato", { libraries: { PledgeLib } })
     )).deploy(mockCjpyOS.address);
+    yamatoDummy = await (<YamatoDummy__factory>await ethers.getContractFactory(
+      "YamatoDummy",
+      {
+        libraries: { PledgeLib },
+      }
+    )).deploy(mockCjpyOS.address); // This has test funcs to size Yamato contract
+
     /* BEGIN DIRTY-FIX
     !!TODO!!
     The code that this block contains is
@@ -105,6 +115,10 @@ describe("contract Yamato", function () {
         libraries: { PledgeLib },
       })
     )).deploy(yamato.address);
+
+    await (
+      await yamatoDummy.setPriorityRegistry(priorityRegistry.address)
+    ).wait();
 
     PRICE = BigNumber.from(260000).mul(1e18 + "");
     MCR = BigNumber.from(110);
@@ -173,61 +187,61 @@ describe("contract Yamato", function () {
   describe("FR()", function () {
     /* Given ICR, get borrowing fee. */
     it(`returns 2000 pertenk for ICR 11000 pertenk`, async function () {
-      expect(await yamato.FR(11000)).to.eq(2000);
+      expect(await yamatoDummy.FR(11000)).to.eq(2000);
     });
     it(`returns 2000 pertenk for ICR 11001 pertenk`, async function () {
-      expect(await yamato.FR(11001)).to.eq(2000);
+      expect(await yamatoDummy.FR(11001)).to.eq(2000);
     });
     it(`returns 1999 pertenk for ICR 11002 pertenk`, async function () {
-      expect(await yamato.FR(11002)).to.eq(1999);
+      expect(await yamatoDummy.FR(11002)).to.eq(1999);
     });
     it(`returns 1992 pertenk for ICR 11010 pertenk`, async function () {
-      expect(await yamato.FR(11010)).to.eq(1992);
+      expect(await yamatoDummy.FR(11010)).to.eq(1992);
     });
     it(`returns 800 pertenk for ICR 12500 pertenk`, async function () {
-      expect(await yamato.FR(12500)).to.eq(800);
+      expect(await yamatoDummy.FR(12500)).to.eq(800);
     });
     it(`returns 480 pertenk for ICR 12900 pertenk`, async function () {
-      expect(await yamato.FR(12900)).to.eq(480);
+      expect(await yamatoDummy.FR(12900)).to.eq(480);
     });
     it(`returns 400 pertenk for ICR 13000 pertenk`, async function () {
-      expect(await yamato.FR(13000)).to.eq(400);
+      expect(await yamatoDummy.FR(13000)).to.eq(400);
     });
     it(`returns 210 pertenk for ICR 14900 pertenk`, async function () {
-      expect(await yamato.FR(14900)).to.eq(210);
+      expect(await yamatoDummy.FR(14900)).to.eq(210);
     });
     it(`returns 200 pertenk for ICR 15000 pertenk`, async function () {
-      expect(await yamato.FR(15000)).to.eq(200);
+      expect(await yamatoDummy.FR(15000)).to.eq(200);
     });
     it(`returns 150 pertenk for ICR 17500 pertenk`, async function () {
-      expect(await yamato.FR(17500)).to.eq(150);
+      expect(await yamatoDummy.FR(17500)).to.eq(150);
     });
     it(`returns 102 pertenk for ICR 19900 pertenk`, async function () {
-      expect(await yamato.FR(19900)).to.eq(102);
+      expect(await yamatoDummy.FR(19900)).to.eq(102);
     });
     it(`returns 100 pertenk for ICR 20000 pertenk`, async function () {
-      expect(await yamato.FR(20000)).to.eq(100);
+      expect(await yamatoDummy.FR(20000)).to.eq(100);
     });
     it(`returns 85 pertenk for ICR 25000 pertenk`, async function () {
-      expect(await yamato.FR(25000)).to.eq(85);
+      expect(await yamatoDummy.FR(25000)).to.eq(85);
     });
     it(`returns 70 pertenk for ICR 30000 pertenk`, async function () {
-      expect(await yamato.FR(30000)).to.eq(70);
+      expect(await yamatoDummy.FR(30000)).to.eq(70);
     });
     it(`returns 40 pertenk for ICR 40000 pertenk`, async function () {
-      expect(await yamato.FR(40000)).to.eq(40);
+      expect(await yamatoDummy.FR(40000)).to.eq(40);
     });
     it(`returns 11 pertenk for ICR 49700 pertenk`, async function () {
-      expect(await yamato.FR(49700)).to.eq(11);
+      expect(await yamatoDummy.FR(49700)).to.eq(11);
     });
     it(`returns 11 pertenk for ICR 49800 pertenk`, async function () {
-      expect(await yamato.FR(49800)).to.eq(11);
+      expect(await yamatoDummy.FR(49800)).to.eq(11);
     });
     it(`returns 11 pertenk for ICR 49900 pertenk`, async function () {
-      expect(await yamato.FR(49900)).to.eq(11);
+      expect(await yamatoDummy.FR(49900)).to.eq(11);
     });
     it(`returns 10 pertenk for ICR 50000 pertenk`, async function () {
-      expect(await yamato.FR(50000)).to.eq(10);
+      expect(await yamatoDummy.FR(50000)).to.eq(10);
     });
   });
   describe("borrow()", function () {
