@@ -17,6 +17,28 @@ interface IYamato {
         address owner;
         uint256 priority;
     }
+    event Deposited(address indexed sender, uint256 ethAmount);
+    event Borrowed(address indexed sender, uint256 cjpyAmount, uint256 fee);
+    event Repaid(address indexed sender, uint256 cjpyAmount);
+    event Withdrawn(address indexed sender, uint256 ethAmount);
+    event Redeemed(
+        address indexed sender,
+        uint256 cjpyAmount,
+        uint256 ethAmount,
+        address[] indexed pledgesOwner
+    );
+    event RedeemedMeta(
+        address indexed sender,
+        uint256 price,
+        bool isCoreRedemption,
+        uint256 gasCompensationAmount
+    );
+    event Swept(
+        address indexed sender,
+        uint256 cjpyAmount,
+        uint256 gasCompensationAmount,
+        address[] pledgesOwner
+    );
 
     function getPledge(address _owner) external view returns (Pledge memory);
 

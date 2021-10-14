@@ -26,6 +26,7 @@ import "hardhat/console.sol";
 contract Yamato is IYamato, ReentrancyGuard {
     using SafeMath for uint256;
     using PledgeLib for IYamato.Pledge;
+    using PledgeLib for uint256;
 
     IPool pool;
     bool poolInitialized = false;
@@ -49,8 +50,6 @@ contract Yamato is IYamato, ReentrancyGuard {
     uint8 public RRR = 80; // RedemptionReserveRate in pertenk
     uint8 public SRR = 20; // SweepReserveRate in pertenk
     uint8 public GRR = 1; // GasReserveRate in pertenk
-
-    event Borrowed(uint256 ICRAfter);
 
     /*
         ==============================
@@ -152,6 +151,11 @@ contract Yamato is IYamato, ReentrancyGuard {
         require(success, "transfer failed");
         pool.lockETH(ethAmount);
         depositAndBorrowLocks[msg.sender] = block.number;
+
+        /*
+            4. Event
+        */
+        emit Deposited(msg.sender, ethAmount);
     }
 
     /// @notice Borrow in CJPY. In JPY term, 15.84%=RR, 0.16%=RRGas, 3.96%=SR, 0.4%=SRGas
@@ -166,7 +170,7 @@ contract Yamato is IYamato, ReentrancyGuard {
         uint256 _ICRAfter = pledge.toMem().addDebt(borrowAmountInCjpy).getICR(
             feed
         );
-        uint256 fee = (borrowAmountInCjpy * FR(_ICRAfter)) / 10000;
+        uint256 fee = (borrowAmountInCjpy * _ICRAfter.FR()) / 10000;
         uint256 returnableCJPY = borrowAmountInCjpy.sub(fee);
 
         /*
@@ -216,7 +220,7 @@ contract Yamato is IYamato, ReentrancyGuard {
         /*
             7. Event
         */
-        emit Borrowed(_ICRAfter);
+        emit Borrowed(msg.sender, borrowAmountInCjpy, fee);
     }
 
     /// @notice Recover the collateral of one's pledge.
@@ -255,6 +259,11 @@ contract Yamato is IYamato, ReentrancyGuard {
             4-2. Return coll to the redeemer
         */
         cjpyOS.burnCJPY(msg.sender, cjpyAmount);
+
+        /*
+            5. Event
+        */
+        emit Repaid(msg.sender, cjpyAmount);
     }
 
     /// @notice Withdraw collaterals from one's pledge.
@@ -322,6 +331,11 @@ contract Yamato is IYamato, ReentrancyGuard {
             5-2. Return coll to the withdrawer
         */
         pool.sendETH(msg.sender, ethAmount);
+
+        /*
+            6. Event
+        */
+        emit Withdrawn(msg.sender, ethAmount);
     }
 
     /*
@@ -343,6 +357,10 @@ contract Yamato is IYamato, ReentrancyGuard {
         uint256 jpyPerEth = IPriceFeed(feed).fetchPrice();
         uint256 redeemStart = pool.redemptionReserve();
         uint256 cjpyAmountStart = maxRedemptionCjpyAmount;
+        address[] memory _pledgesOwner = new address[](
+            priorityRegistry.pledgeLength()
+        );
+        uint256 _loopCount = 0;
 
         while (maxRedemptionCjpyAmount > 0) {
             try priorityRegistry.popRedeemable() returns (
@@ -361,6 +379,7 @@ contract Yamato is IYamato, ReentrancyGuard {
                 if (sPledge.coll == 0) {
                     break;
                 }
+                _pledgesOwner[_loopCount] = _redeemablePledge.owner;
 
                 /*
                     1. Expense collateral
@@ -381,6 +400,7 @@ contract Yamato is IYamato, ReentrancyGuard {
                 } catch {
                     break;
                 }
+                _loopCount++;
             } catch {
                 break;
             } /* Over-redemption Flow */
@@ -433,6 +453,22 @@ contract Yamato is IYamato, ReentrancyGuard {
         uint256 gasCompensation = totalRedeemedEthAmount * (uint256(GRR) / 100);
         (bool success, ) = payable(msg.sender).call{value: gasCompensation}("");
         require(success, "Gas payback has been failed.");
+
+        /*
+            5. Event
+        */
+        emit Redeemed(
+            msg.sender,
+            totalRedeemedCjpyAmount,
+            totalRedeemedEthAmount,
+            _pledgesOwner
+        );
+        emit RedeemedMeta(
+            msg.sender,
+            jpyPerEth,
+            isCoreRedemption,
+            gasCompensation
+        );
     }
 
     /// @notice Initialize all pledges such that ICR is 0 (= (0*price)/debt )
@@ -442,13 +478,17 @@ contract Yamato is IYamato, ReentrancyGuard {
         uint256 sweepStart = pool.sweepReserve();
         require(sweepStart > 0, "Sweep failure: sweep reserve is empty.");
         uint256 maxGasCompensation = sweepStart * (GRR / 100);
-        uint256 maxSweeplable = sweepStart - maxGasCompensation; //Note: Secure gas compensation
-        uint256 _maxSweeplableStart = maxSweeplable;
+        uint256 _reminder = sweepStart - maxGasCompensation; //Note: Secure gas compensation
+        uint256 _maxSweeplableStart = _reminder;
+        address[] memory _pledgesOwner = new address[](
+            priorityRegistry.pledgeLength()
+        );
+        uint256 _loopCount = 0;
 
         /*
             1. Sweeping
         */
-        while (maxSweeplable > 0) {
+        while (_reminder > 0) {
             try priorityRegistry.popSweepable() returns (
                 Pledge memory _sweepablePledge
             ) {
@@ -459,30 +499,36 @@ contract Yamato is IYamato, ReentrancyGuard {
 
                 if (!sPledge.isCreated) break; // Note: registry-yamato mismatch
                 if (sPledge.debt == 0) break; // Note: A once-swept pledge is called twice
+                _pledgesOwner[_loopCount] = _sweepablePledge.owner;
 
-                maxSweeplable = _sweepDebt(sPledge, maxSweeplable);
-                if (maxSweeplable > 0) {
+                _reminder = _sweepDebt(sPledge, _reminder);
+                if (_reminder > 0) {
                     priorityRegistry.remove(sPledge.toMem());
                     _neutralizePledge(sPledge);
                 }
+                _loopCount++;
             } catch {
                 break;
             } /* Oversweeping Flow */
         }
         require(
-            _maxSweeplableStart > maxSweeplable,
+            _maxSweeplableStart > _reminder,
             "At least a pledge should be swept."
         );
 
         /*
             2. Gas compensation
         */
-        uint256 sweepEnd = pool.sweepReserve();
-        uint256 sweepDiff = sweepStart - sweepEnd;
-        uint256 gasCompensation = sweepDiff * (GRR / 100);
+        uint256 _sweptAmount = sweepStart - _reminder;
+        uint256 gasCompensation = _sweptAmount * (GRR / 100);
         (bool success, ) = payable(msg.sender).call{value: gasCompensation}("");
         require(success, "Gas payback has been failed.");
         pool.useSweepReserve(gasCompensation);
+
+        /*
+            3. Event
+        */
+        emit Swept(msg.sender, _sweptAmount, gasCompensation, _pledgesOwner);
     }
 
     /*
@@ -587,24 +633,6 @@ contract Yamato is IYamato, ReentrancyGuard {
         }
     }
 
-    /// @param _ICRpertenk IndividualCollateralRatio per 10k
-    /// @dev Three linear fumula there are
-    /// @return _FRpertenk Corresponding fee rate in uint256 per-ten-kilo unit
-    function FR(uint256 _ICRpertenk) public view returns (uint256 _FRpertenk) {
-        require(_ICRpertenk >= 11000, "ICR too low to get fee data.");
-        if (11000 <= _ICRpertenk && _ICRpertenk < 13000) {
-            _FRpertenk = 2000 - ((_ICRpertenk - 11000) * 80) / 100;
-        } else if (13000 <= _ICRpertenk && _ICRpertenk < 15000) {
-            _FRpertenk = 400 - ((_ICRpertenk - 13000) * 10) / 100;
-        } else if (15000 <= _ICRpertenk && _ICRpertenk < 20000) {
-            _FRpertenk = 200 - ((_ICRpertenk - 15000) * 2) / 100;
-        } else if (20000 <= _ICRpertenk && _ICRpertenk < 50000) {
-            _FRpertenk = 100 - ((_ICRpertenk - 20000) * 3) / 10 / 100;
-        } else {
-            _FRpertenk = 10;
-        }
-    }
-
     /*
     ==============================
         State Getter Function
@@ -669,12 +697,33 @@ contract Yamato is IYamato, ReentrancyGuard {
     ==============================
         Testability Helpers
     ==============================
-        - bypassUpsert()
-        - bypassRemove()
+        - FR()
         - updateTCR()
         - setPriorityRegistryInTest()
+        - bypassUpsert()
+        - bypassRemove()
         - getICR()
     */
+    function FR(uint256 _icrpertenk)
+        external
+        view
+        onlyTester
+        returns (uint256)
+    {
+        return _icrpertenk.FR();
+    }
+
+    function updateTCR() external onlyTester {
+        TCR = getTCR();
+    }
+
+    function setPriorityRegistryInTest(address _priorityRegistry)
+        external
+        onlyTester
+    {
+        priorityRegistry = IPriorityRegistry(_priorityRegistry);
+    }
+
     function bypassUpsert(Pledge calldata _pledge) external onlyTester {
         priorityRegistry.upsert(_pledge);
     }
@@ -689,17 +738,6 @@ contract Yamato is IYamato, ReentrancyGuard {
 
     function bypassPopSweepable() external onlyTester {
         priorityRegistry.popSweepable();
-    }
-
-    function updateTCR() external onlyTester {
-        TCR = getTCR();
-    }
-
-    function setPriorityRegistryInTest(address _priorityRegistry)
-        external
-        onlyTester
-    {
-        priorityRegistry = IPriorityRegistry(_priorityRegistry);
     }
 
     function getICR(uint256 _coll, uint256 _debt) external returns (uint256) {
