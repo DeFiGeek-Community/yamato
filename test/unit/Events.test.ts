@@ -21,7 +21,7 @@ import { encode, toERC20 } from "../param/helper";
 chai.use(smock.matchers);
 chai.use(solidity);
 
-describe.only("story Events", function () {
+describe("story Events", function () {
   describe("contract Yamato", function () {
     let mockPool: FakeContract<Pool>;
     let mockFeePoolProxy: FakeContract<FeePool>;

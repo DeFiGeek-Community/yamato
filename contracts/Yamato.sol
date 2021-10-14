@@ -632,6 +632,9 @@ contract Yamato is IYamato, ReentrancyGuard {
             _TCR = _pseudoPledge.getICR(feed);
         }
     }
+    function updateTCR() external {
+        TCR = getTCR();
+    }
 
     /*
     ==============================
@@ -697,50 +700,14 @@ contract Yamato is IYamato, ReentrancyGuard {
     ==============================
         Testability Helpers
     ==============================
-        - FR()
         - updateTCR()
         - setPriorityRegistryInTest()
-        - bypassUpsert()
-        - bypassRemove()
-        - getICR()
     */
-    function FR(uint256 _icrpertenk)
-        external
-        view
-        onlyTester
-        returns (uint256)
-    {
-        return _icrpertenk.FR();
-    }
-
-    function updateTCR() external onlyTester {
-        TCR = getTCR();
-    }
 
     function setPriorityRegistryInTest(address _priorityRegistry)
         external
         onlyTester
     {
         priorityRegistry = IPriorityRegistry(_priorityRegistry);
-    }
-
-    function bypassUpsert(Pledge calldata _pledge) external onlyTester {
-        priorityRegistry.upsert(_pledge);
-    }
-
-    function bypassRemove(Pledge calldata _pledge) external onlyTester {
-        priorityRegistry.remove(_pledge);
-    }
-
-    function bypassPopRedeemable() external onlyTester {
-        priorityRegistry.popRedeemable();
-    }
-
-    function bypassPopSweepable() external onlyTester {
-        priorityRegistry.popSweepable();
-    }
-
-    function getICR(uint256 _coll, uint256 _debt) external returns (uint256) {
-        return Pledge(_coll, _debt, true, msg.sender, 0).getICR(feed);
     }
 }
