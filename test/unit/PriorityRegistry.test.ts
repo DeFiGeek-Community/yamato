@@ -105,7 +105,9 @@ describe("contract PriorityRegistry", function () {
         libraries: { PledgeLib },
       })
     ).deploy(yamatoDummy.address);
-    await (await yamatoDummy.setPriorityRegistry(priorityRegistry.address)).wait();
+    await (
+      await yamatoDummy.setPriorityRegistry(priorityRegistry.address)
+    ).wait();
   });
 
   describe("upsert()", function () {
@@ -128,7 +130,9 @@ describe("contract PriorityRegistry", function () {
       ];
 
       await expect(
-        priorityRegistryWithYamatoMock.connect(accounts[1]).upsert(toTyped(_pledge))
+        priorityRegistryWithYamatoMock
+          .connect(accounts[1])
+          .upsert(toTyped(_pledge))
       ).to.be.revertedWith("You are not Yamato contract.");
     });
 
@@ -140,7 +144,9 @@ describe("contract PriorityRegistry", function () {
         address0,
         0,
       ];
-      await expect(yamatoDummy.bypassUpsert(toTyped(_pledge))).to.be.revertedWith(
+      await expect(
+        yamatoDummy.bypassUpsert(toTyped(_pledge))
+      ).to.be.revertedWith(
         "Arithmetic Error: Yamato doesn't define the ICR of coll=0 debt=0 pledge."
       );
     });
@@ -156,7 +162,9 @@ describe("contract PriorityRegistry", function () {
           "1157920892373161954235709850086879078532699846656405640394575840079131296399"
         ),
       ];
-      await expect(yamatoDummy.bypassUpsert(toTyped(_pledge))).to.be.revertedWith(
+      await expect(
+        yamatoDummy.bypassUpsert(toTyped(_pledge))
+      ).to.be.revertedWith(
         "Upsert Error: The logless zero pledge cannot be upserted. It should be removed."
       );
     });
@@ -273,7 +281,9 @@ describe("contract PriorityRegistry", function () {
         1,
       ];
 
-      await expect(yamatoDummy.bypassRemove(toTyped(_nonSweptPledge))).to.be.revertedWith(
+      await expect(
+        yamatoDummy.bypassRemove(toTyped(_nonSweptPledge))
+      ).to.be.revertedWith(
         "Unintentional priority is given to the remove function."
       );
     });
@@ -379,9 +389,9 @@ describe("contract PriorityRegistry", function () {
         const _debt1 = BigNumber.from("300001000000000000000000");
         const _inputPledge1 = [_coll1, _debt1, true, _owner1, 0];
 
-        await expect(yamatoDummy.bypassUpsert(toTyped(_inputPledge1))).to.be.revertedWith(
-          "Upsert Error: Such a pledge can't exist!"
-        );
+        await expect(
+          yamatoDummy.bypassUpsert(toTyped(_inputPledge1))
+        ).to.be.revertedWith("Upsert Error: Such a pledge can't exist!");
       });
 
       it(`fails to get the lowest but MAX_INT pledge \(=new pledge / coll>0 debt=0 priority=0\)`, async function () {
@@ -463,12 +473,12 @@ describe("contract PriorityRegistry", function () {
   });
 });
 
-function toTyped(pledgeInput){
+function toTyped(pledgeInput) {
   return {
     coll: pledgeInput[0],
     debt: pledgeInput[1],
     isCreated: pledgeInput[2],
     owner: pledgeInput[3],
-    priority: pledgeInput[4]
-  }
+    priority: pledgeInput[4],
+  };
 }

@@ -67,9 +67,11 @@ describe("contract Yamato", function () {
       await ethers.getContractFactory("Yamato", { libraries: { PledgeLib } })
     )).deploy(mockCjpyOS.address);
     yamatoDummy = await (<YamatoDummy__factory>(
-      await ethers.getContractFactory("YamatoDummy", { libraries: { PledgeLib } })
+      await ethers.getContractFactory("YamatoDummy", {
+        libraries: { PledgeLib },
+      })
     )).deploy(mockCjpyOS.address); // This has test funcs to size Yamato contract
-    
+
     /* BEGIN DIRTY-FIX
     !!TODO!!
     The code that this block contains is
@@ -105,7 +107,7 @@ describe("contract Yamato", function () {
     await (
       await yamato.setPriorityRegistry(mockPriorityRegistry.address)
     ).wait();
-    
+
     // Note: Will use later for the redeem() test
     priorityRegistry = await (<PriorityRegistry__factory>(
       await ethers.getContractFactory("PriorityRegistry", {

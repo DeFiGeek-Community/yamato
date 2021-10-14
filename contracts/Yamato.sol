@@ -632,6 +632,7 @@ contract Yamato is IYamato, ReentrancyGuard {
             _TCR = _pseudoPledge.getICR(feed);
         }
     }
+
     function updateTCR() external {
         TCR = getTCR();
     }

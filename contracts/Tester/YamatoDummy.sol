@@ -25,12 +25,14 @@ contract YamatoDummy {
         feePool = IFeePool(cjpyOS.feePoolProxy());
         feed = cjpyOS.feed();
     }
+
     function setPriorityRegistry(address _priorityRegistry)
         public
         onlyGovernance
     {
         priorityRegistry = IPriorityRegistry(_priorityRegistry);
     }
+
     modifier onlyGovernance() {
         require(msg.sender == governance, "You are not the governer.");
         _;
@@ -77,5 +79,4 @@ contract YamatoDummy {
     function getICR(uint256 _coll, uint256 _debt) external returns (uint256) {
         return IYamato.Pledge(_coll, _debt, true, msg.sender, 0).getICR(feed);
     }
-
 }
