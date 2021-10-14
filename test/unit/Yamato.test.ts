@@ -66,10 +66,11 @@ describe("contract Yamato", function () {
     yamato = await (<Yamato__factory>(
       await ethers.getContractFactory("Yamato", { libraries: { PledgeLib } })
     )).deploy(mockCjpyOS.address);
-    yamatoDummy = await (<YamatoDummy__factory>(
-      await ethers.getContractFactory("YamatoDummy", {
+    yamatoDummy = await (<YamatoDummy__factory>await ethers.getContractFactory(
+      "YamatoDummy",
+      {
         libraries: { PledgeLib },
-      })
+      }
     )).deploy(mockCjpyOS.address); // This has test funcs to size Yamato contract
 
     /* BEGIN DIRTY-FIX
