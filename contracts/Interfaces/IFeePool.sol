@@ -1,4 +1,5 @@
 pragma solidity 0.8.4;
+
 /*
  * SPDX-License-Identifier: GPL-3.0-or-later
  * Written by 0xMotoko (0xmotoko@pm.me)
@@ -7,4 +8,6 @@ pragma solidity 0.8.4;
 
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
-interface IFeePool {}
+interface IFeePool {
+
+}
