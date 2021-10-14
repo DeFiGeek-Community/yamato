@@ -2,10 +2,10 @@ name: Slither Analyze
 on:
   push:
     branches:
-      - master
+      - turnOffUntilIssue76IsSolved
   pull_request:
     branches:
-      - master
+      - turnOffUntilIssue76IsSolved
 
 jobs:
   unit-tests:
