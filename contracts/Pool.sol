@@ -116,10 +116,10 @@ contract Pool is IPool {
         public
         view
         returns (
-            uint256,
-            uint256,
-            uint256,
-            uint256
+            uint256 redemptionReserve,
+            uint256 sweepReserve,
+            uint256 dividendReserve,
+            uint256 lockedCollateral
         )
     {
         return (

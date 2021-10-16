@@ -662,12 +662,12 @@ contract Yamato is IYamato, ReentrancyGuard {
         public
         view
         returns (
-            uint256,
-            uint256,
-            uint8,
-            uint8,
-            uint8,
-            uint8
+            uint256 totalColl,
+            uint256 totalDebt,
+            uint8 mcr,
+            uint8 rrr,
+            uint8 srr,
+            uint8 grr
         )
     {
         return (totalColl, totalDebt, MCR, RRR, SRR, GRR);
