@@ -1,5 +1,6 @@
 require("dotenv").config();
 import { readFileSync, writeFileSync, unlinkSync, existsSync } from "fs";
+import hre, { ethers, network } from "hardhat";
 import { Wallet, Signer, getDefaultProvider, Contract } from "ethers";
 import { genABI } from "../src/genABI";
 import { isConstructSignatureDeclaration } from "typescript";
@@ -96,16 +97,25 @@ export function getCurrentNetwork() {
   return process.argv[4]; // node hardhat deploy --network <network>
 }
 export function setProvider() {
-  const provider = getDefaultProvider("rinkeby", {
-    etherscan: process.env.ETHERSCAN_API_KEY,
-    infura: process.env.INFURA_API_TOKEN,
-    alchemy: process.env.ALCHEMY_API_TOKEN,
-  });
-  return singletonProvider(provider);
+  const networkName = hre.hardhatArguments.network || hre.config.defaultNetwork;
+  switch (networkName) {
+    case "hardhat":
+      const hardhatProvider = ethers.provider;
+      return singletonProvider(hardhatProvider);
+    case "rinkeby":
+      const rinkebyProvider = getDefaultProvider("rinkeby", {
+        etherscan: process.env.ETHERSCAN_API_KEY,
+        infura: process.env.INFURA_API_TOKEN,
+        alchemy: process.env.ALCHEMY_API_TOKEN,
+      });
+      return singletonProvider(rinkebyProvider);
+    default:
+      throw `setProvider does not support the network, ${networkName}.`;
+  }
 }
 export async function deploy(contractName: string, opts: Options) {
-  const foundation: Signer = getFoundation();
-  const deployer: Signer = getDeployer();
+  const foundation: Signer = await getFoundation();
+  const deployer: Signer = await getDeployer();
 
   if (!opts.from) opts.from = foundation;
   if (!opts.signer) opts.signer = opts.from;
@@ -128,6 +138,7 @@ export async function deploy(contractName: string, opts: Options) {
 
   const _Factory = await opts.getContractFactory(contractName, _opt);
 
+  console.log("here!");
   const _Contract: Contract = await _Factory.deploy(...opts.args, {
     gasLimit: opts.gasLimit,
     // maxPriorityFeePerGas: opts.maxPriorityFeePerGas,
@@ -136,6 +147,7 @@ export async function deploy(contractName: string, opts: Options) {
   });
   const tx = _Contract.deployTransaction;
   console.log(`Waiting for ${contractName} deployTx...`);
+  console.log("here!");
   let res = await tx.wait().catch((e) => console.trace(e.message));
   if (!res) throw new Error(`The deployment of ${contractName} is failed.`);
 
@@ -244,11 +256,31 @@ export function singletonProvider(_provider: any | undefined = undefined) {
   return provider;
 }
 
-export function getFoundation(): Signer {
-  return new Wallet(process.env.FOUNDATION_PRIVATE_KEY, singletonProvider());
+export async function getFoundation(): Promise<Signer> {
+  const networkName = hre.hardhatArguments.network || hre.config.defaultNetwork;
+  if ("hardhat" == networkName) {
+    const accounts = await hre.ethers.getSigners();
+    return new Promise(() => accounts[0]);
+  } else {
+    const foundation = new Wallet(
+      process.env.FOUNDATION_PRIVATE_KEY,
+      singletonProvider()
+    );
+    return new Promise(() => foundation);
+  }
 }
-export function getDeployer(): Signer {
-  return new Wallet(process.env.DEPLOYER_PRIVATE_KEY, singletonProvider());
+export async function getDeployer(): Promise<Signer> {
+  const networkName = hre.hardhatArguments.network || hre.config.defaultNetwork;
+  if ("hardhat" == networkName) {
+    const accounts = await hre.ethers.getSigners();
+    return new Promise(() => accounts[1]);
+  } else {
+    const deployer = new Wallet(
+      process.env.DEPLOYER_PRIVATE_KEY,
+      singletonProvider()
+    );
+    return new Promise(() => deployer);
+  }
 }
 
 export async function sleep(n) {
