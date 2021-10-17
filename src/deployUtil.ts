@@ -94,10 +94,10 @@ type Options = {
 };
 
 export function getCurrentNetwork() {
-  return process.argv[4]; // node hardhat deploy --network <network>
+  return hre.hardhatArguments.network || hre.config.defaultNetwork;
 }
 export function setProvider() {
-  const networkName = hre.hardhatArguments.network || hre.config.defaultNetwork;
+  const networkName = getCurrentNetwork();
   switch (networkName) {
     case "hardhat":
       const hardhatProvider = ethers.provider;
@@ -183,6 +183,8 @@ export function getDeploymentAddressPathWithTag(
 }
 
 export function verifyWithEtherscan() {
+  if ("rinkeby" != getCurrentNetwork()) return;
+
   let ChainLinkEthUsd = readFileSync(
     getDeploymentAddressPathWithTag("ChainLinkMock", "EthUsd")
   ).toString();
@@ -255,7 +257,7 @@ export function singletonProvider(_provider: any | undefined = undefined) {
 }
 
 export async function getFoundation() {
-  const networkName = hre.hardhatArguments.network || hre.config.defaultNetwork;
+  const networkName = getCurrentNetwork();
   if ("hardhat" == networkName) {
     const accounts = await hre.ethers.getSigners();
     return accounts[0];
@@ -268,7 +270,7 @@ export async function getFoundation() {
   }
 }
 export async function getDeployer() {
-  const networkName = hre.hardhatArguments.network || hre.config.defaultNetwork;
+  const networkName = getCurrentNetwork();
   if ("hardhat" == networkName) {
     const accounts = await hre.ethers.getSigners();
     return accounts[1];
