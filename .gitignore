@@ -14,7 +14,7 @@ allure-results
 typechain
 *.dbg.json
 cache/**/*
-deployments/rinkeby/*
+deployments/*
 !deployments/rinkeby/.chainId
 abis
 test/**/*.js
