@@ -138,7 +138,6 @@ export async function deploy(contractName: string, opts: Options) {
 
   const _Factory = await opts.getContractFactory(contractName, _opt);
 
-  console.log("here!");
   const _Contract: Contract = await _Factory.deploy(...opts.args, {
     gasLimit: opts.gasLimit,
     // maxPriorityFeePerGas: opts.maxPriorityFeePerGas,
@@ -147,7 +146,6 @@ export async function deploy(contractName: string, opts: Options) {
   });
   const tx = _Contract.deployTransaction;
   console.log(`Waiting for ${contractName} deployTx...`);
-  console.log("here!");
   let res = await tx.wait().catch((e) => console.trace(e.message));
   if (!res) throw new Error(`The deployment of ${contractName} is failed.`);
 
@@ -256,30 +254,30 @@ export function singletonProvider(_provider: any | undefined = undefined) {
   return provider;
 }
 
-export async function getFoundation(): Promise<Signer> {
+export async function getFoundation() {
   const networkName = hre.hardhatArguments.network || hre.config.defaultNetwork;
   if ("hardhat" == networkName) {
     const accounts = await hre.ethers.getSigners();
-    return new Promise(() => accounts[0]);
+    return accounts[0];
   } else {
     const foundation = new Wallet(
       process.env.FOUNDATION_PRIVATE_KEY,
       singletonProvider()
     );
-    return new Promise(() => foundation);
+    return foundation;
   }
 }
-export async function getDeployer(): Promise<Signer> {
+export async function getDeployer() {
   const networkName = hre.hardhatArguments.network || hre.config.defaultNetwork;
   if ("hardhat" == networkName) {
     const accounts = await hre.ethers.getSigners();
-    return new Promise(() => accounts[1]);
+    return accounts[1];
   } else {
     const deployer = new Wallet(
       process.env.DEPLOYER_PRIVATE_KEY,
       singletonProvider()
     );
-    return new Promise(() => deployer);
+    return deployer;
   }
 }
 
