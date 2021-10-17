@@ -39,22 +39,22 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   await (
     await chainlinkEthUsd
-      .connect(getFoundation())
+      .connect(await getFoundation())
       .simulatePriceMove({ gasLimit: 200000 })
   ).wait();
   await (
     await chainlinkJpyUsd
-      .connect(getFoundation())
+      .connect(await getFoundation())
       .simulatePriceMove({ gasLimit: 200000 })
   ).wait();
   await (
     await chainlinkEthUsd
-      .connect(getFoundation())
+      .connect(await getFoundation())
       .simulatePriceMove({ gasLimit: 200000 })
   ).wait();
   await (
     await chainlinkJpyUsd
-      .connect(getFoundation())
+      .connect(await getFoundation())
       .simulatePriceMove({ gasLimit: 200000 })
   ).wait();
 

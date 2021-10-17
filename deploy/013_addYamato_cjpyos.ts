@@ -20,7 +20,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const _yamatoAddr = readFileSync(
     getDeploymentAddressPath("Yamato")
   ).toString();
-  await (await CjpyOS.connect(getFoundation()).addYamato(_yamatoAddr)).wait();
+  await (
+    await CjpyOS.connect(await getFoundation()).addYamato(_yamatoAddr)
+  ).wait();
 
   console.log(`log: CjpyOS.addYamato() executed.`);
 };
