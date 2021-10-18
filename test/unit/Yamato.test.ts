@@ -25,7 +25,7 @@ chai.use(solidity);
 
 describe("contract Yamato", function () {
   let mockPool: FakeContract<Pool>;
-  let mockFeePoolProxy: FakeContract<FeePool>;
+  let mockFeePool: FakeContract<FeePool>;
   let mockFeed: FakeContract<PriceFeed>;
   let mockYMT: FakeContract<YMT>;
   let mockCJPY: FakeContract<CJPY>;
@@ -44,7 +44,7 @@ describe("contract Yamato", function () {
     ownerAddress = await accounts[0].getAddress();
 
     mockPool = await smock.fake<Pool>("Pool");
-    mockFeePoolProxy = await smock.fake<FeePool>("FeePoolProxy");
+    mockFeePool = await smock.fake<FeePool>("FeePool");
     mockFeed = await smock.fake<PriceFeed>("PriceFeed");
     mockYMT = await smock.fake<YMT>("YMT");
     mockCJPY = await smock.fake<CJPY>("CJPY");
@@ -61,7 +61,7 @@ describe("contract Yamato", function () {
 
     // Note: Yamato's constructor needs this mock and so the line below has to be called here.
     mockCjpyOS.feed.returns(mockFeed.address);
-    mockCjpyOS.feePoolProxy.returns(mockFeePoolProxy.address);
+    mockCjpyOS.feePoolProxy.returns(mockFeePool.address);
 
     yamato = await (<Yamato__factory>(
       await ethers.getContractFactory("Yamato", { libraries: { PledgeLib } })

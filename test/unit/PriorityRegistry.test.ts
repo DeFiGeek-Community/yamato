@@ -21,7 +21,7 @@ chai.use(solidity);
 describe("contract PriorityRegistry", function () {
   let mockYamato: FakeContract<Yamato>;
   let mockCjpyOS: FakeContract<CjpyOS>;
-  let mockFeePoolProxy: FakeContract<FeePool>;
+  let mockFeePool: FakeContract<FeePool>;
   let mockFeed: FakeContract<PriceFeed>;
   let yamato;
   let yamatoDummy: YamatoDummy;
@@ -36,7 +36,7 @@ describe("contract PriorityRegistry", function () {
     address0 = await accounts[0].getAddress();
 
     mockFeed = await smock.fake<PriceFeed>("PriceFeed");
-    mockFeePoolProxy = await smock.fake<FeePool>("FeePoolProxy");
+    mockFeePool = await smock.fake<FeePool>("FeePool");
     mockCjpyOS = await smock.fake<CjpyOS>("CjpyOS");
     const PledgeLib = (
       await (<PledgeLib__factory>(
@@ -84,7 +84,7 @@ describe("contract PriorityRegistry", function () {
     mockFeed.fetchPrice.returns(PRICE);
     mockFeed.lastGoodPrice.returns(PRICE);
     mockCjpyOS.feed.returns(mockFeed.address);
-    mockCjpyOS.feePoolProxy.returns(mockFeePoolProxy.address);
+    mockCjpyOS.feePoolProxy.returns(mockFeePool.address);
     mockYamato.feed.returns(mockFeed.address);
 
     /*

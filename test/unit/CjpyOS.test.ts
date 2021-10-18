@@ -6,12 +6,12 @@ import { Signer } from "ethers";
 import {
   CjpyOS,
   CJPY,
-  FeePoolProxy,
+  FeePool,
   YMT,
   VeYMT,
   PriceFeed,
   CjpyOS__factory,
-  FeePoolProxy__factory,
+  FeePool__factory,
 } from "../../typechain";
 
 chai.use(smock.matchers);
@@ -22,7 +22,7 @@ describe("CjpyOS", () => {
   let mockYMT: FakeContract<YMT>;
   let mockVeYMT: FakeContract<VeYMT>;
   let mockFeed: FakeContract<PriceFeed>;
-  let mockFeePoolProxy: FakeContract<FeePoolProxy>;
+  let mockFeePool: FakeContract<FeePool>;
   let cjpyOS: CjpyOS;
   let accounts: Signer[];
   let ownerAddress: string;
@@ -34,14 +34,14 @@ describe("CjpyOS", () => {
     userAddress = await accounts[1].getAddress();
     mockCJPY = await smock.fake<CJPY>("CJPY");
     mockFeed = await smock.fake<PriceFeed>("PriceFeed");
-    mockFeePoolProxy = await smock.fake<FeePoolProxy>("FeePoolProxy");
+    mockFeePool = await smock.fake<FeePool>("FeePool");
 
     cjpyOS = await (<CjpyOS__factory>(
       await ethers.getContractFactory("CjpyOS")
     )).deploy(
       mockCJPY.address,
       mockFeed.address,
-      mockFeePoolProxy.address
+      mockFeePool.address
       // governance=deployer
     );
 
