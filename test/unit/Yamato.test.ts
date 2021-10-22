@@ -19,11 +19,12 @@ import {
   YMT,
 } from "../../typechain";
 import { encode, toERC20 } from "../param/helper";
+import { getFakeProxy } from "../../src/testUtil";
 
 chai.use(smock.matchers);
 chai.use(solidity);
 
-describe("contract Yamato", function () {
+describe.only("contract Yamato", function () {
   let mockPool: FakeContract<Pool>;
   let mockFeePool: FakeContract<FeePool>;
   let mockFeed: FakeContract<PriceFeed>;
@@ -44,7 +45,7 @@ describe("contract Yamato", function () {
     ownerAddress = await accounts[0].getAddress();
 
     mockPool = await smock.fake<Pool>("Pool");
-    mockFeePool = await smock.fake<FeePool>("FeePool");
+    mockFeePool = await getFakeProxy<FeePool>("FeePool")
     mockFeed = await smock.fake<PriceFeed>("PriceFeed");
     mockYMT = await smock.fake<YMT>("YMT");
     mockCJPY = await smock.fake<CJPY>("CJPY");

@@ -451,7 +451,7 @@ contract Yamato is IYamato, ReentrancyGuard {
             4. Gas compensation
         */
         uint256 gasCompensation = totalRedeemedEthAmount * (uint256(GRR) / 100);
-        (bool success, ) = payable(msg.sender).call{value: gasCompensation}("");
+        (bool success, ) = payable(msg.sender).call{value: gasCompensation}(""); // Bug: pool.sendETH(msg.sender, gasCompensation);
         require(success, "Gas payback has been failed.");
 
         /*
@@ -521,7 +521,7 @@ contract Yamato is IYamato, ReentrancyGuard {
         */
         uint256 _sweptAmount = sweepStart - _reminder;
         uint256 gasCompensation = _sweptAmount * (GRR / 100);
-        (bool success, ) = payable(msg.sender).call{value: gasCompensation}("");
+        (bool success, ) = payable(msg.sender).call{value: gasCompensation}(""); // Bug: FeePool.sendETH(msg.sender, gasCompensation)
         require(success, "Gas payback has been failed.");
         pool.useSweepReserve(gasCompensation);
 
