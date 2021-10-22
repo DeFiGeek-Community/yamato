@@ -13,6 +13,7 @@ import {
   CjpyOS__factory,
   FeePool__factory,
 } from "../../typechain";
+import { getFakeProxy } from "../../src/testUtil";
 
 chai.use(smock.matchers);
 chai.use(solidity);
@@ -33,8 +34,8 @@ describe("CjpyOS", () => {
     ownerAddress = await accounts[0].getAddress();
     userAddress = await accounts[1].getAddress();
     mockCJPY = await smock.fake<CJPY>("CJPY");
-    mockFeed = await smock.fake<PriceFeed>("PriceFeed");
-    mockFeePool = await smock.fake<FeePool>("FeePool");
+    mockFeed = await getFakeProxy<PriceFeed>("PriceFeed");
+    mockFeePool = await getFakeProxy<FeePool>("FeePool")
 
     cjpyOS = await (<CjpyOS__factory>(
       await ethers.getContractFactory("CjpyOS")

@@ -24,6 +24,7 @@ import {
   FeePool__factory,
   PriorityRegistry__factory,
 } from "../../typechain";
+import { getProxy } from "../../src/testUtil";
 
 chai.use(smock.matchers);
 chai.use(solidity);
@@ -80,9 +81,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       await ethers.getContractFactory("TellorCallerMock")
     )).deploy();
 
-    PriceFeed = await (<PriceFeed__factory>(
-      await ethers.getContractFactory("PriceFeed")
-    )).deploy(ChainLinkEthUsd.address, ChainLinkUsdJpy.address, Tellor.address);
+    PriceFeed = await getProxy<PriceFeed, PriceFeed__factory>("PriceFeed", [ChainLinkEthUsd.address, ChainLinkUsdJpy.address, Tellor.address])
 
     CJPY = await (<CJPY__factory>(
       await ethers.getContractFactory("CJPY")

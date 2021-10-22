@@ -24,7 +24,7 @@ import { getFakeProxy } from "../../src/testUtil";
 chai.use(smock.matchers);
 chai.use(solidity);
 
-describe.only("contract Yamato", function () {
+describe("contract Yamato", function () {
   let mockPool: FakeContract<Pool>;
   let mockFeePool: FakeContract<FeePool>;
   let mockFeed: FakeContract<PriceFeed>;
@@ -46,7 +46,7 @@ describe.only("contract Yamato", function () {
 
     mockPool = await smock.fake<Pool>("Pool");
     mockFeePool = await getFakeProxy<FeePool>("FeePool")
-    mockFeed = await smock.fake<PriceFeed>("PriceFeed");
+    mockFeed = await getFakeProxy<PriceFeed>("PriceFeed")
     mockYMT = await smock.fake<YMT>("YMT");
     mockCJPY = await smock.fake<CJPY>("CJPY");
     mockCjpyOS = await smock.fake<CjpyOS>("CjpyOS");

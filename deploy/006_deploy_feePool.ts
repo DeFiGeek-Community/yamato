@@ -12,17 +12,14 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { ethers, deployments } = hre;
   const { getContractFactory } = ethers;
 
-  await deploy("FeePoolProxy", {
+  const FeePool = await deploy("FeePool", {
     args: [],
     getContractFactory,
     deployments,
-  }).catch((e) => console.trace(e.message));
+  })
+  if(typeof FeePool.upgradeTo !== 'function') throw new Error(`FeePool has to inherit UUPSUpgradeable to have upgradeTo().`);
+  await FeePool.initialize()
 
-  await deploy("FeePool", {
-    args: [],
-    getContractFactory,
-    deployments,
-  }).catch((e) => console.trace(e.message));
 };
 export default func;
 func.tags = ["FeePool"];

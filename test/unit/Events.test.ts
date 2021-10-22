@@ -17,6 +17,7 @@ import {
   YMT,
 } from "../../typechain";
 import { encode, toERC20 } from "../param/helper";
+import { getFakeProxy } from "../../src/testUtil";
 
 chai.use(smock.matchers);
 chai.use(solidity);

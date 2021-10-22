@@ -14,6 +14,7 @@ import {
   YamatoDummy__factory,
   FeePool__factory,
 } from "../../typechain";
+import { getFakeProxy } from "../../src/testUtil";
 
 chai.use(smock.matchers);
 chai.use(solidity);
@@ -36,7 +37,7 @@ describe("contract PriorityRegistry", function () {
     address0 = await accounts[0].getAddress();
 
     mockFeed = await smock.fake<PriceFeed>("PriceFeed");
-    mockFeePool = await smock.fake<FeePool>("FeePool");
+    mockFeePool = await getFakeProxy<FeePool>("FeePool")
     mockCjpyOS = await smock.fake<CjpyOS>("CjpyOS");
     const PledgeLib = (
       await (<PledgeLib__factory>(

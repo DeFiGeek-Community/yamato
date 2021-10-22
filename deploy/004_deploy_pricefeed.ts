@@ -58,11 +58,14 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       .simulatePriceMove({ gasLimit: 200000 })
   ).wait();
 
-  await deploy("PriceFeed", {
-    args: [ChainLinkEthUsd, ChainLinkJpyUsd, TellorEthJpy],
+  const PriceFeed = await deploy("PriceFeed", {
+    args: [],
     getContractFactory,
     deployments,
-  }).catch((e) => console.trace(e.message));
+  })
+  if(typeof PriceFeed.upgradeTo !== 'function') throw new Error(`PriceFeed has to inherit UUPSUpgradeable to have upgradeTo().`);
+
+  await PriceFeed.initialize(ChainLinkEthUsd, ChainLinkJpyUsd, TellorEthJpy);
 };
 export default func;
 func.tags = ["PriceFeed"];
