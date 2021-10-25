@@ -9,14 +9,19 @@ pragma solidity 0.8.4;
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 
+import "./Interfaces/IUUPSEtherscanVerifiable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract FeePool is Initializable, UUPSUpgradeable, OwnableUpgradeable {
-
-    function initialize() initializer public {
-      __Ownable_init();
+contract FeePool is
+    IUUPSEtherscanVerifiable,
+    Initializable,
+    UUPSUpgradeable,
+    OwnableUpgradeable
+{
+    function initialize() public initializer {
+        __Ownable_init();
     }
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -24,6 +29,9 @@ contract FeePool is Initializable, UUPSUpgradeable, OwnableUpgradeable {
 
     function _authorizeUpgrade(address) internal override onlyOwner {}
 
+    function getImplementation() external view override returns (address) {
+        return _getImplementation();
+    }
 
     receive() external payable {}
 

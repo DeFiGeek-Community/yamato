@@ -113,8 +113,11 @@ describe("PriceFeed", function () {
         tellor: 7200,
       },
     });
-    feed = await getProxy<PriceFeed, PriceFeed__factory>("PriceFeed", [mockAggregatorV3EthUsd.address, mockAggregatorV3JpyUsd.address, mockTellorCaller.address])
-
+    feed = await getProxy<PriceFeed, PriceFeed__factory>("PriceFeed", [
+      mockAggregatorV3EthUsd.address,
+      mockAggregatorV3JpyUsd.address,
+      mockTellorCaller.address,
+    ]);
   });
 
   describe("fetchPrice()", function () {

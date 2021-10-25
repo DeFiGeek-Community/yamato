@@ -45,8 +45,8 @@ describe("contract Yamato", function () {
     ownerAddress = await accounts[0].getAddress();
 
     mockPool = await smock.fake<Pool>("Pool");
-    mockFeePool = await getFakeProxy<FeePool>("FeePool")
-    mockFeed = await getFakeProxy<PriceFeed>("PriceFeed")
+    mockFeePool = await getFakeProxy<FeePool>("FeePool");
+    mockFeed = await getFakeProxy<PriceFeed>("PriceFeed");
     mockYMT = await smock.fake<YMT>("YMT");
     mockCJPY = await smock.fake<CJPY>("CJPY");
     mockCjpyOS = await smock.fake<CjpyOS>("CjpyOS");

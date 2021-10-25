@@ -20,17 +20,20 @@ interface ICjpyOS {
 
     function feed() external view returns (address);
 
-    function feePoolProxy() external view returns (address);
+    function feePool() external view returns (address);
 }
 
 contract CjpyOS is ICjpyOS, CurrencyOS {
     using SafeMath for uint256;
 
+    /// @param cjpyAddr just an ERC20
+    /// @param feedAddr ERC1967Proxy
+    /// @param feePool ERC1967Proxy
     constructor(
         address cjpyAddr,
         address feedAddr,
-        address feePoolProxy
-    ) CurrencyOS(cjpyAddr, feedAddr, feePoolProxy) {}
+        address feePool
+    ) CurrencyOS(cjpyAddr, feedAddr, feePool) {}
 
     function mintCJPY(address to, uint256 amount) public override onlyYamato {
         _mintCurrency(to, amount);
@@ -44,7 +47,7 @@ contract CjpyOS is ICjpyOS, CurrencyOS {
         return _feed;
     }
 
-    function feePoolProxy() public view override returns (address) {
-        return _feePoolProxy;
+    function feePool() public view override returns (address) {
+        return _feePool;
     }
 }

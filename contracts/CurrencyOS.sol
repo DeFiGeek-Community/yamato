@@ -26,7 +26,7 @@ contract CurrencyOS {
     IYMT public YMT;
     IveYMT public veYMT;
     address _feed;
-    address _feePoolProxy;
+    address _feePool;
     address governance;
     address ymtOSProxyAddr;
     address[] public yamatoes;
@@ -35,11 +35,11 @@ contract CurrencyOS {
     constructor(
         address currencyAddr,
         address feedAddr,
-        address feePoolProxy
+        address feePool
     ) {
         currency = ICurrency(currencyAddr);
         _feed = feedAddr;
-        _feePoolProxy = feePoolProxy;
+        _feePool = feePool;
         governance = msg.sender;
     }
 

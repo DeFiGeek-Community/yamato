@@ -37,7 +37,7 @@ describe("contract PriorityRegistry", function () {
     address0 = await accounts[0].getAddress();
 
     mockFeed = await smock.fake<PriceFeed>("PriceFeed");
-    mockFeePool = await getFakeProxy<FeePool>("FeePool")
+    mockFeePool = await getFakeProxy<FeePool>("FeePool");
     mockCjpyOS = await smock.fake<CjpyOS>("CjpyOS");
     const PledgeLib = (
       await (<PledgeLib__factory>(

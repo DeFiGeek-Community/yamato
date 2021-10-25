@@ -10,6 +10,9 @@ import {
 } from "../src/deployUtil";
 import { genABI } from "../src/genABI";
 import { Contract } from "ethers";
+import { PriceFeed, PriceFeed__factory } from "../typechain";
+import { getProxy } from "../src/testUtil";
+import { writeFileSync } from "fs";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const p = await setProvider();
@@ -58,14 +61,28 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       .simulatePriceMove({ gasLimit: 200000 })
   ).wait();
 
-  const PriceFeed = await deploy("PriceFeed", {
-    args: [],
-    getContractFactory,
-    deployments,
-  })
-  if(typeof PriceFeed.upgradeTo !== 'function') throw new Error(`PriceFeed has to inherit UUPSUpgradeable to have upgradeTo().`);
+  const inst = await await getProxy<PriceFeed, PriceFeed__factory>(
+    "PriceFeed",
+    [ChainLinkEthUsd, ChainLinkJpyUsd, TellorEthJpy]
+  );
+  const implAddr = await inst.getImplementation();
 
-  await PriceFeed.initialize(ChainLinkEthUsd, ChainLinkJpyUsd, TellorEthJpy);
+  console.log(
+    `PriceFeed is deployed as ${
+      inst.address
+    } with impl(${implAddr}) by ${await inst.signer.getAddress()} on ${
+      (await inst.provider.getNetwork()).name
+    } at ${await inst.provider.getBlockNumber()}`
+  );
+
+  writeFileSync(
+    getDeploymentAddressPathWithTag("PriceFeed", "ERC1967Proxy"),
+    inst.address
+  );
+  writeFileSync(
+    getDeploymentAddressPathWithTag("PriceFeed", "UUPSImpl"),
+    implAddr
+  );
 };
 export default func;
 func.tags = ["PriceFeed"];

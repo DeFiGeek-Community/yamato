@@ -55,6 +55,6 @@ contract TellorCallerMock is OracleMockBase, ITellorCaller {
     }
 
     function setPriceToDefault() public override onlyOwner {
-        lastPrice = 300000000000; // 300000 JPY
+        lastPrice = 410000000000; // 410000 JPY per ETH
     }
 }

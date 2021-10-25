@@ -14,10 +14,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const cjpyAddr = readFileSync(getDeploymentAddressPath("CJPY")).toString();
   const feePoolAddr = readFileSync(
-    getDeploymentAddressPath("FeePool")
+    getDeploymentAddressPath("FeePoolERC1967Proxy")
   ).toString();
   const feedAddr = readFileSync(
-    getDeploymentAddressPath("PriceFeed")
+    getDeploymentAddressPath("PriceFeedERC1967Proxy")
   ).toString();
 
   await deploy("CjpyOS", {

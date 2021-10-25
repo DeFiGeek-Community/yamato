@@ -35,7 +35,7 @@ describe("CjpyOS", () => {
     userAddress = await accounts[1].getAddress();
     mockCJPY = await smock.fake<CJPY>("CJPY");
     mockFeed = await getFakeProxy<PriceFeed>("PriceFeed");
-    mockFeePool = await getFakeProxy<FeePool>("FeePool")
+    mockFeePool = await getFakeProxy<FeePool>("FeePool");
 
     cjpyOS = await (<CjpyOS__factory>(
       await ethers.getContractFactory("CjpyOS")

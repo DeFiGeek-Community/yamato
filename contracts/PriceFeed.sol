@@ -11,6 +11,7 @@ pragma solidity 0.8.4;
 
 import "./Interfaces/IPriceFeed.sol";
 import "./Interfaces/ITellorCaller.sol";
+import "./Interfaces/IUUPSEtherscanVerifiable.sol";
 import "./Dependencies/AggregatorV3Interface.sol";
 import "./Dependencies/SafeMath.sol";
 // import "@openzeppelin/contracts/math/SafeMath.sol";
@@ -31,7 +32,14 @@ import "hardhat/console.sol";
  * switching oracles based on oracle failures, timeouts, and conditions for returning to the primary
  * Chainlink oracle.
  */
-contract PriceFeed is BaseMath, IPriceFeed, Initializable, UUPSUpgradeable, OwnableUpgradeable  {
+contract PriceFeed is
+    BaseMath,
+    IPriceFeed,
+    IUUPSEtherscanVerifiable,
+    Initializable,
+    UUPSUpgradeable,
+    OwnableUpgradeable
+{
     using SafeMath for uint256;
 
     string public constant NAME = "PriceFeed";
@@ -106,7 +114,7 @@ contract PriceFeed is BaseMath, IPriceFeed, Initializable, UUPSUpgradeable, Owna
         address _ethPriceAggregatorInUSDAddress,
         address _jpyPriceAggregatorInUSDAddress,
         address _tellorCallerAddress
-    ) initializer public {
+    ) public initializer {
         __Ownable_init();
 
         ethPriceAggregatorInUSD = AggregatorV3Interface(
@@ -141,9 +149,8 @@ contract PriceFeed is BaseMath, IPriceFeed, Initializable, UUPSUpgradeable, Owna
 
         renounceOwnership();
     }
+
     function _authorizeUpgrade(address) internal override onlyOwner {}
-
-
 
     // --- Functions ---
 
@@ -817,5 +824,9 @@ contract PriceFeed is BaseMath, IPriceFeed, Initializable, UUPSUpgradeable, Owna
             for (uint256 i = 1; i < exponent; i++) z = z.mul(base);
             return z;
         }
+    }
+
+    function getImplementation() external view override returns (address) {
+        return _getImplementation();
     }
 }

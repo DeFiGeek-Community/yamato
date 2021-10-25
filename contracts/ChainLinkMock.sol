@@ -46,11 +46,11 @@ contract ChainLinkMock is OracleMockBase, AggregatorV3Interface {
 
     function setPriceToDefault() public override onlyOwner {
         if (symbol == ETHUSD) {
-            lastPrice = 300000000000;
+            lastPrice = 410000000000;
         } // 3000 USD
         if (symbol == JPYUSD) {
-            lastPrice = 1000000;
-        } // 0.010 JPYUSD = 100 USDJPY
+            lastPrice = 877000;
+        } // 0.00877 JPYUSD = 114 USDJPY
     }
 
     function latestRoundData()

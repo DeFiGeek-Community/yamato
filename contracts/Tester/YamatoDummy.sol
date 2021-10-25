@@ -31,7 +31,7 @@ contract YamatoDummy {
         cjpyOS = ICjpyOS(_cjpyOS);
         governance = msg.sender;
         tester = msg.sender;
-        feePool = IFeePool(cjpyOS.feePoolProxy());
+        feePool = IFeePool(cjpyOS.feePool());
         feed = cjpyOS.feed();
     }
 
