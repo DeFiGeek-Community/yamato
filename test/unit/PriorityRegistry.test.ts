@@ -85,7 +85,7 @@ describe("contract PriorityRegistry", function () {
     mockFeed.fetchPrice.returns(PRICE);
     mockFeed.lastGoodPrice.returns(PRICE);
     mockCjpyOS.feed.returns(mockFeed.address);
-    mockCjpyOS.feePoolProxy.returns(mockFeePool.address);
+    mockCjpyOS.feePool.returns(mockFeePool.address);
     mockYamato.feed.returns(mockFeed.address);
 
     /*
