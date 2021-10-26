@@ -90,7 +90,7 @@ module.exports = {
   },
   mocha: {
     timeout: 720000,
-    forbidOnly: process.env.NODE_ENV === 'ci'
+    forbidOnly: process.env.NODE_ENV === "ci",
   },
   contractSizer: {
     alphaSort: true,
