@@ -23,6 +23,7 @@ library PledgeLib {
     /// @return _ICR in uint256
     function getICR(IYamato.Pledge memory _pledge, address _feed)
         public
+        view
         returns (uint256 _ICR)
     {
         require(_feed != address(0), "Feed is null address.");

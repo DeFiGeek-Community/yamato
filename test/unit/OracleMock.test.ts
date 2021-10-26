@@ -22,7 +22,7 @@ let ethJpyDefaultPrice = 410000000000;
 let chainlinkInitialRoundId = "30000000000000000001";
 let priceDeviationRange = 0.01;
 
-describe.only("OracleMockBase", function () {
+describe("OracleMockBase", function () {
   beforeEach(async () => {
     const spec1 = <ChainLinkMock__factory>(
       await ethers.getContractFactory("ChainLinkMock")

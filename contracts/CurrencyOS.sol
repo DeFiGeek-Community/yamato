@@ -22,7 +22,7 @@ import "hardhat/console.sol";
 contract CurrencyOS {
     using SafeMath for uint256;
 
-    ICurrency public currency;
+    ICurrency _currency;
     IYMT public YMT;
     IveYMT public veYMT;
     address _feed;
@@ -37,7 +37,7 @@ contract CurrencyOS {
         address feedAddr,
         address feePool
     ) {
-        currency = ICurrency(currencyAddr);
+        _currency = ICurrency(currencyAddr);
         _feed = feedAddr;
         _feePool = feePool;
         governance = msg.sender;
@@ -91,10 +91,10 @@ contract CurrencyOS {
     }
 
     function _mintCurrency(address to, uint256 amount) internal {
-        currency.mint(to, amount);
+        _currency.mint(to, amount);
     }
 
     function _burnCurrency(address to, uint256 amount) internal {
-        currency.burn(to, amount);
+        _currency.burn(to, amount);
     }
 }

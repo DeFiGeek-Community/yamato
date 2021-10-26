@@ -150,4 +150,8 @@ contract ChainLinkMock is OracleMockBase, AggregatorV3Interface {
     function version() external view virtual override returns (uint256) {
         return 1;
     }
+
+    function transferOwnership(address _newOwner) public onlyOwner {
+        transferOwnership(_newOwner);
+    }
 }

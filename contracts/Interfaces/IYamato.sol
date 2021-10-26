@@ -44,5 +44,7 @@ interface IYamato {
 
     function feed() external view returns (address);
 
+    function cjpyOS() external view returns (address);
+
     function MCR() external view returns (uint8);
 }

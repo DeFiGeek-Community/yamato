@@ -32,7 +32,7 @@ contract Yamato is IYamato, ReentrancyGuard {
     bool poolInitialized = false;
     IPriorityRegistry priorityRegistry;
     bool priorityRegistryInitialized = false;
-    ICjpyOS cjpyOS;
+    address public override cjpyOS;
     IFeePool feePool;
     address public override feed;
     address governance;
@@ -61,11 +61,11 @@ contract Yamato is IYamato, ReentrancyGuard {
         - revokeTester
     */
     constructor(address _cjpyOS) {
-        cjpyOS = ICjpyOS(_cjpyOS);
+        cjpyOS = _cjpyOS;
         governance = msg.sender;
         tester = msg.sender;
-        feePool = IFeePool(cjpyOS.feePool());
-        feed = cjpyOS.feed();
+        feePool = IFeePool(ICjpyOS(cjpyOS).feePool());
+        feed = ICjpyOS(cjpyOS).feed();
     }
 
     function setPool(address _pool) public onlyGovernance onlyOnceForSetPool {
@@ -208,8 +208,8 @@ contract Yamato is IYamato, ReentrancyGuard {
         /*
             6. Borrowed fund & fee transfer
         */
-        cjpyOS.mintCJPY(msg.sender, returnableCJPY); // onlyYamato
-        cjpyOS.mintCJPY(address(pool), fee); // onlyYamato
+        ICjpyOS(cjpyOS).mintCJPY(msg.sender, returnableCJPY); // onlyYamato
+        ICjpyOS(cjpyOS).mintCJPY(address(pool), fee); // onlyYamato
 
         if (pool.redemptionReserve() / 5 <= pool.sweepReserve()) {
             pool.depositRedemptionReserve(fee);
@@ -258,7 +258,7 @@ contract Yamato is IYamato, ReentrancyGuard {
             4-1. Charge CJPY
             4-2. Return coll to the redeemer
         */
-        cjpyOS.burnCJPY(msg.sender, cjpyAmount);
+        ICjpyOS(cjpyOS).burnCJPY(msg.sender, cjpyAmount);
 
         /*
             5. Event
@@ -303,7 +303,6 @@ contract Yamato is IYamato, ReentrancyGuard {
         // Note: SafeMath unintentionally checks full withdrawal
         pledge.coll = pledge.coll - ethAmount;
         totalColl = totalColl - ethAmount;
-
         TCR = getTCR();
 
         /*
@@ -439,20 +438,19 @@ contract Yamato is IYamato, ReentrancyGuard {
             _redemptionBearer = address(pool);
             _dividendDestination = address(feePool);
             pool.useRedemptionReserve(totalRedeemedCjpyAmount);
-            pool.accumulateDividendReserve(dividendEthAmount);
+            pool.accumulateDividendReserve(dividendEthAmount); // TODO: It's shared logic with individual redemption
         } else {
             _redemptionBearer = msg.sender;
             _dividendDestination = msg.sender;
         }
-        pool.sendETH(_dividendDestination, dividendEthAmount);
-        cjpyOS.burnCJPY(_redemptionBearer, totalRedeemedCjpyAmount);
+        pool.sendETH(_dividendDestination, dividendEthAmount); //TODO: Use FeePool.sol
+        ICjpyOS(cjpyOS).burnCJPY(_redemptionBearer, totalRedeemedCjpyAmount);
 
         /*
             4. Gas compensation
         */
-        uint256 gasCompensation = totalRedeemedEthAmount * (uint256(GRR) / 100);
-        (bool success, ) = payable(msg.sender).call{value: gasCompensation}(""); // Bug: pool.sendETH(msg.sender, gasCompensation);
-        require(success, "Gas payback has been failed.");
+        uint256 gasCompensationInETH = totalRedeemedEthAmount * (GRR / 100);
+        pool.sendETH(msg.sender, gasCompensationInETH);
 
         /*
             5. Event
@@ -467,7 +465,7 @@ contract Yamato is IYamato, ReentrancyGuard {
             msg.sender,
             jpyPerEth,
             isCoreRedemption,
-            gasCompensation
+            gasCompensationInETH
         );
     }
 
@@ -499,7 +497,7 @@ contract Yamato is IYamato, ReentrancyGuard {
 
                 if (!sPledge.isCreated) break; // Note: registry-yamato mismatch
                 if (sPledge.debt == 0) break; // Note: A once-swept pledge is called twice
-                _pledgesOwner[_loopCount] = _sweepablePledge.owner;
+                _pledgesOwner[_loopCount] = _sweepablePledge.owner; // Note: For event
 
                 _reminder = _sweepDebt(sPledge, _reminder);
                 if (_reminder > 0) {
@@ -520,15 +518,19 @@ contract Yamato is IYamato, ReentrancyGuard {
             2. Gas compensation
         */
         uint256 _sweptAmount = sweepStart - _reminder;
-        uint256 gasCompensation = _sweptAmount * (GRR / 100);
-        (bool success, ) = payable(msg.sender).call{value: gasCompensation}(""); // Bug: FeePool.sendETH(msg.sender, gasCompensation)
-        require(success, "Gas payback has been failed.");
-        pool.useSweepReserve(gasCompensation);
+        uint256 gasCompensationInCJPY = _sweptAmount * (GRR / 100);
+        pool.sendCJPY(msg.sender, gasCompensationInCJPY); // Not sendETH. But redemption returns in ETH and so it's a bit weird.
+        pool.useSweepReserve(gasCompensationInCJPY);
 
         /*
             3. Event
         */
-        emit Swept(msg.sender, _sweptAmount, gasCompensation, _pledgesOwner);
+        emit Swept(
+            msg.sender,
+            _sweptAmount,
+            gasCompensationInCJPY,
+            _pledgesOwner
+        );
     }
 
     /*
@@ -609,7 +611,7 @@ contract Yamato is IYamato, ReentrancyGuard {
             3. Budget reduction
         */
         pool.useSweepReserve(sweepingAmount);
-        cjpyOS.burnCJPY(address(pool), sweepingAmount);
+        ICjpyOS(cjpyOS).burnCJPY(address(pool), sweepingAmount);
 
         return reminder;
     }
@@ -617,8 +619,7 @@ contract Yamato is IYamato, ReentrancyGuard {
     /// @notice Calculate TCR
     /// @dev (totalColl*jpyPerEth)/totalDebt
     /// @return _TCR in uint256
-    function getTCR() public returns (uint256 _TCR) {
-        IPriceFeed(feed).fetchPrice();
+    function getTCR() public view returns (uint256 _TCR) {
         Pledge memory _pseudoPledge = Pledge(
             totalColl,
             totalDebt,
