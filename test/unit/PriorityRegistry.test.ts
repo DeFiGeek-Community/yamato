@@ -30,7 +30,7 @@ describe("contract PriorityRegistry", function () {
   let priorityRegistry;
   let accounts: Signer[];
   let address0: string;
-  const PRICE = BigNumber.from(300000).mul(1e18 + "");
+  const PRICE = BigNumber.from(410000).mul(1e18 + "");
 
   beforeEach(async () => {
     accounts = await ethers.getSigners();
@@ -470,6 +470,67 @@ describe("contract PriorityRegistry", function () {
       expect(nextSweepableAfter.coll).to.eq(0);
       expect(nextSweepableAfter.debt).to.eq(0);
       expect(nextSweepableAfter.isCreated).to.eq(false);
+    });
+  });
+
+  describe.only("getRedeemablesCap()", function () {
+    it(`should return some value`, async function () {
+      const _coll1 = BigNumber.from(1e18 + "");
+      const _debt1 = BigNumber.from(410000).mul(1e18 + "");
+      const _prio1 = BigNumber.from(100 + "");
+      for (var i = 0; i < 10; i++) {
+        await (
+          await yamatoDummy.bypassUpsert(
+            toTyped([
+              _coll1,
+              _debt1,
+              true,
+              await accounts[i].getAddress(),
+              _prio1,
+            ])
+          )
+        ).wait();
+      }
+      for (var i = 10; i < 20; i++) {
+        await (
+          await yamatoDummy.bypassUpsert(
+            toTyped([
+              _coll1,
+              _debt1.div(2),
+              true,
+              await accounts[i].getAddress(),
+              _prio1,
+            ])
+          )
+        ).wait();
+      }
+
+      const cap = await priorityRegistry.getRedeemablesCap();
+
+      expect(cap).to.equal(PRICE.mul(_coll1.mul(10)).div(1e18 + ""));
+    });
+  });
+  describe.only("getSweepablesCap()", function () {
+    it(`should return some value`, async function () {
+      const _coll1 = BigNumber.from(0 + "");
+      const _debt1 = BigNumber.from(410000).mul(1e18 + "");
+      const _prio1 = BigNumber.from(0 + "");
+      for (var i = 0; i < 10; i++) {
+        await (
+          await yamatoDummy.bypassUpsert(
+            toTyped([
+              _coll1,
+              _debt1,
+              true,
+              await accounts[i].getAddress(),
+              _prio1,
+            ])
+          )
+        ).wait();
+      }
+      const cap = await priorityRegistry.getSweepablesCap();
+
+      expect(cap).to.equal(_debt1.mul(10));
     });
   });
 });
