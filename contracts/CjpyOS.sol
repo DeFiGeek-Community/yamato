@@ -21,6 +21,8 @@ interface ICjpyOS {
     function feed() external view returns (address);
 
     function feePool() external view returns (address);
+
+    function currency() external view returns (address);
 }
 
 contract CjpyOS is ICjpyOS, CurrencyOS {
@@ -45,6 +47,10 @@ contract CjpyOS is ICjpyOS, CurrencyOS {
 
     function feed() public view override returns (address) {
         return _feed;
+    }
+
+    function currency() public view override returns (address) {
+        return address(_currency);
     }
 
     function feePool() public view override returns (address) {

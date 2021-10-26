@@ -9,6 +9,8 @@ pragma solidity 0.8.4;
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 import "./Interfaces/IYamato.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./CjpyOS.sol";
 import "hardhat/console.sol";
 
 interface IPool {
@@ -27,6 +29,8 @@ interface IPool {
     function lockETH(uint256 amount) external;
 
     function sendETH(address recipient, uint256 amount) external;
+
+    function sendCJPY(address recipient, uint256 amount) external;
 
     function redemptionReserve() external view returns (uint256);
 
@@ -109,6 +113,15 @@ contract Pool is IPool {
         (bool success, ) = payable(recipient).call{value: amount}("");
         require(success, "transfer failed");
         lockedCollateral -= amount;
+    }
+
+    function sendCJPY(address recipient, uint256 amount)
+        public
+        override
+        onlyYamato
+    {
+        IERC20 _currency = IERC20(ICjpyOS(yamato.cjpyOS()).currency());
+        _currency.transfer(recipient, amount);
     }
 
     /// @notice Provide the data of public storage.

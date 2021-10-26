@@ -595,13 +595,28 @@ describe("contract Yamato", function () {
       const MCR = BigNumber.from(110);
       const toCollateralize = 1;
       await yamato.deposit({ value: toERC20(toCollateralize + "") });
+
+      const _pledgeBefore = await yamato.getPledge(
+        await yamato.signer.getAddress()
+      );
+      expect(_pledgeBefore.isCreated).to.be.true;
+
       await yamato.withdraw(toERC20(toCollateralize + ""));
 
-      // const _pledge = await yamato.getPledge(await yamato.signer.getAddress())
-      // console.log(_pledge)
-      // expect(mockPriorityRegistry.remove.calls.length).to.eq(1);
+      const _pledgeAfter = await yamato.getPledge(
+        await yamato.signer.getAddress()
+      );
+      expect(_pledgeAfter.isCreated).to.be.false;
+
+      expect(mockPriorityRegistry.remove).to.have.calledOnce;
     });
-    it.skip(`TODO:  should run sendETH() of Pool.sol`);
+    it(`should run sendETH() of Pool.sol`, async function () {
+      const toCollateralize = 1;
+      await yamato.deposit({ value: toERC20(toCollateralize + "") });
+      await yamato.withdraw(toERC20(toCollateralize + ""));
+
+      expect(mockPool.sendETH).to.have.calledOnce;
+    });
   });
 
   describe("redeem()", function () {
@@ -653,7 +668,6 @@ describe("contract Yamato", function () {
         .deposit({ value: toERC20(toCollateralize + "") });
       await yamato.connect(accounts[2]).borrow(toERC20(toBorrow + ""));
 
-      // TODO: lower ICR must be less than 11000
       mockFeed.fetchPrice.returns(PRICE_AFTER);
       mockFeed.lastGoodPrice.returns(PRICE_AFTER);
       await (await yamato.updateTCR()).wait();
@@ -729,6 +743,10 @@ describe("contract Yamato", function () {
       await yamato.connect(accounts[0]).redeem(toERC20(toBorrow + ""), true);
       expect(mockPool.useRedemptionReserve).to.have.calledOnce;
     });
+
+    /*
+      TODO: Use FeePool
+    */
     it(`should NOT run accumulateDividendReserve\(\) of Pool.sol when isCoreRedemption=false`, async function () {
       await yamato.connect(accounts[0]).redeem(toERC20(toBorrow + ""), false);
       expect(mockPool.accumulateDividendReserve).to.have.callCount(0);
@@ -737,20 +755,16 @@ describe("contract Yamato", function () {
       await yamato.connect(accounts[0]).redeem(toERC20(toBorrow + ""), true);
       expect(mockPool.accumulateDividendReserve).to.have.calledOnce;
     });
+
     it(`should run sendETH\(\) of Pool.sol for successful redeemer`, async function () {
       await yamato.connect(accounts[0]).redeem(toERC20(toBorrow + ""), false);
-      expect(mockPool.sendETH).to.have.calledOnce;
+      expect(mockPool.sendETH).to.have.calledTwice;
     });
     it(`should run burnCJPY\(\) of Yamato.sol for successful redeemer`, async function () {
       await yamato.connect(accounts[0]).redeem(toERC20(toBorrow + ""), false);
       expect(mockCjpyOS.burnCJPY).to.have.calledOnce;
     });
-    it.skip(`can remain coll=0 debt>0 pledge in the storage`, async function () {});
     it.skip(`TODO: should NOT revert if excessive redemption amount comes in.`);
-    it.skip(`TODO: should reduce CJPY of successful redeemer`);
-    it.skip(
-      `TODO: should not reduce CJPY when there're no ICR<MCR && coll>0 pledges`
-    );
   });
 
   describe("sweep()", function () {
@@ -764,6 +778,7 @@ describe("contract Yamato", function () {
       mockPool.depositSweepReserve.returns(0);
       mockPool.lockETH.returns(0);
       mockPool.sendETH.returns(0);
+      mockPool.sendCJPY.returns(0);
       mockPool.useSweepReserve.returns(0);
       mockPool.sweepReserve.returns(
         BigNumber.from("99999999000000000000000000")
@@ -801,9 +816,7 @@ describe("contract Yamato", function () {
       mockFeed.fetchPrice.returns(PRICE_AFTER);
       mockFeed.lastGoodPrice.returns(PRICE_AFTER);
       await (await yamato.updateTCR()).wait();
-    });
 
-    it(`should improve TCR after sweeping`, async function () {
       /*
           Make sludge pledges
         */
@@ -816,24 +829,23 @@ describe("contract Yamato", function () {
       await (
         await yamato.connect(accounts[0]).redeem(toERC20(toRedeem + ""), false)
       ).wait();
-
-      // expect((await priorityRegistry.nextSweepable()).isCreated).to.eq(true);
-
-      // /*
-      //     Sweep it
-      //   */
-      // const _TCRBefore = await yamato.TCR();
-      // await (await yamato.connect(accounts[1]).sweep()).wait();
-      // const _TCRAfter = await yamato.TCR();
-
-      // expect(_TCRAfter).to.gt(_TCRBefore);
     });
 
-    it.skip(`doesn't care how much TCR is. (compare to MCR)`, async function () {});
-    it.skip(`should remove coll=0 pledges from the smallest debt`, async function () {});
-    it.skip(`TODO: should run useSweepReserve() of Pool.sol`);
-    it.skip(`TODO: should execute partial sweep`);
-    it.skip(`TODO: should execute excessive sweep`);
+    it(`should improve TCR after sweeping`, async function () {
+      const _TCRBefore = await yamato.TCR();
+      await (await yamato.connect(accounts[1]).sweep()).wait();
+      const _TCRAfter = await yamato.TCR();
+
+      expect(_TCRAfter).to.gt(_TCRBefore);
+    });
+
+    it(`should run fetchPrice() of PriceFeed.sol and sendCJPY() of Pool.sol`, async function () {
+      await (await yamato.connect(accounts[1]).sweep()).wait();
+
+      expect(mockFeed.fetchPrice).to.have.called;
+      expect(mockPool.sendCJPY).to.have.calledOnce;
+      expect(mockPool.useSweepReserve).to.have.calledTwice;
+    });
   });
 
   describe("getStates()", () => {
