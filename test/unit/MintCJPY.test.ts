@@ -130,6 +130,7 @@ describe("MintCJPY :: contract Yamato", () => {
 
   describe("borrow()", function () {
     it(`should mint CJPY`, async function () {
+      await (await PriceFeed.fetchPrice()).wait();
       const PRICE = await PriceFeed.lastGoodPrice();
 
       const MCR = BigNumber.from(110);

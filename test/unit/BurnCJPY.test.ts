@@ -135,6 +135,7 @@ describe("BurnCJPY :: contract Yamato", () => {
     let toBorrow;
 
     beforeEach(async () => {
+      await (await PriceFeed.fetchPrice()).wait();
       PRICE = await PriceFeed.lastGoodPrice();
       toCollateralize = 1;
       toBorrow = PRICE.mul(toCollateralize)
@@ -142,7 +143,7 @@ describe("BurnCJPY :: contract Yamato", () => {
         .div(MCR)
         .div(1e18 + "");
 
-      /* Set lower ICR */
+        /* Set lower ICR */
       await Yamato.connect(accounts[0]).deposit({
         value: toERC20(toCollateralize * 10 + ""),
       }); // Larger deposit
