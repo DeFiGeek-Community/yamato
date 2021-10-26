@@ -9,6 +9,7 @@ pragma solidity 0.8.4;
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 import "./Yamato.sol";
+import "./Interfaces/IPriceFeed.sol";
 import "./Dependencies/PledgeLib.sol";
 import "./Dependencies/SafeMath.sol";
 import "./Dependencies/LiquityMath.sol";
@@ -232,7 +233,6 @@ contract PriorityRegistry is IPriorityRegistry {
         // Note: pop is deletion. So traverse could be needed.
         // Note: Traversing to the ICR=MAX_UINT256 pledges are validated, don't worry about gas.
         // Note: LICR is state variable and it will be undated here.
-        // _traverseToNextLICR(poppedPledge.priority);
 
         return poppedPledge;
     }
@@ -339,6 +339,9 @@ contract PriorityRegistry is IPriorityRegistry {
     ==============================
         - nextRedeemable
         - nextSweepable
+        - getLevelIndice
+        - getRedeemablesCap
+        - getSweepablesCap
     */
     function nextRedeemable()
         public
@@ -378,6 +381,23 @@ contract PriorityRegistry is IPriorityRegistry {
             return address(0);
         }
         return levelIndice[icr][i];
+    }
+
+    function getRedeemablesCap() external view returns (uint256 _cap) {
+        for (uint256 i = 1; i < uint256(IYamato(yamato).MCR()); i++) {
+            for (uint256 j = 0; j < levelIndice[i].length; j++) {
+                _cap +=
+                    (leveledPledges[i][levelIndice[i][j]].coll *
+                        IPriceFeed(IYamato(yamato).feed()).lastGoodPrice()) /
+                    1e18;
+            }
+        }
+    }
+
+    function getSweepablesCap() external view returns (uint256 _cap) {
+        for (uint256 j = 0; j < levelIndice[0].length; j++) {
+            _cap += leveledPledges[0][levelIndice[0][j]].debt;
+        }
     }
 
     function floor(uint256 _ICRpertenk) internal returns (uint256) {

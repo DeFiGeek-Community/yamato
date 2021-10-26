@@ -30,7 +30,7 @@ describe("contract PriorityRegistry", function () {
   let priorityRegistry;
   let accounts: Signer[];
   let address0: string;
-  const PRICE = BigNumber.from(300000).mul(1e18 + "");
+  const PRICE = BigNumber.from(410000).mul(1e18 + "");
 
   beforeEach(async () => {
     accounts = await ethers.getSigners();
@@ -124,7 +124,7 @@ describe("contract PriorityRegistry", function () {
               */
       const _pledge = [
         BigNumber.from("100000000000000000"),
-        BigNumber.from("30000100000000000000000"),
+        BigNumber.from("41000100000000000000000"),
         true,
         address0,
         0,
@@ -189,7 +189,7 @@ describe("contract PriorityRegistry", function () {
 
     it(`succeeds to replace an existing item with ICR=0.`, async function () {
       const _collBefore = BigNumber.from("100000000000000000");
-      const _debtBefore = BigNumber.from("30000100000000000000000");
+      const _debtBefore = BigNumber.from("41000100000000000000000");
       const _ICRDefault = BigNumber.from("1");
       const _ICRBefore = _collBefore
         .mul(PRICE)
@@ -266,7 +266,7 @@ describe("contract PriorityRegistry", function () {
   describe("remove()", function () {
     it(`fails to remove non-zero pledge`, async function () {
       const _collBefore = BigNumber.from("0");
-      const _debtBefore = BigNumber.from("300001000000000000000000");
+      const _debtBefore = BigNumber.from("410001000000000000000000");
       const _owner = address0;
 
       // Note: Virtually it was a pledge with ICR=30% and now it had been redeemed. So it should be upserted to ICR=0 area.
@@ -291,7 +291,7 @@ describe("contract PriorityRegistry", function () {
 
     it(`succeeds to remove zero a.k.a. sludge pledge`, async function () {
       const _collBefore = BigNumber.from("0");
-      const _debtBefore = BigNumber.from("300001000000000000000000");
+      const _debtBefore = BigNumber.from("410001000000000000000000");
       const _owner = address0;
 
       // Note: Virtually it was a pledge with ICR=30% and now it had been redeemed. So it should be upserted to ICR=0 area.
@@ -356,7 +356,7 @@ describe("contract PriorityRegistry", function () {
     it(`fails to pop the zero pledge because it isn't redeemable.`, async function () {
       const _owner1 = address0;
       const _coll1 = BigNumber.from("0");
-      const _debt1 = BigNumber.from("300001000000000000000000");
+      const _debt1 = BigNumber.from("410001000000000000000000");
       const _inputPledge1 = [_coll1, _debt1, true, _owner1, 0];
       await (await yamatoDummy.bypassUpsert(toTyped(_inputPledge1))).wait();
 
@@ -370,7 +370,7 @@ describe("contract PriorityRegistry", function () {
     it(`succeeds to fetch even by account 3`, async function () {
       const _owner1 = await accounts[3].getAddress();
       const _coll1 = BigNumber.from("1000000000000000000");
-      const _debt1 = BigNumber.from("300001000000000000000000");
+      const _debt1 = BigNumber.from("410001000000000000000000");
       const _inputPledge1 = [_coll1, _debt1, true, _owner1, 1];
 
       await (await yamatoDummy.bypassUpsert(toTyped(_inputPledge1))).wait();
@@ -387,7 +387,7 @@ describe("contract PriorityRegistry", function () {
       it(`fails to get the lowest pledge with coll>0 debt>0 priority=0`, async function () {
         const _owner1 = address0;
         const _coll1 = BigNumber.from("1000000000000000000");
-        const _debt1 = BigNumber.from("300001000000000000000000");
+        const _debt1 = BigNumber.from("410001000000000000000000");
         const _inputPledge1 = [_coll1, _debt1, true, _owner1, 0];
 
         await expect(
@@ -410,12 +410,12 @@ describe("contract PriorityRegistry", function () {
       it(`succeeds to get the lowest pledge with priority\>0`, async function () {
         const _owner1 = address0;
         const _coll1 = BigNumber.from("1000000000000000000");
-        const _debt1 = BigNumber.from("300001000000000000000000");
+        const _debt1 = BigNumber.from("410001000000000000000000");
         const _owner2 = await accounts[1].getAddress();
         const _coll2 = BigNumber.from("2000000000000000000");
-        const _debt2 = BigNumber.from("300001000000000000000000");
-        const _debt3 = _debt1.add("30001000000000000000000");
-        const _debt4 = _debt2.add("30002000000000000000000");
+        const _debt2 = BigNumber.from("410001000000000000000000");
+        const _debt3 = _debt1.add("41001000000000000000000");
+        const _debt4 = _debt2.add("41002000000000000000000");
         const _inputPledge1 = [_coll1, _debt1, true, _owner1, 1];
         const _inputPledge2 = [_coll2, _debt2, true, _owner2, 1];
         const _inputPledge3 = [_coll1, _debt3, true, _owner1, 99];
@@ -456,7 +456,7 @@ describe("contract PriorityRegistry", function () {
     it(`fails to fetch the zero pledge`, async function () {
       const _owner1 = address0;
       const _coll1 = BigNumber.from("0");
-      const _debt1 = BigNumber.from("300001000000000000000000");
+      const _debt1 = BigNumber.from("410001000000000000000000");
       const _inputPledge1 = [_coll1, _debt1, true, _owner1, 0];
       await (await yamatoDummy.bypassUpsert(toTyped(_inputPledge1))).wait();
 
@@ -470,6 +470,67 @@ describe("contract PriorityRegistry", function () {
       expect(nextSweepableAfter.coll).to.eq(0);
       expect(nextSweepableAfter.debt).to.eq(0);
       expect(nextSweepableAfter.isCreated).to.eq(false);
+    });
+  });
+
+  describe("getRedeemablesCap()", function () {
+    it(`should return some value`, async function () {
+      const _coll1 = BigNumber.from(1e18 + "");
+      const _debt1 = BigNumber.from(410000).mul(1e18 + "");
+      const _prio1 = BigNumber.from(100 + "");
+      for (var i = 0; i < 10; i++) {
+        await (
+          await yamatoDummy.bypassUpsert(
+            toTyped([
+              _coll1,
+              _debt1,
+              true,
+              await accounts[i].getAddress(),
+              _prio1,
+            ])
+          )
+        ).wait();
+      }
+      for (var i = 10; i < 20; i++) {
+        await (
+          await yamatoDummy.bypassUpsert(
+            toTyped([
+              _coll1,
+              _debt1.div(2),
+              true,
+              await accounts[i].getAddress(),
+              _prio1,
+            ])
+          )
+        ).wait();
+      }
+
+      const cap = await priorityRegistry.getRedeemablesCap();
+
+      expect(cap).to.equal(PRICE.mul(_coll1.mul(10)).div(1e18 + ""));
+    });
+  });
+  describe("getSweepablesCap()", function () {
+    it(`should return some value`, async function () {
+      const _coll1 = BigNumber.from(0 + "");
+      const _debt1 = BigNumber.from(410000).mul(1e18 + "");
+      const _prio1 = BigNumber.from(0 + "");
+      for (var i = 0; i < 10; i++) {
+        await (
+          await yamatoDummy.bypassUpsert(
+            toTyped([
+              _coll1,
+              _debt1,
+              true,
+              await accounts[i].getAddress(),
+              _prio1,
+            ])
+          )
+        ).wait();
+      }
+      const cap = await priorityRegistry.getSweepablesCap();
+
+      expect(cap).to.equal(_debt1.mul(10));
     });
   });
 });
