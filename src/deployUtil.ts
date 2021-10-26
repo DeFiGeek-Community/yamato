@@ -182,13 +182,18 @@ export function verifyWithEtherscan() {
   let Tellor = readFileSync(
     getDeploymentAddressPath("TellorCallerMock")
   ).toString();
-  let PriceFeed = readFileSync(
-    getDeploymentAddressPath("PriceFeed")
+  let PriceFeedERC1967Proxy = readFileSync(
+    getDeploymentAddressPathWithTag("PriceFeed", "ERC1967Proxy")
+  ).toString();
+  let PriceFeedUUPSImpl = readFileSync(
+    getDeploymentAddressPathWithTag("PriceFeed", "UUPSImpl")
   ).toString();
   let CJPY = readFileSync(getDeploymentAddressPath("CJPY")).toString();
-  let FeePool = readFileSync(getDeploymentAddressPath("FeePool")).toString();
-  let FeePoolProxy = readFileSync(
-    getDeploymentAddressPath("FeePoolProxy")
+  let FeePoolERC1967Proxy = readFileSync(
+    getDeploymentAddressPathWithTag("FeePool", "ERC1967Proxy")
+  ).toString();
+  let FeePoolUUPSImpl = readFileSync(
+    getDeploymentAddressPathWithTag("FeePool", "UUPSImpl")
   ).toString();
   let CjpyOS = readFileSync(getDeploymentAddressPath("CjpyOS")).toString();
   let Yamato = readFileSync(getDeploymentAddressPath("Yamato")).toString();
@@ -209,20 +214,32 @@ export function verifyWithEtherscan() {
   execSync(
     `npm run verify:testnet -- --contract contracts/TellorCallerMock.sol:TellorCallerMock ${Tellor}`
   );
-  execSync(
-    `npm run verify:testnet -- --contract contracts/PriceFeed.sol:PriceFeed ${PriceFeed} ${ChainLinkEthUsd} ${ChainLinkJpyUsd} ${Tellor}`
-  );
+  try {
+    execSync(
+      `npm run verify:testnet -- --contract contracts/PriceFeed.sol:PriceFeed ${PriceFeedUUPSImpl} 2> /dev/null`
+    );
+    _logProxyProcedure(PriceFeedERC1967Proxy);
+  } catch (e) {
+    console.log(
+      "Etherscan Verification of PriceFeed.sol is failed. Maybe because of oz-upgrades reusing unused impl."
+    );
+  }
+
   execSync(
     `npm run verify:testnet -- --contract contracts/CJPY.sol:CJPY ${CJPY}`
   );
+  try {
+    execSync(
+      `npm run verify:testnet -- --contract contracts/FeePool.sol:FeePool ${FeePoolUUPSImpl} 2> /dev/null`
+    );
+    _logProxyProcedure(FeePoolERC1967Proxy);
+  } catch (e) {
+    console.log(
+      "Etherscan Verification of FeePool.sol is failed. Maybe because of oz-upgrades reusing unused impl."
+    );
+  }
   execSync(
-    `npm run verify:testnet -- --contract contracts/FeePool.sol:FeePool ${FeePool}`
-  );
-  execSync(
-    `npm run verify:testnet -- --contract contracts/FeePoolProxy.sol:FeePoolProxy ${FeePoolProxy}`
-  );
-  execSync(
-    `npm run verify:testnet -- --contract contracts/CjpyOS.sol:CjpyOS ${CjpyOS} ${CJPY} ${PriceFeed} ${FeePool}`
+    `npm run verify:testnet -- --contract contracts/CjpyOS.sol:CjpyOS ${CjpyOS} ${CJPY} ${PriceFeedERC1967Proxy} ${FeePoolERC1967Proxy}`
   );
   execSync(
     `npm run verify:testnet -- --contract contracts/Yamato.sol:Yamato ${Yamato} ${CjpyOS}`
@@ -235,6 +252,16 @@ export function verifyWithEtherscan() {
   );
   execSync(
     `npm run verify:testnet -- --contract contracts/Dependencies/PledgeLib.sol:PledgeLib ${PledgeLib}`
+  );
+}
+function _getIsThisAProxyURL(_proxyURL) {
+  return `https://${getCurrentNetwork()}.etherscan.io/proxyContractChecker?a=${_proxyURL}`;
+}
+function _logProxyProcedure(proxyAddr) {
+  console.log(
+    `Open ${_getIsThisAProxyURL(
+      proxyAddr
+    )} and continue heuristic "Read as Proxy" configuration. Read more: https://medium.com/etherscan-blog/and-finally-proxy-contract-support-on-etherscan-693e3da0714b`
   );
 }
 

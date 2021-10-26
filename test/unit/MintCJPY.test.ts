@@ -8,7 +8,7 @@ import {
   ChainLinkMock,
   TellorCallerMock,
   PriceFeed,
-  FeePoolProxy,
+  FeePool,
   CjpyOS,
   CJPY,
   Yamato,
@@ -17,13 +17,14 @@ import {
   ChainLinkMock__factory,
   TellorCallerMock__factory,
   PriceFeed__factory,
-  FeePoolProxy__factory,
+  FeePool__factory,
   CjpyOS__factory,
   CJPY__factory,
   Yamato__factory,
   Pool__factory,
   PriorityRegistry__factory,
 } from "../../typechain";
+import { getProxy } from "../../src/testUtil";
 
 chai.use(smock.matchers);
 chai.use(solidity);
@@ -34,7 +35,7 @@ describe("MintCJPY :: contract Yamato", () => {
   let Tellor: TellorCallerMock;
   let PriceFeed: PriceFeed;
   let CJPY: CJPY;
-  let FeePoolProxy: FeePoolProxy;
+  let FeePool: FeePool;
   let CjpyOS: CjpyOS;
   let Yamato: Yamato;
   let Pool: Pool;
@@ -80,16 +81,18 @@ describe("MintCJPY :: contract Yamato", () => {
       await ethers.getContractFactory("TellorCallerMock")
     )).deploy();
 
-    PriceFeed = await (<PriceFeed__factory>(
-      await ethers.getContractFactory("PriceFeed")
-    )).deploy(ChainLinkEthUsd.address, ChainLinkUsdJpy.address, Tellor.address);
+    PriceFeed = await getProxy<PriceFeed, PriceFeed__factory>("PriceFeed", [
+      ChainLinkEthUsd.address,
+      ChainLinkUsdJpy.address,
+      Tellor.address,
+    ]);
 
     CJPY = await (<CJPY__factory>(
       await ethers.getContractFactory("CJPY")
     )).deploy();
 
-    FeePoolProxy = await (<FeePoolProxy__factory>(
-      await ethers.getContractFactory("FeePoolProxy")
+    FeePool = await (<FeePool__factory>(
+      await ethers.getContractFactory("FeePool")
     )).deploy();
 
     CjpyOS = await (<CjpyOS__factory>(
@@ -97,7 +100,7 @@ describe("MintCJPY :: contract Yamato", () => {
     )).deploy(
       CJPY.address,
       PriceFeed.address,
-      FeePoolProxy.address
+      FeePool.address
       // governance=deployer
     );
 
@@ -127,6 +130,7 @@ describe("MintCJPY :: contract Yamato", () => {
 
   describe("borrow()", function () {
     it(`should mint CJPY`, async function () {
+      await (await PriceFeed.fetchPrice()).wait();
       const PRICE = await PriceFeed.lastGoodPrice();
 
       const MCR = BigNumber.from(110);

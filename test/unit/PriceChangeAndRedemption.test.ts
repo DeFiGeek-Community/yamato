@@ -24,6 +24,7 @@ import {
   FeePool__factory,
   PriorityRegistry__factory,
 } from "../../typechain";
+import { getProxy } from "../../src/testUtil";
 
 chai.use(smock.matchers);
 chai.use(solidity);
@@ -80,9 +81,12 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       await ethers.getContractFactory("TellorCallerMock")
     )).deploy();
 
-    PriceFeed = await (<PriceFeed__factory>(
-      await ethers.getContractFactory("PriceFeed")
-    )).deploy(ChainLinkEthUsd.address, ChainLinkUsdJpy.address, Tellor.address);
+    PriceFeed = await getProxy<PriceFeed, PriceFeed__factory>("PriceFeed", [
+      ChainLinkEthUsd.address,
+      ChainLinkUsdJpy.address,
+      Tellor.address,
+    ]);
+    await (await PriceFeed.fetchPrice()).wait();
 
     CJPY = await (<CJPY__factory>(
       await ethers.getContractFactory("CJPY")
@@ -270,8 +274,8 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         await Yamato.connect(redeemee).borrow(toERC20(toBorrow + ""));
 
         /* Market Dump */
-        await (await ChainLinkEthUsd.setLastPrice("200000000000")).wait(); //dec8
-        await (await Tellor.setLastPrice("200000000000")).wait(); //dec8
+        await (await ChainLinkEthUsd.setLastPrice("300000000000")).wait(); //dec8
+        await (await Tellor.setLastPrice("300000000000")).wait(); //dec8
 
         /* redeemee's pledge is sweepable */
         await Yamato.connect(redeemer).redeem(
@@ -280,8 +284,8 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         );
 
         /* Market Pump */
-        await (await ChainLinkEthUsd.setLastPrice("400000000000")).wait(); //dec8
-        await (await Tellor.setLastPrice("400000000000")).wait(); //dec8
+        await (await ChainLinkEthUsd.setLastPrice("600000000000")).wait(); //dec8
+        await (await Tellor.setLastPrice("600000000000")).wait(); //dec8
 
         /* Set anotherRedeemee's pledge to be redeemable */
         await Yamato.connect(anotherRedeemee).deposit({
@@ -290,8 +294,8 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         await Yamato.connect(anotherRedeemee).borrow(toERC20(toBorrow + ""));
 
         /* Market Dump */
-        await (await ChainLinkEthUsd.setLastPrice("100000000000")).wait(); //dec8
-        await (await Tellor.setLastPrice("100000000000")).wait(); //dec8
+        await (await ChainLinkEthUsd.setLastPrice("200000000000")).wait(); //dec8
+        await (await Tellor.setLastPrice("200000000000")).wait(); //dec8
       });
 
       it(`should redeem w/o making LICR broken and w/ reasonable gas`, async function () {

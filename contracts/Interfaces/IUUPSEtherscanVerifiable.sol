@@ -8,6 +8,7 @@ pragma solidity 0.8.4;
 
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
-contract FeePoolProxy {
-    fallback() external {}
+
+interface IUUPSEtherscanVerifiable {
+    function getImplementation() external view returns (address);
 }

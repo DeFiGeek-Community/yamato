@@ -16,13 +16,13 @@ chai.use(solidity);
 let chainlinkMockEthUsd: ChainLinkMock;
 let chainlinkMockJpyUsd: ChainLinkMock;
 let tellorCallerMockEthJpy: TellorCallerMock;
-let ethUsdDefaultPrice = 300000000000;
-let jpyUsdDefaultPrice = 1000000;
-let ethJpyDefaultPrice = 300000000000;
+let ethUsdDefaultPrice = 410000000000;
+let jpyUsdDefaultPrice = 877000;
+let ethJpyDefaultPrice = 410000000000;
 let chainlinkInitialRoundId = "30000000000000000001";
 let priceDeviationRange = 0.01;
 
-describe("OracleMockBase", function () {
+describe.only("OracleMockBase", function () {
   beforeEach(async () => {
     const spec1 = <ChainLinkMock__factory>(
       await ethers.getContractFactory("ChainLinkMock")

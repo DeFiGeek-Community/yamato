@@ -158,7 +158,7 @@ contract YmtOSV1 is IYmtOSV1 {
         */
 
         // uint _amount = ???;
-        // IFeePoolV1(feePoolProxy).withdrawFromProtocol(_amount);
+        // IFeePoolV1(feePool).withdrawFromProtocol(_amount);
     }
 
     function getCurrentCycle() public view returns (uint256) {

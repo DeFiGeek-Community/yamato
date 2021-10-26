@@ -11,12 +11,17 @@ pragma solidity 0.8.4;
 
 import "./Interfaces/IPriceFeed.sol";
 import "./Interfaces/ITellorCaller.sol";
+import "./Interfaces/IUUPSEtherscanVerifiable.sol";
 import "./Dependencies/AggregatorV3Interface.sol";
 import "./Dependencies/SafeMath.sol";
 // import "@openzeppelin/contracts/math/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/BaseMath.sol";
 import "./Dependencies/LiquityMath.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+
 import "hardhat/console.sol";
 
 /*
@@ -27,7 +32,14 @@ import "hardhat/console.sol";
  * switching oracles based on oracle failures, timeouts, and conditions for returning to the primary
  * Chainlink oracle.
  */
-contract PriceFeed is Ownable, BaseMath, IPriceFeed {
+contract PriceFeed is
+    BaseMath,
+    IPriceFeed,
+    IUUPSEtherscanVerifiable,
+    Initializable,
+    UUPSUpgradeable,
+    OwnableUpgradeable
+{
     using SafeMath for uint256;
 
     string public constant NAME = "PriceFeed";
@@ -95,11 +107,16 @@ contract PriceFeed is Ownable, BaseMath, IPriceFeed {
     event LastGoodPriceUpdated(uint256 _lastGoodPrice);
     event PriceFeedStatusChanged(Status newStatus);
 
-    constructor(
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() initializer {}
+
+    function initialize(
         address _ethPriceAggregatorInUSDAddress,
         address _jpyPriceAggregatorInUSDAddress,
         address _tellorCallerAddress
-    ) {
+    ) public initializer {
+        __Ownable_init();
+
         ethPriceAggregatorInUSD = AggregatorV3Interface(
             _ethPriceAggregatorInUSDAddress
         );
@@ -130,8 +147,10 @@ contract PriceFeed is Ownable, BaseMath, IPriceFeed {
 
         _storeChainlinkPrice(chainlinkResponse);
 
-        _renounceOwnership();
+        renounceOwnership();
     }
+
+    function _authorizeUpgrade(address) internal override onlyOwner {}
 
     // --- Functions ---
 
@@ -805,5 +824,9 @@ contract PriceFeed is Ownable, BaseMath, IPriceFeed {
             for (uint256 i = 1; i < exponent; i++) z = z.mul(base);
             return z;
         }
+    }
+
+    function getImplementation() external view override returns (address) {
+        return _getImplementation();
     }
 }

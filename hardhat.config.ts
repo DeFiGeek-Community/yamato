@@ -18,6 +18,7 @@ import "@nomiclabs/hardhat-etherscan";
 import "hardhat-abi-exporter";
 import "hardhat-contract-sizer";
 import "hardhat-gas-reporter";
+import "@openzeppelin/hardhat-upgrades";
 
 if (!process.env.ALCHEMY_URL) throw Error("Get your .env");
 

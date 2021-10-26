@@ -9,6 +9,7 @@ import {
   PriceFeed__factory,
   TellorCallerMock,
 } from "../../typechain";
+import { getProxy } from "../../src/testUtil";
 
 chai.use(smock.matchers);
 chai.use(solidity);
@@ -112,14 +113,11 @@ describe("PriceFeed", function () {
         tellor: 7200,
       },
     });
-
-    feed = await (<PriceFeed__factory>(
-      await ethers.getContractFactory("PriceFeed")
-    )).deploy(
+    feed = await getProxy<PriceFeed, PriceFeed__factory>("PriceFeed", [
       mockAggregatorV3EthUsd.address,
       mockAggregatorV3JpyUsd.address,
-      mockTellorCaller.address
-    );
+      mockTellorCaller.address,
+    ]);
   });
 
   describe("fetchPrice()", function () {
