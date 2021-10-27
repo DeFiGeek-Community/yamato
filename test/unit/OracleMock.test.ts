@@ -133,7 +133,7 @@ describe("ChainlinkMock", function () {
     });
   });
   describe("transferOwnership()", function () {
-    it.only(`succeeds to change owner`, async function () {
+    it(`succeeds to change owner`, async function () {
       const ownerBefore = await chainlinkMockEthUsd.owner();
       await (
         await chainlinkMockEthUsd.transferOwnership(
@@ -191,7 +191,7 @@ describe("TellorCallerMock", function () {
   });
 
   describe("transferOwnership()", function () {
-    it.only(`succeeds to change owner`, async function () {
+    it(`succeeds to change owner`, async function () {
       const ownerBefore = await tellorCallerMockEthJpy.owner();
       await (
         await tellorCallerMockEthJpy.transferOwnership(
