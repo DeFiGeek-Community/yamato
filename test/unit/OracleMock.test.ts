@@ -21,6 +21,7 @@ let jpyUsdDefaultPrice = 877000;
 let ethJpyDefaultPrice = 410000000000;
 let chainlinkInitialRoundId = "30000000000000000001";
 let priceDeviationRange = 0.01;
+let accounts;
 
 describe("OracleMockBase", function () {
   beforeEach(async () => {
@@ -43,6 +44,7 @@ describe("OracleMockBase", function () {
 
 describe("ChainlinkMock", function () {
   beforeEach(async () => {
+    accounts = await ethers.getSigners();
     const spec1 = <ChainLinkMock__factory>(
       await ethers.getContractFactory("ChainLinkMock")
     );
@@ -130,10 +132,23 @@ describe("ChainlinkMock", function () {
       expect(roundId2.toString()).to.eq(nextRoundId);
     });
   });
+  describe("transferOwnership()", function () {
+    it(`succeeds to change owner`, async function () {
+      const ownerBefore = await chainlinkMockEthUsd.owner();
+      await (
+        await chainlinkMockEthUsd.transferOwnership(
+          await accounts[1].getAddress()
+        )
+      ).wait();
+      const ownerAfter = await chainlinkMockEthUsd.owner();
+      chai.expect(ownerAfter).to.not.equal(ownerBefore);
+    });
+  });
 });
 
 describe("TellorCallerMock", function () {
   beforeEach(async () => {
+    accounts = await ethers.getSigners();
     const spec = <TellorCallerMock__factory>(
       await ethers.getContractFactory("TellorCallerMock")
     );
@@ -172,6 +187,19 @@ describe("TellorCallerMock", function () {
       const lowerRangeEthJpy = ethJpyDefaultPrice * (1 - priceDeviationRange);
       const upperRangeEthJpy = ethJpyDefaultPrice * (1 + priceDeviationRange);
       expect(ethJpyValue).to.be.within(lowerRangeEthJpy, upperRangeEthJpy);
+    });
+  });
+
+  describe("transferOwnership()", function () {
+    it(`succeeds to change owner`, async function () {
+      const ownerBefore = await tellorCallerMockEthJpy.owner();
+      await (
+        await tellorCallerMockEthJpy.transferOwnership(
+          await accounts[1].getAddress()
+        )
+      ).wait();
+      const ownerAfter = await tellorCallerMockEthJpy.owner();
+      chai.expect(ownerAfter).to.not.equal(ownerBefore);
     });
   });
 });

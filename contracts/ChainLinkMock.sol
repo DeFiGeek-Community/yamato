@@ -8,6 +8,7 @@ pragma solidity 0.8.4;
 
 import "./OracleMockBase.sol";
 import "./Dependencies/AggregatorV3Interface.sol";
+import "hardhat/console.sol";
 
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
@@ -149,9 +150,5 @@ contract ChainLinkMock is OracleMockBase, AggregatorV3Interface {
 
     function version() external view virtual override returns (uint256) {
         return 1;
-    }
-
-    function transferOwnership(address _newOwner) public onlyOwner {
-        transferOwnership(_newOwner);
     }
 }

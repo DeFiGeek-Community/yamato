@@ -8,6 +8,7 @@ pragma solidity 0.8.4;
 
 import "./OracleMockBase.sol";
 import "./Interfaces/ITellorCaller.sol";
+import "hardhat/console.sol";
 
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
@@ -56,9 +57,5 @@ contract TellorCallerMock is OracleMockBase, ITellorCaller {
 
     function setPriceToDefault() public override onlyOwner {
         lastPrice = 410000000000; // 410000 JPY per ETH
-    }
-
-    function transferOwnership(address _newOwner) public onlyOwner {
-        transferOwnership(_newOwner);
     }
 }
