@@ -9,19 +9,32 @@ pragma solidity 0.8.4;
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 
-import "./Dependencies/Ownable.sol";
-
 // Base class to create a oracle mock contract for a specific provider
-abstract contract OracleMockBase is Ownable {
+abstract contract OracleMockBase {
     int256 internal lastPrice;
     uint256 private lastBlockNumber;
+    address public owner;
+
+    constructor() {
+        owner = msg.sender;
+    }
 
     function setLastPrice(int256 _price) public onlyOwner {
         lastPrice = _price;
         lastBlockNumber = block.number;
+        owner = msg.sender;
+    }
+
+    modifier onlyOwner() {
+        require(owner == msg.sender, "You are not the owner.");
+        _;
     }
 
     function setPriceToDefault() public virtual;
+
+    function transferOwnership(address _newOwner) public onlyOwner {
+        owner = _newOwner;
+    }
 
     function simulatePriceMove(uint256 deviation, bool sign) internal virtual;
 
