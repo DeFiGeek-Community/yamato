@@ -319,6 +319,9 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         );
         const poolCollateralBefore = await Pool.lockedCollateral();
         const redeemedPledgeBefore = await Yamato.getPledge(targetRedeemee);
+        const feePoolBalanceBefore = await Yamato.provider.getBalance(
+          FeePool.address
+        );
 
         const txReceipt = await (
           await Yamato.connect(redeemer).redeem(
@@ -338,6 +341,9 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
           Pool.address
         );
         const poolCollateralAfter = await Pool.lockedCollateral();
+        const feePoolBalanceAfter = await Yamato.provider.getBalance(
+          FeePool.address
+        );
 
         expect(totalSupplyAfter).to.be.lt(totalSupplyBefore);
         expect(redeemerCJPYBalanceAfter).to.be.lt(redeemerCJPYBalanceBefore);
@@ -348,6 +354,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         ).to.be.gt(redeemerETHBalanceBefore);
         expect(redeemedPledgeAfter.coll).to.be.eq(0);
         expect(redeemedPledgeAfter.priority).to.be.eq(0);
+        expect(feePoolBalanceAfter).to.be.eq(feePoolBalanceBefore);
       });
     });
 
@@ -411,6 +418,9 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
         const redeemablePledge = await PriorityRegistry.nextRedeemable();
         const cjpyBalanceBefore = await CJPY.balanceOf(redeemerAddr);
+        const feePoolBalanceBefore = await Yamato.provider.getBalance(
+          FeePool.address
+        );
 
         const txReceipt = await (
           await Yamato.connect(redeemer).redeem(
@@ -420,9 +430,13 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         ).wait();
         const redeemedPledge = await Yamato.getPledge(redeemablePledge.owner);
         const cjpyBalanceAfter = await CJPY.balanceOf(redeemerAddr);
+        const feePoolBalanceAfter = await Yamato.provider.getBalance(
+          FeePool.address
+        );
 
         expect(cjpyBalanceAfter).to.equal(cjpyBalanceBefore);
         expect(redeemedPledge.coll).to.be.lt(redeemablePledge.coll);
+        expect(feePoolBalanceAfter).to.be.gt(feePoolBalanceBefore);
       });
     });
 
@@ -495,7 +509,9 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         const redeemerETHBalanceBefore = await Yamato.provider.getBalance(
           redeemerAddr
         );
-        const redeemeePledgeBefore = await Yamato.getPledge(await _ACCOUNTS[1].getAddress());
+        const redeemeePledgeBefore = await Yamato.getPledge(
+          await _ACCOUNTS[1].getAddress()
+        );
         const statesBefore = await Yamato.getStates();
 
         await (
@@ -509,14 +525,15 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         const redeemerETHBalanceAfter = await Yamato.provider.getBalance(
           redeemerAddr
         );
-        const redeemeePledgeAfter = await Yamato.getPledge(await _ACCOUNTS[1].getAddress());
+        const redeemeePledgeAfter = await Yamato.getPledge(
+          await _ACCOUNTS[1].getAddress()
+        );
         const statesAfter = await Yamato.getStates();
-
 
         expect(gasEstimation).to.be.lt(30000000);
         expect(redeemerETHBalanceAfter).to.be.gt(redeemerETHBalanceBefore);
-        expect(statesAfter[0]).to.be.lt(statesBefore[0]);//totalColl
-        expect(statesAfter[1]).to.be.lt(statesBefore[1]);//totalDebt
+        expect(statesAfter[0]).to.be.lt(statesBefore[0]); //totalColl
+        expect(statesAfter[1]).to.be.lt(statesBefore[1]); //totalDebt
         expect(redeemeePledgeAfter.coll).to.be.lt(redeemeePledgeBefore.coll);
         expect(redeemeePledgeAfter.debt).to.be.lt(redeemeePledgeBefore.debt);
       });

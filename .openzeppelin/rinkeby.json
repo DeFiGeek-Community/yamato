@@ -172,6 +172,21 @@
       "address": "0xF8Ad394982e04697c363c2b4E2fDaF3c171c4Ef3",
       "txHash": "0xa100fba1e141eceba99cd8bf99b345190b3c924be38c7c22ccaf3bae25132df4",
       "kind": "uups"
+    },
+    {
+      "address": "0x73aFC47EF4b925971cca6E746C59E19bd7C543Ca",
+      "txHash": "0xf52e6a8ac0184054ad031dc7565d057e73d8f23bdc266cf208587e1a266c7532",
+      "kind": "uups"
+    },
+    {
+      "address": "0xED27f2eeAbda7744ffdb93410dbda82ef806C856",
+      "txHash": "0x76f88e40de7f19a9d82f057fa78a3984dba25ded92fe8bbdd1193127b828fdc7",
+      "kind": "uups"
+    },
+    {
+      "address": "0xC0484363d71dfd12e33b63Eeca1429005C40ed32",
+      "txHash": "0x868e13a9cfd12c11817d669164d3bb554c093d56957825f95a302a88307188f1",
+      "kind": "uups"
     }
   ],
   "impls": {
@@ -543,6 +558,73 @@
           },
           "t_bool": {
             "label": "bool"
+          }
+        }
+      }
+    },
+    "ad0d81c7f4d6341fd4742713f19e4f0a590f763ac00d72f96d6deaab68e504ce": {
+      "address": "0xB2e7f58F32Dc497342d600485447F31A4BD6882F",
+      "txHash": "0x9c76bf7dcd3031ed6255b6f890fb89b7978985cc05fc14259b9f11628f7b4fae",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:21"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:26"
+          },
+          {
+            "contract": "ERC1967UpgradeUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:214"
+          },
+          {
+            "contract": "UUPSUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:80"
+          },
+          {
+            "contract": "FeePool",
+            "label": "veYMT",
+            "type": "t_address",
+            "src": "contracts/FeePool.sol:22"
+          },
+          {
+            "contract": "FeePool",
+            "label": "protocolWhitelist",
+            "type": "t_mapping(t_address,t_bool)",
+            "src": "contracts/FeePool.sol:23"
+          },
+          {
+            "contract": "FeePool",
+            "label": "governance",
+            "type": "t_address",
+            "src": "contracts/FeePool.sol:24"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)"
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_uint256": {
+            "label": "uint256"
           }
         }
       }

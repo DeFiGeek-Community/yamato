@@ -449,6 +449,12 @@ contract Yamato is IYamato, ReentrancyGuard {
             _redemptionBearer = msg.sender;
             _returningDestination = msg.sender;
         }
+        console.log(
+            "pool.bal:%s  pool.sendETH(_returningDestination, returningEthAmount) = (%s, %s)",
+            address(pool).balance,
+            _returningDestination,
+            returningEthAmount
+        );
         pool.sendETH(_returningDestination, returningEthAmount);
         ICjpyOS(cjpyOS).burnCJPY(_redemptionBearer, totalRedeemedCjpyAmount);
 

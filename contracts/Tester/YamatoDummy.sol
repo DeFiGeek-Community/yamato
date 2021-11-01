@@ -44,10 +44,8 @@ contract YamatoDummy {
     {
         priorityRegistry = IPriorityRegistry(_priorityRegistry);
     }
-    function setPool(address _pool)
-        public
-        onlyGovernance
-    {
+
+    function setPool(address _pool) public onlyGovernance {
         pool = IPool(_pool);
     }
 
@@ -94,28 +92,42 @@ contract YamatoDummy {
         priorityRegistry.popSweepable();
     }
 
-    function bypassDepositRedemptionReserve(uint _amount) external onlyTester {
+    function bypassDepositRedemptionReserve(uint256 _amount)
+        external
+        onlyTester
+    {
         pool.depositRedemptionReserve(_amount);
     }
-    function bypassUseRedemptionReserve(uint _amount) external onlyTester {
+
+    function bypassUseRedemptionReserve(uint256 _amount) external onlyTester {
         pool.useRedemptionReserve(_amount);
     }
-    function bypassDepositSweepReserve(uint _amount) external onlyTester {
+
+    function bypassDepositSweepReserve(uint256 _amount) external onlyTester {
         pool.depositSweepReserve(_amount);
     }
-    function bypassUseSweepReserve(uint _amount) external onlyTester {
+
+    function bypassUseSweepReserve(uint256 _amount) external onlyTester {
         pool.useSweepReserve(_amount);
     }
-    function bypassLockETH(uint _amount) external onlyTester {
+
+    function bypassLockETH(uint256 _amount) external onlyTester {
         pool.lockETH(_amount);
     }
-    function bypassSendETH(address _recipient, uint _amount) external onlyTester {
+
+    function bypassSendETH(address _recipient, uint256 _amount)
+        external
+        onlyTester
+    {
         pool.sendETH(_recipient, _amount);
     }
-    function bypassSendCJPY(address _recipient, uint _amount) external onlyTester {
+
+    function bypassSendCJPY(address _recipient, uint256 _amount)
+        external
+        onlyTester
+    {
         pool.sendCJPY(_recipient, _amount);
     }
-
 
     function getICR(uint256 _coll, uint256 _debt) external returns (uint256) {
         return IYamato.Pledge(_coll, _debt, true, msg.sender, 0).getICR(feed);
