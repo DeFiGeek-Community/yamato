@@ -106,7 +106,7 @@ contract Pool is IPool {
         onlyYamato
     {
         require(
-            lockedCollateral > amount,
+            lockedCollateral >= amount,
             "locked collateral must be more than sending amount."
         );
         (bool success, ) = payable(recipient).call{value: amount}("");

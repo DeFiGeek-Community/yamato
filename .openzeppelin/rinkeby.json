@@ -187,6 +187,31 @@
       "address": "0xC0484363d71dfd12e33b63Eeca1429005C40ed32",
       "txHash": "0x868e13a9cfd12c11817d669164d3bb554c093d56957825f95a302a88307188f1",
       "kind": "uups"
+    },
+    {
+      "address": "0x6B11453570308136E8d388a4cc4e6e1caC349408",
+      "txHash": "0x5f45c14d6b3f76d4bade905fc475cd8b7ec97c8fd3b9801a68746a110a98f6ff",
+      "kind": "uups"
+    },
+    {
+      "address": "0xcdEcDf6Ec85681842e03Ca56Be7e48Bd97977F74",
+      "txHash": "0xb2b1657b9411878d66e32050cc5904669fcf190728caf86ed9c5e96dd1e02111",
+      "kind": "uups"
+    },
+    {
+      "address": "0xC3649fE58fb3Ee22df8617939EcF98567ACFAd6D",
+      "txHash": "0x2c10490b7373a6509185e095deed9c8a0ae8a3b39d0d5d08ef826ef46e82f0ee",
+      "kind": "uups"
+    },
+    {
+      "address": "0x69b7a0a45Dd4Ff58976816D65CD581F3DC42b70F",
+      "txHash": "0xe83555378bfea7e2b644c485c3d5ff21e43de22a085adb086b1347844bb12ee3",
+      "kind": "uups"
+    },
+    {
+      "address": "0xB08C20774CEEcd567d0594d155F4FC81F5BAE737",
+      "txHash": "0x0ba1798191fd3bbbbee24e65689e71e3cbae9c682ff7cf6f781883de8928e5c6",
+      "kind": "uups"
     }
   ],
   "impls": {
@@ -608,6 +633,73 @@
             "label": "governance",
             "type": "t_address",
             "src": "contracts/FeePool.sol:24"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)"
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          }
+        }
+      }
+    },
+    "8930739a8c34a2d29bb0112c2db1d90534708c83dcdd923780a3e103a57740ed": {
+      "address": "0xE30466a566512a832813c166284A31160bACC754",
+      "txHash": "0x5f14c77e6200a76c8d63b4a4c52dd186f395b71a698cd08085a3c73207850071",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:21"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:26"
+          },
+          {
+            "contract": "ERC1967UpgradeUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:214"
+          },
+          {
+            "contract": "UUPSUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:80"
+          },
+          {
+            "contract": "FeePool",
+            "label": "veYMT",
+            "type": "t_address",
+            "src": "contracts/FeePool.sol:18"
+          },
+          {
+            "contract": "FeePool",
+            "label": "protocolWhitelist",
+            "type": "t_mapping(t_address,t_bool)",
+            "src": "contracts/FeePool.sol:19"
+          },
+          {
+            "contract": "FeePool",
+            "label": "governance",
+            "type": "t_address",
+            "src": "contracts/FeePool.sol:20"
           }
         ],
         "types": {
