@@ -383,7 +383,7 @@ contract Yamato is IYamato, ReentrancyGuard {
                 /*
                     1. Expense collateral
                 */
-                maxRedemptionCjpyAmount = _expenseColl(
+                maxRedemptionCjpyAmount = _redeemPledge(
                     sPledge,
                     maxRedemptionCjpyAmount,
                     jpyPerEth
@@ -550,7 +550,7 @@ contract Yamato is IYamato, ReentrancyGuard {
     }
 
     /// @notice Use when redemption
-    function _expenseColl(
+    function _redeemPledge(
         Pledge storage sPledge,
         uint256 cjpyAmount,
         uint256 jpyPerEth
@@ -578,6 +578,7 @@ contract Yamato is IYamato, ReentrancyGuard {
             3. Update macro state
         */
         sPledge.coll -= ethToBeExpensed; // Note: storage variable in the internal func doesn't change state!
+        sPledge.debt -= redemptionAmount;
         return reminder;
     }
 

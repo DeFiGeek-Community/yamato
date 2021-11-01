@@ -495,6 +495,8 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         const redeemerETHBalanceBefore = await Yamato.provider.getBalance(
           redeemerAddr
         );
+        const redeemeePledgeBefore = await Yamato.getPledge(await _ACCOUNTS[1].getAddress());
+        const statesBefore = await Yamato.getStates();
 
         await (
           await Yamato.connect(redeemer).redeem(
@@ -507,8 +509,16 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         const redeemerETHBalanceAfter = await Yamato.provider.getBalance(
           redeemerAddr
         );
+        const redeemeePledgeAfter = await Yamato.getPledge(await _ACCOUNTS[1].getAddress());
+        const statesAfter = await Yamato.getStates();
+
+
         expect(gasEstimation).to.be.lt(30000000);
         expect(redeemerETHBalanceAfter).to.be.gt(redeemerETHBalanceBefore);
+        expect(statesAfter[0]).to.be.lt(statesBefore[0]);//totalColl
+        expect(statesAfter[1]).to.be.lt(statesBefore[1]);//totalDebt
+        expect(redeemeePledgeAfter.coll).to.be.lt(redeemeePledgeBefore.coll);
+        expect(redeemeePledgeAfter.debt).to.be.lt(redeemeePledgeBefore.debt);
       });
     });
   });
