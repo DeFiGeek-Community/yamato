@@ -637,7 +637,6 @@ describe("contract Yamato", function () {
       mockPool.lockETH.returns(0);
       mockCjpyOS.burnCJPY.returns(0);
       mockPool.useRedemptionReserve.returns(0);
-      mockPool.accumulateDividendReserve.returns(0);
       mockPool.sendETH.returns(0);
       mockFeed.fetchPrice.returns(PRICE);
       mockFeed.lastGoodPrice.returns(PRICE);
@@ -744,16 +743,13 @@ describe("contract Yamato", function () {
       expect(mockPool.useRedemptionReserve).to.have.calledOnce;
     });
 
-    /*
-      TODO: Use FeePool
-    */
-    it(`should NOT run accumulateDividendReserve\(\) of Pool.sol when isCoreRedemption=false`, async function () {
+    it(`should NOT run useRedemptionReserve\(\) of Pool.sol when isCoreRedemption=false`, async function () {
       await yamato.connect(accounts[0]).redeem(toERC20(toBorrow + ""), false);
-      expect(mockPool.accumulateDividendReserve).to.have.callCount(0);
+      expect(mockPool.useRedemptionReserve).to.have.callCount(0);
     });
-    it(`should run accumulateDividendReserve\(\) of Pool.sol when isCoreRedemption=true`, async function () {
+    it(`should run useRedemptionReserve\(\) of Pool.sol when isCoreRedemption=true`, async function () {
       await yamato.connect(accounts[0]).redeem(toERC20(toBorrow + ""), true);
-      expect(mockPool.accumulateDividendReserve).to.have.calledOnce;
+      expect(mockPool.useRedemptionReserve).to.have.calledOnce;
     });
 
     it(`should run sendETH\(\) of Pool.sol for successful redeemer`, async function () {

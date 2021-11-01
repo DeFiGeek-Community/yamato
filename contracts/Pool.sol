@@ -9,11 +9,20 @@ pragma solidity 0.8.4;
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 import "./Interfaces/IYamato.sol";
+import "./Interfaces/IFeePool.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./CjpyOS.sol";
 import "hardhat/console.sol";
 
 interface IPool {
+    event RedemptionReserveDeposited();
+    event RedemptionReserveUsed();
+    event SweepReserveDeposited();
+    event SweepReserveUsed();
+    event ETHLocked();
+    event ETHSent();
+    event CJPYSent();
+
     function depositRedemptionReserve(uint256 amount) external;
 
     function useRedemptionReserve(uint256 amount) external;
@@ -21,10 +30,6 @@ interface IPool {
     function depositSweepReserve(uint256 amount) external;
 
     function useSweepReserve(uint256 amount) external;
-
-    function accumulateDividendReserve(uint256 amount) external;
-
-    function withdrawDividendReserve(uint256 amount) external;
 
     function lockETH(uint256 amount) external;
 
@@ -36,22 +41,23 @@ interface IPool {
 
     function sweepReserve() external view returns (uint256);
 
-    function dividendReserve() external view returns (uint256);
-
     function lockedCollateral() external view returns (uint256);
 
     function yamato() external view returns (IYamato);
+
+    function feePool() external view returns (IFeePool);
 }
 
 contract Pool is IPool {
     IYamato public override yamato;
+    IFeePool public override feePool;
     uint256 public override redemptionReserve; // Auto redemption pool a.k.a. (kinda) Stability Pool in Liquity
     uint256 public override sweepReserve; // Protocol Controlling Value (PCV) to remove Pledges(coll=0, debt>0)
-    uint256 public override dividendReserve; // All redeemed Pledges returns coll=ETH to here.
     uint256 public override lockedCollateral; // All collateralized ETH
 
     constructor(address _yamato) {
         yamato = IYamato(_yamato);
+        feePool = IFeePool(yamato.feePool());
     }
 
     event Received(address, uint256);
@@ -71,38 +77,27 @@ contract Pool is IPool {
         onlyYamato
     {
         redemptionReserve += amount;
+        emit RedemptionReserveDeposited();
     }
 
     function useRedemptionReserve(uint256 amount) public override onlyYamato {
         redemptionReserve -= amount;
+        emit RedemptionReserveUsed();
     }
 
     function depositSweepReserve(uint256 amount) public override onlyYamato {
         sweepReserve += amount;
+        emit SweepReserveDeposited();
     }
 
     function useSweepReserve(uint256 amount) public override onlyYamato {
         sweepReserve -= amount;
-    }
-
-    function accumulateDividendReserve(uint256 amount)
-        public
-        override
-        onlyYamato
-    {
-        dividendReserve += amount;
-    }
-
-    function withdrawDividendReserve(uint256 amount)
-        public
-        override
-        onlyYamato
-    {
-        dividendReserve -= amount;
+        emit SweepReserveUsed();
     }
 
     function lockETH(uint256 amount) public override onlyYamato {
         lockedCollateral += amount;
+        emit ETHLocked();
     }
 
     function sendETH(address recipient, uint256 amount)
@@ -110,9 +105,14 @@ contract Pool is IPool {
         override
         onlyYamato
     {
+        require(
+            lockedCollateral >= amount,
+            "locked collateral must be more than sending amount."
+        );
         (bool success, ) = payable(recipient).call{value: amount}("");
         require(success, "transfer failed");
         lockedCollateral -= amount;
+        emit ETHSent();
     }
 
     function sendCJPY(address recipient, uint256 amount)
@@ -122,6 +122,7 @@ contract Pool is IPool {
     {
         IERC20 _currency = IERC20(ICjpyOS(yamato.cjpyOS()).currency());
         _currency.transfer(recipient, amount);
+        emit CJPYSent();
     }
 
     /// @notice Provide the data of public storage.
@@ -138,7 +139,7 @@ contract Pool is IPool {
         return (
             redemptionReserve,
             sweepReserve,
-            dividendReserve,
+            address(feePool).balance,
             lockedCollateral
         );
     }

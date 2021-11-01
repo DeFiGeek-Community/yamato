@@ -13,26 +13,29 @@ import "../PriorityRegistry.sol";
 import "../Dependencies/PledgeLib.sol";
 import "../Interfaces/IYamato.sol";
 import "../Interfaces/IFeePool.sol";
+import "../Pool.sol";
 import "../CjpyOS.sol";
 import "../PriceFeed.sol";
+import "hardhat/console.sol";
 
 contract YamatoDummy {
     using PledgeLib for IYamato.Pledge;
     using PledgeLib for uint256;
     IPriorityRegistry priorityRegistry;
-    ICjpyOS cjpyOS;
-    IFeePool feePool;
+    IPool pool;
+    address public cjpyOS;
+    address public feePool;
     address public feed;
     address governance;
     address tester;
     uint8 public MCR = 110; // MinimumCollateralizationRatio in pertenk
 
     constructor(address _cjpyOS) {
-        cjpyOS = ICjpyOS(_cjpyOS);
+        cjpyOS = _cjpyOS;
         governance = msg.sender;
         tester = msg.sender;
-        feePool = IFeePool(cjpyOS.feePool());
-        feed = cjpyOS.feed();
+        feePool = ICjpyOS(cjpyOS).feePool();
+        feed = ICjpyOS(cjpyOS).feed();
     }
 
     function setPriorityRegistry(address _priorityRegistry)
@@ -40,6 +43,10 @@ contract YamatoDummy {
         onlyGovernance
     {
         priorityRegistry = IPriorityRegistry(_priorityRegistry);
+    }
+
+    function setPool(address _pool) public onlyGovernance {
+        pool = IPool(_pool);
     }
 
     modifier onlyGovernance() {
@@ -83,6 +90,43 @@ contract YamatoDummy {
 
     function bypassPopSweepable() external onlyTester {
         priorityRegistry.popSweepable();
+    }
+
+    function bypassDepositRedemptionReserve(uint256 _amount)
+        external
+        onlyTester
+    {
+        pool.depositRedemptionReserve(_amount);
+    }
+
+    function bypassUseRedemptionReserve(uint256 _amount) external onlyTester {
+        pool.useRedemptionReserve(_amount);
+    }
+
+    function bypassDepositSweepReserve(uint256 _amount) external onlyTester {
+        pool.depositSweepReserve(_amount);
+    }
+
+    function bypassUseSweepReserve(uint256 _amount) external onlyTester {
+        pool.useSweepReserve(_amount);
+    }
+
+    function bypassLockETH(uint256 _amount) external onlyTester {
+        pool.lockETH(_amount);
+    }
+
+    function bypassSendETH(address _recipient, uint256 _amount)
+        external
+        onlyTester
+    {
+        pool.sendETH(_recipient, _amount);
+    }
+
+    function bypassSendCJPY(address _recipient, uint256 _amount)
+        external
+        onlyTester
+    {
+        pool.sendCJPY(_recipient, _amount);
     }
 
     function getICR(uint256 _coll, uint256 _debt) external returns (uint256) {

@@ -25,7 +25,7 @@ interface IYamato {
         address indexed sender,
         uint256 cjpyAmount,
         uint256 ethAmount,
-        address[] indexed pledgesOwner
+        address[] pledgesOwner
     );
     event RedeemedMeta(
         address indexed sender,
@@ -43,6 +43,8 @@ interface IYamato {
     function getPledge(address _owner) external view returns (Pledge memory);
 
     function feed() external view returns (address);
+
+    function feePool() external view returns (address);
 
     function cjpyOS() external view returns (address);
 

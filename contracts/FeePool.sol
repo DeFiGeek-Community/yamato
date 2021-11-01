@@ -10,30 +10,84 @@ pragma solidity 0.8.4;
 //solhint-disable no-inline-assembly
 
 import "./Interfaces/IUUPSEtherscanVerifiable.sol";
+import "./veYMT.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract FeePool is
-    IUUPSEtherscanVerifiable,
-    Initializable,
-    UUPSUpgradeable,
-    OwnableUpgradeable
-{
+contract FeePool is IUUPSEtherscanVerifiable, Initializable, UUPSUpgradeable {
+    address veYMT;
+    mapping(address => bool) protocolWhitelist;
+    address governance;
+
+    event Withdrawn(address, uint256);
+    event WithdrawnByProtocol(address, uint256);
+    event Received(address, uint256);
+    event VeYMTSet(address, address);
+
+    /*
+        ====================
+        Proxy Functions Start
+        ====================
+    */
     function initialize() public initializer {
-        __Ownable_init();
+        governance = msg.sender;
     }
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() initializer {}
 
-    function _authorizeUpgrade(address) internal override onlyOwner {}
+    function _authorizeUpgrade(address) internal override onlyGovernance {}
 
     function getImplementation() external view override returns (address) {
         return _getImplementation();
     }
 
-    receive() external payable {}
+    /*
+        ====================
+        Proxy Functions End
+        ====================
+    */
 
-    fallback() external payable {}
+    /*
+        ====================
+        Original Functions
+        ====================
+    */
+
+    // @dev This func may send ETH to a malicious contract and can cause reentrancy. Validate first then send ETH next.
+    function withdraw(uint256 amount) public onlyVeYMT {
+        emit Withdrawn(msg.sender, amount);
+    }
+
+    // @dev This func may send ETH to a malicious contract and can cause reentrancy. Validate first then send ETH next.
+    function withdrawFromProtocol(uint256 amount) public onlyProtocols {
+        emit WithdrawnByProtocol(msg.sender, amount);
+    }
+
+    function addProtocol(address protocol) public onlyGovernance {}
+
+    function setVeYMT(address _veYMT) public onlyGovernance {
+        veYMT = _veYMT;
+        emit VeYMTSet(msg.sender, _veYMT);
+    }
+
+    modifier onlyVeYMT() {
+        require(
+            IveYMT(veYMT).balanceOfAt(msg.sender, block.number) > 0,
+            "You are not a veYMT holder."
+        );
+        _;
+    }
+    modifier onlyGovernance() {
+        require(msg.sender == governance, "You are not the governer.");
+        _;
+    }
+    modifier onlyProtocols() {
+        require(protocolWhitelist[msg.sender], "You are not in the whitelist");
+        _;
+    }
+
+    receive() external payable {
+        emit Received(msg.sender, msg.value);
+    }
 }
