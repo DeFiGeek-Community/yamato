@@ -33,7 +33,7 @@ contract Yamato is IYamato, ReentrancyGuard {
     IPriorityRegistry priorityRegistry;
     bool priorityRegistryInitialized = false;
     address public override cjpyOS;
-    IFeePool feePool;
+    address public override feePool;
     address public override feed;
     address governance;
     address tester;
@@ -64,7 +64,7 @@ contract Yamato is IYamato, ReentrancyGuard {
         cjpyOS = _cjpyOS;
         governance = msg.sender;
         tester = msg.sender;
-        feePool = IFeePool(ICjpyOS(cjpyOS).feePool());
+        feePool = ICjpyOS(cjpyOS).feePool();
         feed = ICjpyOS(cjpyOS).feed();
     }
 
@@ -418,10 +418,10 @@ contract Yamato is IYamato, ReentrancyGuard {
         uint256 totalRedeemedEthAmount = totalRedeemedCjpyAmount.mul(1e18).div(
             jpyPerEth
         );
-        uint256 dividendEthAmount = (totalRedeemedEthAmount * (100 - GRR)) /
+        uint256 returningEthAmount = (totalRedeemedEthAmount * (100 - GRR)) /
             100;
         address _redemptionBearer;
-        address _dividendDestination;
+        address _returningDestination;
 
         totalDebt -= totalRedeemedCjpyAmount;
         totalColl -= totalRedeemedEthAmount;
@@ -433,17 +433,23 @@ contract Yamato is IYamato, ReentrancyGuard {
                 (-) Redemption Reserve (CJPY)
                             v
                             v
-                (+)  Dividend Reserve (ETH)
+                (+)  Fee Pool (ETH)
             */
             _redemptionBearer = address(pool);
-            _dividendDestination = address(feePool);
+            _returningDestination = feePool;
             pool.useRedemptionReserve(totalRedeemedCjpyAmount);
-            pool.accumulateDividendReserve(dividendEthAmount); // TODO: It's shared logic with individual redemption
         } else {
+            /* 
+            [ Normal Redemption - Account Subtotal ]
+                (-) Bearer Balance (CJPY)
+                            v
+                            v
+                (+) Bearer Balance (ETH)
+            */
             _redemptionBearer = msg.sender;
-            _dividendDestination = msg.sender;
+            _returningDestination = msg.sender;
         }
-        pool.sendETH(_dividendDestination, dividendEthAmount); //TODO: Use FeePool.sol
+        pool.sendETH(_returningDestination, returningEthAmount);
         ICjpyOS(cjpyOS).burnCJPY(_redemptionBearer, totalRedeemedCjpyAmount);
 
         /*

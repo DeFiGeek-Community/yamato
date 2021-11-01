@@ -12,9 +12,12 @@ import {
   PriorityRegistry,
   PriorityRegistry__factory,
   Yamato,
+  YamatoDummy,
   Yamato__factory,
+  YamatoDummy__factory,
   FeePool__factory,
   YMT,
+  Pool__factory,
 } from "../../typechain";
 import { encode, toERC20 } from "../param/helper";
 import { getFakeProxy } from "../../src/testUtil";
@@ -274,4 +277,89 @@ describe("story Events", function () {
       });
     });
   });
+
+  describe.only("contract Pool", function () {
+    let pool: Pool;
+    let yamatoDummy: YamatoDummy;
+    let mockCJPY: FakeContract<CJPY>;
+    let mockFeePool: FakeContract<FeePool>;
+    let mockFeed: FakeContract<PriceFeed>;
+    let mockCjpyOS: FakeContract<CjpyOS>;
+    let accounts;
+
+    beforeEach(async () => {
+      accounts = await ethers.getSigners();
+      mockCJPY = await smock.fake<CJPY>("CJPY");
+      mockCJPY.transfer.returns(0);
+
+      mockFeePool = await smock.fake<FeePool>("FeePool");
+      mockFeed = await smock.fake<PriceFeed>("PriceFeed");
+      mockCjpyOS = await smock.fake<CjpyOS>("CjpyOS");
+      mockCjpyOS.feed.returns(mockFeed.address);
+      mockCjpyOS.feePool.returns(mockFeePool.address);
+      mockCjpyOS.currency.returns(mockCJPY.address);
+
+      const PledgeLib = (
+        await (await ethers.getContractFactory("PledgeLib")).deploy()
+      ).address;
+  
+      yamatoDummy = await (<YamatoDummy__factory>(
+        await ethers.getContractFactory("YamatoDummy", { libraries: { PledgeLib } })
+      )).deploy(mockCjpyOS.address);
+
+      pool = await (<Pool__factory>(
+        await ethers.getContractFactory("Pool")
+      )).deploy(yamatoDummy.address);
+
+      await accounts[0].sendTransaction({
+        to: pool.address,
+        value: BigNumber.from(1e18 + ""),
+      })
+
+
+      await ( await yamatoDummy.setPool(pool.address) ).wait()
+
+    });
+    describe("event RedemptionReserveDeposited", function () {
+      it(`should be emitted`, async function () {
+        await expect(yamatoDummy.bypassDepositRedemptionReserve(BigNumber.from(1e18+""))).to.emit(pool, "RedemptionReserveDeposited");
+      });
+    });
+    describe("event RedemptionReserveUsed", function () {
+      it(`should be emitted`, async function () {
+        await (await yamatoDummy.bypassDepositRedemptionReserve(BigNumber.from(1e18+""))).wait()
+        await expect(yamatoDummy.bypassUseRedemptionReserve(BigNumber.from(1e18+""))).to.emit(pool, "RedemptionReserveUsed");
+      });
+    });
+    describe("event SweepReserveDeposited", function () {
+      it(`should be emitted`, async function () {
+        await expect(yamatoDummy.bypassDepositSweepReserve(BigNumber.from(1e18+""))).to.emit(pool, "SweepReserveDeposited");
+      });
+    });
+    describe("event SweepReserveUsed", function () {
+      it(`should be emitted`, async function () {
+        await (await yamatoDummy.bypassDepositSweepReserve(BigNumber.from(1e18+""))).wait()
+        await expect(yamatoDummy.bypassUseSweepReserve(BigNumber.from(1e18+""))).to.emit(pool, "SweepReserveUsed");
+      });
+    });
+    describe("event ETHLocked", function () {
+      it(`should be emitted`, async function () {
+        await expect(yamatoDummy.bypassLockETH(BigNumber.from(1e18+""))).to.emit(pool, "ETHLocked");
+      });
+    });
+    describe("event ETHSent", function () {
+      it(`should be emitted`, async function () {
+        await (await yamatoDummy.bypassLockETH(BigNumber.from(1e18+""))).wait();
+        await expect(yamatoDummy.bypassSendETH(await accounts[0].getAddress(), BigNumber.from(1e18+""))).to.emit(pool, "ETHSent");
+      });
+    });
+    describe("event CJPYSent", function () {
+      it(`should be emitted`, async function () {
+        await expect(yamatoDummy.bypassSendCJPY(await accounts[0].getAddress(), BigNumber.from(1e18+""))).to.emit(pool, "CJPYSent");
+      });
+    });
+
+  });
+
+
 });
