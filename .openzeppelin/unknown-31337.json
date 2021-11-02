@@ -123,7 +123,7 @@
     },
     {
       "address": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6",
-      "txHash": "0x8f98aca4aa66b06f85f5f14ad6ad68ca3a9cc6cd7076dbffec5eb68e19f22eff",
+      "txHash": "0x41b09821659feae6fc3a74ea725e6a8777d5e64de6e3d26d230d165594e3451e",
       "kind": "uups"
     },
     {
@@ -165,12 +165,27 @@
       "address": "0x3de00f44ce68FC56DB0e0E33aD4015C6e78eCB39",
       "txHash": "0xcaf407c4c4516c6f63282d1e69835c2cd12c0f07f89a9be7f731c1a4c9823155",
       "kind": "uups"
+    },
+    {
+      "address": "0x9D3DA37d36BB0B825CD319ed129c2872b893f538",
+      "txHash": "0x90e73fd7555f88502915d5f792003b4754c99b08d202a2f2b7e7089d5ad6a4a2",
+      "kind": "uups"
+    },
+    {
+      "address": "0x9d136eEa063eDE5418A6BC7bEafF009bBb6CFa70",
+      "txHash": "0xc51194201a0f4891e24f254c5aaf52331c34516d3551a64bc1ad2589a7a1a3e7",
+      "kind": "uups"
+    },
+    {
+      "address": "0x49149a233de6E4cD6835971506F47EE5862289c1",
+      "txHash": "0x2f0146c797b82ff25be29e45f0d5b4696d86c16891e8c25511cc7b95ff1118fd",
+      "kind": "uups"
     }
   ],
   "impls": {
     "7b33f3dac60af9d2f40cb31680f8602ca049095b76905272733d084b8c294f1f": {
       "address": "0xa513E6E4b8f2a923D98304ec87F64353C4D5C853",
-      "txHash": "0x97644c3a5350a763a06a85926f11cd378b9c7716ddeb67b19e98503d93491167",
+      "txHash": "0xfd7a9aa04f4c1ce7fdf953601617ef3cbb5c13b4fd1a755d9575ad0eedb72999",
       "layout": {
         "storage": [
           {
@@ -248,7 +263,7 @@
           {
             "contract": "PriceFeed",
             "label": "status",
-            "type": "t_enum(Status)4361",
+            "type": "t_enum(Status)4434",
             "src": "contracts/PriceFeed.sol:105"
           }
         ],
@@ -262,7 +277,7 @@
           "t_uint256": {
             "label": "uint256"
           },
-          "t_enum(Status)4361": {
+          "t_enum(Status)4434": {
             "label": "enum PriceFeed.Status",
             "members": [
               "chainlinkWorking",

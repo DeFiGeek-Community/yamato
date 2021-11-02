@@ -15,13 +15,13 @@ import "./CjpyOS.sol";
 import "hardhat/console.sol";
 
 interface IPool {
-    event RedemptionReserveDeposited();
-    event RedemptionReserveUsed();
-    event SweepReserveDeposited();
-    event SweepReserveUsed();
-    event ETHLocked();
-    event ETHSent();
-    event CJPYSent();
+    event RedemptionReserveDeposited(address, uint256, uint256);
+    event RedemptionReserveUsed(address, uint256, uint256);
+    event SweepReserveDeposited(address, uint256, uint256);
+    event SweepReserveUsed(address, uint256, uint256);
+    event ETHLocked(address, uint256, uint256);
+    event ETHSent(address, address, uint256, uint256);
+    event CJPYSent(address, address, uint256);
 
     function depositRedemptionReserve(uint256 amount) external;
 
@@ -77,27 +77,27 @@ contract Pool is IPool {
         onlyYamato
     {
         redemptionReserve += amount;
-        emit RedemptionReserveDeposited();
+        emit RedemptionReserveDeposited(msg.sender, amount, redemptionReserve);
     }
 
     function useRedemptionReserve(uint256 amount) public override onlyYamato {
         redemptionReserve -= amount;
-        emit RedemptionReserveUsed();
+        emit RedemptionReserveUsed(msg.sender, amount, redemptionReserve);
     }
 
     function depositSweepReserve(uint256 amount) public override onlyYamato {
         sweepReserve += amount;
-        emit SweepReserveDeposited();
+        emit SweepReserveDeposited(msg.sender, amount, sweepReserve);
     }
 
     function useSweepReserve(uint256 amount) public override onlyYamato {
         sweepReserve -= amount;
-        emit SweepReserveUsed();
+        emit SweepReserveUsed(msg.sender, amount, sweepReserve);
     }
 
     function lockETH(uint256 amount) public override onlyYamato {
         lockedCollateral += amount;
-        emit ETHLocked();
+        emit ETHLocked(msg.sender, amount, lockedCollateral);
     }
 
     function sendETH(address recipient, uint256 amount)
@@ -112,7 +112,7 @@ contract Pool is IPool {
         (bool success, ) = payable(recipient).call{value: amount}("");
         require(success, "transfer failed");
         lockedCollateral -= amount;
-        emit ETHSent();
+        emit ETHSent(msg.sender, recipient, amount, lockedCollateral);
     }
 
     function sendCJPY(address recipient, uint256 amount)
@@ -122,7 +122,7 @@ contract Pool is IPool {
     {
         IERC20 _currency = IERC20(ICjpyOS(yamato.cjpyOS()).currency());
         _currency.transfer(recipient, amount);
-        emit CJPYSent();
+        emit CJPYSent(msg.sender, recipient, amount);
     }
 
     /// @notice Provide the data of public storage.
