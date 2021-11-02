@@ -40,9 +40,7 @@ contract Yamato is
     using PledgeLib for uint256;
 
     IPool pool;
-    bool poolInitialized = false;
     IPriorityRegistry priorityRegistry;
-    bool priorityRegistryInitialized = false;
     address public override cjpyOS;
     address public override feePool;
     address public override feed;
@@ -57,10 +55,12 @@ contract Yamato is
     mapping(address => uint256) withdrawLocks;
     mapping(address => uint256) depositAndBorrowLocks;
 
-    uint8 public override MCR = 110; // MinimumCollateralizationRatio in pertenk
-    uint8 public RRR = 80; // RedemptionReserveRate in pertenk
-    uint8 public SRR = 20; // SweepReserveRate in pertenk
-    uint8 public GRR = 1; // GasReserveRate in pertenk
+    bool poolInitialized;
+    bool priorityRegistryInitialized;
+    uint8 public override MCR; // MinimumCollateralizationRatio in pertenk
+    uint8 public RRR; // RedemptionReserveRate in pertenk
+    uint8 public SRR; // SweepReserveRate in pertenk
+    uint8 public GRR; // GasReserveRate in pertenk
 
     /*
         ==============================
@@ -72,6 +72,12 @@ contract Yamato is
         - revokeTester
     */
     function initialize(address _cjpyOS) public initializer {
+        poolInitialized = false;
+        priorityRegistryInitialized = false;
+        MCR = 110;
+        RRR = 80;
+        SRR = 20;
+        GRR = 1;
         __ReentrancyGuard_init();
         __Pausable_init();
         cjpyOS = _cjpyOS;
@@ -335,7 +341,7 @@ contract Yamato is
                 4-a. Clean full withdrawal
             */
             priorityRegistry.remove(pledge);
-            _neutralizePledge(pledge);
+            console.log("_neutralizePledge:%s",_neutralizePledge(pledge).coll);
         } else {
             /*
                 4-b. Reasonable partial withdrawal
@@ -576,10 +582,11 @@ contract Yamato is
     */
 
     /// @notice Use when removing a pledge
-    function _neutralizePledge(Pledge storage _pledge) internal {
+    function _neutralizePledge(Pledge storage _pledge) internal returns (Pledge storage) {
         _pledge.priority = 0;
         _pledge.isCreated = false;
         _pledge.owner = address(0);
+        return _pledge;
     }
 
     /// @notice Use when redemption

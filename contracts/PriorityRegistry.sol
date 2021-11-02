@@ -50,8 +50,8 @@ contract PriorityRegistry is
 
     mapping(uint256 => mapping(address => IYamato.Pledge)) leveledPledges; // ICR => owner => Pledge
     mapping(uint256 => address[]) private levelIndice; // ICR => owner[]
-    uint256 public override pledgeLength = 0;
-    uint256 public override LICR = 0; // Note: Lowest ICR in percent
+    uint256 public override pledgeLength;
+    uint256 public override LICR; // Note: Lowest ICR in percent
     address public yamato;
     address public governance;
 

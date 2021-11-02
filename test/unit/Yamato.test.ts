@@ -19,7 +19,7 @@ import {
   YMT,
 } from "../../typechain";
 import { encode, toERC20 } from "../param/helper";
-import { getFakeProxy } from "../../src/testUtil";
+import { getFakeProxy, getLinkedProxy } from "../../src/testUtil";
 
 chai.use(smock.matchers);
 chai.use(solidity);
@@ -54,19 +54,13 @@ describe("contract Yamato", function () {
     const PledgeLib = (
       await (await ethers.getContractFactory("PledgeLib")).deploy()
     ).address;
-    const priorityRegistryContractFactory = <PriorityRegistry__factory>(
-      await ethers.getContractFactory("PriorityRegistry", {
-        libraries: { PledgeLib },
-      })
-    );
 
     // Note: Yamato's constructor needs this mock and so the line below has to be called here.
     mockCjpyOS.feed.returns(mockFeed.address);
     mockCjpyOS.feePool.returns(mockFeePool.address);
 
-    yamato = await (<Yamato__factory>(
-      await ethers.getContractFactory("Yamato", { libraries: { PledgeLib } })
-    )).deploy(mockCjpyOS.address);
+    yamato = await getLinkedProxy<Yamato, Yamato__factory>("Yamato", [mockCjpyOS.address], ["PledgeLib"])
+
     yamatoDummy = await (<YamatoDummy__factory>await ethers.getContractFactory(
       "YamatoDummy",
       {
@@ -74,36 +68,7 @@ describe("contract Yamato", function () {
       }
     )).deploy(mockCjpyOS.address); // This has test funcs to size Yamato contract
 
-    /* BEGIN DIRTY-FIX
-    !!TODO!!
-    The code that this block contains is
-    for avoiding bugs of smock, hardhat-ethers or ethers
-    (I think ethers is suspicious.)
-    and must be as following if there is no bug:
-    ```
-    mockPriorityRegistry = await smock.fake<PriorityRegistry>(
-      priorityRegistryContractFactory
-    );
-    ```
-
-    The bugs are that some of the hardhat-ethers methods, like getContractFactory,
-    return wrong ethers objects, and the smock library can not handle that wrong object and raises an error.
-    That reproduces when using library linking.
-
-    The smock library falls in error when it runs the code following [this line](
-    https://github.com/defi-wonderland/smock/blob/v2.0.7/src/factories/ethers-interface.ts#L22).
-    This patch allows the function to return from [this line](
-    https://github.com/defi-wonderland/smock/blob/v2.0.7/src/factories/ethers-interface.ts#L16)
-    before falling error.
-
-    */
-    const priorityRegistryContract =
-      await priorityRegistryContractFactory.deploy(yamato.address);
-    await priorityRegistryContract.deployed();
-    mockPriorityRegistry = await smock.fake<PriorityRegistry>(
-      "PriorityRegistry"
-    );
-    /* END DIRTY-FIX */
+    mockPriorityRegistry = await getFakeProxy<PriorityRegistry>("PriorityRegistry");
 
     await (await yamato.setPool(mockPool.address)).wait();
     await (
@@ -111,11 +76,7 @@ describe("contract Yamato", function () {
     ).wait();
 
     // Note: Will use later for the redeem() test
-    priorityRegistry = await (<PriorityRegistry__factory>(
-      await ethers.getContractFactory("PriorityRegistry", {
-        libraries: { PledgeLib },
-      })
-    )).deploy(yamato.address);
+    priorityRegistry = await getLinkedProxy<PriorityRegistry , PriorityRegistry__factory>("PriorityRegistry", [yamato.address], ["PledgeLib"]);
 
     await (
       await yamatoDummy.setPriorityRegistry(priorityRegistry.address)

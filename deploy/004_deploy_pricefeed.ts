@@ -61,7 +61,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       .simulatePriceMove({ gasLimit: 200000 })
   ).wait();
 
-  const inst = await await getProxy<PriceFeed, PriceFeed__factory>(
+  const inst = await getProxy<PriceFeed, PriceFeed__factory>(
     "PriceFeed",
     [ChainLinkEthUsd, ChainLinkJpyUsd, TellorEthJpy]
   );

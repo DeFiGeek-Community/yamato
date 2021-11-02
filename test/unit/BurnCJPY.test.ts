@@ -24,7 +24,7 @@ import {
   Pool__factory,
   PriorityRegistry__factory,
 } from "../../typechain";
-import { getProxy } from "../../src/testUtil";
+import { getProxy, getLinkedProxy } from "../../src/testUtil";
 
 chai.use(smock.matchers);
 chai.use(solidity);
@@ -104,23 +104,21 @@ describe("BurnCJPY :: contract Yamato", () => {
       // governance=deployer
     );
 
-    const PledgeLib = (
-      await (await ethers.getContractFactory("PledgeLib")).deploy()
-    ).address;
-
-    Yamato = await (<Yamato__factory>await ethers.getContractFactory("Yamato", {
-      libraries: { PledgeLib },
-    })).deploy(CjpyOS.address);
+    Yamato = await getLinkedProxy<Yamato, Yamato__factory>(
+      "Yamato",
+      [CjpyOS.address],
+      ["PledgeLib"]
+    );
 
     Pool = await (<Pool__factory>(
       await ethers.getContractFactory("Pool")
     )).deploy(Yamato.address);
 
-    PriorityRegistry = await (<PriorityRegistry__factory>(
-      await ethers.getContractFactory("PriorityRegistry", {
-        libraries: { PledgeLib },
-      })
-    )).deploy(Yamato.address);
+    PriorityRegistry = await getLinkedProxy<PriorityRegistry, PriorityRegistry__factory>(
+      "PriorityRegistry",
+      [Yamato.address],
+      ["PledgeLib"]
+    );
 
     await (await Yamato.setPool(Pool.address)).wait();
     await (await Yamato.setPriorityRegistry(PriorityRegistry.address)).wait();
