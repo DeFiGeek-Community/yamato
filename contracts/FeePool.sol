@@ -13,8 +13,14 @@ import "./Interfaces/IUUPSEtherscanVerifiable.sol";
 import "./veYMT.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
-contract FeePool is IUUPSEtherscanVerifiable, Initializable, UUPSUpgradeable {
+contract FeePool is
+    IUUPSEtherscanVerifiable,
+    Initializable,
+    UUPSUpgradeable,
+    ReentrancyGuardUpgradeable
+{
     address veYMT;
     mapping(address => bool) protocolWhitelist;
     address governance;
@@ -30,6 +36,7 @@ contract FeePool is IUUPSEtherscanVerifiable, Initializable, UUPSUpgradeable {
         ====================
     */
     function initialize() public initializer {
+        __ReentrancyGuard_init();
         governance = msg.sender;
     }
 
@@ -54,13 +61,15 @@ contract FeePool is IUUPSEtherscanVerifiable, Initializable, UUPSUpgradeable {
         ====================
     */
 
-    // @dev This func may send ETH to a malicious contract and can cause reentrancy. Validate first then send ETH next.
-    function withdraw(uint256 amount) public onlyVeYMT {
+    function withdraw(uint256 amount) public onlyVeYMT nonReentrant {
         emit Withdrawn(msg.sender, amount);
     }
 
-    // @dev This func may send ETH to a malicious contract and can cause reentrancy. Validate first then send ETH next.
-    function withdrawFromProtocol(uint256 amount) public onlyProtocols {
+    function withdrawFromProtocol(uint256 amount)
+        public
+        onlyProtocols
+        nonReentrant
+    {
         emit WithdrawnByProtocol(msg.sender, amount);
     }
 

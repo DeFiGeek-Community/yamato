@@ -39,7 +39,12 @@ interface IPriorityRegistry {
 }
 
 // @dev For gas saving reason, we use percent denominated ICR only in this contract.
-contract PriorityRegistry is IPriorityRegistry {
+contract PriorityRegistry is
+    IPriorityRegistry,
+    IUUPSEtherscanVerifiable,
+    Initializable,
+    UUPSUpgradeable
+{
     using SafeMath for uint256;
     using PledgeLib for IYamato.Pledge;
 
@@ -48,9 +53,20 @@ contract PriorityRegistry is IPriorityRegistry {
     uint256 public override pledgeLength = 0;
     uint256 public override LICR = 0; // Note: Lowest ICR in percent
     address public yamato;
+    address public governance;
 
-    constructor(address _yamato) {
+    function initialize(address _yamato) public initializer {
         yamato = _yamato;
+        governance = msg.sender;
+    }
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() initializer {}
+
+    function _authorizeUpgrade(address) internal override onlyGovernance {}
+
+    function getImplementation() external view override returns (address) {
+        return _getImplementation();
     }
 
     /*
@@ -402,5 +418,10 @@ contract PriorityRegistry is IPriorityRegistry {
 
     function floor(uint256 _ICRpertenk) internal returns (uint256) {
         return _ICRpertenk / 100;
+    }
+
+    modifier onlyGovernance() {
+        require(msg.sender == governance, "You are not the governer.");
+        _;
     }
 }

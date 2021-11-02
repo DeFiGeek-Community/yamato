@@ -12,7 +12,6 @@ pragma solidity 0.8.4;
 import "./Pool.sol";
 import "./PriorityRegistry.sol";
 import "./YMT.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./CjpyOS.sol";
 import "./PriceFeed.sol";
 import "./Dependencies/PledgeLib.sol";
@@ -20,10 +19,22 @@ import "./Dependencies/SafeMath.sol";
 import "./Interfaces/IYamato.sol";
 import "./Interfaces/IFeePool.sol";
 import "hardhat/console.sol";
+import "./Interfaces/IUUPSEtherscanVerifiable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 
 /// @title Yamato Pledge Manager Contract
 /// @author 0xMotoko
-contract Yamato is IYamato, ReentrancyGuard {
+contract Yamato is
+    IYamato,
+    IUUPSEtherscanVerifiable,
+    Initializable,
+    UUPSUpgradeable,
+    ReentrancyGuardUpgradeable,
+    PausableUpgradeable
+{
     using SafeMath for uint256;
     using PledgeLib for IYamato.Pledge;
     using PledgeLib for uint256;
@@ -60,12 +71,23 @@ contract Yamato is IYamato, ReentrancyGuard {
         - revokeGovernance
         - revokeTester
     */
-    constructor(address _cjpyOS) {
+    function initialize(address _cjpyOS) public initializer {
+        __ReentrancyGuard_init();
+        __Pausable_init();
         cjpyOS = _cjpyOS;
         governance = msg.sender;
         tester = msg.sender;
         feePool = ICjpyOS(cjpyOS).feePool();
         feed = ICjpyOS(cjpyOS).feed();
+    }
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() initializer {}
+
+    function _authorizeUpgrade(address) internal override onlyGovernance {}
+
+    function getImplementation() external view override returns (address) {
+        return _getImplementation();
     }
 
     function setPool(address _pool) public onlyGovernance onlyOnceForSetPool {
@@ -122,7 +144,7 @@ contract Yamato is IYamato, ReentrancyGuard {
 
     /// @notice Make a Pledge with ETH. "Top-up" supported.
     /// @dev We haven't supported ERC-20 pledges and pool
-    function deposit() public payable nonReentrant {
+    function deposit() public payable nonReentrant whenNotPaused {
         IPriceFeed(feed).fetchPrice();
         uint256 ethAmount = msg.value;
 
@@ -161,7 +183,7 @@ contract Yamato is IYamato, ReentrancyGuard {
     /// @notice Borrow in CJPY. In JPY term, 15.84%=RR, 0.16%=RRGas, 3.96%=SR, 0.4%=SRGas
     /// @dev This function can't be executed just the same block with your deposit
     /// @param borrowAmountInCjpy maximal redeemable amount
-    function borrow(uint256 borrowAmountInCjpy) public {
+    function borrow(uint256 borrowAmountInCjpy) public whenNotPaused {
         /*
             1. Ready
         */
@@ -352,6 +374,7 @@ contract Yamato is IYamato, ReentrancyGuard {
     function redeem(uint256 maxRedemptionCjpyAmount, bool isCoreRedemption)
         public
         nonReentrant
+        whenNotPaused
     {
         uint256 jpyPerEth = IPriceFeed(feed).fetchPrice();
         uint256 redeemStart = pool.redemptionReserve();
@@ -378,7 +401,6 @@ contract Yamato is IYamato, ReentrancyGuard {
                 if (sPledge.coll == 0) {
                     break;
                 }
-                _pledgesOwner[_loopCount] = _redeemablePledge.owner;
 
                 /*
                     1. Expense collateral
@@ -399,6 +421,7 @@ contract Yamato is IYamato, ReentrancyGuard {
                 } catch {
                     break;
                 }
+                _pledgesOwner[_loopCount] = _redeemablePledge.owner;
                 _loopCount++;
             } catch {
                 break;
@@ -477,7 +500,7 @@ contract Yamato is IYamato, ReentrancyGuard {
 
     /// @notice Initialize all pledges such that ICR is 0 (= (0*price)/debt )
     /// @dev Will be run by incentivised DAO member. Scan all pledges and filter debt>0, coll=0. Pay gas compensation from the 1% of SweepReserve at most, and as same as 1% of the actual sweeping amount.
-    function sweep() public nonReentrant {
+    function sweep() public nonReentrant whenNotPaused {
         IPriceFeed(feed).fetchPrice();
         uint256 sweepStart = pool.sweepReserve();
         require(sweepStart > 0, "Sweep failure: sweep reserve is empty.");
@@ -544,8 +567,12 @@ contract Yamato is IYamato, ReentrancyGuard {
         Helpers
     ==============================
         - _neutralizePledge
+        - _redeemPledge
+        - _sweepDebt
         - getTCR
-        - FR
+        - updateTCR
+        - pause
+        - unpause
     */
 
     /// @notice Use when removing a pledge
@@ -643,6 +670,14 @@ contract Yamato is IYamato, ReentrancyGuard {
 
     function updateTCR() external {
         TCR = getTCR();
+    }
+
+    function pause() public onlyGovernance whenNotPaused {
+        _pause();
+    }
+
+    function unpause() public onlyGovernance whenPaused {
+        _unpause();
     }
 
     /*
