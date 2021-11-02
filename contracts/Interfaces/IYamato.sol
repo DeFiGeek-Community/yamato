@@ -41,6 +41,14 @@ interface IYamato {
     );
 
     function getPledge(address _owner) external view returns (Pledge memory);
+    function getStates() external view returns (
+        uint256,
+        uint256,
+        uint8,
+        uint8,
+        uint8,
+        uint8
+    );
 
     function feed() external view returns (address);
 
