@@ -59,10 +59,6 @@ interface IYamatoHelper {
 
     function priorityRegistry() external view returns (address);
 
-    function neutralizePledge(IYamato.Pledge memory)
-        external
-        returns (IYamato.Pledge memory);
-
     function sweepDebt(IYamato.Pledge memory sPledge, uint256 maxSweeplable)
         external
         returns (
@@ -76,6 +72,8 @@ interface IYamatoHelper {
         uint256 cjpyAmount,
         uint256 jpyPerEth
     ) external returns (IYamato.Pledge memory, uint256);
+
+    function runWithdraw(address sender, uint256 ethAmount) external;
 
     function runRedeem(RunRedeemeArgs memory)
         external
@@ -159,10 +157,86 @@ contract YamatoHelper is IYamatoHelper, YamatoBase {
     ==============================
         Helpers
     ==============================
+        - runWithdraw
         - runRedeem
-        - neutralizePledge
+        - runSweep
+        - redeemPledge
+        - sweepDebt
         - getTCR
     */
+
+    function runWithdraw(address sender, uint256 ethAmount)
+        public
+        override
+        onlyYamato
+    {
+        /*
+            1. Get feed and pledge
+        */
+        IPriceFeed(__feed).fetchPrice();
+        IYamato.Pledge memory pledge = IYamato(yamato).getPledge(sender);
+        (uint256 totalColl, , , , , ) = IYamato(yamato).getStates();
+
+        /*
+            2. Validate
+        */
+        require(
+            ethAmount <= pledge.coll,
+            "Withdrawal amount must be less than equal to the target coll amount."
+        );
+        require(
+            ethAmount <= totalColl,
+            "Withdrawal amount must be less than equal to the total coll amount."
+        );
+        require(
+            IYamato(yamato).withdrawLocks(sender) <= block.timestamp,
+            "Withdrawal is being locked for this sender."
+        );
+        require(
+            pledge.getICR(__feed) >= uint256(IYamato(yamato).MCR()) * 100,
+            "Withdrawal failure: ICR is not more than MCR."
+        );
+
+        /*
+            3. Update pledge
+        */
+
+        // Note: SafeMath unintentionally checks full withdrawal
+        pledge.coll = pledge.coll - ethAmount;
+        IYamato(yamato).setPledge(pledge);
+
+        IYamato(yamato).setTotalDebt(totalColl - ethAmount);
+
+        /*
+            4. Validate and update PriorityRegistry
+        */
+        if (pledge.coll == 0 && pledge.debt == 0) {
+            /*
+                4-a. Clean full withdrawal
+            */
+            IPriorityRegistry(priorityRegistry).remove(pledge);
+            IYamato(yamato).setPledge(pledge.nil());
+        } else {
+            /*
+                4-b. Reasonable partial withdrawal
+            */
+            require(
+                pledge.getICR(__feed) >= uint256(IYamato(yamato).MCR()) * 100,
+                "Withdrawal failure: ICR can't be less than MCR after withdrawal."
+            );
+            pledge.priority = IPriorityRegistry(priorityRegistry).upsert(
+                pledge
+            );
+            IYamato(yamato).setPledge(pledge);
+        }
+
+        /*
+            5-1. Charge CJPY
+            5-2. Return coll to the withdrawer
+        */
+        IPool(pool).sendETH(sender, ethAmount);
+    }
+
     function runRedeem(RunRedeemeArgs memory _args)
         public
         override
@@ -337,13 +411,14 @@ contract YamatoHelper is IYamatoHelper, YamatoBase {
                 ) = this.sweepDebt(sPledge, _reminder);
                 _reminder = _sweptReminder;
                 sPledge = _sweptPledge;
+                IYamato(yamato).setPledge(sPledge);
 
                 (, uint256 totalDebt, , , , ) = IYamato(yamato).getStates();
                 IYamato(yamato).setTotalDebt(totalDebt - sweepingAmount);
 
                 if (_reminder > 0) {
                     IPriorityRegistry(priorityRegistry).remove(sPledge);
-                    sPledge = this.neutralizePledge(sPledge);
+                    IYamato(yamato).setPledge(sPledge.nil());
                 }
                 _loopCount++;
             } catch {
@@ -364,19 +439,6 @@ contract YamatoHelper is IYamatoHelper, YamatoBase {
         IPool(pool).useSweepReserve(gasCompensationInCJPY);
 
         return (_sweptAmount, gasCompensationInCJPY, _pledgesOwner);
-    }
-
-    /// @notice Use when removing a pledge
-    function neutralizePledge(IYamato.Pledge memory _pledge)
-        public
-        override
-        onlyYamato
-        returns (IYamato.Pledge memory)
-    {
-        _pledge.priority = 0;
-        _pledge.isCreated = false;
-        _pledge.owner = address(0);
-        return _pledge;
     }
 
     /// @notice Use when redemption

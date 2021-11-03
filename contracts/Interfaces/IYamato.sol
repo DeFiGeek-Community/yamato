@@ -42,6 +42,13 @@ interface IYamato {
 
     function getPledge(address _owner) external view returns (Pledge memory);
 
+    function withdrawLocks(address _owner) external view returns (uint256);
+
+    function depositAndBorrowLocks(address _owner)
+        external
+        view
+        returns (uint256);
+
     function getStates()
         external
         view

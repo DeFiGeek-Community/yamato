@@ -47,8 +47,8 @@ contract Yamato is
     uint256 totalDebt;
     uint256 public TCR;
 
-    mapping(address => uint256) withdrawLocks;
-    mapping(address => uint256) depositAndBorrowLocks;
+    mapping(address => uint256) public override withdrawLocks;
+    mapping(address => uint256) public override depositAndBorrowLocks;
 
     uint8 public override MCR; // MinimumCollateralizationRatio in pertenk
     uint8 public RRR; // RedemptionReserveRate in pertenk
@@ -275,70 +275,7 @@ contract Yamato is
     /// @dev Nood reentrancy guard. TCR will go down.
     /// @param ethAmount withdrawal amount
     function withdraw(uint256 ethAmount) public nonReentrant {
-        /*
-            1. Get feed and pledge
-        */
-        IPriceFeed(__feed).fetchPrice();
-        Pledge storage pledge = pledges[msg.sender];
-
-        /*
-            2. Validate
-        */
-        require(
-            ethAmount <= pledge.coll,
-            "Withdrawal amount must be less than equal to the target coll amount."
-        );
-        require(
-            ethAmount <= totalColl,
-            "Withdrawal amount must be less than equal to the total coll amount."
-        );
-        require(
-            withdrawLocks[msg.sender] <= block.timestamp,
-            "Withdrawal is being locked for this sender."
-        );
-        require(
-            pledge.toMem().getICR(__feed) >= uint256(MCR) * 100,
-            "Withdrawal failure: ICR is not more than MCR."
-        );
-
-        /*
-            3. Update pledge
-        */
-
-        // Note: SafeMath unintentionally checks full withdrawal
-        pledge.coll = pledge.coll - ethAmount;
-        totalColl = totalColl - ethAmount;
-        TCR = helper.getTCR();
-
-        /*
-            4. Validate and update PriorityRegistry
-        */
-        if (pledge.coll == 0 && pledge.debt == 0) {
-            /*
-                4-a. Clean full withdrawal
-            */
-            priorityRegistry.remove(pledge);
-            pledge.sync(helper.neutralizePledge(pledge.toMem()));
-        } else {
-            /*
-                4-b. Reasonable partial withdrawal
-            */
-            require(
-                pledge.toMem().getICR(__feed) >= uint256(MCR) * 100,
-                "Withdrawal failure: ICR can't be less than MCR after withdrawal."
-            );
-            pledge.priority = priorityRegistry.upsert(pledge);
-        }
-
-        /*
-            5-1. Charge CJPY
-            5-2. Return coll to the withdrawer
-        */
-        pool.sendETH(msg.sender, ethAmount);
-
-        /*
-            6. Event
-        */
+        helper.runWithdraw(msg.sender, ethAmount);
         emit Withdrawn(msg.sender, ethAmount);
     }
 

@@ -100,6 +100,13 @@ library PledgeLib {
         return mPledge;
     }
 
+    function nil(IYamato.Pledge memory _p)
+        public
+        returns (IYamato.Pledge memory)
+    {
+        return IYamato.Pledge(0, 0, false, address(0), 0);
+    }
+
     /// @param _ICRpertenk IndividualCollateralRatio per 10k
     /// @dev Three linear fumula there are
     /// @return _FRpertenk Corresponding fee rate in uint256 per-ten-kilo unit

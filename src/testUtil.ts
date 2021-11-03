@@ -42,12 +42,10 @@ export async function getLinkedProxy<
   let contractFactory: S = <S>(
     await getLinkedContractFactory(contractName, Libraries)
   );
-  const instance: T = <T>(
-    await upgrades.deployProxy(contractFactory, args, {
-      kind: "uups",
-      unsafeAllow: ["external-library-linking"],
-    })
-  );
+  const instance: T = <T>await upgrades.deployProxy(contractFactory, args, {
+    kind: "uups",
+    unsafeAllow: ["external-library-linking"],
+  });
   return instance;
 }
 
