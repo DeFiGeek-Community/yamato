@@ -12,8 +12,10 @@ import {
   PriorityRegistry,
   PriorityRegistry__factory,
   Yamato,
+  YamatoHelper,
   YamatoDummy,
   Yamato__factory,
+  YamatoHelper__factory,
   YamatoDummy__factory,
   FeePool__factory,
   YMT,
@@ -33,6 +35,7 @@ describe("contract Yamato", function () {
   let mockCjpyOS: FakeContract<CjpyOS>;
   let mockPriorityRegistry: FakeContract<PriorityRegistry>;
   let yamato: Yamato;
+  let yamatoHelper: YamatoHelper;
   let yamatoDummy: YamatoDummy;
   let priorityRegistry: PriorityRegistry;
   let PRICE: BigNumber;
@@ -64,6 +67,11 @@ describe("contract Yamato", function () {
       [mockCjpyOS.address],
       ["PledgeLib"]
     );
+    yamatoHelper = await getLinkedProxy<YamatoHelper, YamatoHelper__factory>(
+      "YamatoHelper",
+      [yamato.address],
+      ["PledgeLib"]
+    );
 
     yamatoDummy = await (<YamatoDummy__factory>await ethers.getContractFactory(
       "YamatoDummy",
@@ -76,16 +84,17 @@ describe("contract Yamato", function () {
       "PriorityRegistry"
     );
 
-    await (await yamato.setPool(mockPool.address)).wait();
+    await (await yamatoHelper.setPool(mockPool.address)).wait();
     await (
-      await yamato.setPriorityRegistry(mockPriorityRegistry.address)
+      await yamatoHelper.setPriorityRegistry(mockPriorityRegistry.address)
     ).wait();
+    await (await yamato.setYamatoHelper(yamatoHelper.address)).wait()
 
     // Note: Will use later for the redeem() test
     priorityRegistry = await getLinkedProxy<
       PriorityRegistry,
       PriorityRegistry__factory
-    >("PriorityRegistry", [yamato.address], ["PledgeLib"]);
+    >("PriorityRegistry", [yamatoHelper.address], ["PledgeLib"]);
 
     await (
       await yamatoDummy.setPriorityRegistry(priorityRegistry.address)
@@ -614,7 +623,7 @@ describe("contract Yamato", function () {
       await (await yamato.updateTCR()).wait();
 
       await (
-        await yamato.setPriorityRegistryInTest(priorityRegistry.address)
+        await yamatoHelper.setPriorityRegistryInTest(priorityRegistry.address)
       ).wait();
 
       toCollateralize = 1;
@@ -755,7 +764,7 @@ describe("contract Yamato", function () {
       mockCjpyOS.burnCJPY.returns(0);
 
       await (
-        await yamato.setPriorityRegistryInTest(priorityRegistry.address)
+        await yamatoHelper.setPriorityRegistryInTest(priorityRegistry.address)
       ).wait();
 
       /*

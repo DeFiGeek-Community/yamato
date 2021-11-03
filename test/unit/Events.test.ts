@@ -12,8 +12,10 @@ import {
   PriorityRegistry,
   PriorityRegistry__factory,
   Yamato,
+  YamatoHelper,
   YamatoDummy,
   Yamato__factory,
+  YamatoHelper__factory,
   YamatoDummy__factory,
   FeePool__factory,
   YMT,
@@ -35,6 +37,7 @@ describe("story Events", function () {
     let mockCjpyOS: FakeContract<CjpyOS>;
     let mockPriorityRegistry: FakeContract<PriorityRegistry>;
     let yamato: Yamato;
+    let yamatoHelper: YamatoHelper;
     let priorityRegistry: PriorityRegistry;
     let PRICE: BigNumber;
     let MCR: BigNumber;
@@ -72,15 +75,21 @@ describe("story Events", function () {
         [mockCjpyOS.address],
         ["PledgeLib"]
       );
+      yamatoHelper = await getLinkedProxy<YamatoHelper, YamatoHelper__factory>(
+        "YamatoHelper",
+        [yamato.address],
+        ["PledgeLib"]
+      );
 
       mockPriorityRegistry = await getFakeProxy<PriorityRegistry>(
         "PriorityRegistry"
       );
 
-      await (await yamato.setPool(mockPool.address)).wait();
+      await (await yamatoHelper.setPool(mockPool.address)).wait();
       await (
-        await yamato.setPriorityRegistry(mockPriorityRegistry.address)
+        await yamatoHelper.setPriorityRegistry(mockPriorityRegistry.address)
       ).wait();
+      yamato.setYamatoHelper(yamatoHelper.address);
 
       PRICE = BigNumber.from(260000).mul(1e18 + "");
       MCR = BigNumber.from(110);

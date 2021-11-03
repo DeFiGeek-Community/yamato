@@ -12,6 +12,7 @@ import {
   CjpyOS,
   CJPY,
   Yamato,
+  YamatoHelper,
   PriorityRegistry,
   Pool,
   ChainLinkMock__factory,
@@ -21,6 +22,7 @@ import {
   CjpyOS__factory,
   CJPY__factory,
   Yamato__factory,
+  YamatoHelper__factory,
   Pool__factory,
   PriorityRegistry__factory,
 } from "../../typechain";
@@ -38,6 +40,7 @@ describe("BurnCJPY :: contract Yamato", () => {
   let FeePool: FeePool;
   let CjpyOS: CjpyOS;
   let Yamato: Yamato;
+  let YamatoHelper: YamatoHelper;
   let Pool: Pool;
   let PriorityRegistry: PriorityRegistry;
   let accounts: Signer[];
@@ -104,23 +107,31 @@ describe("BurnCJPY :: contract Yamato", () => {
       // governance=deployer
     );
 
+
     Yamato = await getLinkedProxy<Yamato, Yamato__factory>(
       "Yamato",
       [CjpyOS.address],
       ["PledgeLib"]
     );
 
+    YamatoHelper = await getLinkedProxy<YamatoHelper, YamatoHelper__factory>(
+      "YamatoHelper",
+      [YamatoHelper.address],
+      ["PledgeLib"]
+    );
+
     Pool = await (<Pool__factory>(
       await ethers.getContractFactory("Pool")
-    )).deploy(Yamato.address);
+    )).deploy(YamatoHelper.address);
 
     PriorityRegistry = await getLinkedProxy<
       PriorityRegistry,
       PriorityRegistry__factory
-    >("PriorityRegistry", [Yamato.address], ["PledgeLib"]);
+    >("PriorityRegistry", [YamatoHelper.address], ["PledgeLib"]);
 
-    await (await Yamato.setPool(Pool.address)).wait();
-    await (await Yamato.setPriorityRegistry(PriorityRegistry.address)).wait();
+    await (await YamatoHelper.setPool(Pool.address)).wait();
+    await (await YamatoHelper.setPriorityRegistry(PriorityRegistry.address)).wait();
+    await (await Yamato.setYamatoHelper(YamatoHelper.address)).wait()
     await (await CjpyOS.addYamato(Yamato.address)).wait();
     await (await CJPY.setCurrencyOS(CjpyOS.address)).wait();
   });
