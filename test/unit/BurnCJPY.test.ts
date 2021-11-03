@@ -114,11 +114,10 @@ describe("BurnCJPY :: contract Yamato", () => {
       await ethers.getContractFactory("Pool")
     )).deploy(Yamato.address);
 
-    PriorityRegistry = await getLinkedProxy<PriorityRegistry, PriorityRegistry__factory>(
-      "PriorityRegistry",
-      [Yamato.address],
-      ["PledgeLib"]
-    );
+    PriorityRegistry = await getLinkedProxy<
+      PriorityRegistry,
+      PriorityRegistry__factory
+    >("PriorityRegistry", [Yamato.address], ["PledgeLib"]);
 
     await (await Yamato.setPool(Pool.address)).wait();
     await (await Yamato.setPriorityRegistry(PriorityRegistry.address)).wait();

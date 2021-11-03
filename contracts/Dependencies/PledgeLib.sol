@@ -88,6 +88,17 @@ library PledgeLib {
         return sPledge;
     }
 
+    function assign(
+        IYamato.Pledge memory mPledge,
+        IYamato.Pledge memory _pledge
+    ) public returns (IYamato.Pledge memory) {
+        mPledge.coll = _pledge.coll;
+        mPledge.debt = _pledge.debt;
+        mPledge.isCreated = _pledge.isCreated;
+        mPledge.owner = _pledge.owner;
+        mPledge.priority = _pledge.priority;
+        return mPledge;
+    }
 
     /// @param _ICRpertenk IndividualCollateralRatio per 10k
     /// @dev Three linear fumula there are

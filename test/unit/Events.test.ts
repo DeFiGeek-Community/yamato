@@ -63,8 +63,6 @@ describe("story Events", function () {
         })
       );
 
-
-      
       // Note: Yamato's constructor needs this mock and so the line below has to be called here.
       mockCjpyOS.feed.returns(mockFeed.address);
       mockCjpyOS.feePool.returns(mockFeePool.address);
@@ -75,7 +73,9 @@ describe("story Events", function () {
         ["PledgeLib"]
       );
 
-      mockPriorityRegistry = await getFakeProxy<PriorityRegistry>("PriorityRegistry");
+      mockPriorityRegistry = await getFakeProxy<PriorityRegistry>(
+        "PriorityRegistry"
+      );
 
       await (await yamato.setPool(mockPool.address)).wait();
       await (

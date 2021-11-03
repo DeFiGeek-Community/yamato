@@ -53,7 +53,7 @@ contract Yamato is
     uint8 public override MCR; // MinimumCollateralizationRatio in pertenk
     uint8 public RRR; // RedemptionReserveRate in pertenk
     uint8 public SRR; // SweepReserveRate in pertenk
-    uint8 public GRR; // GasReserveRate in pertenk
+    uint8 public override GRR; // GasReserveRate in pertenk
 
     /*
         ==============================
@@ -73,10 +73,46 @@ contract Yamato is
         __Pausable_init();
         __YamatoBase_init(_cjpyOS);
     }
+
     function setYamatoHelper(address _yamatoHelper) public onlyGovernance {
+        /*
+            [ Deployment Order ]
+            CjpyOS.deploy()
+            Yamato.deploy(CjpyOS)
+            YamatoHelper.deploy(Yamato)
+            Pool.deploy(YamatoHelper)
+            PriorityRegistry.deploy(YamatoHelper)
+            YamatoHelper.setPool(Pool)
+            YamatoHelper.setPriorityRegistry(PriorityRegistry)
+            Yamato.setYamatoHelper(YamatoHelper)
+        */
         helper = IYamatoHelper(_yamatoHelper);
         pool = IPool(helper.pool());
         priorityRegistry = IPriorityRegistry(helper.priorityRegistry());
+    }
+
+    function setPledge(Pledge memory _p) public override onlyYamato {
+        Pledge storage p = pledges[_p.owner];
+        p.coll = _p.coll;
+        p.debt = _p.debt;
+        p.owner = _p.owner;
+        p.isCreated = _p.isCreated;
+        p.priority = _p.coll;
+    }
+
+    function setTotalColl(uint256 _totalColl) public override onlyYamato {
+        totalColl = _totalColl;
+        TCR = helper.getTCR();
+    }
+
+    function setTotalDebt(uint256 _totalDebt) public override onlyYamato {
+        totalDebt = _totalDebt;
+        TCR = helper.getTCR();
+    }
+
+    modifier onlyYamato() {
+        require(helper.permitDeps(msg.sender), "Not deps");
+        _;
     }
 
     /*
@@ -323,187 +359,37 @@ contract Yamato is
         nonReentrant
         whenNotPaused
     {
-        uint256 jpyPerEth = IPriceFeed(__feed).fetchPrice();
-        uint256 redeemStart = pool.redemptionReserve();
-        uint256 cjpyAmountStart = maxRedemptionCjpyAmount;
-        address[] memory _pledgesOwner = new address[](
-            priorityRegistry.pledgeLength()
-        );
-        uint256 _loopCount = 0;
-
-        while (maxRedemptionCjpyAmount > 0) {
-            try priorityRegistry.popRedeemable() returns (
-                Pledge memory _redeemablePledge
-            ) {
-                if (
-                    !_redeemablePledge.isCreated ||
-                    _redeemablePledge.owner == address(0x00)
-                ) {
-                    break;
-                }
-                Pledge storage sPledge = pledges[_redeemablePledge.owner];
-                if (!sPledge.isCreated) {
-                    break;
-                }
-                if (sPledge.coll == 0) {
-                    break;
-                }
-
-                /*
-                    1. Expense collateral
-                */
-                (Pledge memory _redeemedPledge, uint256 maxRedemptionCjpyAmount) = helper.redeemPledge(
-                    sPledge,
-                    maxRedemptionCjpyAmount,
-                    jpyPerEth
-                );
-                sPledge.sync(_redeemedPledge);
-
-                /*
-                    2. Put the sludge pledge to the queue
-                */
-                try priorityRegistry.upsert(sPledge.toMem()) returns (
-                    uint256 _newICRpercent
-                ) {
-                    sPledge.priority = _newICRpercent;
-                } catch {
-                    break;
-                }
-                _pledgesOwner[_loopCount] = _redeemablePledge.owner;
-                _loopCount++;
-            } catch {
-                break;
-            } /* Over-redemption Flow */
-        }
-
-        require(
-            cjpyAmountStart > maxRedemptionCjpyAmount,
-            "No pledges are redeemed."
+        IYamatoHelper.RedeemedArgs memory _args = helper.runRedeem(
+            IYamatoHelper.RunRedeemeArgs(
+                msg.sender,
+                maxRedemptionCjpyAmount,
+                isCoreRedemption
+            )
         );
 
-        /*
-            3. Update global state and ditribute colls.
-        */
-        uint256 totalRedeemedCjpyAmount = cjpyAmountStart -
-            maxRedemptionCjpyAmount;
-        uint256 totalRedeemedEthAmount = totalRedeemedCjpyAmount * 1e18 / jpyPerEth;
-        uint256 returningEthAmount = (totalRedeemedEthAmount * (100 - GRR)) /
-            100;
-        address _redemptionBearer;
-        address _returningDestination;
-
-        totalDebt -= totalRedeemedCjpyAmount;
-        totalColl -= totalRedeemedEthAmount;
-        TCR = helper.getTCR();
-
-        if (isCoreRedemption) {
-            /* 
-            [ Core Redemption - Pool Subtotal ]
-                (-) Redemption Reserve (CJPY)
-                            v
-                            v
-                (+)  Fee Pool (ETH)
-            */
-            _redemptionBearer = address(pool);
-            _returningDestination = __feePool;
-            pool.useRedemptionReserve(totalRedeemedCjpyAmount);
-        } else {
-            /* 
-            [ Normal Redemption - Account Subtotal ]
-                (-) Bearer Balance (CJPY)
-                            v
-                            v
-                (+) Bearer Balance (ETH)
-            */
-            _redemptionBearer = msg.sender;
-            _returningDestination = msg.sender;
-        }
-        pool.sendETH(_returningDestination, returningEthAmount);
-        ICjpyOS(__cjpyOS).burnCJPY(_redemptionBearer, totalRedeemedCjpyAmount);
-
-        /*
-            4. Gas compensation
-        */
-        uint256 gasCompensationInETH = totalRedeemedEthAmount * (GRR / 100);
-        pool.sendETH(msg.sender, gasCompensationInETH);
-
-        /*
-            5. Event
-        */
         emit Redeemed(
             msg.sender,
-            totalRedeemedCjpyAmount,
-            totalRedeemedEthAmount,
-            _pledgesOwner
+            _args.totalRedeemedCjpyAmount,
+            _args.totalRedeemedEthAmount,
+            _args._pledgesOwner
         );
         emit RedeemedMeta(
             msg.sender,
-            jpyPerEth,
+            _args.jpyPerEth,
             isCoreRedemption,
-            gasCompensationInETH
+            _args.gasCompensationInETH
         );
     }
 
     /// @notice Initialize all pledges such that ICR is 0 (= (0*price)/debt )
     /// @dev Will be run by incentivised DAO member. Scan all pledges and filter debt>0, coll=0. Pay gas compensation from the 1% of SweepReserve at most, and as same as 1% of the actual sweeping amount.
     function sweep() public nonReentrant whenNotPaused {
-        IPriceFeed(__feed).fetchPrice();
-        uint256 sweepStart = pool.sweepReserve();
-        require(sweepStart > 0, "Sweep failure: sweep reserve is empty.");
-        uint256 maxGasCompensation = sweepStart * (GRR / 100);
-        uint256 _reminder = sweepStart - maxGasCompensation; //Note: Secure gas compensation
-        uint256 _maxSweeplableStart = _reminder;
-        address[] memory _pledgesOwner = new address[](
-            priorityRegistry.pledgeLength()
-        );
-        uint256 _loopCount = 0;
+        (
+            uint256 _sweptAmount,
+            uint256 gasCompensationInCJPY,
+            address[] memory _pledgesOwner
+        ) = helper.runSweep(msg.sender);
 
-        /*
-            1. Sweeping
-        */
-        while (_reminder > 0) {
-            try priorityRegistry.popSweepable() returns (
-                Pledge memory _sweepablePledge
-            ) {
-                if (!_sweepablePledge.isCreated) break; // Note: No any more redeemable pledges
-                if (_sweepablePledge.owner == address(0x00)) break; // Note: No any more redeemable pledges
-
-                Pledge storage sPledge = pledges[_sweepablePledge.owner];
-
-                if (!sPledge.isCreated) break; // Note: registry-yamato mismatch
-                if (sPledge.debt == 0) break; // Note: A once-swept pledge is called twice
-                _pledgesOwner[_loopCount] = _sweepablePledge.owner; // Note: For event
-
-                (Pledge memory _sweptPledge, uint256 _reminder, uint256 sweepingAmount) = helper.sweepDebt(sPledge, _reminder);
-                sPledge.sync(_sweptPledge);
-                totalDebt -= sweepingAmount;
-                TCR = helper.getTCR();
-
-                if (_reminder > 0) {
-                    priorityRegistry.remove(sPledge.toMem());
-                    sPledge.sync(helper.neutralizePledge(sPledge.toMem()));
-                }
-                _loopCount++;
-            } catch {
-                break;
-            } /* Oversweeping Flow */
-        }
-        require(
-            _maxSweeplableStart > _reminder,
-            "At least a pledge should be swept."
-        );
-
-        /*
-            2. Gas compensation
-        */
-        uint256 _sweptAmount = sweepStart - _reminder;
-        uint256 gasCompensationInCJPY = _sweptAmount * (GRR / 100);
-        pool.sendCJPY(msg.sender, gasCompensationInCJPY); // Not sendETH. But redemption returns in ETH and so it's a bit weird.
-        pool.useSweepReserve(gasCompensationInCJPY);
-
-        /*
-            3. Event
-        */
         emit Swept(
             msg.sender,
             _sweptAmount,
@@ -511,9 +397,6 @@ contract Yamato is
             _pledgesOwner
         );
     }
-
-
-
 
     /*
     ==============================
@@ -525,16 +408,14 @@ contract Yamato is
     function updateTCR() external {
         TCR = helper.getTCR();
     }
+
     function toggle() public onlyGovernance {
-        if( paused() ){
+        if (paused()) {
             _pause();
         } else {
             _unpause();
         }
     }
-
-
-
 
     /*
     ==============================
@@ -560,7 +441,7 @@ contract Yamato is
     function getStates()
         public
         view
-        override 
+        override
         returns (
             uint256,
             uint256,
@@ -600,11 +481,8 @@ contract Yamato is
     function feed() public view override returns (address) {
         return __feed;
     }
-    function feePool() public view override returns (address) {
-        return __feePool;        
-    }
-    function cjpyOS() public view override returns (address) {
-        return __cjpyOS;        
-    }
 
+    function cjpyOS() public view override returns (address) {
+        return __cjpyOS;
+    }
 }

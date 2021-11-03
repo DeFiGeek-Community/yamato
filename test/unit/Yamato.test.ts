@@ -59,7 +59,11 @@ describe("contract Yamato", function () {
     mockCjpyOS.feed.returns(mockFeed.address);
     mockCjpyOS.feePool.returns(mockFeePool.address);
 
-    yamato = await getLinkedProxy<Yamato, Yamato__factory>("Yamato", [mockCjpyOS.address], ["PledgeLib"])
+    yamato = await getLinkedProxy<Yamato, Yamato__factory>(
+      "Yamato",
+      [mockCjpyOS.address],
+      ["PledgeLib"]
+    );
 
     yamatoDummy = await (<YamatoDummy__factory>await ethers.getContractFactory(
       "YamatoDummy",
@@ -68,7 +72,9 @@ describe("contract Yamato", function () {
       }
     )).deploy(mockCjpyOS.address); // This has test funcs to size Yamato contract
 
-    mockPriorityRegistry = await getFakeProxy<PriorityRegistry>("PriorityRegistry");
+    mockPriorityRegistry = await getFakeProxy<PriorityRegistry>(
+      "PriorityRegistry"
+    );
 
     await (await yamato.setPool(mockPool.address)).wait();
     await (
@@ -76,7 +82,10 @@ describe("contract Yamato", function () {
     ).wait();
 
     // Note: Will use later for the redeem() test
-    priorityRegistry = await getLinkedProxy<PriorityRegistry , PriorityRegistry__factory>("PriorityRegistry", [yamato.address], ["PledgeLib"]);
+    priorityRegistry = await getLinkedProxy<
+      PriorityRegistry,
+      PriorityRegistry__factory
+    >("PriorityRegistry", [yamato.address], ["PledgeLib"]);
 
     await (
       await yamatoDummy.setPriorityRegistry(priorityRegistry.address)

@@ -53,7 +53,6 @@ describe("contract PriorityRegistry", function () {
     );
     mockYamato = await getFakeProxy<Yamato>("Yamato");
 
-
     /* END DIRTY-FIX */
 
     mockFeed.fetchPrice.returns(PRICE);
@@ -65,14 +64,20 @@ describe("contract PriorityRegistry", function () {
     /*
         For unit tests
       */
-    priorityRegistryWithYamatoMock = await getLinkedProxy<PriorityRegistry, PriorityRegistry__factory>("PriorityRegistry", [mockYamato.address], ["PledgeLib"]);
+    priorityRegistryWithYamatoMock = await getLinkedProxy<
+      PriorityRegistry,
+      PriorityRegistry__factory
+    >("PriorityRegistry", [mockYamato.address], ["PledgeLib"]);
 
     /*
         For onlyYamato tests
       */
     yamatoDummy = await yamatoDummyContractFactory.deploy(mockCjpyOS.address);
 
-    priorityRegistry = await getLinkedProxy<PriorityRegistry, PriorityRegistry__factory>("PriorityRegistry", [yamatoDummy.address], ["PledgeLib"]);
+    priorityRegistry = await getLinkedProxy<
+      PriorityRegistry,
+      PriorityRegistry__factory
+    >("PriorityRegistry", [yamatoDummy.address], ["PledgeLib"]);
 
     await (
       await yamatoDummy.setPriorityRegistry(priorityRegistry.address)

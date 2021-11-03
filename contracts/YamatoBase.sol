@@ -29,7 +29,6 @@ contract YamatoBase is
     Initializable,
     UUPSUpgradeable
 {
-
     address internal __cjpyOS;
     address internal __feePool;
     address internal __feed;
@@ -69,5 +68,4 @@ contract YamatoBase is
     function revokeTester() public onlyGovernance {
         tester = address(0);
     }
-
 }

@@ -9,6 +9,7 @@ pragma solidity 0.8.4;
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 import "./Yamato.sol";
+import "./YamatoHelper.sol";
 import "./Interfaces/IPriceFeed.sol";
 import "./Dependencies/PledgeLib.sol";
 import "./Dependencies/SafeMath.sol";
@@ -53,10 +54,12 @@ contract PriorityRegistry is
     uint256 public override pledgeLength;
     uint256 public override LICR; // Note: Lowest ICR in percent
     address public yamato;
+    IYamatoHelper helper;
     address public governance;
 
-    function initialize(address _yamato) public initializer {
-        yamato = _yamato;
+    function initialize(address _yamatoHepler) public initializer {
+        helper = IYamatoHelper(_yamatoHepler);
+        yamato = helper.yamato();
         governance = msg.sender;
     }
 
@@ -190,7 +193,7 @@ contract PriorityRegistry is
     }
 
     modifier onlyYamato() {
-        require(msg.sender == yamato, "You are not Yamato contract.");
+        require(helper.permitDeps(msg.sender), "You are not Yamato contract.");
         _;
     }
 

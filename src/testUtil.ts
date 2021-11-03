@@ -33,19 +33,23 @@ export async function getLinkedProxy<
   T extends BaseContract,
   S extends ContractFactory
 >(contractName: string, args: Array<any>, libralies: string[]): Promise<T> {
-  let Libraries = {}
-  for(var i = 0; i < libralies.length; i++){
+  let Libraries = {};
+  for (var i = 0; i < libralies.length; i++) {
     let libraryName = libralies[i];
     Libraries[libraryName] = (await deployLibrary(libraryName)).address;
   }
 
-  let contractFactory: S = <S>await getLinkedContractFactory(contractName, Libraries);
+  let contractFactory: S = <S>(
+    await getLinkedContractFactory(contractName, Libraries)
+  );
   const instance: T = <T>(
-    await upgrades.deployProxy(contractFactory, args, { kind: "uups", unsafeAllow: ['external-library-linking'] })
+    await upgrades.deployProxy(contractFactory, args, {
+      kind: "uups",
+      unsafeAllow: ["external-library-linking"],
+    })
   );
   return instance;
 }
-
 
 async function deployLibrary(libraryName) {
   const Library = await ethers.getContractFactory(libraryName);
@@ -57,10 +61,12 @@ async function deployLibrary(libraryName) {
 async function getLinkedContractFactory(contractName, libraries) {
   const cArtifact = await artifacts.readArtifact(contractName);
   const linkedBytecode = linkBytecode(cArtifact, libraries);
-  const ContractFactory = await ethers.getContractFactory(cArtifact.abi, linkedBytecode);
+  const ContractFactory = await ethers.getContractFactory(
+    cArtifact.abi,
+    linkedBytecode
+  );
   return ContractFactory;
 }
-
 
 // linkBytecode: performs linking by replacing placeholders with deployed addresses
 // Recommended workaround from Hardhat team until linking feature is implemented

@@ -42,7 +42,7 @@ module.exports = {
   },
   networks: {
     hardhat: {
-      allowUnlimitedContractSize: true
+      allowUnlimitedContractSize: true,
     },
     rinkeby: {
       url: process.env.ALCHEMY_URL,

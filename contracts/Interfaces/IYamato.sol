@@ -41,20 +41,30 @@ interface IYamato {
     );
 
     function getPledge(address _owner) external view returns (Pledge memory);
-    function getStates() external view returns (
-        uint256,
-        uint256,
-        uint8,
-        uint8,
-        uint8,
-        uint8
-    );
+
+    function getStates()
+        external
+        view
+        returns (
+            uint256,
+            uint256,
+            uint8,
+            uint8,
+            uint8,
+            uint8
+        );
 
     function feed() external view returns (address);
 
-    function feePool() external view returns (address);
-
     function cjpyOS() external view returns (address);
 
+    function setPledge(Pledge memory) external;
+
+    function setTotalColl(uint256 _totalColl) external;
+
+    function setTotalDebt(uint256 _totalDebt) external;
+
     function MCR() external view returns (uint8);
+
+    function GRR() external view returns (uint8);
 }
