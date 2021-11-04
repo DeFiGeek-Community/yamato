@@ -3,6 +3,7 @@ import { DeployFunction } from "hardhat-deploy/types";
 import {
   setProvider,
   getDeploymentAddressPath,
+  getDeploymentAddressPathWithTag,
   getFoundation,
 } from "../src/deployUtil";
 import { readFileSync } from "fs";
@@ -18,7 +19,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const CjpyOS = new Contract(_cjpyosAddr, genABI("CjpyOS"), p);
 
   const _yamatoAddr = readFileSync(
-    getDeploymentAddressPath("Yamato")
+    getDeploymentAddressPathWithTag("Yamato", "ERC1967Proxy")
   ).toString();
   await (await CjpyOS.connect(getFoundation()).addYamato(_yamatoAddr)).wait();
 

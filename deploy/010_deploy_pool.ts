@@ -12,19 +12,15 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { ethers, deployments } = hre;
   const { getContractFactory } = ethers;
 
-  const _yamatoAddr = readFileSync(
-    getDeploymentAddressPath("Yamato")
-  ).toString();
-  const PledgeLib = readFileSync(
-    getDeploymentAddressPath("PledgeLib")
+  const _yamatoHelperAddr = readFileSync(
+    getDeploymentAddressPath("YamatoHelperERC1967Proxy")
   ).toString();
 
-  await deploy("PriorityRegistry", {
-    args: [_yamatoAddr],
+  await deploy("Pool", {
+    args: [_yamatoHelperAddr],
     getContractFactory,
     deployments,
-    libraries: { PledgeLib },
   }).catch((e) => console.trace(e.message));
 };
 export default func;
-func.tags = ["PriorityRegistry"];
+func.tags = ["Pool"];

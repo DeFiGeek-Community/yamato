@@ -3,6 +3,7 @@ import { DeployFunction } from "hardhat-deploy/types";
 import {
   setProvider,
   getDeploymentAddressPath,
+  getDeploymentAddressPathWithTag,
   getFoundation,
 } from "../src/deployUtil";
 import { readFileSync } from "fs";
@@ -14,23 +15,23 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { ethers, deployments } = hre;
   const { getContractFactory } = ethers;
 
-  const _yamatoAddr = readFileSync(
-    getDeploymentAddressPath("Yamato")
+  const _yamatoHelperAddr = readFileSync(
+    getDeploymentAddressPathWithTag("YamatoHelper", "ERC1967Proxy")
   ).toString();
-  const Yamato = new Contract(_yamatoAddr, genABI("Yamato"), p);
+  const YamatoHelper = new Contract(_yamatoHelperAddr, genABI("YamatoHelper"), p);
 
   const _poolAddr = readFileSync(getDeploymentAddressPath("Pool")).toString();
   const _priorityRegistryAddr = readFileSync(
     getDeploymentAddressPath("PriorityRegistry")
   ).toString();
-  await (await Yamato.connect(getFoundation()).setPool(_poolAddr)).wait();
-  console.log(`log: Yamato.setPool() executed.`);
+  await (await YamatoHelper.connect(getFoundation()).setPool(_poolAddr)).wait();
+  console.log(`log: YamatoHelper.setPool() executed.`);
   await (
-    await Yamato.connect(getFoundation()).setPriorityRegistry(
+    await YamatoHelper.connect(getFoundation()).setPriorityRegistry(
       _priorityRegistryAddr
     )
   ).wait();
-  console.log(`log: Yamato.setPriorityRegistry() executed.`);
+  console.log(`log: YamatoHelper.setPriorityRegistry() executed.`);
 };
 export default func;
 func.tags = [""];
