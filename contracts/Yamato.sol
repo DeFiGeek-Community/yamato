@@ -91,8 +91,12 @@ contract Yamato is
         priorityRegistry = IPriorityRegistry(helper.priorityRegistry());
     }
 
-    function setPledge(Pledge memory _p) public override onlyYamato {
-        Pledge storage p = pledges[_p.owner];
+    function setPledge(address _owner, Pledge memory _p)
+        public
+        override
+        onlyYamato
+    {
+        Pledge storage p = pledges[_owner];
         p.coll = _p.coll;
         p.debt = _p.debt;
         p.owner = _p.owner;
@@ -421,5 +425,9 @@ contract Yamato is
 
     function cjpyOS() public view override returns (address) {
         return __cjpyOS;
+    }
+
+    function yamatoHelper() public view override returns (address) {
+        return address(helper);
     }
 }

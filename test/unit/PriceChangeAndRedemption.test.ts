@@ -120,7 +120,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
     YamatoHelper = await getLinkedProxy<YamatoHelper, YamatoHelper__factory>(
       "YamatoHelper",
-      [YamatoHelper.address],
+      [Yamato.address],
       ["PledgeLib"]
     );
 
@@ -134,8 +134,10 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
     >("PriorityRegistry", [YamatoHelper.address], ["PledgeLib"]);
 
     await (await YamatoHelper.setPool(Pool.address)).wait();
-    await (await YamatoHelper.setPriorityRegistry(PriorityRegistry.address)).wait();
-    await (await Yamato.setYamatoHelper(YamatoHelper.address)).wait()
+    await (
+      await YamatoHelper.setPriorityRegistry(PriorityRegistry.address)
+    ).wait();
+    await (await Yamato.setYamatoHelper(YamatoHelper.address)).wait();
     await (await CjpyOS.addYamato(Yamato.address)).wait();
     await (await CJPY.setCurrencyOS(CjpyOS.address)).wait();
   });

@@ -9,6 +9,8 @@ import {
   FeePool,
   YMT,
   VeYMT,
+  Yamato,
+  YamatoHelper,
   PriceFeed,
   CjpyOS__factory,
   FeePool__factory,
@@ -24,6 +26,8 @@ describe("CjpyOS", () => {
   let mockVeYMT: FakeContract<VeYMT>;
   let mockFeed: FakeContract<PriceFeed>;
   let mockFeePool: FakeContract<FeePool>;
+  let mockYamato: FakeContract<Yamato>;
+  let mockYamatoHelper: FakeContract<YamatoHelper>;
   let cjpyOS: CjpyOS;
   let accounts: Signer[];
   let ownerAddress: string;
@@ -36,6 +40,10 @@ describe("CjpyOS", () => {
     mockCJPY = await smock.fake<CJPY>("CJPY");
     mockFeed = await getFakeProxy<PriceFeed>("PriceFeed");
     mockFeePool = await getFakeProxy<FeePool>("FeePool");
+    mockYamato = await getFakeProxy<Yamato>("Yamato");
+    mockYamatoHelper = await getFakeProxy<YamatoHelper>("YamatoHelper");
+    mockYamato.yamatoHelper.returns(mockYamatoHelper.address);
+    mockYamatoHelper.permitDeps.returns(true);
 
     cjpyOS = await (<CjpyOS__factory>(
       await ethers.getContractFactory("CjpyOS")
@@ -53,14 +61,14 @@ describe("CjpyOS", () => {
   describe("addYamato()", function () {
     it(`fails to add new Yamato for non-governer.`, async function () {
       await expect(
-        cjpyOS.connect(accounts[1]).addYamato(await accounts[1].getAddress())
+        cjpyOS.connect(accounts[1]).addYamato(mockYamato.address)
       ).to.be.revertedWith("You are not the governer.");
     });
 
     it(`succeeds to add new Yamato`, async function () {
-      await cjpyOS.addYamato(ownerAddress); // onlyGovernance
+      await cjpyOS.addYamato(mockYamato.address); // onlyGovernance
       const _yamato = await cjpyOS.yamatoes(0);
-      expect(_yamato).to.equal(ownerAddress);
+      expect(_yamato).to.equal(mockYamato.address);
     });
   });
 
@@ -73,7 +81,7 @@ describe("CjpyOS", () => {
     });
 
     it(`succeeds to mint CJPY`, async function () {
-      await cjpyOS.addYamato(ownerAddress); // onlyGovernance
+      await cjpyOS.addYamato(mockYamato.address); // onlyGovernance
       await cjpyOS.mintCJPY(ownerAddress, 10000); // onlyYamato
       expect(mockCJPY.mint).to.be.calledOnce;
     });
@@ -87,7 +95,7 @@ describe("CjpyOS", () => {
     });
 
     it(`succeeds to burn CJPY`, async function () {
-      await cjpyOS.addYamato(ownerAddress); // onlyGovernance
+      await cjpyOS.addYamato(mockYamato.address); // onlyGovernance
       await cjpyOS.burnCJPY(ownerAddress, 10000); // onlyYamato
       expect(mockCJPY.burn).to.be.calledOnce;
     });

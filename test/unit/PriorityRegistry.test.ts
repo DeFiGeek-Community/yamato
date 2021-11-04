@@ -9,8 +9,10 @@ import {
   PledgeLib__factory,
   PriceFeed,
   Yamato,
+  YamatoHelper,
   YamatoDummy,
   Yamato__factory,
+  YamatoHelper__factory,
   YamatoDummy__factory,
   FeePool__factory,
   PriorityRegistry,
@@ -27,6 +29,7 @@ describe("contract PriorityRegistry", function () {
   let mockFeePool: FakeContract<FeePool>;
   let mockFeed: FakeContract<PriceFeed>;
   let yamato;
+  let mockYamatoHelper;
   let yamatoDummy: YamatoDummy;
   let priorityRegistryWithYamatoMock;
   let priorityRegistry;
@@ -52,14 +55,20 @@ describe("contract PriorityRegistry", function () {
       })
     );
     mockYamato = await getFakeProxy<Yamato>("Yamato");
+    mockYamato.cjpyOS.returns(mockCjpyOS.address)
+    let yamatoHelperWithMockYamato = await getLinkedProxy<YamatoHelper, YamatoHelper__factory>(
+      "YamatoHelper",
+      [mockYamato.address],
+      ["PledgeLib"]
+    );
 
-    /* END DIRTY-FIX */
 
     mockFeed.fetchPrice.returns(PRICE);
     mockFeed.lastGoodPrice.returns(PRICE);
     mockCjpyOS.feed.returns(mockFeed.address);
     mockCjpyOS.feePool.returns(mockFeePool.address);
     mockYamato.feed.returns(mockFeed.address);
+    mockYamato.yamatoHelper.returns(yamatoHelperWithMockYamato.address);
 
     /*
         For unit tests
@@ -67,17 +76,27 @@ describe("contract PriorityRegistry", function () {
     priorityRegistryWithYamatoMock = await getLinkedProxy<
       PriorityRegistry,
       PriorityRegistry__factory
-    >("PriorityRegistry", [mockYamato.address], ["PledgeLib"]);
+    >("PriorityRegistry", [yamatoHelperWithMockYamato.address], ["PledgeLib"]);
+    await yamatoHelperWithMockYamato.setPriorityRegistry(priorityRegistryWithYamatoMock.address)
+
 
     /*
         For onlyYamato tests
       */
     yamatoDummy = await yamatoDummyContractFactory.deploy(mockCjpyOS.address);
+    let yamatoHelperWithYamatoDummy = await getLinkedProxy<YamatoHelper, YamatoHelper__factory>(
+      "YamatoHelper",
+      [yamatoDummy.address],
+      ["PledgeLib"]
+    );
+
 
     priorityRegistry = await getLinkedProxy<
       PriorityRegistry,
       PriorityRegistry__factory
-    >("PriorityRegistry", [yamatoDummy.address], ["PledgeLib"]);
+    >("PriorityRegistry", [yamatoHelperWithYamatoDummy.address], ["PledgeLib"]);
+
+    await yamatoHelperWithYamatoDummy.setPriorityRegistry(priorityRegistry.address)
 
     await (
       await yamatoDummy.setPriorityRegistry(priorityRegistry.address)

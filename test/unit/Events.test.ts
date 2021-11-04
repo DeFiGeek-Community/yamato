@@ -89,7 +89,7 @@ describe("story Events", function () {
       await (
         await yamatoHelper.setPriorityRegistry(mockPriorityRegistry.address)
       ).wait();
-      yamato.setYamatoHelper(yamatoHelper.address);
+      await (await yamato.setYamatoHelper(yamatoHelper.address)).wait();
 
       PRICE = BigNumber.from(260000).mul(1e18 + "");
       MCR = BigNumber.from(110);
@@ -269,6 +269,7 @@ describe("story Events", function () {
     let mockFeePool: FakeContract<FeePool>;
     let mockFeed: FakeContract<PriceFeed>;
     let mockCjpyOS: FakeContract<CjpyOS>;
+    let mockYamatoHelper: FakeContract<YamatoHelper>;
     let accounts;
 
     beforeEach(async () => {
@@ -276,8 +277,8 @@ describe("story Events", function () {
       mockCJPY = await smock.fake<CJPY>("CJPY");
       mockCJPY.transfer.returns(0);
 
-      mockFeePool = await smock.fake<FeePool>("FeePool");
-      mockFeed = await smock.fake<PriceFeed>("PriceFeed");
+      mockFeePool = await getFakeProxy<FeePool>("FeePool");
+      mockFeed = await getFakeProxy<PriceFeed>("PriceFeed");
       mockCjpyOS = await smock.fake<CjpyOS>("CjpyOS");
       mockCjpyOS.feed.returns(mockFeed.address);
       mockCjpyOS.feePool.returns(mockFeePool.address);
@@ -287,15 +288,20 @@ describe("story Events", function () {
         await (await ethers.getContractFactory("PledgeLib")).deploy()
       ).address;
 
+      mockYamatoHelper = await getFakeProxy<YamatoHelper>("YamatoHelper");
+
       yamatoDummy = await (<YamatoDummy__factory>(
         await ethers.getContractFactory("YamatoDummy", {
           libraries: { PledgeLib },
         })
       )).deploy(mockCjpyOS.address);
 
+      mockYamatoHelper.yamato.returns(yamatoDummy.address);
+      mockYamatoHelper.permitDeps.returns(true);
+
       pool = await (<Pool__factory>(
         await ethers.getContractFactory("Pool")
-      )).deploy(yamatoDummy.address);
+      )).deploy(mockYamatoHelper.address);
 
       await accounts[0].sendTransaction({
         to: pool.address,
@@ -303,6 +309,12 @@ describe("story Events", function () {
       });
 
       await (await yamatoDummy.setPool(pool.address)).wait();
+
+      mockYamatoHelper.getDeps.returns([
+        yamatoDummy.address,
+        mockYamatoHelper.address,
+        pool.address,
+      ]);
     });
     describe("event RedemptionReserveDeposited", function () {
       it(`should be emitted`, async function () {

@@ -61,11 +61,13 @@ interface IYamato {
             uint8
         );
 
+    function yamatoHelper() external view returns (address);
+
     function feed() external view returns (address);
 
     function cjpyOS() external view returns (address);
 
-    function setPledge(Pledge memory) external;
+    function setPledge(address _owner, Pledge memory _p) external;
 
     function setTotalColl(uint256 _totalColl) external;
 

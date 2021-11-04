@@ -203,7 +203,7 @@ contract YamatoHelper is IYamatoHelper, YamatoBase {
 
         // Note: SafeMath unintentionally checks full withdrawal
         pledge.coll = pledge.coll - ethAmount;
-        IYamato(yamato).setPledge(pledge);
+        IYamato(yamato).setPledge(pledge.owner, pledge);
 
         IYamato(yamato).setTotalDebt(totalColl - ethAmount);
 
@@ -215,7 +215,7 @@ contract YamatoHelper is IYamatoHelper, YamatoBase {
                 4-a. Clean full withdrawal
             */
             IPriorityRegistry(priorityRegistry).remove(pledge);
-            IYamato(yamato).setPledge(pledge.nil());
+            IYamato(yamato).setPledge(pledge.owner, pledge.nil());
         } else {
             /*
                 4-b. Reasonable partial withdrawal
@@ -227,7 +227,7 @@ contract YamatoHelper is IYamatoHelper, YamatoBase {
             pledge.priority = IPriorityRegistry(priorityRegistry).upsert(
                 pledge
             );
-            IYamato(yamato).setPledge(pledge);
+            IYamato(yamato).setPledge(pledge.owner, pledge);
         }
 
         /*
@@ -256,19 +256,10 @@ contract YamatoHelper is IYamatoHelper, YamatoBase {
             try IPriorityRegistry(priorityRegistry).popRedeemable() returns (
                 IYamato.Pledge memory _redeemablePledge
             ) {
-                if (
-                    !_redeemablePledge.isCreated ||
-                    _redeemablePledge.owner == address(0x00)
-                ) {
-                    break;
-                }
                 IYamato.Pledge memory sPledge = IYamato(yamato).getPledge(
                     _redeemablePledge.owner
                 );
-                if (!sPledge.isCreated) {
-                    break;
-                }
-                if (sPledge.coll == 0) {
+                if (!sPledge.isCreated || sPledge.coll == 0 || sPledge.owner == address(0)) {
                     break;
                 }
 
@@ -279,9 +270,10 @@ contract YamatoHelper is IYamatoHelper, YamatoBase {
                     IYamato.Pledge memory _redeemedPledge,
                     uint256 _reminderInThisTime
                 ) = this.redeemPledge(sPledge, vars._reminder, vars.jpyPerEth);
+
                 vars._reminder = _reminderInThisTime;
                 sPledge = _redeemedPledge;
-                IYamato(yamato).setPledge(sPledge);
+                IYamato(yamato).setPledge(sPledge.owner, sPledge);
 
                 /*
                     2. Put the sludge pledge to the queue
@@ -290,7 +282,7 @@ contract YamatoHelper is IYamatoHelper, YamatoBase {
                     IPriorityRegistry(priorityRegistry).upsert(sPledge)
                 returns (uint256 _newICRpercent) {
                     sPledge.priority = _newICRpercent;
-                    IYamato(yamato).setPledge(sPledge);
+                    IYamato(yamato).setPledge(sPledge.owner, sPledge);
                 } catch {
                     break;
                 }
@@ -317,8 +309,8 @@ contract YamatoHelper is IYamatoHelper, YamatoBase {
 
         (uint256 totalColl, uint256 totalDebt, , , , ) = IYamato(yamato)
             .getStates();
-        IYamato(yamato).setTotalDebt(totalColl - totalRedeemedCjpyAmount);
-        IYamato(yamato).setTotalColl(totalDebt - totalRedeemedEthAmount);
+        IYamato(yamato).setTotalDebt(totalDebt - totalRedeemedCjpyAmount);
+        IYamato(yamato).setTotalColl(totalColl - totalRedeemedEthAmount);
 
         address _redemptionBearer;
         address _returningDestination;
@@ -411,14 +403,14 @@ contract YamatoHelper is IYamatoHelper, YamatoBase {
                 ) = this.sweepDebt(sPledge, _reminder);
                 _reminder = _sweptReminder;
                 sPledge = _sweptPledge;
-                IYamato(yamato).setPledge(sPledge);
+                IYamato(yamato).setPledge(sPledge.owner, sPledge);
 
                 (, uint256 totalDebt, , , , ) = IYamato(yamato).getStates();
                 IYamato(yamato).setTotalDebt(totalDebt - sweepingAmount);
 
                 if (_reminder > 0) {
                     IPriorityRegistry(priorityRegistry).remove(sPledge);
-                    IYamato(yamato).setPledge(sPledge.nil());
+                    IYamato(yamato).setPledge(sPledge.owner, sPledge.nil());
                 }
                 _loopCount++;
             } catch {

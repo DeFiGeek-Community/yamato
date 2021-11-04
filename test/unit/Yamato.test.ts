@@ -28,6 +28,7 @@ chai.use(solidity);
 
 describe("contract Yamato", function () {
   let mockPool: FakeContract<Pool>;
+  let mockYamatoHelper: FakeContract<YamatoHelper>;
   let mockFeePool: FakeContract<FeePool>;
   let mockFeed: FakeContract<PriceFeed>;
   let mockYMT: FakeContract<YMT>;
@@ -88,7 +89,7 @@ describe("contract Yamato", function () {
     await (
       await yamatoHelper.setPriorityRegistry(mockPriorityRegistry.address)
     ).wait();
-    await (await yamato.setYamatoHelper(yamatoHelper.address)).wait()
+    await (await yamato.setYamatoHelper(yamatoHelper.address)).wait();
 
     // Note: Will use later for the redeem() test
     priorityRegistry = await getLinkedProxy<
@@ -139,6 +140,31 @@ describe("contract Yamato", function () {
         ]
       )
     );
+  });
+  describe("setPledge()", function () {
+    beforeEach(async () => {
+      let mockYamatoHelper = await getFakeProxy<YamatoHelper>("YamatoHelper");
+      mockYamatoHelper.priorityRegistry.returns(mockPriorityRegistry.address);
+      mockYamatoHelper.pool.returns(mockPool.address);
+      await yamato.setYamatoHelper(mockYamatoHelper.address);
+      mockYamatoHelper.permitDeps.returns(true);
+      const toCollateralize = 1;
+      await yamato.deposit({ value: toERC20(toCollateralize + "") });
+    });
+    it(`should set zero pledge`, async function () {
+      let owner = await accounts[0].getAddress();
+      let _pledgeBefore = await yamato.getPledge(owner);
+      expect(_pledgeBefore.isCreated).to.be.true;
+      await yamato.setPledge(owner, {
+        coll: 0,
+        debt: 0,
+        isCreated: false,
+        owner: ethers.constants.AddressZero,
+        priority: 0,
+      });
+      let _pledgeAfter = await yamato.getPledge(owner);
+      expect(_pledgeAfter.isCreated).to.be.false;
+    });
   });
 
   describe("deposit()", function () {
@@ -580,8 +606,7 @@ describe("contract Yamato", function () {
       );
       expect(_pledgeBefore.isCreated).to.be.true;
 
-      await yamato.withdraw(toERC20(toCollateralize + ""));
-
+      await (await yamato.withdraw(toERC20(toCollateralize + ""))).wait();
       const _pledgeAfter = await yamato.getPledge(
         await yamato.signer.getAddress()
       );
@@ -625,6 +650,7 @@ describe("contract Yamato", function () {
       await (
         await yamatoHelper.setPriorityRegistryInTest(priorityRegistry.address)
       ).wait();
+      await yamato.setYamatoHelper(yamatoHelper.address)
 
       toCollateralize = 1;
       toBorrow = PRICE.mul(toCollateralize)
@@ -636,15 +662,15 @@ describe("contract Yamato", function () {
       await yamato
         .connect(accounts[0])
         .deposit({ value: toERC20(toCollateralize + "") });
-      await yamato.connect(accounts[0]).borrow(toERC20(toBorrow + ""));
-      await yamato
+        await yamato.connect(accounts[0]).borrow(toERC20(toBorrow + ""));
+        await yamato
         .connect(accounts[1])
         .deposit({ value: toERC20(toCollateralize + "") });
-      await yamato.connect(accounts[1]).borrow(toERC20(toBorrow + ""));
-      await yamato
+        await yamato.connect(accounts[1]).borrow(toERC20(toBorrow + ""));
+        await yamato
         .connect(accounts[2])
         .deposit({ value: toERC20(toCollateralize + "") });
-      await yamato.connect(accounts[2]).borrow(toERC20(toBorrow + ""));
+        await yamato.connect(accounts[2]).borrow(toERC20(toBorrow + ""));
 
       mockFeed.fetchPrice.returns(PRICE_AFTER);
       mockFeed.lastGoodPrice.returns(PRICE_AFTER);
@@ -766,6 +792,7 @@ describe("contract Yamato", function () {
       await (
         await yamatoHelper.setPriorityRegistryInTest(priorityRegistry.address)
       ).wait();
+      await yamato.setYamatoHelper(yamatoHelper.address)
 
       /*
           Set redemption targets
