@@ -42,11 +42,38 @@ interface IYamato {
 
     function getPledge(address _owner) external view returns (Pledge memory);
 
-    function feed() external view returns (address);
+    function withdrawLocks(address _owner) external view returns (uint256);
 
-    function feePool() external view returns (address);
+    function depositAndBorrowLocks(address _owner)
+        external
+        view
+        returns (uint256);
+
+    function getStates()
+        external
+        view
+        returns (
+            uint256,
+            uint256,
+            uint8,
+            uint8,
+            uint8,
+            uint8
+        );
+
+    function yamatoHelper() external view returns (address);
+
+    function feed() external view returns (address);
 
     function cjpyOS() external view returns (address);
 
+    function setPledge(address _owner, Pledge memory _p) external;
+
+    function setTotalColl(uint256 _totalColl) external;
+
+    function setTotalDebt(uint256 _totalDebt) external;
+
     function MCR() external view returns (uint8);
+
+    function GRR() external view returns (uint8);
 }

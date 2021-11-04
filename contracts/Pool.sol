@@ -12,6 +12,7 @@ import "./Interfaces/IYamato.sol";
 import "./Interfaces/IFeePool.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./CjpyOS.sol";
+import "./YamatoHelper.sol";
 import "hardhat/console.sol";
 
 interface IPool {
@@ -45,19 +46,23 @@ interface IPool {
 
     function yamato() external view returns (IYamato);
 
+    function helper() external view returns (IYamatoHelper);
+
     function feePool() external view returns (IFeePool);
 }
 
 contract Pool is IPool {
     IYamato public override yamato;
+    IYamatoHelper public override helper;
     IFeePool public override feePool;
     uint256 public override redemptionReserve; // Auto redemption pool a.k.a. (kinda) Stability Pool in Liquity
     uint256 public override sweepReserve; // Protocol Controlling Value (PCV) to remove Pledges(coll=0, debt>0)
     uint256 public override lockedCollateral; // All collateralized ETH
 
-    constructor(address _yamato) {
-        yamato = IYamato(_yamato);
-        feePool = IFeePool(yamato.feePool());
+    constructor(address _yamatoHelper) {
+        helper = IYamatoHelper(_yamatoHelper);
+        yamato = IYamato(helper.yamato());
+        feePool = IFeePool(ICjpyOS(yamato.cjpyOS()).feePool());
     }
 
     event Received(address, uint256);
@@ -67,7 +72,7 @@ contract Pool is IPool {
     }
 
     modifier onlyYamato() {
-        require(msg.sender == address(yamato), "You are not Yamato contract.");
+        require(helper.permitDeps(msg.sender), "You are not Yamato contract.");
         _;
     }
 

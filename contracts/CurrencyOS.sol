@@ -13,6 +13,7 @@ import "./Interfaces/ICurrency.sol";
 import "./Interfaces/IYMT.sol";
 import "./veYMT.sol";
 import "./PriceFeed.sol";
+import "./YamatoHelper.sol";
 import "./Interfaces/IYamato.sol";
 import "./YmtOSV1.sol";
 import "./Dependencies/SafeMath.sol";
@@ -81,11 +82,12 @@ contract CurrencyOS {
             revert("No Yamato is registered.");
         } else {
             for (uint256 i = 0; i < yamatoes.length; i++) {
-                if (msg.sender == yamatoes[i]) {
+                if (
+                    IYamatoHelper(IYamato(yamatoes[i]).yamatoHelper())
+                        .permitDeps(msg.sender)
+                ) {
                     _;
-                } else if (yamatoes.length.sub(1) == i) {
-                    revert("Caller is not Yamato");
-                } else {}
+                }
             }
         }
     }

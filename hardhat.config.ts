@@ -41,7 +41,9 @@ module.exports = {
     ],
   },
   networks: {
-    hardhat: {},
+    hardhat: {
+      allowUnlimitedContractSize: true,
+    },
     rinkeby: {
       url: process.env.ALCHEMY_URL,
       accounts: [
@@ -96,7 +98,7 @@ module.exports = {
     alphaSort: true,
     disambiguatePaths: false,
     runOnCompile: true,
-    strict: true,
+    strict: false,
   },
   gasReporter: {
     currency: "USD",

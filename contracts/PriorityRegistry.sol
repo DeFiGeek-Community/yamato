@@ -9,6 +9,7 @@ pragma solidity 0.8.4;
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 import "./Yamato.sol";
+import "./YamatoHelper.sol";
 import "./Interfaces/IPriceFeed.sol";
 import "./Dependencies/PledgeLib.sol";
 import "./Dependencies/SafeMath.sol";
@@ -39,18 +40,36 @@ interface IPriorityRegistry {
 }
 
 // @dev For gas saving reason, we use percent denominated ICR only in this contract.
-contract PriorityRegistry is IPriorityRegistry {
+contract PriorityRegistry is
+    IPriorityRegistry,
+    IUUPSEtherscanVerifiable,
+    Initializable,
+    UUPSUpgradeable
+{
     using SafeMath for uint256;
     using PledgeLib for IYamato.Pledge;
 
     mapping(uint256 => mapping(address => IYamato.Pledge)) leveledPledges; // ICR => owner => Pledge
     mapping(uint256 => address[]) private levelIndice; // ICR => owner[]
-    uint256 public override pledgeLength = 0;
-    uint256 public override LICR = 0; // Note: Lowest ICR in percent
+    uint256 public override pledgeLength;
+    uint256 public override LICR; // Note: Lowest ICR in percent
     address public yamato;
+    IYamatoHelper helper;
+    address public governance;
 
-    constructor(address _yamato) {
-        yamato = _yamato;
+    function initialize(address _yamatoHepler) public initializer {
+        helper = IYamatoHelper(_yamatoHepler);
+        yamato = helper.yamato();
+        governance = msg.sender;
+    }
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() initializer {}
+
+    function _authorizeUpgrade(address) internal override onlyGovernance {}
+
+    function getImplementation() external view override returns (address) {
+        return _getImplementation();
     }
 
     /*
@@ -174,7 +193,7 @@ contract PriorityRegistry is IPriorityRegistry {
     }
 
     modifier onlyYamato() {
-        require(msg.sender == yamato, "You are not Yamato contract.");
+        require(helper.permitDeps(msg.sender), "You are not Yamato contract.");
         _;
     }
 
@@ -402,5 +421,10 @@ contract PriorityRegistry is IPriorityRegistry {
 
     function floor(uint256 _ICRpertenk) internal returns (uint256) {
         return _ICRpertenk / 100;
+    }
+
+    modifier onlyGovernance() {
+        require(msg.sender == governance, "You are not the governer.");
+        _;
     }
 }

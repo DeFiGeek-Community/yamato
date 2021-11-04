@@ -76,6 +76,37 @@ library PledgeLib {
             );
     }
 
+    function sync(IYamato.Pledge storage sPledge, IYamato.Pledge memory _pledge)
+        public
+        returns (IYamato.Pledge storage)
+    {
+        sPledge.coll = _pledge.coll;
+        sPledge.debt = _pledge.debt;
+        sPledge.isCreated = _pledge.isCreated;
+        sPledge.owner = _pledge.owner;
+        sPledge.priority = _pledge.priority;
+        return sPledge;
+    }
+
+    function assign(
+        IYamato.Pledge memory mPledge,
+        IYamato.Pledge memory _pledge
+    ) public returns (IYamato.Pledge memory) {
+        mPledge.coll = _pledge.coll;
+        mPledge.debt = _pledge.debt;
+        mPledge.isCreated = _pledge.isCreated;
+        mPledge.owner = _pledge.owner;
+        mPledge.priority = _pledge.priority;
+        return mPledge;
+    }
+
+    function nil(IYamato.Pledge memory _p)
+        public
+        returns (IYamato.Pledge memory)
+    {
+        return IYamato.Pledge(0, 0, false, address(0), 0);
+    }
+
     /// @param _ICRpertenk IndividualCollateralRatio per 10k
     /// @dev Three linear fumula there are
     /// @return _FRpertenk Corresponding fee rate in uint256 per-ten-kilo unit

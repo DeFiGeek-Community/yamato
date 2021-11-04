@@ -9,12 +9,16 @@ import {
   PledgeLib__factory,
   PriceFeed,
   Yamato,
+  YamatoHelper,
   YamatoDummy,
   Yamato__factory,
+  YamatoHelper__factory,
   YamatoDummy__factory,
   FeePool__factory,
+  PriorityRegistry,
+  PriorityRegistry__factory,
 } from "../../typechain";
-import { getFakeProxy } from "../../src/testUtil";
+import { getFakeProxy, getLinkedProxy } from "../../src/testUtil";
 
 chai.use(smock.matchers);
 chai.use(solidity);
@@ -25,6 +29,7 @@ describe("contract PriorityRegistry", function () {
   let mockFeePool: FakeContract<FeePool>;
   let mockFeed: FakeContract<PriceFeed>;
   let yamato;
+  let mockYamatoHelper;
   let yamatoDummy: YamatoDummy;
   let priorityRegistryWithYamatoMock;
   let priorityRegistry;
@@ -44,68 +49,54 @@ describe("contract PriorityRegistry", function () {
         await ethers.getContractFactory("PledgeLib")
       )).deploy()
     ).address;
-    const yamatoContractFactory = <Yamato__factory>(
-      await ethers.getContractFactory("Yamato", {
-        libraries: { PledgeLib },
-      })
-    );
     const yamatoDummyContractFactory = <YamatoDummy__factory>(
       await ethers.getContractFactory("YamatoDummy", {
         libraries: { PledgeLib },
       })
     );
-    /* BEGIN DIRTY-FIX
-    !!TODO!!
-    The code that this block contains is
-    for avoiding bugs of smock, hardhat-ethers or ethers
-    (I think ethers is suspicious.)
-    and must be as following if there is no bug:
-    ```
-    mockYamato = await smock.fake<Yamato>(yamatoContractFactory);
-    ```
-
-    The bugs are that some of the hardhat-ethers methods, like getContractFactory,
-    return wrong ethers objects, and the smock library can not handle that wrong object and raises an error.
-    That reproduces when using library linking.
-
-    The smock library falls in error when it runs the code following [this line](
-    https://github.com/defi-wonderland/smock/blob/v2.0.7/src/factories/ethers-interface.ts#L22).
-    This patch allows the function to return from [this line](
-    https://github.com/defi-wonderland/smock/blob/v2.0.7/src/factories/ethers-interface.ts#L16)
-    before falling error.
-
-    */
-    const yamatoContract = await yamatoContractFactory.deploy(
-      mockCjpyOS.address
-    );
-    await yamatoContract.deployed();
-    mockYamato = await smock.fake<Yamato>("Yamato");
-    /* END DIRTY-FIX */
+    mockYamato = await getFakeProxy<Yamato>("Yamato");
+    mockYamato.cjpyOS.returns(mockCjpyOS.address);
+    let yamatoHelperWithMockYamato = await getLinkedProxy<
+      YamatoHelper,
+      YamatoHelper__factory
+    >("YamatoHelper", [mockYamato.address], ["PledgeLib"]);
 
     mockFeed.fetchPrice.returns(PRICE);
     mockFeed.lastGoodPrice.returns(PRICE);
     mockCjpyOS.feed.returns(mockFeed.address);
     mockCjpyOS.feePool.returns(mockFeePool.address);
     mockYamato.feed.returns(mockFeed.address);
+    mockYamato.yamatoHelper.returns(yamatoHelperWithMockYamato.address);
 
     /*
         For unit tests
       */
-    priorityRegistryWithYamatoMock = await (
-      await ethers.getContractFactory("PriorityRegistry", {
-        libraries: { PledgeLib },
-      })
-    ).deploy(mockYamato.address);
+    priorityRegistryWithYamatoMock = await getLinkedProxy<
+      PriorityRegistry,
+      PriorityRegistry__factory
+    >("PriorityRegistry", [yamatoHelperWithMockYamato.address], ["PledgeLib"]);
+    await yamatoHelperWithMockYamato.setPriorityRegistry(
+      priorityRegistryWithYamatoMock.address
+    );
 
     /*
         For onlyYamato tests
       */
     yamatoDummy = await yamatoDummyContractFactory.deploy(mockCjpyOS.address);
-    priorityRegistry = await (
-      await ethers.getContractFactory("PriorityRegistry", {
-        libraries: { PledgeLib },
-      })
-    ).deploy(yamatoDummy.address);
+    let yamatoHelperWithYamatoDummy = await getLinkedProxy<
+      YamatoHelper,
+      YamatoHelper__factory
+    >("YamatoHelper", [yamatoDummy.address], ["PledgeLib"]);
+
+    priorityRegistry = await getLinkedProxy<
+      PriorityRegistry,
+      PriorityRegistry__factory
+    >("PriorityRegistry", [yamatoHelperWithYamatoDummy.address], ["PledgeLib"]);
+
+    await yamatoHelperWithYamatoDummy.setPriorityRegistry(
+      priorityRegistry.address
+    );
+
     await (
       await yamatoDummy.setPriorityRegistry(priorityRegistry.address)
     ).wait();
