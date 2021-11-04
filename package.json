@@ -18,11 +18,13 @@
     "analyze:summary": "rm -f slither-output.json && slither --filter-paths node_modules --print human-summary --json slither-output.json .",
     "compile": "hardhat compile",
     "compile?": "[[ ! $(git diff contracts) ]] || hardhat compile",
-    "deploy:testnet": "hardhat deploy --network rinkeby",
+    "deploy:rinkeby": "hardhat deploy --network rinkeby",
     "format": "sort-package-json && prettier --write .",
     "lint:check": "solhint 'contracts/**/*.sol' && prettier --check .",
     "test": "hardhat test",
-    "verify:testnet": "hardhat verify --network rinkeby"
+    "verify:rinkeby": "hardhat verify --network rinkeby",
+    "verify:rinkeby:all": "hardhat run src/verifyRinkebyContracts.ts",
+    "verify:rinkeby:showURL": "ts-node src/showRinkebyProxyVerificationURLs.ts"
   },
   "dependencies": {
     "@openzeppelin/contracts": "v4.3.0-rc.0",
