@@ -175,7 +175,6 @@ export function getDeploymentAddressPathWithTag(
 }
 
 export function verifyWithEtherscan() {
-
   console.log("=== Fetching local addresses");
 
   let ChainLinkEthUsd = readFileSync(
@@ -228,9 +227,11 @@ export function verifyWithEtherscan() {
 
   try {
     execSync(
-    `npm run verify:rinkeby -- --contract contracts/ChainLinkMock.sol:ChainLinkMock ${ChainLinkEthUsd} ETH/USD`
+      `npm run verify:rinkeby -- --contract contracts/ChainLinkMock.sol:ChainLinkMock ${ChainLinkEthUsd} ETH/USD`
     );
-  } catch (e) { console.trace(e.message) }
+  } catch (e) {
+    console.trace(e.message);
+  }
   try {
     execSync(
       `npm run verify:rinkeby -- --contract contracts/ChainLinkMock.sol:ChainLinkMock ${ChainLinkJpyUsd} JPY/USD`
@@ -238,8 +239,9 @@ export function verifyWithEtherscan() {
     execSync(
       `npm run verify:rinkeby -- --contract contracts/TellorCallerMock.sol:TellorCallerMock ${Tellor}`
     );
-  } catch (e) { console.trace(e.message) }
-
+  } catch (e) {
+    console.trace(e.message);
+  }
 
   try {
     execSync(
@@ -256,7 +258,9 @@ export function verifyWithEtherscan() {
     execSync(
       `npm run verify:rinkeby -- --contract contracts/CJPY.sol:CJPY ${CJPY}`
     );
-  } catch (e) { console.trace(e.message) }
+  } catch (e) {
+    console.trace(e.message);
+  }
   try {
     execSync(
       `npm run verify:rinkeby -- --contract contracts/FeePool.sol:FeePool ${FeePoolUUPSImpl} 2> /dev/null`
@@ -271,7 +275,9 @@ export function verifyWithEtherscan() {
     execSync(
       `npm run verify:rinkeby -- --contract contracts/CjpyOS.sol:CjpyOS ${CjpyOS} ${CJPY} ${PriceFeedERC1967Proxy} ${FeePoolERC1967Proxy}`
     );
-  } catch (e) { console.trace(e.message) }
+  } catch (e) {
+    console.trace(e.message);
+  }
 
   try {
     execSync(
@@ -299,23 +305,27 @@ export function verifyWithEtherscan() {
     execSync(
       `npm run verify:rinkeby -- --contract contracts/Pool.sol:Pool ${Pool} ${YamatoHelperERC1967Proxy}`
     );
-  } catch (e) { console.trace(e.message) }
+  } catch (e) {
+    console.trace(e.message);
+  }
   try {
     execSync(
       `npm run verify:rinkeby -- --contract contracts/PriorityRegistry.sol:PriorityRegistry ${PriorityRegistry} ${YamatoHelperERC1967Proxy}`
     );
-  } catch (e) { console.trace(e.message) }
+  } catch (e) {
+    console.trace(e.message);
+  }
   try {
     execSync(
       `npm run verify:rinkeby -- --contract contracts/Dependencies/PledgeLib.sol:PledgeLib ${PledgeLib}`
     );
-  } catch (e) { console.trace(e.message) }
+  } catch (e) {
+    console.trace(e.message);
+  }
 
-
-  showProxyVerificationURLs()
+  showProxyVerificationURLs();
 
   console.log("=== Verify ended");
-
 }
 function _getIsThisAProxyURL(_proxyURL) {
   return `https://${getCurrentNetwork()}.etherscan.io/proxyContractChecker?a=${_proxyURL}`;
@@ -327,7 +337,7 @@ function _logProxyProcedure(proxyAddr) {
     )} and continue heuristic "Read as Proxy" configuration. Read more: https://medium.com/etherscan-blog/and-finally-proxy-contract-support-on-etherscan-693e3da0714b`
   );
 }
-export function showProxyVerificationURLs(){
+export function showProxyVerificationURLs() {
   let YamatoERC1967Proxy = readFileSync(
     getDeploymentAddressPathWithTag("Yamato", "ERC1967Proxy")
   ).toString();
@@ -341,10 +351,10 @@ export function showProxyVerificationURLs(){
     getDeploymentAddressPathWithTag("FeePool", "ERC1967Proxy")
   ).toString();
 
-  _logProxyProcedure(YamatoERC1967Proxy)
-  _logProxyProcedure(YamatoHelperERC1967Proxy)
-  _logProxyProcedure(PriceFeedERC1967Proxy)
-  _logProxyProcedure(FeePoolERC1967Proxy)  
+  _logProxyProcedure(YamatoERC1967Proxy);
+  _logProxyProcedure(YamatoHelperERC1967Proxy);
+  _logProxyProcedure(PriceFeedERC1967Proxy);
+  _logProxyProcedure(FeePoolERC1967Proxy);
 }
 
 let provider;

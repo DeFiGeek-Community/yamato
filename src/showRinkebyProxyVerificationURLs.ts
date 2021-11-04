@@ -1,3 +1,3 @@
-import { showProxyVerificationURLs } from './deployUtil'
+import { showProxyVerificationURLs } from "./deployUtil";
 
-showProxyVerificationURLs()
+showProxyVerificationURLs();
