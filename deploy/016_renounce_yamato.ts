@@ -11,7 +11,6 @@ import { genABI } from "../src/genABI";
 import { Contract } from "ethers";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-
   const p = await setProvider();
 
   const _yamatoAddr = readFileSync(
@@ -22,14 +21,17 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const _yamatoHelperAddr = readFileSync(
     getDeploymentAddressPathWithTag("YamatoHelper", "ERC1967Proxy")
   ).toString();
-  const YamatoHelper = new Contract(_yamatoHelperAddr, genABI("YamatoHelper"), p);
+  const YamatoHelper = new Contract(
+    _yamatoHelperAddr,
+    genABI("YamatoHelper"),
+    p
+  );
 
   await (await Yamato.connect(getFoundation()).revokeTester()).wait();
   console.log(`log: Yamato.revokeTester() executed.`);
 
   await (await YamatoHelper.connect(getFoundation()).revokeTester()).wait();
   console.log(`log: YamatoHelper.revokeTester() executed.`);
-
 };
 export default func;
 func.tags = [""];

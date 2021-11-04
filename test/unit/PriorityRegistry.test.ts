@@ -55,13 +55,11 @@ describe("contract PriorityRegistry", function () {
       })
     );
     mockYamato = await getFakeProxy<Yamato>("Yamato");
-    mockYamato.cjpyOS.returns(mockCjpyOS.address)
-    let yamatoHelperWithMockYamato = await getLinkedProxy<YamatoHelper, YamatoHelper__factory>(
-      "YamatoHelper",
-      [mockYamato.address],
-      ["PledgeLib"]
-    );
-
+    mockYamato.cjpyOS.returns(mockCjpyOS.address);
+    let yamatoHelperWithMockYamato = await getLinkedProxy<
+      YamatoHelper,
+      YamatoHelper__factory
+    >("YamatoHelper", [mockYamato.address], ["PledgeLib"]);
 
     mockFeed.fetchPrice.returns(PRICE);
     mockFeed.lastGoodPrice.returns(PRICE);
@@ -77,26 +75,27 @@ describe("contract PriorityRegistry", function () {
       PriorityRegistry,
       PriorityRegistry__factory
     >("PriorityRegistry", [yamatoHelperWithMockYamato.address], ["PledgeLib"]);
-    await yamatoHelperWithMockYamato.setPriorityRegistry(priorityRegistryWithYamatoMock.address)
-
+    await yamatoHelperWithMockYamato.setPriorityRegistry(
+      priorityRegistryWithYamatoMock.address
+    );
 
     /*
         For onlyYamato tests
       */
     yamatoDummy = await yamatoDummyContractFactory.deploy(mockCjpyOS.address);
-    let yamatoHelperWithYamatoDummy = await getLinkedProxy<YamatoHelper, YamatoHelper__factory>(
-      "YamatoHelper",
-      [yamatoDummy.address],
-      ["PledgeLib"]
-    );
-
+    let yamatoHelperWithYamatoDummy = await getLinkedProxy<
+      YamatoHelper,
+      YamatoHelper__factory
+    >("YamatoHelper", [yamatoDummy.address], ["PledgeLib"]);
 
     priorityRegistry = await getLinkedProxy<
       PriorityRegistry,
       PriorityRegistry__factory
     >("PriorityRegistry", [yamatoHelperWithYamatoDummy.address], ["PledgeLib"]);
 
-    await yamatoHelperWithYamatoDummy.setPriorityRegistry(priorityRegistry.address)
+    await yamatoHelperWithYamatoDummy.setPriorityRegistry(
+      priorityRegistry.address
+    );
 
     await (
       await yamatoDummy.setPriorityRegistry(priorityRegistry.address)

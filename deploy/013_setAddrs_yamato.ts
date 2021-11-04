@@ -23,7 +23,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   ).toString();
   const Yamato = new Contract(_yamatoAddr, genABI("Yamato"), p);
 
-  await (await Yamato.connect(getFoundation()).setYamatoHelper(_yamatoHelperAddr)).wait();
+  await (
+    await Yamato.connect(getFoundation()).setYamatoHelper(_yamatoHelperAddr)
+  ).wait();
   console.log(`log: Yamato.setYamatoHelper() executed.`);
 };
 export default func;

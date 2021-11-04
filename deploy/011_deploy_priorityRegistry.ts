@@ -5,9 +5,9 @@ import {
   setProvider,
   getDeploymentAddressPathWithTag,
 } from "../src/deployUtil";
-import { getLinkedProxy } from '../src/testUtil';
+import { getLinkedProxy } from "../src/testUtil";
 import { readFileSync, writeFileSync } from "fs";
-import { PriorityRegistry, PriorityRegistry__factory } from '../typechain';
+import { PriorityRegistry, PriorityRegistry__factory } from "../typechain";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const p = await setProvider();
@@ -18,7 +18,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     getDeploymentAddressPathWithTag("YamatoHelper", "ERC1967Proxy")
   ).toString();
 
-  const inst = await getLinkedProxy<PriorityRegistry, PriorityRegistry__factory>("PriorityRegistry", [_yamatoHelperAddr], ["PledgeLib"]);
+  const inst = await getLinkedProxy<
+    PriorityRegistry,
+    PriorityRegistry__factory
+  >("PriorityRegistry", [_yamatoHelperAddr], ["PledgeLib"]);
   const implAddr = await inst.getImplementation();
 
   console.log(
@@ -37,7 +40,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     getDeploymentAddressPathWithTag("PriorityRegistry", "UUPSImpl"),
     implAddr
   );
-
 };
 export default func;
 func.tags = ["PriorityRegistry"];

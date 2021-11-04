@@ -45,7 +45,6 @@ contract Yamato is
     mapping(address => Pledge) pledges;
     uint256 totalColl;
     uint256 totalDebt;
-    uint256 public TCR;
 
     mapping(address => uint256) public override withdrawLocks;
     mapping(address => uint256) public override depositAndBorrowLocks;
@@ -106,12 +105,10 @@ contract Yamato is
 
     function setTotalColl(uint256 _totalColl) public override onlyYamato {
         totalColl = _totalColl;
-        TCR = helper.getTCR();
     }
 
     function setTotalDebt(uint256 _totalDebt) public override onlyYamato {
         totalDebt = _totalDebt;
-        TCR = helper.getTCR();
     }
 
     modifier onlyYamato() {
@@ -202,7 +199,6 @@ contract Yamato is
         */
         pledge.debt += borrowAmountInCjpy;
         totalDebt += borrowAmountInCjpy;
-        TCR = helper.getTCR();
 
         /*
             4. Update PriorityRegistry
@@ -256,7 +252,6 @@ contract Yamato is
         */
         pledge.debt -= cjpyAmount;
         totalDebt -= cjpyAmount;
-        TCR = helper.getTCR();
 
         /*
             3. Update PriorityRegistry
@@ -343,12 +338,8 @@ contract Yamato is
     ==============================
         Internal Helpers
     ==============================
-        - updateTCR
         - toggle
     */
-    function updateTCR() external {
-        TCR = helper.getTCR();
-    }
 
     function toggle() public onlyGovernance {
         if (paused()) {

@@ -6,9 +6,9 @@ import {
   getDeploymentAddressPath,
   getDeploymentAddressPathWithTag,
 } from "../src/deployUtil";
-import { getLinkedProxy } from '../src/testUtil';
+import { getLinkedProxy } from "../src/testUtil";
 import { readFileSync, writeFileSync } from "fs";
-import { YamatoHelper, YamatoHelper__factory } from '../typechain';
+import { YamatoHelper, YamatoHelper__factory } from "../typechain";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const p = await setProvider();
@@ -19,7 +19,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     getDeploymentAddressPath("Yamato")
   ).toString();
 
-  const inst = await getLinkedProxy<YamatoHelper, YamatoHelper__factory>("YamatoHelper", [_yamatoAddr], ["PledgeLib"]);
+  const inst = await getLinkedProxy<YamatoHelper, YamatoHelper__factory>(
+    "YamatoHelper",
+    [_yamatoAddr],
+    ["PledgeLib"]
+  );
   const implAddr = await inst.getImplementation();
 
   console.log(

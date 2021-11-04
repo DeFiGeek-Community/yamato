@@ -87,3 +87,20 @@ function linkBytecode(artifact, libraries) {
   }
   return bytecode;
 }
+
+export function getTCR(
+  totalColl: BigNumber,
+  totalDebt: BigNumber,
+  price: BigNumber
+): BigNumber {
+  let denominatedPrice = price.div(BigNumber.from(1e14 + ""));
+  if (totalDebt.isZero()) {
+    return BigNumber.from(
+      "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
+    );
+  } else if (totalColl.isZero() && totalDebt.isZero()) {
+    return BigNumber.from("0");
+  } else {
+    return totalColl.mul(denominatedPrice).div(totalDebt);
+  }
+}

@@ -18,7 +18,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const _yamatoHelperAddr = readFileSync(
     getDeploymentAddressPathWithTag("YamatoHelper", "ERC1967Proxy")
   ).toString();
-  const YamatoHelper = new Contract(_yamatoHelperAddr, genABI("YamatoHelper"), p);
+  const YamatoHelper = new Contract(
+    _yamatoHelperAddr,
+    genABI("YamatoHelper"),
+    p
+  );
 
   const _poolAddr = readFileSync(getDeploymentAddressPath("Pool")).toString();
   const _priorityRegistryAddr = readFileSync(

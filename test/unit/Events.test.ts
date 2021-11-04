@@ -100,7 +100,6 @@ describe("story Events", function () {
       mockPool.sendETH.returns(0);
       mockFeed.fetchPrice.returns(PRICE);
       mockFeed.lastGoodPrice.returns(PRICE);
-      await (await yamato.updateTCR()).wait();
       mockPool.redemptionReserve.returns(1);
       mockPool.sweepReserve.returns(
         BigNumber.from("99999999000000000000000000")

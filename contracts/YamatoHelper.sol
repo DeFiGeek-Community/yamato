@@ -88,8 +88,6 @@ interface IYamatoHelper {
         );
 
     function permitDeps(address _sender) external view returns (bool);
-
-    function getTCR() external view returns (uint256 _TCR);
 }
 
 contract YamatoHelper is IYamatoHelper, YamatoBase {
@@ -162,7 +160,6 @@ contract YamatoHelper is IYamatoHelper, YamatoBase {
         - runSweep
         - redeemPledge
         - sweepDebt
-        - getTCR
     */
 
     function runWithdraw(address sender, uint256 ethAmount)
@@ -259,7 +256,11 @@ contract YamatoHelper is IYamatoHelper, YamatoBase {
                 IYamato.Pledge memory sPledge = IYamato(yamato).getPledge(
                     _redeemablePledge.owner
                 );
-                if (!sPledge.isCreated || sPledge.coll == 0 || sPledge.owner == address(0)) {
+                if (
+                    !sPledge.isCreated ||
+                    sPledge.coll == 0 ||
+                    sPledge.owner == address(0)
+                ) {
                     break;
                 }
 
@@ -504,26 +505,6 @@ contract YamatoHelper is IYamatoHelper, YamatoBase {
         return (sPledge, reminder, sweepingAmount);
     }
 
-    /// @notice Calculate TCR
-    /// @dev (totalColl*jpyPerEth)/totalDebt
-    /// @return _TCR in uint256
-    function getTCR() public view override returns (uint256 _TCR) {
-        (uint256 totalColl, uint256 totalDebt, , , , ) = IYamato(yamato)
-            .getStates();
-        IYamato.Pledge memory _pseudoPledge = IYamato.Pledge(
-            totalColl,
-            totalDebt,
-            true,
-            msg.sender,
-            0
-        );
-        if (totalColl == 0 && totalColl == 0) {
-            _TCR = 0;
-        } else {
-            _TCR = _pseudoPledge.getICR(__feed);
-        }
-    }
-
     function getDeps() public view returns (address[4] memory) {
         return [yamato, address(this), pool, priorityRegistry];
     }
@@ -532,7 +513,6 @@ contract YamatoHelper is IYamatoHelper, YamatoBase {
     ==============================
         Testability Helpers
     ==============================
-        - updateTCR()
         - setPriorityRegistryInTest()
     */
 

@@ -65,6 +65,10 @@ contract YamatoBase is
         governance = address(0);
     }
 
+    function transferGovernance(address _newGoverner) public onlyGovernance {
+        governance = _newGoverner;
+    }
+
     function revokeTester() public onlyGovernance {
         tester = address(0);
     }
