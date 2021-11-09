@@ -66,7 +66,17 @@ contract YmtOSV1 is IYmtOSV1 {
         public
         override
         onlyCurrencyOSs
-    {}
+    {
+        // TODO: Given there exists a Yamato before adding the YmtOS contract to CurrencyOS contract, such Yamato contract won't be registered to YmtOS because the Yamato.sol doesn't know which YmtOS is should be added yet.
+        // So you need to make a new function onto CurrencyOS.sol where it can sync the existing, but unregistered yamatoes of CurrencyOS.sol.
+        /*
+            function syncYamatoesToYmtOS() onlyGovernance {
+                yamatoes.map(y=>{
+                    ymtOS.addYamatoOfCurrencyOS(address(y));
+                })
+            }
+        */
+    }
 
     modifier onlyCurrencyOSs() {
         for (uint256 i = 0; i < currencyOSs.length; ++i) {

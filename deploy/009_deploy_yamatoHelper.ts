@@ -3,7 +3,6 @@ import { DeployFunction } from "hardhat-deploy/types";
 import {
   deploy,
   setProvider,
-  getDeploymentAddressPath,
   getDeploymentAddressPathWithTag,
 } from "../src/deployUtil";
 import { getLinkedProxy } from "../src/testUtil";
@@ -16,7 +15,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { getContractFactory } = ethers;
 
   const _yamatoAddr = readFileSync(
-    getDeploymentAddressPath("Yamato")
+    getDeploymentAddressPathWithTag("Yamato", "ERC1967Proxy")
   ).toString();
 
   const inst = await getLinkedProxy<YamatoHelper, YamatoHelper__factory>(
