@@ -15,7 +15,6 @@ import "./veYMT.sol";
 import "./PriceFeed.sol";
 import "./YamatoHelper.sol";
 import "./Interfaces/IYamato.sol";
-import "./YmtOSV1.sol";
 import "./Dependencies/SafeMath.sol";
 // import "@openzeppelin/contracts/math/SafeMath.sol";
 import "hardhat/console.sol";
@@ -29,9 +28,7 @@ contract CurrencyOS {
     address _feed;
     address _feePool;
     address governance;
-    address ymtOSProxyAddr;
     address[] public yamatoes;
-    bool isYmtOSInitialized = false;
 
     constructor(
         address currencyAddr,
@@ -54,26 +51,10 @@ contract CurrencyOS {
 
     function addYamato(address _yamatoAddr) external onlyGovernance {
         yamatoes.push(_yamatoAddr);
-        if (ymtOSProxyAddr != address(0)) {
-            IYmtOSV1(ymtOSProxyAddr).addYamatoOfCurrencyOS(_yamatoAddr);
-        }
-    }
-
-    function setYmtOSProxy(address _ymtOSProxyAddr)
-        external
-        onlyGovernance
-        onlyOnce
-    {
-        ymtOSProxyAddr = _ymtOSProxyAddr;
     }
 
     modifier onlyGovernance() {
         require(msg.sender == governance, "You are not the governer.");
-        _;
-    }
-    modifier onlyOnce() {
-        require(!isYmtOSInitialized, "YmtOS is already initialized.");
-        isYmtOSInitialized = true;
         _;
     }
 

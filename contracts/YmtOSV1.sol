@@ -12,70 +12,70 @@ pragma solidity 0.8.4;
 import "./veYMT.sol";
 import "./Interfaces/IYMT.sol";
 import "./Interfaces/IYamato.sol";
+import "./Interfaces/ICurrencyOS.sol";
 import "./Dependencies/SafeMath.sol";
+import "./Dependencies/LiquityMath.sol";
+import "./Dependencies/PledgeLib.sol";
 import "hardhat/console.sol";
+import "./Interfaces/IUUPSEtherscanVerifiable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 interface IYmtOSV1 {
-    function initialize(
-        address _governance,
-        address _YMT,
-        address _veYMT
-    ) external;
-
-    function addYamatoOfCurrencyOS(address _yamatoAddr) external;
-
     function vote(address _currencyOS, address _yamato) external;
 }
 
-contract YmtOSV1 is IYmtOSV1 {
+contract YmtOSV1 is
+    IYmtOSV1,
+    IUUPSEtherscanVerifiable,
+    Initializable,
+    UUPSUpgradeable
+ {
     using SafeMath for uint256;
+    using PledgeLib for IYamato.Pledge;
 
-    bool initialized = false;
+    struct Score {
+        address yamato;
+        uint256 yamatoScore;
+        address[] voters;
+        uint256[] voterScores;
+        uint256 totalVoterScore;
+    }
+    struct Vars {
+        uint256 mintableInTimeframe;
+        Score[] scores;
+        uint256 totalYamatoScore;
+        uint256 at;
+        uint256 cycle;
+        uint256[2] range;
+    }
+
     address governance;
     address[] currencyOSs;
-    mapping(address => address[]) yamatoesOfCurrencyOS;
     address[] voters;
     mapping(address => bool) voted;
     mapping(address => address) decisions;
-    mapping(address => uint256) memScore;
     IveYMT veYMT;
     IYMT YMT;
     uint256 constant CYCLE_SIZE = 100000;
 
-    /*
-        !!! Admin Caution !!!
-        Make sure you've explicitly initialized this contract after deployment; otherwise, someone will do it for her to set am evil governer.
-    */
+
     function initialize(
-        address _governance,
         address _YMT,
         address _veYMT
-    ) public override onlyOnce {
-        governance = _governance;
+    ) public initializer {
+        governance = msg.sender;
         YMT = IYMT(_YMT);
         veYMT = IveYMT(_veYMT);
     }
 
-    modifier onlyOnce() {
-        require(!initialized, "This contract is already initialized.");
-        initialized = true;
-        _;
-    }
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() initializer {}
 
-    function addYamatoOfCurrencyOS(address _yamatoAddr)
-        public
-        override
-        onlyCurrencyOSs
-    {
-        // TODO: Given there exists a Yamato before adding the YmtOS contract to CurrencyOS contract, such Yamato contract won't be registered to YmtOS because the Yamato.sol doesn't know which YmtOS is should be added yet.
-        // So you need to make a new function onto CurrencyOS.sol where it can sync the existing, but unregistered yamatoes of CurrencyOS.sol.
-        /*
-            function syncYamatoesToYmtOS() onlyGovernance {
-                yamatoes.map(y=>{
-                    ymtOS.addYamatoOfCurrencyOS(address(y));
-                })
-            }
-        */
+    function _authorizeUpgrade(address) internal override onlyGovernance {}
+
+    function getImplementation() external view override returns (address) {
+        return _getImplementation();
     }
 
     modifier onlyCurrencyOSs() {
@@ -107,60 +107,72 @@ contract YmtOSV1 is IYmtOSV1 {
         */
         if (!voted[msg.sender]) {
             //Note: "Once vote and transfer the veYMT" is not a DoS-vector because veYMT is not transferrable.
+            voted[msg.sender] = true;
             voters.push(msg.sender);
         }
     }
 
     modifier onlyWhitelisted(address _currencyOS, address _yamato) {
-        address[] memory cos = yamatoesOfCurrencyOS[_currencyOS];
-        for (uint256 i = 0; i < cos.length; i++) {
-            if (cos[i] == _yamato) {
-                _;
+        for (uint256 i = 0; i < currencyOSs.length; i++) {
+            address[] memory _yamatoes = ICurrencyOS(currencyOSs[i]).yamatoes();
+            for (uint256 j = 0; j < _yamatoes.length; j++) {
+                if (_yamatoes[j] == _yamato) {
+                    _;
+                }
             }
         }
         revert("No yamato matched.");
     }
 
     function distributeYMT() public {
-        uint256 _cycle = getLastCycle();
-        uint256 _at = _cycle * CYCLE_SIZE;
-        uint256[2] memory _range = getLastCycleBlockRange();
-        uint256 _mintableInTimeframe = veYMT.mintableInTimeframe(
-            _range[0],
-            _range[1]
+        Vars memory _vars;
+        _vars.cycle = getLastCycle();
+        _vars.at = _vars.cycle * CYCLE_SIZE;
+        _vars.range = getLastCycleBlockRange();
+        _vars.mintableInTimeframe = veYMT.mintableInTimeframe(
+           _vars. range[0],
+            _vars.range[1]
         );
-        uint256 _totalScore = 0;
 
         /*
-            Sum up all score
+            Allocate mintables to Yamato
         */
-        for (uint256 i = 0; i < voters.length; i++) {
-            address _voter = voters[i];
-            address _yamato = decisions[_voter];
-            IYamato.Pledge memory _pledge = IYamato(_yamato).getPledge(_voter);
-            uint256 _score = getScore(_pledge, _at);
-            memScore[_voter] = _score;
-            _totalScore += _score;
+        uint256[] memory _yamatoVotingBalances;
+        Score[] memory _scores;
+        uint256 _totalYamatoScore;
+        for (uint256 i = 0; i < currencyOSs.length; i++) {
+            address[] memory _yamatoes = ICurrencyOS(currencyOSs[i]).yamatoes();
+            for (uint256 j = 0; j < _yamatoes.length; j++) {
+                uint256 l;
+                for (uint256 k = 0; k < voters.length; j++) {
+                    address _yamato = decisions[voters[k]];
+                    if (_yamato == _yamatoes[j]) {
+                        uint256 _votingBalance = veYMT.balanceOfAt(voters[k], _vars.at); // dec18
+                        uint256 _voterScore = getScore(_yamato, voters[k], _vars.at);
+                        _vars.scores[j].yamato = _yamato;
+                        _vars.scores[j].yamatoScore = _votingBalance;
+                        _vars.scores[j].voters[l] = voters[k];
+                        _vars.scores[j].voterScores[l] = _voterScore;
+                        _vars.scores[j].totalVoterScore += _voterScore;
+                        _vars.totalYamatoScore += _votingBalance;
+                        l++;
+                    }
+                }
+            }
         }
 
         /*
             Calculate mintable YMT amount in this cycle
         */
-        for (uint256 i = 0; i < voters.length; i++) {
-            address _voter = voters[i];
-            address _yamato = decisions[_voter];
-            IYamato.Pledge memory _pledge = IYamato(_yamato).getPledge(_voter);
-
-            // TODO: min((borrow*40/100)+(Totalborrow*VotingBalance/VotingTotal*(100-40)/100),borrow)*0or0.4ro0.6or0.8ro1.0
-            // Note: https://docs.google.com/document/d/1URC_h5GpBNLGQxhE2sAAhJ86taoKHkqQEwXacp8msxw/edit
-            // This document shows CJPY-denominated score result, but you still should normalize the score with "TotalScore"
-            // And then multiply that scoreShare with the
-
-            uint256 _mintThisPerson = _mintableInTimeframe
-                .mul(getScore(_pledge, _at))
-                .div(_totalScore);
-            YMT.mint(_voter, _mintThisPerson);
-            delete memScore[_voter];
+        for (uint256 i = 0; i < currencyOSs.length; i++) {
+            address[] memory _yamatoes = ICurrencyOS(currencyOSs[i]).yamatoes();
+            for (uint256 j = 0; j < _yamatoes.length; j++) {
+                uint256 _mintableForYamato = _vars.mintableInTimeframe * _vars.scores[j].yamatoScore / _vars.totalYamatoScore;
+                for (uint256 k = 0; k < _vars.scores[j].voters.length; k++) {
+                    uint256 _mintThisPerson = _mintableForYamato * _vars.scores[j].voterScores[k] / _vars.scores[j].totalVoterScore;
+                    YMT.mint(_vars.scores[j].voters[k], _mintThisPerson);
+                }
+            }
         }
 
         /*
@@ -197,15 +209,50 @@ contract YmtOSV1 is IYmtOSV1 {
         ];
     }
 
-    function getScore(IYamato.Pledge memory _pledge, uint256 _at)
+    function getScore(address _yamato, address _voter, uint256 _at)
         public
         view
         returns (uint256)
     {
-        uint256 veScore = veYMT.balanceOfAt(_pledge.owner, _at);
+        // Note: https://docs.google.com/document/d/1URC_h5GpBNLGQxhE2sAAhJ86taoKHkqQEwXacp8msxw/edit
+        // This document shows CJPY-denominated score result, but you still should normalize the score with "TotalScore"
+        // And then multiply that share of score with the mintableInTimeframe
 
-        // TODO: Do some magic :)
+        IYamato.Pledge memory _pledge = IYamato(_yamato).getPledge(_voter);
 
-        return 1;
+        /*
+            veYMT Bonus
+        */
+        uint256 _votingBalance = veYMT.balanceOfAt(_pledge.owner, _at); // dec18
+        uint256 _votingTotal = veYMT.totalSupplyAt(_at);
+        uint256 _borrow = _pledge.debt;
+        (,uint256 _totalBorrow,,,,) = IYamato(_yamato).getStates();
+        uint256 _veCoef = LiquityMath._min(
+            // Before optimization: (_borrow * 40/100) + (_totalBorrow * _votingBalance / _votingTotal * (100-40)/100),
+            ( (_borrow * 40) + (_totalBorrow * _votingBalance * 60 / _votingTotal) )/ 100,
+            _borrow
+        );
+
+
+
+        /*
+            ICR Bonus
+        */
+        uint256 _icrCoef; // dec18
+        uint256 _icr = _pledge.getICR(IYamato(_yamato).feed());
+        uint256 _mcr = uint256(IYamato(_yamato).MCR())*100;
+        if (_icr < _mcr) {
+            _icrCoef = 0;
+        } else if (_icr < 15000) {
+            _icrCoef = 4e17;
+        } else if (_icr < 20000) {
+            _icrCoef = 6e17;
+        } else if (_icr < 25000) {
+            _icrCoef = 8e17;
+        } else {
+            _icrCoef = 1e18;
+        }
+
+        return _veCoef * _icrCoef / 1e18; // dec18
     }
 }

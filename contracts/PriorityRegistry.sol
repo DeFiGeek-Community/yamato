@@ -143,7 +143,7 @@ contract PriorityRegistry is
         /*  
             2-2. Traverse from min(oldICR,newICR) to fill the loss of popRedeemable
         */
-        // Note: All deletions could cause traverse.
+        // Note: All upsert causes deletion. And ICR recovery or full-redemption could cause traversing.
         // Note: Traversing to the ICR=MAX_UINT256 pledges are validated, don't worry about gas.
         // Note: LICR is state variable and it will be undated here.
         uint256 _traverseStartICR;
@@ -159,7 +159,6 @@ contract PriorityRegistry is
         }
 
         if (_traverseStartICR > 0) _traverseToNextLICR(_traverseStartICR);
-        // console.log("gasUsed:upsert(): %s", gasStart - gasleft());
     }
 
     /*
