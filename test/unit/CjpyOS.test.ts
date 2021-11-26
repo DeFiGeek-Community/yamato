@@ -43,7 +43,7 @@ describe("CjpyOS", () => {
     mockYamato = await getFakeProxy<Yamato>("Yamato");
     mockYamatoHelper = await getFakeProxy<YamatoHelper>("YamatoHelper");
     mockYamato.yamatoHelper.returns(mockYamatoHelper.address);
-    mockYamatoHelper.permitDeps.returns(true);
+    mockYamato.permitDeps.returns(true);
 
     cjpyOS = await (<CjpyOS__factory>(
       await ethers.getContractFactory("CjpyOS")

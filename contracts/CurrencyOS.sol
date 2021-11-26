@@ -83,7 +83,7 @@ contract CurrencyOS {
         } else {
             for (uint256 i = 0; i < yamatoes.length; i++) {
                 if (
-                    IYamatoHelper(IYamato(yamatoes[i]).yamatoHelper())
+                    IYamato(yamatoes[i])
                         .permitDeps(msg.sender)
                 ) {
                     _;

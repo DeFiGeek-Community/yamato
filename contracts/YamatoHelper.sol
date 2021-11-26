@@ -86,8 +86,6 @@ interface IYamatoHelper {
             uint256 gasCompensationInCJPY,
             address[] memory
         );
-
-    function permitDeps(address _sender) external view returns (bool);
 }
 
 contract YamatoHelper is IYamatoHelper, YamatoBase {
@@ -95,60 +93,19 @@ contract YamatoHelper is IYamatoHelper, YamatoBase {
     using PledgeLib for uint256;
 
     address public override yamato;
-    address public override pool;
-    address public override priorityRegistry;
-    bool poolInitialized;
-    bool priorityRegistryInitialized;
-
     /*
         ==============================
             Set-up functions
         ==============================
-        - setPool
-        - setPriorityRegistry
+        - initialize
     */
     function initialize(address _yamato) public initializer {
         yamato = _yamato;
         __YamatoBase_init(IYamato(yamato).cjpyOS());
     }
-
-    function setPool(address _pool) public onlyGovernance onlyOnceForSetPool {
-        pool = _pool;
-    }
-
-    function setPriorityRegistry(address _priorityRegistry)
-        public
-        onlyGovernance
-        onlyOnceForSetPriorityRegistry
-    {
-        priorityRegistry = _priorityRegistry;
-    }
-
-    modifier onlyOnceForSetPool() {
-        require(!poolInitialized, "Pool is already initialized.");
-        poolInitialized = true;
-        _;
-    }
-    modifier onlyOnceForSetPriorityRegistry() {
-        require(
-            !priorityRegistryInitialized,
-            "PriorityRegistry is already initialized."
-        );
-        priorityRegistryInitialized = true;
-        _;
-    }
     modifier onlyYamato() {
-        require(permitDeps(msg.sender), "Not deps");
+        require(IYamato(yamato).permitDeps(msg.sender), "Not deps");
         _;
-    }
-
-    function permitDeps(address _sender) public view override returns (bool) {
-        bool permit;
-        address[4] memory deps = getDeps();
-        for (uint256 i = 0; i < deps.length; i++) {
-            if (_sender == deps[i]) permit = true;
-        }
-        return permit;
     }
 
     /*
@@ -211,7 +168,7 @@ contract YamatoHelper is IYamatoHelper, YamatoBase {
             /*
                 4-a. Clean full withdrawal
             */
-            IPriorityRegistry(priorityRegistry).remove(pledge);
+            IPriorityRegistry(priorityRegistry()).remove(pledge);
             IYamato(yamato).setPledge(pledge.owner, pledge.nil());
         } else {
             /*
@@ -221,7 +178,7 @@ contract YamatoHelper is IYamatoHelper, YamatoBase {
                 pledge.getICR(__feed) >= uint256(IYamato(yamato).MCR()) * 100,
                 "Withdrawal failure: ICR can't be less than MCR after withdrawal."
             );
-            pledge.priority = IPriorityRegistry(priorityRegistry).upsert(
+            pledge.priority = IPriorityRegistry(priorityRegistry()).upsert(
                 pledge
             );
             IYamato(yamato).setPledge(pledge.owner, pledge);
@@ -231,7 +188,7 @@ contract YamatoHelper is IYamatoHelper, YamatoBase {
             5-1. Charge CJPY
             5-2. Return coll to the withdrawer
         */
-        IPool(pool).sendETH(sender, ethAmount);
+        IPool(pool()).sendETH(sender, ethAmount);
     }
 
     function runRedeem(RunRedeemeArgs memory _args)
@@ -245,12 +202,12 @@ contract YamatoHelper is IYamatoHelper, YamatoBase {
         vars.cjpyAmountStart = _args.maxRedemptionCjpyAmount;
         vars._reminder = _args.maxRedemptionCjpyAmount;
         vars._pledgesOwner = new address[](
-            IPriorityRegistry(priorityRegistry).pledgeLength()
+            IPriorityRegistry(priorityRegistry()).pledgeLength()
         );
         vars._GRR = IYamato(yamato).GRR();
 
         while (vars._reminder > 0) {
-            try IPriorityRegistry(priorityRegistry).popRedeemable() returns (
+            try IPriorityRegistry(priorityRegistry()).popRedeemable() returns (
                 IYamato.Pledge memory _redeemablePledge
             ) {
                 IYamato.Pledge memory sPledge = IYamato(yamato).getPledge(
@@ -280,7 +237,7 @@ contract YamatoHelper is IYamatoHelper, YamatoBase {
                     2. Put the sludge pledge to the queue
                 */
                 try
-                    IPriorityRegistry(priorityRegistry).upsert(sPledge)
+                    IPriorityRegistry(priorityRegistry()).upsert(sPledge)
                 returns (uint256 _newICRpercent) {
                     sPledge.priority = _newICRpercent;
                     IYamato(yamato).setPledge(sPledge.owner, sPledge);
@@ -323,9 +280,9 @@ contract YamatoHelper is IYamatoHelper, YamatoBase {
                             v
                 (+)  Fee Pool (ETH)
             */
-            _redemptionBearer = pool;
+            _redemptionBearer = pool();
             _returningDestination = ICjpyOS(IYamato(yamato).cjpyOS()).feePool();
-            IPool(pool).useRedemptionReserve(totalRedeemedCjpyAmount);
+            IPool(pool()).useRedemptionReserve(totalRedeemedCjpyAmount);
         } else {
             /* 
             [ Normal Redemption - Account Subtotal ]
@@ -337,7 +294,7 @@ contract YamatoHelper is IYamatoHelper, YamatoBase {
             _redemptionBearer = _args.sender;
             _returningDestination = _args.sender;
         }
-        IPool(pool).sendETH(_returningDestination, returningEthAmount);
+        IPool(pool()).sendETH(_returningDestination, returningEthAmount);
         ICjpyOS(__cjpyOS).burnCJPY(_redemptionBearer, totalRedeemedCjpyAmount);
 
         /*
@@ -345,7 +302,7 @@ contract YamatoHelper is IYamatoHelper, YamatoBase {
         */
         uint256 gasCompensationInETH = totalRedeemedEthAmount *
             (vars._GRR / 100);
-        IPool(pool).sendETH(_args.sender, gasCompensationInETH);
+        IPool(pool()).sendETH(_args.sender, gasCompensationInETH);
 
         return
             RedeemedArgs(
@@ -368,14 +325,14 @@ contract YamatoHelper is IYamatoHelper, YamatoBase {
         )
     {
         IPriceFeed(__feed).fetchPrice();
-        uint256 sweepStart = IPool(pool).sweepReserve();
+        uint256 sweepStart = IPool(pool()).sweepReserve();
         require(sweepStart > 0, "Sweep failure: sweep reserve is empty.");
         uint8 _GRR = IYamato(yamato).GRR();
         uint256 maxGasCompensation = sweepStart * (_GRR / 100);
         uint256 _reminder = sweepStart - maxGasCompensation; //Note: Secure gas compensation
         uint256 _maxSweeplableStart = _reminder;
         address[] memory _pledgesOwner = new address[](
-            IPriorityRegistry(priorityRegistry).pledgeLength()
+            IPriorityRegistry(priorityRegistry()).pledgeLength()
         );
         uint256 _loopCount = 0;
 
@@ -383,7 +340,7 @@ contract YamatoHelper is IYamatoHelper, YamatoBase {
             1. Sweeping
         */
         while (_reminder > 0) {
-            try IPriorityRegistry(priorityRegistry).popSweepable() returns (
+            try IPriorityRegistry(priorityRegistry()).popSweepable() returns (
                 IYamato.Pledge memory _sweepablePledge
             ) {
                 if (!_sweepablePledge.isCreated) break; // Note: No any more redeemable pledges
@@ -410,7 +367,7 @@ contract YamatoHelper is IYamatoHelper, YamatoBase {
                 IYamato(yamato).setTotalDebt(totalDebt - sweepingAmount);
 
                 if (_reminder > 0) {
-                    IPriorityRegistry(priorityRegistry).remove(sPledge);
+                    IPriorityRegistry(priorityRegistry()).remove(sPledge);
                     IYamato(yamato).setPledge(sPledge.owner, sPledge.nil());
                 }
                 _loopCount++;
@@ -428,8 +385,8 @@ contract YamatoHelper is IYamatoHelper, YamatoBase {
         */
         uint256 _sweptAmount = sweepStart - _reminder;
         uint256 gasCompensationInCJPY = _sweptAmount * (_GRR / 100);
-        IPool(pool).sendCJPY(sender, gasCompensationInCJPY); // Not sendETH. But redemption returns in ETH and so it's a bit weird.
-        IPool(pool).useSweepReserve(gasCompensationInCJPY);
+        IPool(pool()).sendCJPY(sender, gasCompensationInCJPY); // Not sendETH. But redemption returns in ETH and so it's a bit weird.
+        IPool(pool()).useSweepReserve(gasCompensationInCJPY);
 
         return (_sweptAmount, gasCompensationInCJPY, _pledgesOwner);
     }
@@ -499,27 +456,18 @@ contract YamatoHelper is IYamatoHelper, YamatoBase {
         /*
             3. Budget reduction
         */
-        IPool(pool).useSweepReserve(sweepingAmount);
-        ICjpyOS(__cjpyOS).burnCJPY(pool, sweepingAmount);
+        IPool(pool()).useSweepReserve(sweepingAmount);
+        ICjpyOS(__cjpyOS).burnCJPY(pool(), sweepingAmount);
 
         return (sPledge, reminder, sweepingAmount);
     }
 
-    function getDeps() public view returns (address[4] memory) {
-        return [yamato, address(this), pool, priorityRegistry];
+
+    function pool() public view override returns (address) {
+        return IYamato(yamato).pool();
+    }
+    function priorityRegistry() public view override returns (address) {
+        return IYamato(yamato).priorityRegistry();
     }
 
-    /*
-    ==============================
-        Testability Helpers
-    ==============================
-        - setPriorityRegistryInTest()
-    */
-
-    function setPriorityRegistryInTest(address _priorityRegistry)
-        external
-        onlyTester
-    {
-        priorityRegistry = _priorityRegistry;
-    }
 }

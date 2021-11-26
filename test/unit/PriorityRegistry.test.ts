@@ -75,9 +75,6 @@ describe("contract PriorityRegistry", function () {
       PriorityRegistry,
       PriorityRegistry__factory
     >("PriorityRegistry", [yamatoHelperWithMockYamato.address], ["PledgeLib"]);
-    await yamatoHelperWithMockYamato.setPriorityRegistry(
-      priorityRegistryWithYamatoMock.address
-    );
 
     /*
         For onlyYamato tests
@@ -93,9 +90,6 @@ describe("contract PriorityRegistry", function () {
       PriorityRegistry__factory
     >("PriorityRegistry", [yamatoHelperWithYamatoDummy.address], ["PledgeLib"]);
 
-    await yamatoHelperWithYamatoDummy.setPriorityRegistry(
-      priorityRegistry.address
-    );
 
     await (
       await yamatoDummy.setPriorityRegistry(priorityRegistry.address)

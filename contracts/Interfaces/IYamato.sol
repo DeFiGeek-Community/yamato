@@ -40,6 +40,8 @@ interface IYamato {
         address[] pledgesOwner
     );
 
+    function permitDeps(address _sender) external view returns (bool);
+
     function getPledge(address _owner) external view returns (Pledge memory);
 
     function withdrawLocks(address _owner) external view returns (uint256);
@@ -66,6 +68,10 @@ interface IYamato {
     function feed() external view returns (address);
 
     function cjpyOS() external view returns (address);
+
+    function pool() external view returns (address);
+
+    function priorityRegistry() external view returns (address);
 
     function setPledge(address _owner, Pledge memory _p) external;
 

@@ -113,6 +113,8 @@ describe("BurnCJPY :: contract Yamato", () => {
       ["PledgeLib"]
     );
 
+    // TODO set pool before helper deploy, but pool requires helper at deploy...
+
     YamatoHelper = await getLinkedProxy<YamatoHelper, YamatoHelper__factory>(
       "YamatoHelper",
       [Yamato.address],
@@ -128,9 +130,9 @@ describe("BurnCJPY :: contract Yamato", () => {
       PriorityRegistry__factory
     >("PriorityRegistry", [YamatoHelper.address], ["PledgeLib"]);
 
-    await (await YamatoHelper.setPool(Pool.address)).wait();
+    await (await Yamato.setPool(Pool.address)).wait();
     await (
-      await YamatoHelper.setPriorityRegistry(PriorityRegistry.address)
+      await Yamato.setPriorityRegistry(PriorityRegistry.address)
     ).wait();
     await (await Yamato.setYamatoHelper(YamatoHelper.address)).wait();
     await (await CjpyOS.addYamato(Yamato.address)).wait();

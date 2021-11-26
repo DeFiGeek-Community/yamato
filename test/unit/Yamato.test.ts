@@ -85,9 +85,9 @@ describe("contract Yamato", function () {
       "PriorityRegistry"
     );
 
-    await (await yamatoHelper.setPool(mockPool.address)).wait();
+    await (await yamato.setPool(mockPool.address)).wait();
     await (
-      await yamatoHelper.setPriorityRegistry(mockPriorityRegistry.address)
+      await yamato.setPriorityRegistry(mockPriorityRegistry.address)
     ).wait();
     await (await yamato.setYamatoHelper(yamatoHelper.address)).wait();
 
@@ -146,12 +146,12 @@ describe("contract Yamato", function () {
       mockYamatoHelper.priorityRegistry.returns(mockPriorityRegistry.address);
       mockYamatoHelper.pool.returns(mockPool.address);
       await yamato.setYamatoHelper(mockYamatoHelper.address);
-      mockYamatoHelper.permitDeps.returns(true);
       const toCollateralize = 1;
       await yamato.deposit({ value: toERC20(toCollateralize + "") });
     });
     it(`should set zero pledge`, async function () {
       let owner = await accounts[0].getAddress();
+      await yamato.setYamatoHelper(owner); // Note: Dirty test hack to bypass onlyYamato
       let _pledgeBefore = await yamato.getPledge(owner);
       expect(_pledgeBefore.isCreated).to.be.true;
       await yamato.setPledge(owner, {
@@ -663,7 +663,7 @@ describe("contract Yamato", function () {
       mockPool.redemptionReserve.returns(1000000000000);
 
       await (
-        await yamatoHelper.setPriorityRegistryInTest(priorityRegistry.address)
+        await yamato.setPriorityRegistry(priorityRegistry.address)
       ).wait();
       await yamato.setYamatoHelper(yamatoHelper.address);
 
@@ -817,7 +817,7 @@ describe("contract Yamato", function () {
       mockCjpyOS.burnCJPY.returns(0);
 
       await (
-        await yamatoHelper.setPriorityRegistryInTest(priorityRegistry.address)
+        await yamato.setPriorityRegistry(priorityRegistry.address)
       ).wait();
       await yamato.setYamatoHelper(yamatoHelper.address);
 

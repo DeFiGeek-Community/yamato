@@ -193,7 +193,7 @@ contract PriorityRegistry is
     }
 
     modifier onlyYamato() {
-        require(helper.permitDeps(msg.sender), "You are not Yamato contract.");
+        require(IYamato(yamato).permitDeps(msg.sender), "You are not Yamato contract.");
         _;
     }
 

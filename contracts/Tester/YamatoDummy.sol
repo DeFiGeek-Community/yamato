@@ -132,4 +132,16 @@ contract YamatoDummy {
     function getICR(uint256 _coll, uint256 _debt) external returns (uint256) {
         return IYamato.Pledge(_coll, _debt, true, msg.sender, 0).getICR(feed);
     }
+
+    function getDeps() public view returns (address[4] memory) {
+        return [address(this), address(this), address(pool), address(priorityRegistry)];
+    }
+    function permitDeps(address _sender) public view returns (bool) {
+        bool permit;
+        address[4] memory deps = getDeps();
+        for (uint256 i = 0; i < deps.length; i++) {
+            if (_sender == deps[i]) permit = true;
+        }
+        return permit;
+    }
 }

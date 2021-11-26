@@ -72,7 +72,7 @@ contract Pool is IPool {
     }
 
     modifier onlyYamato() {
-        require(helper.permitDeps(msg.sender), "You are not Yamato contract.");
+        require(yamato.permitDeps(msg.sender), "You are not Yamato contract.");
         _;
     }
 

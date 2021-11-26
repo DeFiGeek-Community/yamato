@@ -49,14 +49,14 @@ export async function getLinkedProxy<
   return instance;
 }
 
-async function deployLibrary(libraryName) {
+export async function deployLibrary(libraryName) {
   const Library = await ethers.getContractFactory(libraryName);
   const library = await Library.deploy();
   await library.deployed();
   return library;
 }
 
-async function getLinkedContractFactory(contractName, libraries) {
+export async function getLinkedContractFactory(contractName, libraries) {
   const cArtifact = await artifacts.readArtifact(contractName);
   const linkedBytecode = linkBytecode(cArtifact, libraries);
   const ContractFactory = await ethers.getContractFactory(

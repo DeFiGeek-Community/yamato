@@ -85,9 +85,9 @@ describe("story Events", function () {
         "PriorityRegistry"
       );
 
-      await (await yamatoHelper.setPool(mockPool.address)).wait();
+      await (await yamato.setPool(mockPool.address)).wait();
       await (
-        await yamatoHelper.setPriorityRegistry(mockPriorityRegistry.address)
+        await yamato.setPriorityRegistry(mockPriorityRegistry.address)
       ).wait();
       await (await yamato.setYamatoHelper(yamatoHelper.address)).wait();
 
@@ -296,7 +296,6 @@ describe("story Events", function () {
       )).deploy(mockCjpyOS.address);
 
       mockYamatoHelper.yamato.returns(yamatoDummy.address);
-      mockYamatoHelper.permitDeps.returns(true);
 
       pool = await (<Pool__factory>(
         await ethers.getContractFactory("Pool")
@@ -309,11 +308,6 @@ describe("story Events", function () {
 
       await (await yamatoDummy.setPool(pool.address)).wait();
 
-      mockYamatoHelper.getDeps.returns([
-        yamatoDummy.address,
-        mockYamatoHelper.address,
-        pool.address,
-      ]);
     });
     describe("event RedemptionReserveDeposited", function () {
       it(`should be emitted`, async function () {
