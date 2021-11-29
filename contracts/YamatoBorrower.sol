@@ -25,14 +25,9 @@ import "hardhat/console.sol";
 /// @author 0xMotoko
 
 interface IYamatoBorrower {
-    function runBorrow(address _sender, uint256 _borrowAmountInCurrency) external returns (uint256 fee);
-
-    function yamato() external view returns (address);
-    function pool() external view returns (address);
-    function priorityRegistry() external view returns (address);
-    function feePool() external view returns (address);
-    function feed() external view returns (address);
-    function currencyOS() external view returns (address);
+    function runBorrow(address _sender, uint256 _borrowAmountInCurrency)
+        external
+        returns (uint256 fee);
 }
 
 contract YamatoBorrower is IYamatoBorrower, YamatoAction {
@@ -54,7 +49,7 @@ contract YamatoBorrower is IYamatoBorrower, YamatoAction {
         */
         IPriceFeed(feed()).fetchPrice();
         IYamato.Pledge memory pledge = IYamato(yamato()).getPledge(_sender);
-        (,uint256 totalDebt, , , , ) = IYamato(yamato()).getStates();
+        (, uint256 totalDebt, , , , ) = IYamato(yamato()).getStates();
         uint256 _ICRAfter = pledge.addDebt(_borrowAmountInCurrency).getICR(
             feed()
         );
@@ -74,7 +69,10 @@ contract YamatoBorrower is IYamatoBorrower, YamatoAction {
             "This minting is invalid because of too large borrowing."
         );
         require(fee > 0, "fee must be more than zero.");
-        require(returnableCurrency > 0, "(borrow - fee) must be more than zero.");
+        require(
+            returnableCurrency > 0,
+            "(borrow - fee) must be more than zero."
+        );
 
         /*
             3. Add debt to a pledge in memory
@@ -86,12 +84,10 @@ contract YamatoBorrower is IYamatoBorrower, YamatoAction {
         */
         pledge.priority = IPriorityRegistry(priorityRegistry()).upsert(pledge);
 
-
         /*
             5. Commit to pledge
         */
         IYamato(yamato()).setPledge(pledge.owner, pledge);
-
 
         /*
             5. Update totalDebt
@@ -109,11 +105,13 @@ contract YamatoBorrower is IYamatoBorrower, YamatoAction {
         ICurrencyOS(currencyOS()).mintCurrency(_sender, returnableCurrency); // onlyYamato
         ICurrencyOS(currencyOS()).mintCurrency(address(IPool(pool())), fee); // onlyYamato
 
-        if (IPool(pool()).redemptionReserve() / 5 <= IPool(pool()).sweepReserve()) {
+        if (
+            IPool(pool()).redemptionReserve() / 5 <=
+            IPool(pool()).sweepReserve()
+        ) {
             IPool(pool()).depositRedemptionReserve(fee);
         } else {
             IPool(pool()).depositSweepReserve(fee);
         }
-
     }
 }

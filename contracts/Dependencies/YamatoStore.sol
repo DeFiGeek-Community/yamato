@@ -19,6 +19,6 @@ contract YamatoStore is YamatoBase {
         __YamatoBase_init(_yamato);
         __YamatoStore_init_unchained();
     }
-    function __YamatoStore_init_unchained() public initializer {
-    }
+
+    function __YamatoStore_init_unchained() public initializer {}
 }

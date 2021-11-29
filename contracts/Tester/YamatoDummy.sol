@@ -134,8 +134,14 @@ contract YamatoDummy {
     }
 
     function getDeps() public view returns (address[4] memory) {
-        return [address(this), address(this), address(pool), address(priorityRegistry)];
+        return [
+            address(this),
+            address(this),
+            address(pool),
+            address(priorityRegistry)
+        ];
     }
+
     function permitDeps(address _sender) public view returns (bool) {
         bool permit;
         address[4] memory deps = getDeps();

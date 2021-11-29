@@ -40,16 +40,17 @@ contract CurrencyOS is ICurrencyOS, UUPSBase {
         CURRENCY_SLOT_ID = "deps.Currency";
         PRICEFEED_SLOT_ID = "deps.PriceFeed";
         FEEPOOL_SLOT_ID = "deps.FeePool";
-        
+
         bytes32 CURRENCY_KEY = bytes32(keccak256(abi.encode(CURRENCY_SLOT_ID)));
-        bytes32 PRICEFEED_KEY = bytes32(keccak256(abi.encode(PRICEFEED_SLOT_ID)));
+        bytes32 PRICEFEED_KEY = bytes32(
+            keccak256(abi.encode(PRICEFEED_SLOT_ID))
+        );
         bytes32 FEEPOOL_KEY = bytes32(keccak256(abi.encode(FEEPOOL_SLOT_ID)));
         assembly {
             sstore(CURRENCY_KEY, currencyAddr)
             sstore(PRICEFEED_KEY, feedAddr)
             sstore(FEEPOOL_KEY, feePoolAddr)
         }
-
     }
 
     function setGovernanceTokens(address _ymtAddr, address _veYmtAddr)
@@ -74,9 +75,6 @@ contract CurrencyOS is ICurrencyOS, UUPSBase {
         _;
     }
 
-
-
-
     function addYamato(address _yamatoAddr) external onlyGovernance {
         yamatoes.push(_yamatoAddr);
         if (ymtOSProxyAddr != address(0)) {
@@ -89,41 +87,49 @@ contract CurrencyOS is ICurrencyOS, UUPSBase {
             revert("No Yamato is registered.");
         } else {
             for (uint256 i = 0; i < yamatoes.length; i++) {
-                if (
-                    IYamato(yamatoes[i])
-                        .permitDeps(msg.sender)
-                ) {
+                if (IYamato(yamatoes[i]).permitDeps(msg.sender)) {
                     _;
                 }
             }
         }
     }
 
-    function mintCurrency(address to, uint256 amount) public onlyYamato override {
+    function mintCurrency(address to, uint256 amount)
+        public
+        override
+        onlyYamato
+    {
         ICurrency(currency()).mint(to, amount);
     }
 
-    function burnCurrency(address to, uint256 amount) public onlyYamato override {
+    function burnCurrency(address to, uint256 amount)
+        public
+        override
+        onlyYamato
+    {
         ICurrency(currency()).burn(to, amount);
     }
 
     function currency() public view override returns (address _currency) {
         bytes32 CURRENCY_KEY = bytes32(keccak256(abi.encode(CURRENCY_SLOT_ID)));
         assembly {
-           _currency := sload(CURRENCY_KEY)
-        }
-    }
-    function feed() public view override returns (address _feed) {
-        bytes32 PRICEFEED_KEY = bytes32(keccak256(abi.encode(PRICEFEED_SLOT_ID)));
-        assembly {
-           _feed := sload(PRICEFEED_KEY)
-        }
-    }
-    function feePool() public view override returns (address _feePool) {
-        bytes32 FEEPOOL_KEY = bytes32(keccak256(abi.encode(FEEPOOL_SLOT_ID)));
-        assembly {
-           _feePool := sload(FEEPOOL_KEY)
+            _currency := sload(CURRENCY_KEY)
         }
     }
 
+    function feed() public view override returns (address _feed) {
+        bytes32 PRICEFEED_KEY = bytes32(
+            keccak256(abi.encode(PRICEFEED_SLOT_ID))
+        );
+        assembly {
+            _feed := sload(PRICEFEED_KEY)
+        }
+    }
+
+    function feePool() public view override returns (address _feePool) {
+        bytes32 FEEPOOL_KEY = bytes32(keccak256(abi.encode(FEEPOOL_SLOT_ID)));
+        assembly {
+            _feePool := sload(FEEPOOL_KEY)
+        }
+    }
 }

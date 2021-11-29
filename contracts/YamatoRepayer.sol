@@ -26,13 +26,6 @@ import "hardhat/console.sol";
 
 interface IYamatoRepayer {
     function runRepay(address _sender, uint256 _amount) external;
-
-    function yamato() external view returns (address);
-    function pool() external view returns (address);
-    function priorityRegistry() external view returns (address);
-    function feePool() external view returns (address);
-    function feed() external view returns (address);
-    function currencyOS() external view returns (address);
 }
 
 contract YamatoRepayer is IYamatoRepayer, YamatoAction {
@@ -53,7 +46,7 @@ contract YamatoRepayer is IYamatoRepayer, YamatoAction {
         */
         IPriceFeed(feed()).fetchPrice();
         IYamato.Pledge memory pledge = IYamato(yamato()).getPledge(_sender);
-        (,uint256 totalDebt, , , , ) = IYamato(yamato()).getStates();
+        (, uint256 totalDebt, , , , ) = IYamato(yamato()).getStates();
 
         /*
             2. Check repayability
@@ -73,7 +66,6 @@ contract YamatoRepayer is IYamatoRepayer, YamatoAction {
             3. Add PriorityRegistry update result to a pledge in memory
         */
         pledge.priority = IPriorityRegistry(priorityRegistry()).upsert(pledge);
-
 
         /*
             4. Commit a pledge in memory to YamatoStore

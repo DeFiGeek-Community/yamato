@@ -26,13 +26,6 @@ import "hardhat/console.sol";
 
 interface IYamatoDepositor {
     function runDeposit(address _sender) external payable;
-
-    function yamato() external view returns (address);
-    function pool() external view returns (address);
-    function priorityRegistry() external view returns (address);
-    function feePool() external view returns (address);
-    function feed() external view returns (address);
-    function currencyOS() external view returns (address);
 }
 
 contract YamatoDepositor is IYamatoDepositor, YamatoAction {
@@ -44,12 +37,7 @@ contract YamatoDepositor is IYamatoDepositor, YamatoAction {
     }
 
     // @dev no reentrancy guard because action funcs are protected by permitDeps()
-    function runDeposit(address _sender)
-        public
-        override
-        payable
-        onlyYamato
-    {
+    function runDeposit(address _sender) public payable override onlyYamato {
         IPriceFeed(feed()).fetchPrice();
         uint256 _ethAmount = msg.value;
         /*

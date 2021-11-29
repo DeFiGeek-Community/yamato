@@ -129,9 +129,7 @@ describe("MintCJPY :: contract Yamato", () => {
     >("PriorityRegistry", [YamatoHelper.address], ["PledgeLib"]);
 
     await (await Yamato.setPool(Pool.address)).wait();
-    await (
-      await Yamato.setPriorityRegistry(PriorityRegistry.address)
-    ).wait();
+    await (await Yamato.setPriorityRegistry(PriorityRegistry.address)).wait();
     await (await Yamato.setYamatoHelper(YamatoHelper.address)).wait();
     await (await CjpyOS.addYamato(Yamato.address)).wait();
     await (await CJPY.setCurrencyOS(CjpyOS.address)).wait();

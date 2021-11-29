@@ -72,12 +72,16 @@ interface IYamato {
     function priorityRegistry() external view returns (address);
 
     function depositor() external view returns (address);
-    function borrower() external view returns (address);
-    function repayer() external view returns (address);
-    function withdrawer() external view returns (address);
-    function redeemer() external view returns (address);
-    function sweeper() external view returns (address);
 
+    function borrower() external view returns (address);
+
+    function repayer() external view returns (address);
+
+    function withdrawer() external view returns (address);
+
+    function redeemer() external view returns (address);
+
+    function sweeper() external view returns (address);
 
     function setPledge(address _owner, Pledge memory _p) external;
 

@@ -307,7 +307,6 @@ describe("story Events", function () {
       });
 
       await (await yamatoDummy.setPool(pool.address)).wait();
-
     });
     describe("event RedemptionReserveDeposited", function () {
       it(`should be emitted`, async function () {

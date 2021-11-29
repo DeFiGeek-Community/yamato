@@ -662,9 +662,7 @@ describe("contract Yamato", function () {
       mockFeed.lastGoodPrice.returns(PRICE);
       mockPool.redemptionReserve.returns(1000000000000);
 
-      await (
-        await yamato.setPriorityRegistry(priorityRegistry.address)
-      ).wait();
+      await (await yamato.setPriorityRegistry(priorityRegistry.address)).wait();
       await yamato.setYamatoHelper(yamatoHelper.address);
 
       toCollateralize = 1;
@@ -816,9 +814,7 @@ describe("contract Yamato", function () {
       mockFeed.lastGoodPrice.returns(PRICE);
       mockCjpyOS.burnCJPY.returns(0);
 
-      await (
-        await yamato.setPriorityRegistry(priorityRegistry.address)
-      ).wait();
+      await (await yamato.setPriorityRegistry(priorityRegistry.address)).wait();
       await yamato.setYamatoHelper(yamatoHelper.address);
 
       /*

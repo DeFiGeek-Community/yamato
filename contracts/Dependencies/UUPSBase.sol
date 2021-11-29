@@ -16,11 +16,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 /// @title Universal Upgradeability Proxy Standard Base Contract
 /// @author 0xMotoko
-contract UUPSBase is
-    IUUPSEtherscanVerifiable,
-    Initializable,
-    UUPSUpgradeable
-{
+contract UUPSBase is IUUPSEtherscanVerifiable, Initializable, UUPSUpgradeable {
     address governance;
     address pendingGovernance;
     address tester;
@@ -32,6 +28,7 @@ contract UUPSBase is
     function __UUPSBase_init() public initializer {
         __UUPSBase_init_unchained();
     }
+
     function __UUPSBase_init_unchained() public initializer {
         governance = msg.sender;
         tester = msg.sender;
@@ -51,14 +48,16 @@ contract UUPSBase is
         _;
     }
     modifier onlyNewGovernance() {
-        require(msg.sender == pendingGovernance, "You are not the pending governer.");
+        require(
+            msg.sender == pendingGovernance,
+            "You are not the pending governer."
+        );
         _;
     }
     modifier onlyTester() {
         require(msg.sender == tester, "You are not the tester.");
         _;
     }
-
 
     /*
         2-phase commit to avoid assigning non-owned address.
@@ -67,10 +66,12 @@ contract UUPSBase is
         pendingGovernance = _newGoverner;
         emit NewPendingGovernance(_newGoverner);
     }
+
     function acceptGovernance() public onlyNewGovernance {
         governance = pendingGovernance;
         emit UpdateGovernance(governance);
     }
+
     /*
         To make the contract immutable.
     */
@@ -78,7 +79,6 @@ contract UUPSBase is
         governance = address(0);
         emit RevokeGovernance(msg.sender);
     }
-    
 
     function revokeTester() public onlyGovernance {
         tester = address(0);

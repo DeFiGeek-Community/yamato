@@ -32,6 +32,7 @@ interface IYamatoSweeper {
             uint256 gasCompensationInCurrency,
             address[] memory
         );
+
     function sweepDebt(IYamato.Pledge memory sPledge, uint256 maxSweeplable)
         external
         returns (
@@ -39,15 +40,6 @@ interface IYamatoSweeper {
             uint256,
             uint256
         );
-
-
-
-    function yamato() external view returns (address);
-    function pool() external view returns (address);
-    function priorityRegistry() external view returns (address);
-    function feePool() external view returns (address);
-    function feed() external view returns (address);
-    function currencyOS() external view returns (address);
 }
 
 contract YamatoSweeper is IYamatoSweeper, YamatoAction {
@@ -57,7 +49,6 @@ contract YamatoSweeper is IYamatoSweeper, YamatoAction {
     function initialize(address _yamato) public initializer {
         __YamatoAction_init(_yamato);
     }
-
 
     // @dev no reentrancy guard because action funcs are protected by permitDeps()
     function runSweep(address _sender)
@@ -174,5 +165,4 @@ contract YamatoSweeper is IYamatoSweeper, YamatoAction {
 
         return (sPledge, reminder, sweepingAmount);
     }
-
 }

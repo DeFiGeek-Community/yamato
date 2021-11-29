@@ -26,13 +26,6 @@ import "hardhat/console.sol";
 
 interface IYamatoWithdrawer {
     function runWithdraw(address _sender, uint256 _ethAmount) external;
-
-    function yamato() external view returns (address);
-    function pool() external view returns (address);
-    function priorityRegistry() external view returns (address);
-    function feePool() external view returns (address);
-    function feed() external view returns (address);
-    function currencyOS() external view returns (address);
 }
 
 contract YamatoWithdrawer is IYamatoWithdrawer, YamatoAction {

@@ -40,10 +40,7 @@ interface IPriorityRegistry {
 }
 
 // @dev For gas saving reason, we use percent denominated ICR only in this contract.
-contract PriorityRegistry is
-    IPriorityRegistry,
-    YamatoStore
-{
+contract PriorityRegistry is IPriorityRegistry, YamatoStore {
     using SafeMath for uint256;
     using PledgeLib for IYamato.Pledge;
 
@@ -55,7 +52,6 @@ contract PriorityRegistry is
     function initialize(address _yamato) public initializer {
         __YamatoStore_init(_yamato);
     }
-
 
     /*
     ==============================
@@ -402,5 +398,4 @@ contract PriorityRegistry is
     function floor(uint256 _ICRpertenk) internal returns (uint256) {
         return _ICRpertenk / 100;
     }
-
 }

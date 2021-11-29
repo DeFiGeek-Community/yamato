@@ -23,6 +23,7 @@ contract YamatoBase is UUPSBase {
         __UUPSBase_init();
         __YamatoBase_init_unchained(_yamato);
     }
+
     function __YamatoBase_init_unchained(address _yamato) public initializer {
         YAMATO_SLOT_ID = "deps.Yamato";
         bytes32 YAMATO_KEY = bytes32(keccak256(abi.encode(YAMATO_SLOT_ID)));
@@ -35,25 +36,30 @@ contract YamatoBase is UUPSBase {
     function yamato() public view virtual returns (address _yamato) {
         bytes32 YAMATO_KEY = bytes32(keccak256(abi.encode(YAMATO_SLOT_ID)));
         assembly {
-           _yamato := sload(YAMATO_KEY)
+            _yamato := sload(YAMATO_KEY)
         }
     }
+
     // @dev All YamatoStores and YamatoActions except Yamato.sol are NOT needed to modify these funcs. Just write the same signature and don't fill inside. Yamato.sol must override it with correct logic.
     function currencyOS() public view virtual returns (address) {
         return IYamato(yamato()).currencyOS();
     }
+
     // @dev All YamatoStores and YamatoActions except Yamato.sol are NOT needed to modify these funcs. Just write the same signature and don't fill inside. Yamato.sol must override it with correct logic.
     function feePool() public view virtual returns (address) {
         return ICurrencyOS(currencyOS()).feePool();
     }
+
     // @dev All YamatoStores and YamatoActions except Yamato.sol are NOT needed to modify these funcs. Just write the same signature and don't fill inside. Yamato.sol must override it with correct logic.
     function feed() public view virtual returns (address) {
         return ICurrencyOS(currencyOS()).feed();
     }
+
     // @dev All YamatoStores and YamatoActions except Yamato.sol are NOT needed to modify these funcs. Just write the same signature and don't fill inside. Yamato.sol must override it with correct logic.
-    function permitDeps(address _sender) public view  virtual returns (bool) {
+    function permitDeps(address _sender) public view virtual returns (bool) {
         return IYamato(yamato()).permitDeps(_sender);
     }
+
     modifier onlyYamato() virtual {
         require(permitDeps(msg.sender), "You are not Yamato contract.");
         _;

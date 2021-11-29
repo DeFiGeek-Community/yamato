@@ -28,14 +28,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   ).wait();
   console.log(`log: Yamato.setYamatoHelper() executed.`);
 
-
   const _poolAddr = readFileSync(getDeploymentAddressPath("Pool")).toString();
   let _priorityRegistryAddr = readFileSync(
     getDeploymentAddressPathWithTag("PriorityRegistry", "ERC1967Proxy")
   ).toString();
   await (await Yamato.connect(getFoundation()).setPool(_poolAddr)).wait();
   console.log(`log: Yamato.setPool() executed.`);
-
 
   await (
     await Yamato.connect(getFoundation()).setPriorityRegistry(

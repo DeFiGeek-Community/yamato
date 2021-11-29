@@ -19,8 +19,8 @@ contract YamatoAction is YamatoBase {
         __YamatoBase_init(_yamato);
         __YamatoAction_init_unchained();
     }
-    function __YamatoAction_init_unchained() public initializer {
-    }
+
+    function __YamatoAction_init_unchained() public initializer {}
 
     /*
         These accessors are mandatory for all actions to interact with.
@@ -28,8 +28,8 @@ contract YamatoAction is YamatoBase {
     function pool() public view returns (address) {
         return IYamato(yamato()).pool();
     }
+
     function priorityRegistry() public view returns (address) {
         return IYamato(yamato()).priorityRegistry();
     }
-
 }

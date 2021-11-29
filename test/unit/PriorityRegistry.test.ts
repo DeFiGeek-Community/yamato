@@ -90,7 +90,6 @@ describe("contract PriorityRegistry", function () {
       PriorityRegistry__factory
     >("PriorityRegistry", [yamatoHelperWithYamatoDummy.address], ["PledgeLib"]);
 
-
     await (
       await yamatoDummy.setPriorityRegistry(priorityRegistry.address)
     ).wait();

@@ -57,14 +57,6 @@ interface IYamatoRedeemer {
     function runRedeem(RunRedeemArgs memory)
         external
         returns (RedeemedArgs memory);
-
-
-    function yamato() external view returns (address);
-    function pool() external view returns (address);
-    function priorityRegistry() external view returns (address);
-    function feePool() external view returns (address);
-    function feed() external view returns (address);
-    function currencyOS() external view returns (address);
 }
 
 contract YamatoRedeemer is IYamatoRedeemer, YamatoAction {
@@ -74,7 +66,6 @@ contract YamatoRedeemer is IYamatoRedeemer, YamatoAction {
     function initialize(address _yamato) public initializer {
         __YamatoAction_init(_yamato);
     }
-
 
     // @dev no reentrancy guard because action funcs are protected by permitDeps()
     function runRedeem(RunRedeemArgs memory _args)
@@ -113,7 +104,11 @@ contract YamatoRedeemer is IYamatoRedeemer, YamatoAction {
                 (
                     IYamato.Pledge memory _redeemedPledge,
                     uint256 _reminderInThisTime
-                ) = this.redeemPledge(sPledge, vars._reminder, vars.ethPriceInCurrency);
+                ) = this.redeemPledge(
+                        sPledge,
+                        vars._reminder,
+                        vars.ethPriceInCurrency
+                    );
 
                 vars._reminder = _reminderInThisTime;
                 sPledge = _redeemedPledge;
@@ -145,7 +140,8 @@ contract YamatoRedeemer is IYamatoRedeemer, YamatoAction {
         /*
             3. Update global state and ditribute colls.
         */
-        uint256 totalRedeemedCurrencyAmount = vars.currencyAmountStart - vars._reminder;
+        uint256 totalRedeemedCurrencyAmount = vars.currencyAmountStart -
+            vars._reminder;
         uint256 totalRedeemedEthAmount = (totalRedeemedCurrencyAmount * 1e18) /
             vars.ethPriceInCurrency;
         uint256 returningEthAmount = (totalRedeemedEthAmount *
@@ -181,7 +177,10 @@ contract YamatoRedeemer is IYamatoRedeemer, YamatoAction {
             _returningDestination = _args.sender;
         }
         IPool(pool()).sendETH(_returningDestination, returningEthAmount);
-        ICurrencyOS(currencyOS()).burnCurrency(_redemptionBearer, totalRedeemedCurrencyAmount);
+        ICurrencyOS(currencyOS()).burnCurrency(
+            _redemptionBearer,
+            totalRedeemedCurrencyAmount
+        );
 
         /*
             4. Gas compensation
@@ -200,7 +199,7 @@ contract YamatoRedeemer is IYamatoRedeemer, YamatoAction {
             );
     }
 
-        /// @notice Use when redemption
+    /// @notice Use when redemption
     function redeemPledge(
         IYamato.Pledge memory sPledge,
         uint256 currencyAmount,
@@ -232,7 +231,4 @@ contract YamatoRedeemer is IYamatoRedeemer, YamatoAction {
         sPledge.debt -= redemptionAmount;
         return (sPledge, reminder);
     }
-
-
-
 }
