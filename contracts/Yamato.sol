@@ -12,7 +12,6 @@ pragma solidity 0.8.4;
 import "./Pool.sol";
 import "./PriorityRegistry.sol";
 import "./YMT.sol";
-import "./CjpyOS.sol";
 import "./PriceFeed.sol";
 import "./YamatoDepositor.sol";
 import "./YamatoBorrower.sol";
@@ -25,10 +24,8 @@ import "./Dependencies/PledgeLib.sol";
 import "./Dependencies/SafeMath.sol";
 import "./Interfaces/IYamato.sol";
 import "./Interfaces/IFeePool.sol";
+import "./Interfaces/ICurrencyOS.sol";
 import "hardhat/console.sol";
-import "./Interfaces/IUUPSEtherscanVerifiable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 
@@ -43,20 +40,10 @@ contract Yamato is
     using PledgeLib for IYamato.Pledge;
     using PledgeLib for uint256;
 
-    string constant CURRENCY_OS_SLOT_ID = "deps.CurrencyOS";
-    string constant YAMATO_DEPOSITER_SLOT_ID = "deps.YamatoDepositer";
-    string constant YAMATO_BORROWER_SLOT_ID = "deps.YamatoBorrower";
-    string constant YAMATO_REPAYER_SLOT_ID = "deps.YamatoRepayer";
-    string constant YAMATO_WITHDRAWER_SLOT_ID = "deps.YamatoWithdrawer";
-    string constant YAMATO_REDEEMER_SLOT_ID = "deps.YamatoRedeemer";
-    string constant YAMATO_SWEEPER_SLOT_ID = "deps.YamatoSweeper";
-    string constant POOL_SLOT_ID = "deps.Pool";
-    string constant PRIORITY_REGISTRY_SLOT_ID = "deps.PriorityRegistry";
-
-    mapping(address => Pledge) pledges;
     uint256 totalColl;
     uint256 totalDebt;
 
+    mapping(address => Pledge) pledges;
     mapping(address => uint256) public override withdrawLocks;
     mapping(address => uint256) public override depositAndBorrowLocks;
 
@@ -65,16 +52,35 @@ contract Yamato is
     uint8 public SRR; // SweepReserveRate in pertenk
     uint8 public override GRR; // GasReserveRate in pertenk
 
+    string CURRENCY_OS_SLOT_ID;
+    string YAMATO_DEPOSITOR_SLOT_ID;
+    string YAMATO_BORROWER_SLOT_ID;
+    string YAMATO_REPAYER_SLOT_ID;
+    string YAMATO_WITHDRAWER_SLOT_ID;
+    string YAMATO_REDEEMER_SLOT_ID;
+    string YAMATO_SWEEPER_SLOT_ID;
+    string POOL_SLOT_ID;
+    string PRIORITY_REGISTRY_SLOT_ID;
+
     /*
         ==============================
             Set-up functions
         ==============================
-        - setPool
-        - setPriorityRegistry
-        - revokeGovernance
-        - revokeTester
+        - initialize
+        - setDeps
     */
-    function initialize(address _cjpyOS) public initializer {
+    function initialize(address _currencyOS) public initializer {
+        // Note: UUPS can't have constants above
+        CURRENCY_OS_SLOT_ID = "deps.CurrencyOS";
+        YAMATO_DEPOSITOR_SLOT_ID = "deps.YamatoDepositor";
+        YAMATO_BORROWER_SLOT_ID = "deps.YamatoBorrower";
+        YAMATO_REPAYER_SLOT_ID = "deps.YamatoRepayer";
+        YAMATO_WITHDRAWER_SLOT_ID = "deps.YamatoWithdrawer";
+        YAMATO_REDEEMER_SLOT_ID = "deps.YamatoRedeemer";
+        YAMATO_SWEEPER_SLOT_ID = "deps.YamatoSweeper";
+        POOL_SLOT_ID = "deps.Pool";
+        PRIORITY_REGISTRY_SLOT_ID = "deps.PriorityRegistry";
+
         MCR = 110;
         RRR = 80;
         SRR = 20;
@@ -82,7 +88,7 @@ contract Yamato is
 
         bytes32 CURRENCY_OS_KEY = bytes32(keccak256(abi.encode(CURRENCY_OS_SLOT_ID)));
         assembly {
-            sstore(CURRENCY_OS_KEY, _cjpyOS)
+            sstore(CURRENCY_OS_KEY, _currencyOS)
         }
 
         __ReentrancyGuard_init();
@@ -98,15 +104,15 @@ contract Yamato is
         address _yamatoRedeemer,
         address _yamatoSweeper,
         address _pool,
-        address _priorityRegistry,
+        address _priorityRegistry
     ) public onlyGovernance {
         /*
             [ Deployment Order ]
-            CJPY.deploy()
+            Currency.deploy()
             FeePool.deploy()
             PriceFeed.deploy()
-            CjpyOS.deploy(CJPY,FeePool,PriceFeed)
-            Yamato.deploy(CjpyOS)
+            CurrencyOS.deploy(Currency,FeePool,PriceFeed)
+            Yamato.deploy(CurrencyOS)
             YamatoDepositor.deploy(Yamato)
             YamatoBorrower.deploy(Yamato)
             YamatoRepayer.deploy(Yamato)
@@ -117,7 +123,7 @@ contract Yamato is
             PriorityRegistry.deploy(Yamato)
             Yamato.setDeps(YamatoDepositor,YamatoBorrower,YamatoRepayer,YamatoWithdrawer,YamatoRedeemer,YamatoSweeper,Pool,PriorityRegistry)
         */
-        bytes32 YAMATO_DEPOSITER_KEY = bytes32(keccak256(abi.encode(YAMATO_DEPOSITER_SLOT_ID)));
+        bytes32 YAMATO_DEPOSITOR_KEY = bytes32(keccak256(abi.encode(YAMATO_DEPOSITOR_SLOT_ID)));
         bytes32 YAMATO_BORROWER_KEY = bytes32(keccak256(abi.encode(YAMATO_BORROWER_SLOT_ID)));
         bytes32 YAMATO_REPAYER_KEY = bytes32(keccak256(abi.encode(YAMATO_REPAYER_SLOT_ID)));
         bytes32 YAMATO_WITHDRAWER_KEY = bytes32(keccak256(abi.encode(YAMATO_WITHDRAWER_SLOT_ID)));
@@ -126,7 +132,7 @@ contract Yamato is
         bytes32 POOL_KEY = bytes32(keccak256(abi.encode(POOL_SLOT_ID)));
         bytes32 PRIORITY_REGISTRY_KEY = bytes32(keccak256(abi.encode(PRIORITY_REGISTRY_SLOT_ID)));
         assembly {
-            sstore(YAMATO_DEPOSITER_KEY, _yamatoDepositor)
+            sstore(YAMATO_DEPOSITOR_KEY, _yamatoDepositor)
             sstore(YAMATO_BORROWER_KEY, _yamatoBorrower)
             sstore(YAMATO_REPAYER_KEY, _yamatoRepayer)
             sstore(YAMATO_WITHDRAWER_KEY, _yamatoWithdrawer)
@@ -137,7 +143,16 @@ contract Yamato is
         }
     }
 
-
+    /*
+        ==============================
+            Storing functions
+        ==============================
+        - setPledge
+        - setTotalColl
+        - setTotalDebt
+        - setDepositAndBorrowLocks
+        - setWithdrawLocks
+    */
     function setPledge(address _owner, Pledge memory _p)
         public
         override
@@ -150,7 +165,6 @@ contract Yamato is
         p.isCreated = _p.isCreated;
         p.priority = _p.coll;
     }
-
     function setTotalColl(uint256 _totalColl) public override onlyYamato {
         totalColl = _totalColl;
     }
@@ -164,8 +178,8 @@ contract Yamato is
         withdrawLocks[_owner] = block.timestamp + 3 days;
     }
 
-    modifier onlyYamato() {
-        require(permitDeps(msg.sender), "Not deps");
+    modifier onlyYamato() override {
+        require(permitDeps(msg.sender), "You are not Yamato contract.");
         _;
     }
 
@@ -193,20 +207,20 @@ contract Yamato is
         emit Deposited(msg.sender, msg.value);
     }
 
-    /// @notice Borrow in CJPY. In JPY term, 15.84%=RR, 0.16%=RRGas, 3.96%=SR, 0.4%=SRGas
+    /// @notice Borrow in Currency. In that currency-unit (e.g., CJPY), 15.84%=RR, 0.16%=RRGas, 3.96%=SR, 0.4%=SRGas
     /// @dev This function can't be executed just the same block with your deposit
-    /// @param borrowAmountInCjpy maximal redeemable amount
-    function borrow(uint256 borrowAmountInCjpy) public whenNotPaused {
-        uint fee = IYamatoBorrower(borrower()).runBorrow(msg.sender, borrowAmountInCjpy);
-        emit Borrowed(msg.sender, borrowAmountInCjpy, fee);
+    /// @param borrowAmountInCurrency maximal redeemable amount
+    function borrow(uint256 borrowAmountInCurrency) public whenNotPaused {
+        uint fee = IYamatoBorrower(borrower()).runBorrow(msg.sender, borrowAmountInCurrency);
+        emit Borrowed(msg.sender, borrowAmountInCurrency, fee);
     }
 
     /// @notice Recover the collateral of one's pledge.
     /// @dev Need allowance. TCR will go up.
-    /// @param cjpyAmount maximal redeemable amount
-    function repay(uint256 cjpyAmount) public {
-        IYamatoRepayer(repayer()).runRepay(msg.sender, cjpyAmount);
-        emit Repaid(msg.sender, cjpyAmount);
+    /// @param currencyAmount maximal redeemable amount
+    function repay(uint256 currencyAmount) public {
+        IYamatoRepayer(repayer()).runRepay(msg.sender, currencyAmount);
+        emit Repaid(msg.sender, currencyAmount);
     }
 
     /// @notice Withdraw collaterals from one's pledge.
@@ -225,11 +239,11 @@ contract Yamato is
         - sweep
     */
 
-    /// @notice Retrieve ETH collaterals from Pledges by burning CJPY
+    /// @notice Retrieve ETH collaterals from Pledges by burning Currency
     /// @dev Need allowance. Lowest ICR Pledges get redeemed first. TCR will go up. coll=0 pledges are to be remained.
-    /// @param maxRedemptionCjpyAmount maximal redeemable amount
+    /// @param maxRedemptionCurrencyAmount maximal redeemable amount
     /// @param isCoreRedemption A flag for who to pay
-    function redeem(uint256 maxRedemptionCjpyAmount, bool isCoreRedemption)
+    function redeem(uint256 maxRedemptionCurrencyAmount, bool isCoreRedemption)
         public
         nonReentrant
         whenNotPaused
@@ -237,20 +251,20 @@ contract Yamato is
         IYamatoRedeemer.RedeemedArgs memory _args = IYamatoRedeemer(redeemer()).runRedeem(
             IYamatoRedeemer.RunRedeemArgs(
                 msg.sender,
-                maxRedemptionCjpyAmount,
+                maxRedemptionCurrencyAmount,
                 isCoreRedemption
             )
         );
 
         emit Redeemed(
             msg.sender,
-            _args.totalRedeemedCjpyAmount,
+            _args.totalRedeemedCurrencyAmount,
             _args.totalRedeemedEthAmount,
             _args._pledgesOwner
         );
         emit RedeemedMeta(
             msg.sender,
-            _args.jpyPerEth,
+            _args.ethPriceInCurrency,
             isCoreRedemption,
             _args.gasCompensationInETH
         );
@@ -261,14 +275,14 @@ contract Yamato is
     function sweep() public nonReentrant whenNotPaused {
         (
             uint256 _sweptAmount,
-            uint256 gasCompensationInCJPY,
+            uint256 gasCompensationInCurrency,
             address[] memory _pledgesOwner
         ) = IYamatoSweeper(sweeper()).runSweep(msg.sender);
 
         emit Swept(
             msg.sender,
             _sweptAmount,
-            gasCompensationInCJPY,
+            gasCompensationInCurrency,
             _pledgesOwner
         );
     }
@@ -354,49 +368,49 @@ contract Yamato is
     function yamato() public view override returns (address) {
         return address(this);
     }
-    function pool() public view returns (address _pool) {
+    function pool() public view override returns (address _pool) {
         bytes32 POOL_KEY = bytes32(keccak256(abi.encode(POOL_SLOT_ID)));
         assembly {
            _pool := sload(POOL_KEY)
         }
     }
-    function priorityRegistry() public view returns (address _priorityRegistry) {
+    function priorityRegistry() public view override returns (address _priorityRegistry) {
         bytes32 PRIORITY_REGISTRY_KEY = bytes32(keccak256(abi.encode(PRIORITY_REGISTRY_SLOT_ID)));
         assembly {
            _priorityRegistry := sload(PRIORITY_REGISTRY_KEY)
         }
     }
-    function depositor() public view returns (address _depositor) {
+    function depositor() public view override returns (address _depositor) {
         bytes32 YAMATO_DEPOSITOR_KEY = bytes32(keccak256(abi.encode(YAMATO_DEPOSITOR_SLOT_ID)));
         assembly {
            _depositor := sload(YAMATO_DEPOSITOR_KEY)
         }
     }
-    function borrower() public view returns (address _borrower) {
+    function borrower() public view override returns (address _borrower) {
         bytes32 YAMATO_BORROWER_KEY = bytes32(keccak256(abi.encode(YAMATO_BORROWER_SLOT_ID)));
         assembly {
            _borrower := sload(YAMATO_BORROWER_KEY)
         }
     }
-    function repayer() public view returns (address _depositor) {
+    function repayer() public view override returns (address _depositor) {
         bytes32 YAMATO_REPAYER_KEY = bytes32(keccak256(abi.encode(YAMATO_REPAYER_SLOT_ID)));
         assembly {
            _depositor := sload(YAMATO_REPAYER_KEY)
         }
     }
-    function withdrawer() public view returns (address _withdrawer) {
+    function withdrawer() public view override returns (address _withdrawer) {
         bytes32 YAMATO_WITHDRAWER_KEY = bytes32(keccak256(abi.encode(YAMATO_WITHDRAWER_SLOT_ID)));
         assembly {
            _withdrawer := sload(YAMATO_WITHDRAWER_KEY)
         }
     }
-    function redeemer() public view returns (address _redeemer) {
+    function redeemer() public view override returns (address _redeemer) {
         bytes32 YAMATO_REDEEMER_KEY = bytes32(keccak256(abi.encode(YAMATO_REDEEMER_SLOT_ID)));
         assembly {
            _redeemer := sload(YAMATO_REDEEMER_KEY)
         }
     }
-    function sweeper() public view returns (address _sweeper) {
+    function sweeper() public view override returns (address _sweeper) {
         bytes32 YAMATO_SWEEPER_KEY = bytes32(keccak256(abi.encode(YAMATO_SWEEPER_SLOT_ID)));
         assembly {
            _sweeper := sload(YAMATO_SWEEPER_KEY)
@@ -405,19 +419,19 @@ contract Yamato is
 
 
     // @dev Yamato.sol must override it with correct logic.
-    function cjpyOS() public view override returns (address _cjpyOS) {
+    function currencyOS() public view override returns (address _currencyOS) {
         bytes32 CURRENCY_OS_KEY= bytes32(keccak256(abi.encode(CURRENCY_OS_SLOT_ID)));
         assembly {
-           _cjpyOS := sload(CURRENCY_OS_KEY)
+           _currencyOS := sload(CURRENCY_OS_KEY)
         }
     }
     // @dev Yamato.sol must override it with correct logic.
     function feePool() public view override returns (address) {
-        return ICjpyOS(cjpyOS()).feePool();
+        return ICurrencyOS(currencyOS()).feePool();
     }
     // @dev Yamato.sol must override it with correct logic.
     function feed() public view override returns (address) {
-        return ICjpyOS(cjpyOS()).feed();
+        return ICurrencyOS(currencyOS()).feed();
     }
     // @dev All YamatoStores and YamatoActions except Yamato.sol are NOT needed to modify these funcs. Just write the same signature and don't fill inside. Yamato.sol must override it with correct logic.
     function permitDeps(address _sender) public view override returns (bool) {

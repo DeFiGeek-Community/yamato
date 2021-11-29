@@ -18,12 +18,12 @@ interface IYamato {
         uint256 priority;
     }
     event Deposited(address indexed sender, uint256 ethAmount);
-    event Borrowed(address indexed sender, uint256 cjpyAmount, uint256 fee);
-    event Repaid(address indexed sender, uint256 cjpyAmount);
+    event Borrowed(address indexed sender, uint256 currencyAmount, uint256 fee);
+    event Repaid(address indexed sender, uint256 currencyAmount);
     event Withdrawn(address indexed sender, uint256 ethAmount);
     event Redeemed(
         address indexed sender,
-        uint256 cjpyAmount,
+        uint256 currencyAmount,
         uint256 ethAmount,
         address[] pledgesOwner
     );
@@ -35,7 +35,7 @@ interface IYamato {
     );
     event Swept(
         address indexed sender,
-        uint256 cjpyAmount,
+        uint256 currencyAmount,
         uint256 gasCompensationAmount,
         address[] pledgesOwner
     );
@@ -65,7 +65,7 @@ interface IYamato {
 
     function feed() external view returns (address);
 
-    function cjpyOS() external view returns (address);
+    function currencyOS() external view returns (address);
 
     function pool() external view returns (address);
 

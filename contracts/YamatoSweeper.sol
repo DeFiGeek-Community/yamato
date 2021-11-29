@@ -12,47 +12,24 @@ pragma solidity 0.8.4;
 import "./Pool.sol";
 import "./PriorityRegistry.sol";
 import "./YMT.sol";
-import "./CjpyOS.sol";
 import "./PriceFeed.sol";
 import "./Dependencies/YamatoAction.sol";
 import "./Dependencies/PledgeLib.sol";
 import "./Dependencies/SafeMath.sol";
 import "./Interfaces/IYamato.sol";
 import "./Interfaces/IFeePool.sol";
+import "./Interfaces/ICurrencyOS.sol";
 import "hardhat/console.sol";
 
 /// @title Yamato Sweeper Contract
 /// @author 0xMotoko
 
-interface IYamatoRedeemer {
-    // To avoid stack too deep error in the functions
-    struct RunRedeemArgs {
-        address sender;
-        uint256 maxRedemptionCjpyAmount;
-        bool isCoreRedemption;
-    }
-    struct RunRedeemVars {
-        uint256 jpyPerEth;
-        uint256 redeemStart;
-        uint256 cjpyAmountStart;
-        uint256 _reminder;
-        address[] _pledgesOwner;
-        uint256 _loopCount;
-        uint8 _GRR;
-    }
-    struct RedeemedArgs {
-        uint256 totalRedeemedCjpyAmount;
-        uint256 totalRedeemedEthAmount;
-        address[] _pledgesOwner;
-        uint256 jpyPerEth;
-        uint256 gasCompensationInETH;
-    }
-
-    function runSweep(address sender)
+interface IYamatoSweeper {
+    function runSweep(address _sender)
         external
         returns (
             uint256 _sweptAmount,
-            uint256 gasCompensationInCJPY,
+            uint256 gasCompensationInCurrency,
             address[] memory
         );
     function sweepDebt(IYamato.Pledge memory sPledge, uint256 maxSweeplable)
@@ -70,10 +47,10 @@ interface IYamatoRedeemer {
     function priorityRegistry() external view returns (address);
     function feePool() external view returns (address);
     function feed() external view returns (address);
-    function cjpyOS() external view returns (address);
+    function currencyOS() external view returns (address);
 }
 
-contract YamatoHelper is IYamatoRedeemer, YamatoAction {
+contract YamatoSweeper is IYamatoSweeper, YamatoAction {
     using PledgeLib for IYamato.Pledge;
     using PledgeLib for uint256;
 
@@ -82,14 +59,14 @@ contract YamatoHelper is IYamatoRedeemer, YamatoAction {
     }
 
 
-
-    function runSweep(address sender)
+    // @dev no reentrancy guard because action funcs are protected by permitDeps()
+    function runSweep(address _sender)
         public
         override
         onlyYamato
         returns (
             uint256 _sweptAmount,
-            uint256 gasCompensationInCJPY,
+            uint256 gasCompensationInCurrency,
             address[] memory _pledgesOwner
         )
     {
@@ -153,11 +130,11 @@ contract YamatoHelper is IYamatoRedeemer, YamatoAction {
             2. Gas compensation
         */
         uint256 _sweptAmount = sweepStart - _reminder;
-        uint256 gasCompensationInCJPY = _sweptAmount * (_GRR / 100);
-        IPool(pool()).sendCJPY(sender, gasCompensationInCJPY); // Not sendETH. But redemption returns in ETH and so it's a bit weird.
-        IPool(pool()).useSweepReserve(gasCompensationInCJPY);
+        uint256 gasCompensationInCurrency = _sweptAmount * (_GRR / 100);
+        IPool(pool()).sendCurrency(_sender, gasCompensationInCurrency); // Not sendETH. But redemption returns in ETH and so it's a bit weird.
+        IPool(pool()).useSweepReserve(gasCompensationInCurrency);
 
-        return (_sweptAmount, gasCompensationInCJPY, _pledgesOwner);
+        return (_sweptAmount, gasCompensationInCurrency, _pledgesOwner);
     }
 
     function sweepDebt(IYamato.Pledge memory sPledge, uint256 maxSweeplable)
@@ -193,7 +170,7 @@ contract YamatoHelper is IYamatoRedeemer, YamatoAction {
             3. Budget reduction
         */
         IPool(pool()).useSweepReserve(sweepingAmount);
-        ICjpyOS(cjpyOS()).burnCJPY(pool(), sweepingAmount);
+        ICurrencyOS(currencyOS()).burnCurrency(pool(), sweepingAmount);
 
         return (sPledge, reminder, sweepingAmount);
     }

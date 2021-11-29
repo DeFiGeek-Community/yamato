@@ -9,7 +9,6 @@ pragma solidity 0.8.4;
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 import "./Yamato.sol";
-import "./YamatoHelper.sol";
 import "./Interfaces/IPriceFeed.sol";
 import "./Dependencies/PledgeLib.sol";
 import "./Dependencies/YamatoStore.sol";
@@ -54,7 +53,7 @@ contract PriorityRegistry is
     uint256 public override LICR; // Note: Lowest ICR in percent
 
     function initialize(address _yamato) public initializer {
-        __YamatoAction_init(_yamato);
+        __YamatoStore_init(_yamato);
     }
 
 
@@ -103,7 +102,7 @@ contract PriorityRegistry is
         /* 
             2. insert new pledge
         */
-        _newICRpercent = floor(_pledge.getICR(IYamato(yamato).feed()));
+        _newICRpercent = floor(_pledge.getICR(feed()));
         require(
             _newICRpercent <= floor(2**256 - 1),
             "priority can't be that big."
@@ -178,11 +177,6 @@ contract PriorityRegistry is
         _deletePledge(_pledge);
     }
 
-    modifier onlyYamato() {
-        require(IYamato(yamato).permitDeps(msg.sender), "You are not Yamato contract.");
-        _;
-    }
-
     /*
     ==============================
         Mutable Getters
@@ -230,8 +224,8 @@ contract PriorityRegistry is
 
         // Note: Don't check LICR, real ICR is the matter.
         require(
-            floor(poppedPledge.getICR(IYamato(yamato).feed())) <
-                uint256(IYamato(yamato).MCR()),
+            floor(poppedPledge.getICR(feed())) <
+                uint256(IYamato(yamato()).MCR()),
             "You can't redeem if redeemable candidate is more than MCR."
         );
 
@@ -311,7 +305,7 @@ contract PriorityRegistry is
     }
 
     function _traverseToNextLICR(uint256 _icr) internal {
-        uint256 _mcr = uint256(IYamato(yamato).MCR());
+        uint256 _mcr = uint256(IYamato(yamato()).MCR());
         bool infLoopish = pledgeLength ==
             levelIndice[0].length + levelIndice[floor(2**256 - 1)].length;
         // Note: The _oldICRpercent == LICR now, and that former LICR-level has just been nullified. New licr is needed.
@@ -381,7 +375,7 @@ contract PriorityRegistry is
         override
         returns (address)
     {
-        uint256 _mcr = uint256(IYamato(yamato).MCR());
+        uint256 _mcr = uint256(IYamato(yamato()).MCR());
         if (icr == _mcr && icr == LICR && levelIndice[icr].length == 0) {
             return address(0);
         }
@@ -389,11 +383,11 @@ contract PriorityRegistry is
     }
 
     function getRedeemablesCap() external view returns (uint256 _cap) {
-        for (uint256 i = 1; i < uint256(IYamato(yamato).MCR()); i++) {
+        for (uint256 i = 1; i < uint256(IYamato(yamato()).MCR()); i++) {
             for (uint256 j = 0; j < levelIndice[i].length; j++) {
                 _cap +=
                     (leveledPledges[i][levelIndice[i][j]].coll *
-                        IPriceFeed(IYamato(yamato).feed()).lastGoodPrice()) /
+                        IPriceFeed(feed()).lastGoodPrice()) /
                     1e18;
             }
         }
@@ -409,8 +403,4 @@ contract PriorityRegistry is
         return _ICRpertenk / 100;
     }
 
-    modifier onlyGovernance() {
-        require(msg.sender == governance, "You are not the governer.");
-        _;
-    }
 }

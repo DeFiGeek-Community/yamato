@@ -29,10 +29,10 @@ library PledgeLib {
         require(_feed != address(0), "Feed is null address.");
         IPriceFeed feed = IPriceFeed(_feed);
 
-        uint256 _jpyPerEth = feed.lastGoodPrice(); // dec18
+        uint256 _ethPriceInCurrency = feed.lastGoodPrice(); // dec18
         uint256 _coll = _pledge.coll; // dec18
         uint256 _debt = _pledge.debt; // dec18
-        uint256 _collInCjpy = (_coll * _jpyPerEth) / 1e18; // dec18 * dec18 / dec18 = dec18
+        uint256 _collInCurrency = (_coll * _ethPriceInCurrency) / 1e18; // dec18 * dec18 / dec18 = dec18
 
         if (_coll == 0 && _debt == 0) {
             revert(
@@ -42,7 +42,7 @@ library PledgeLib {
             _ICR = 2**256 - 1;
         } else {
             // Note: ICR is per-ten-k in Yamato
-            _ICR = (10000 * _collInCjpy) / _debt;
+            _ICR = (10000 * _collInCurrency) / _debt;
         }
     }
 

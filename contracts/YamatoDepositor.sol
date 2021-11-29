@@ -12,13 +12,13 @@ pragma solidity 0.8.4;
 import "./Pool.sol";
 import "./PriorityRegistry.sol";
 import "./YMT.sol";
-import "./CjpyOS.sol";
 import "./PriceFeed.sol";
 import "./Dependencies/YamatoAction.sol";
 import "./Dependencies/PledgeLib.sol";
 import "./Dependencies/SafeMath.sol";
 import "./Interfaces/IYamato.sol";
 import "./Interfaces/IFeePool.sol";
+import "./Interfaces/ICurrencyOS.sol";
 import "hardhat/console.sol";
 
 /// @title Yamato Depositor Contract
@@ -32,7 +32,7 @@ interface IYamatoDepositor {
     function priorityRegistry() external view returns (address);
     function feePool() external view returns (address);
     function feed() external view returns (address);
-    function cjpyOS() external view returns (address);
+    function currencyOS() external view returns (address);
 }
 
 contract YamatoDepositor is IYamatoDepositor, YamatoAction {
@@ -43,11 +43,11 @@ contract YamatoDepositor is IYamatoDepositor, YamatoAction {
         __YamatoAction_init(_yamato);
     }
 
+    // @dev no reentrancy guard because action funcs are protected by permitDeps()
     function runDeposit(address _sender)
         public
         override
         payable
-        nonReentrant
         onlyYamato
     {
         IPriceFeed(feed()).fetchPrice();
@@ -55,7 +55,7 @@ contract YamatoDepositor is IYamatoDepositor, YamatoAction {
         /*
             1. Compose a pledge in memory
         */
-        Pledge memory pledge = IYamato(yamato()).getPledge(_sender);
+        IYamato.Pledge memory pledge = IYamato(yamato()).getPledge(_sender);
         (uint256 totalColl, , , , , ) = IYamato(yamato()).getStates();
 
         pledge.coll += _ethAmount;
@@ -86,6 +86,6 @@ contract YamatoDepositor is IYamatoDepositor, YamatoAction {
         (bool success, ) = payable(pool()).call{value: _ethAmount}("");
         require(success, "transfer failed");
         IPool(pool()).lockETH(_ethAmount);
-        IYamato(yamato).setDepositAndBorrowLocks(_sender);
+        IYamato(yamato()).setDepositAndBorrowLocks(_sender);
     }
 }

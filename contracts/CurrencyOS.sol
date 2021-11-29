@@ -10,38 +10,46 @@ pragma solidity 0.8.4;
 //solhint-disable no-inline-assembly
 
 import "./Interfaces/ICurrency.sol";
+import "./Interfaces/ICurrencyOS.sol";
 import "./Interfaces/IYMT.sol";
 import "./veYMT.sol";
 import "./PriceFeed.sol";
-import "./YamatoHelper.sol";
 import "./Interfaces/IYamato.sol";
 import "./YmtOSV1.sol";
-import "./Dependencies/SafeMath.sol";
-// import "@openzeppelin/contracts/math/SafeMath.sol";
+import "./Dependencies/UUPSBase.sol";
 import "hardhat/console.sol";
 
-contract CurrencyOS {
-    using SafeMath for uint256;
-
-    ICurrency _currency;
+contract CurrencyOS is ICurrencyOS, UUPSBase {
     IYMT public YMT;
     IveYMT public veYMT;
-    address _feed;
-    address _feePool;
-    address governance;
     address ymtOSProxyAddr;
+
     address[] public yamatoes;
     bool isYmtOSInitialized = false;
 
-    constructor(
+    string CURRENCY_SLOT_ID;
+    string PRICEFEED_SLOT_ID;
+    string FEEPOOL_SLOT_ID;
+
+    function initialize(
         address currencyAddr,
         address feedAddr,
-        address feePool
-    ) {
-        _currency = ICurrency(currencyAddr);
-        _feed = feedAddr;
-        _feePool = feePool;
-        governance = msg.sender;
+        address feePoolAddr
+    ) public initializer {
+        __UUPSBase_init();
+        CURRENCY_SLOT_ID = "deps.Currency";
+        PRICEFEED_SLOT_ID = "deps.PriceFeed";
+        FEEPOOL_SLOT_ID = "deps.FeePool";
+        
+        bytes32 CURRENCY_KEY = bytes32(keccak256(abi.encode(CURRENCY_SLOT_ID)));
+        bytes32 PRICEFEED_KEY = bytes32(keccak256(abi.encode(PRICEFEED_SLOT_ID)));
+        bytes32 FEEPOOL_KEY = bytes32(keccak256(abi.encode(FEEPOOL_SLOT_ID)));
+        assembly {
+            sstore(CURRENCY_KEY, currencyAddr)
+            sstore(PRICEFEED_KEY, feedAddr)
+            sstore(FEEPOOL_KEY, feePoolAddr)
+        }
+
     }
 
     function setGovernanceTokens(address _ymtAddr, address _veYmtAddr)
@@ -52,13 +60,6 @@ contract CurrencyOS {
         veYMT = IveYMT(_veYmtAddr);
     }
 
-    function addYamato(address _yamatoAddr) external onlyGovernance {
-        yamatoes.push(_yamatoAddr);
-        if (ymtOSProxyAddr != address(0)) {
-            IYmtOSV1(ymtOSProxyAddr).addYamatoOfCurrencyOS(_yamatoAddr);
-        }
-    }
-
     function setYmtOSProxy(address _ymtOSProxyAddr)
         external
         onlyGovernance
@@ -67,14 +68,20 @@ contract CurrencyOS {
         ymtOSProxyAddr = _ymtOSProxyAddr;
     }
 
-    modifier onlyGovernance() {
-        require(msg.sender == governance, "You are not the governer.");
-        _;
-    }
     modifier onlyOnce() {
         require(!isYmtOSInitialized, "YmtOS is already initialized.");
         isYmtOSInitialized = true;
         _;
+    }
+
+
+
+
+    function addYamato(address _yamatoAddr) external onlyGovernance {
+        yamatoes.push(_yamatoAddr);
+        if (ymtOSProxyAddr != address(0)) {
+            IYmtOSV1(ymtOSProxyAddr).addYamatoOfCurrencyOS(_yamatoAddr);
+        }
     }
 
     modifier onlyYamato() {
@@ -92,11 +99,31 @@ contract CurrencyOS {
         }
     }
 
-    function _mintCurrency(address to, uint256 amount) internal {
-        _currency.mint(to, amount);
+    function mintCurrency(address to, uint256 amount) public onlyYamato override {
+        ICurrency(currency()).mint(to, amount);
     }
 
-    function _burnCurrency(address to, uint256 amount) internal {
-        _currency.burn(to, amount);
+    function burnCurrency(address to, uint256 amount) public onlyYamato override {
+        ICurrency(currency()).burn(to, amount);
     }
+
+    function currency() public view override returns (address _currency) {
+        bytes32 CURRENCY_KEY = bytes32(keccak256(abi.encode(CURRENCY_SLOT_ID)));
+        assembly {
+           _currency := sload(CURRENCY_KEY)
+        }
+    }
+    function feed() public view override returns (address _feed) {
+        bytes32 PRICEFEED_KEY = bytes32(keccak256(abi.encode(PRICEFEED_SLOT_ID)));
+        assembly {
+           _feed := sload(PRICEFEED_KEY)
+        }
+    }
+    function feePool() public view override returns (address _feePool) {
+        bytes32 FEEPOOL_KEY = bytes32(keccak256(abi.encode(FEEPOOL_SLOT_ID)));
+        assembly {
+           _feePool := sload(FEEPOOL_KEY)
+        }
+    }
+
 }

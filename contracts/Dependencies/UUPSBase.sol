@@ -22,7 +22,12 @@ contract UUPSBase is
     UUPSUpgradeable
 {
     address governance;
+    address pendingGovernance;
     address tester;
+
+    event NewPendingGovernance(address _sender);
+    event UpdateGovernance(address _sender);
+    event RevokeGovernance(address _sender);
 
     function __UUPSBase_init() public initializer {
         __UUPSBase_init_unchained();
@@ -60,17 +65,18 @@ contract UUPSBase is
     */
     function setGovernance(address _newGoverner) public onlyGovernance {
         pendingGovernance = _newGoverner;
-        emit GovernerPended(msg.sender, _newGoverner);
+        emit NewPendingGovernance(_newGoverner);
     }
     function acceptGovernance() public onlyNewGovernance {
         governance = pendingGovernance;
-        emit GovernerAccepted(msg.sender, governance);
+        emit UpdateGovernance(governance);
     }
     /*
         To make the contract immutable.
     */
     function revokeGovernance() public onlyGovernance {
         governance = address(0);
+        emit RevokeGovernance(msg.sender);
     }
     
 

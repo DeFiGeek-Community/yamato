@@ -12,27 +12,27 @@ pragma solidity 0.8.4;
 import "./Pool.sol";
 import "./PriorityRegistry.sol";
 import "./YMT.sol";
-import "./CjpyOS.sol";
 import "./PriceFeed.sol";
 import "./Dependencies/YamatoAction.sol";
 import "./Dependencies/PledgeLib.sol";
 import "./Dependencies/SafeMath.sol";
 import "./Interfaces/IYamato.sol";
 import "./Interfaces/IFeePool.sol";
+import "./Interfaces/ICurrencyOS.sol";
 import "hardhat/console.sol";
 
 /// @title Yamato Borrower Contract
 /// @author 0xMotoko
 
 interface IYamatoBorrower {
-    function runBorrow(address _sender, uint256 _borrowAmountInCjpy) external returns (uint256 fee);
+    function runBorrow(address _sender, uint256 _borrowAmountInCurrency) external returns (uint256 fee);
 
     function yamato() external view returns (address);
     function pool() external view returns (address);
     function priorityRegistry() external view returns (address);
     function feePool() external view returns (address);
     function feed() external view returns (address);
-    function cjpyOS() external view returns (address);
+    function currencyOS() external view returns (address);
 }
 
 contract YamatoBorrower is IYamatoBorrower, YamatoAction {
@@ -43,10 +43,9 @@ contract YamatoBorrower is IYamatoBorrower, YamatoAction {
         __YamatoAction_init(_yamato);
     }
 
-    function runBorrow(address _sender, uint256 _borrowAmountInCjpy)
+    function runBorrow(address _sender, uint256 _borrowAmountInCurrency)
         public
         override
-        nonReentrant
         onlyYamato
         returns (uint256 fee)
     {
@@ -54,13 +53,13 @@ contract YamatoBorrower is IYamatoBorrower, YamatoAction {
             1. Ready
         */
         IPriceFeed(feed()).fetchPrice();
-        Pledge memory pledge = IYamato(yamato()).getPledges(_sender);
+        IYamato.Pledge memory pledge = IYamato(yamato()).getPledge(_sender);
         (,uint256 totalDebt, , , , ) = IYamato(yamato()).getStates();
-        uint256 _ICRAfter = pledge.addDebt(_borrowAmountInCjpy).getICR(
+        uint256 _ICRAfter = pledge.addDebt(_borrowAmountInCurrency).getICR(
             feed()
         );
-        uint256 fee = (_borrowAmountInCjpy * _ICRAfter.FR()) / 10000;
-        uint256 returnableCJPY = _borrowAmountInCjpy - fee;
+        uint256 fee = (_borrowAmountInCurrency * _ICRAfter.FR()) / 10000;
+        uint256 returnableCurrency = _borrowAmountInCurrency - fee;
 
         /*
             2. Validate
@@ -75,12 +74,12 @@ contract YamatoBorrower is IYamatoBorrower, YamatoAction {
             "This minting is invalid because of too large borrowing."
         );
         require(fee > 0, "fee must be more than zero.");
-        require(returnableCJPY > 0, "(borrow - fee) must be more than zero.");
+        require(returnableCurrency > 0, "(borrow - fee) must be more than zero.");
 
         /*
             3. Add debt to a pledge in memory
         */
-        pledge.debt += _borrowAmountInCjpy;
+        pledge.debt += _borrowAmountInCurrency;
 
         /*
             4. Add PriorityRegistry change
@@ -97,7 +96,7 @@ contract YamatoBorrower is IYamatoBorrower, YamatoAction {
         /*
             5. Update totalDebt
         */
-        IYamato(yamato()).setTotalDebt(totalDebt + _borrowAmountInCjpy);
+        IYamato(yamato()).setTotalDebt(totalDebt + _borrowAmountInCurrency);
 
         /*
             5. Cheat guard
@@ -107,8 +106,8 @@ contract YamatoBorrower is IYamatoBorrower, YamatoAction {
         /*
             6. Borrowed fund & fee transfer
         */
-        ICjpyOS(cjpyOS()).mintCJPY(_sender, returnableCJPY); // onlyYamato
-        ICjpyOS(cjpyOS()).mintCJPY(address(IPool(pool())), fee); // onlyYamato
+        ICurrencyOS(currencyOS()).mintCurrency(_sender, returnableCurrency); // onlyYamato
+        ICurrencyOS(currencyOS()).mintCurrency(address(IPool(pool())), fee); // onlyYamato
 
         if (IPool(pool()).redemptionReserve() / 5 <= IPool(pool()).sweepReserve()) {
             IPool(pool()).depositRedemptionReserve(fee);

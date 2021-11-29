@@ -9,7 +9,7 @@ pragma solidity 0.8.4;
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 
-import "./Dependencies/YamatoBase.sol";
+import "./YamatoBase.sol";
 import "hardhat/console.sol";
 
 /// @title Yamato Store Base Contract

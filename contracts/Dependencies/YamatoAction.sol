@@ -9,15 +9,15 @@ pragma solidity 0.8.4;
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 
-import "./Dependencies/YamatoBase.sol";
+import "./YamatoBase.sol";
 import "hardhat/console.sol";
 
 /// @title Yamato Action Base Contract
 /// @author 0xMotoko
 contract YamatoAction is YamatoBase {
     function __YamatoAction_init(address _yamato) public initializer {
-        __YamatoBase_init();
-        __YamatoAction_init_unchained(_yamato);
+        __YamatoBase_init(_yamato);
+        __YamatoAction_init_unchained();
     }
     function __YamatoAction_init_unchained() public initializer {
     }
@@ -26,10 +26,10 @@ contract YamatoAction is YamatoBase {
         These accessors are mandatory for all actions to interact with.
     */
     function pool() public view returns (address) {
-        return IYamato(yamato).pool();
+        return IYamato(yamato()).pool();
     }
     function priorityRegistry() public view returns (address) {
-        return IYamato(yamato).priorityRegistry();
+        return IYamato(yamato()).priorityRegistry();
     }
 
 }
