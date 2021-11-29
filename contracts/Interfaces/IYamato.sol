@@ -63,8 +63,6 @@ interface IYamato {
             uint8
         );
 
-    function yamatoHelper() external view returns (address);
-
     function feed() external view returns (address);
 
     function cjpyOS() external view returns (address);
@@ -73,11 +71,23 @@ interface IYamato {
 
     function priorityRegistry() external view returns (address);
 
+    function depositor() external view returns (address);
+    function borrower() external view returns (address);
+    function repayer() external view returns (address);
+    function withdrawer() external view returns (address);
+    function redeemer() external view returns (address);
+    function sweeper() external view returns (address);
+
+
     function setPledge(address _owner, Pledge memory _p) external;
 
     function setTotalColl(uint256 _totalColl) external;
 
     function setTotalDebt(uint256 _totalDebt) external;
+
+    function setDepositAndBorrowLocks(address _owner) external;
+
+    function setWithdrawLocks(address _owner) external;
 
     function MCR() external view returns (uint8);
 

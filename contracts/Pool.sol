@@ -10,6 +10,7 @@ pragma solidity 0.8.4;
 //solhint-disable no-inline-assembly
 import "./Interfaces/IYamato.sol";
 import "./Interfaces/IFeePool.sol";
+import "./Dependencies/YamatoStore.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./CjpyOS.sol";
 import "./YamatoHelper.sol";
@@ -51,7 +52,7 @@ interface IPool {
     function feePool() external view returns (IFeePool);
 }
 
-contract Pool is IPool {
+contract Pool is IPool, YamatoStore {
     IYamato public override yamato;
     IYamatoHelper public override helper;
     IFeePool public override feePool;

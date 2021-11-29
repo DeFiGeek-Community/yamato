@@ -9,38 +9,27 @@ pragma solidity 0.8.4;
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 
-import "./Pool.sol";
-import "./PriorityRegistry.sol";
-import "./CjpyOS.sol";
-import "./PriceFeed.sol";
-import "./Dependencies/PledgeLib.sol";
-import "./Dependencies/SafeMath.sol";
-import "./Interfaces/IYamato.sol";
-import "./Interfaces/IFeePool.sol";
 import "hardhat/console.sol";
-import "./Interfaces/IUUPSEtherscanVerifiable.sol";
+import "../Interfaces/IUUPSEtherscanVerifiable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-/// @title Yamato Pledge Manager Contract
+/// @title Universal Upgradeability Proxy Standard Base Contract
 /// @author 0xMotoko
-contract YamatoBase is
+contract UUPSBase is
     IUUPSEtherscanVerifiable,
     Initializable,
     UUPSUpgradeable
 {
-    address internal __cjpyOS;
-    address internal __feePool;
-    address internal __feed;
     address governance;
     address tester;
 
-    function __YamatoBase_init(address _cjpyOS) public initializer {
+    function __UUPSBase_init() public initializer {
+        __UUPSBase_init_unchained();
+    }
+    function __UUPSBase_init_unchained() public initializer {
         governance = msg.sender;
         tester = msg.sender;
-        __cjpyOS = _cjpyOS;
-        __feePool = ICjpyOS(_cjpyOS).feePool();
-        __feed = ICjpyOS(_cjpyOS).feed();
     }
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -56,18 +45,34 @@ contract YamatoBase is
         require(msg.sender == governance, "You are not the governer.");
         _;
     }
+    modifier onlyNewGovernance() {
+        require(msg.sender == pendingGovernance, "You are not the pending governer.");
+        _;
+    }
     modifier onlyTester() {
         require(msg.sender == tester, "You are not the tester.");
         _;
     }
 
+
+    /*
+        2-phase commit to avoid assigning non-owned address.
+    */
+    function setGovernance(address _newGoverner) public onlyGovernance {
+        pendingGovernance = _newGoverner;
+        emit GovernerPended(msg.sender, _newGoverner);
+    }
+    function acceptGovernance() public onlyNewGovernance {
+        governance = pendingGovernance;
+        emit GovernerAccepted(msg.sender, governance);
+    }
+    /*
+        To make the contract immutable.
+    */
     function revokeGovernance() public onlyGovernance {
         governance = address(0);
     }
-
-    function transferGovernance(address _newGoverner) public onlyGovernance {
-        governance = _newGoverner;
-    }
+    
 
     function revokeTester() public onlyGovernance {
         tester = address(0);

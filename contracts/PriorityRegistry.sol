@@ -12,6 +12,7 @@ import "./Yamato.sol";
 import "./YamatoHelper.sol";
 import "./Interfaces/IPriceFeed.sol";
 import "./Dependencies/PledgeLib.sol";
+import "./Dependencies/YamatoStore.sol";
 import "./Dependencies/SafeMath.sol";
 import "./Dependencies/LiquityMath.sol";
 import "hardhat/console.sol";
@@ -42,9 +43,7 @@ interface IPriorityRegistry {
 // @dev For gas saving reason, we use percent denominated ICR only in this contract.
 contract PriorityRegistry is
     IPriorityRegistry,
-    IUUPSEtherscanVerifiable,
-    Initializable,
-    UUPSUpgradeable
+    YamatoStore
 {
     using SafeMath for uint256;
     using PledgeLib for IYamato.Pledge;
@@ -53,24 +52,11 @@ contract PriorityRegistry is
     mapping(uint256 => address[]) private levelIndice; // ICR => owner[]
     uint256 public override pledgeLength;
     uint256 public override LICR; // Note: Lowest ICR in percent
-    address public yamato;
-    IYamatoHelper helper;
-    address public governance;
 
-    function initialize(address _yamatoHepler) public initializer {
-        helper = IYamatoHelper(_yamatoHepler);
-        yamato = helper.yamato();
-        governance = msg.sender;
+    function initialize(address _yamato) public initializer {
+        __YamatoAction_init(_yamato);
     }
 
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() initializer {}
-
-    function _authorizeUpgrade(address) internal override onlyGovernance {}
-
-    function getImplementation() external view override returns (address) {
-        return _getImplementation();
-    }
 
     /*
     ==============================
