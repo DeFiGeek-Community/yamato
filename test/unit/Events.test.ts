@@ -5,24 +5,34 @@ import { solidity } from "ethereum-waffle";
 import { Signer, BigNumber, Wallet } from "ethers";
 import {
   CJPY,
-  CjpyOS,
+  CurrencyOS,
   Pool,
   FeePool,
   PriceFeed,
   PriorityRegistry,
   PriorityRegistry__factory,
   Yamato,
-  YamatoHelper,
+  YamatoDepositor,
+  YamatoBorrower,
+  YamatoRepayer,
+  YamatoWithdrawer,
+  YamatoRedeemer,
+  YamatoSweeper,
   YamatoDummy,
   Yamato__factory,
-  YamatoHelper__factory,
+  YamatoDepositor__factory,
+  YamatoBorrower__factory,
+  YamatoRepayer__factory,
+  YamatoWithdrawer__factory,
+  YamatoRedeemer__factory,
+  YamatoSweeper__factory,
   YamatoDummy__factory,
   FeePool__factory,
   YMT,
   Pool__factory,
 } from "../../typechain";
 import { encode, toERC20 } from "../param/helper";
-import { getFakeProxy, getLinkedProxy } from "../../src/testUtil";
+import { getFakeProxy, getLinkedProxy, getProxy } from "../../src/testUtil";
 
 chai.use(smock.matchers);
 chai.use(solidity);
@@ -34,10 +44,15 @@ describe("story Events", function () {
     let mockFeed: FakeContract<PriceFeed>;
     let mockYMT: FakeContract<YMT>;
     let mockCJPY: FakeContract<CJPY>;
-    let mockCjpyOS: FakeContract<CjpyOS>;
+    let mockCurrencyOS: FakeContract<CurrencyOS>;
     let mockPriorityRegistry: FakeContract<PriorityRegistry>;
     let yamato: Yamato;
-    let yamatoHelper: YamatoHelper;
+    let yamatoDepositor: YamatoDepositor;
+    let yamatoBorrower: YamatoBorrower;
+    let yamatoRepayer: YamatoRepayer;
+    let yamatoWithdrawer: YamatoWithdrawer;
+    let yamatoRedeemer: YamatoRedeemer;
+    let yamatoSweeper: YamatoSweeper;
     let priorityRegistry: PriorityRegistry;
     let PRICE: BigNumber;
     let MCR: BigNumber;
@@ -55,7 +70,7 @@ describe("story Events", function () {
       mockFeed = await smock.fake<PriceFeed>("PriceFeed");
       mockYMT = await smock.fake<YMT>("YMT");
       mockCJPY = await smock.fake<CJPY>("CJPY");
-      mockCjpyOS = await smock.fake<CjpyOS>("CjpyOS");
+      mockCurrencyOS = await smock.fake<CurrencyOS>("CurrencyOS");
 
       const PledgeLib = (
         await (await ethers.getContractFactory("PledgeLib")).deploy()
@@ -67,30 +82,66 @@ describe("story Events", function () {
       );
 
       // Note: Yamato's constructor needs this mock and so the line below has to be called here.
-      mockCjpyOS.feed.returns(mockFeed.address);
-      mockCjpyOS.feePool.returns(mockFeePool.address);
+      mockCurrencyOS.feed.returns(mockFeed.address);
+      mockCurrencyOS.feePool.returns(mockFeePool.address);
 
       yamato = await getLinkedProxy<Yamato, Yamato__factory>(
         "Yamato",
-        [mockCjpyOS.address],
+        [mockCurrencyOS.address],
         ["PledgeLib"]
       );
-      yamatoHelper = await getLinkedProxy<YamatoHelper, YamatoHelper__factory>(
-        "YamatoHelper",
+      yamatoDepositor = await getLinkedProxy<YamatoDepositor, YamatoDepositor__factory>(
+        "YamatoDepositor",
         [yamato.address],
         ["PledgeLib"]
       );
+  
+      yamatoBorrower = await getLinkedProxy<YamatoBorrower, YamatoBorrower__factory>(
+        "YamatoBorrower",
+        [yamato.address],
+        ["PledgeLib"]
+      );
+  
+      yamatoRepayer = await getLinkedProxy<YamatoRepayer, YamatoRepayer__factory>(
+        "YamatoRepayer",
+        [yamato.address],
+        ["PledgeLib"]
+      );
+  
+      yamatoWithdrawer = await getLinkedProxy<YamatoWithdrawer, YamatoWithdrawer__factory>(
+        "YamatoDepositor",
+        [yamato.address],
+        ["PledgeLib"]
+      );
+  
+      yamatoRedeemer = await getLinkedProxy<YamatoRedeemer, YamatoRedeemer__factory>(
+        "YamatoRedeemer",
+        [yamato.address],
+        ["PledgeLib"]
+      );
+  
+      yamatoSweeper = await getLinkedProxy<YamatoSweeper, YamatoSweeper__factory>(
+        "YamatoSweeper",
+        [yamato.address],
+        ["PledgeLib"]
+      );
+  
 
       mockPriorityRegistry = await getFakeProxy<PriorityRegistry>(
         "PriorityRegistry"
       );
 
-      await (await yamato.setPool(mockPool.address)).wait();
-      await (
-        await yamato.setPriorityRegistry(mockPriorityRegistry.address)
-      ).wait();
-      await (await yamato.setYamatoHelper(yamatoHelper.address)).wait();
-
+      await (await yamato.setDeps(
+        yamatoDepositor.address,
+        yamatoBorrower.address,
+        yamatoRepayer.address,
+        yamatoWithdrawer.address,
+        yamatoRedeemer.address,
+        yamatoSweeper.address,
+        mockPool.address,
+        mockPriorityRegistry.address
+      )).wait();
+  
       PRICE = BigNumber.from(260000).mul(1e18 + "");
       MCR = BigNumber.from(110);
 
@@ -267,9 +318,14 @@ describe("story Events", function () {
     let mockCJPY: FakeContract<CJPY>;
     let mockFeePool: FakeContract<FeePool>;
     let mockFeed: FakeContract<PriceFeed>;
-    let mockCjpyOS: FakeContract<CjpyOS>;
-    let mockYamatoHelper: FakeContract<YamatoHelper>;
-    let accounts;
+    let mockCurrencyOS: FakeContract<CurrencyOS>;
+    let mockYamatoDepositor: FakeContract<YamatoDepositor>;
+    let mockYamatoBorrower: FakeContract<YamatoBorrower>;
+    let mockYamatoRepayer: FakeContract<YamatoRepayer>;
+    let mockYamatoWithdrawer: FakeContract<YamatoWithdrawer>;
+    let mockYamatoRedeemer: FakeContract<YamatoRedeemer>;
+    let mockYamatoSweeper: FakeContract<YamatoSweeper>;
+      let accounts;
 
     beforeEach(async () => {
       accounts = await ethers.getSigners();
@@ -278,29 +334,41 @@ describe("story Events", function () {
 
       mockFeePool = await getFakeProxy<FeePool>("FeePool");
       mockFeed = await getFakeProxy<PriceFeed>("PriceFeed");
-      mockCjpyOS = await smock.fake<CjpyOS>("CjpyOS");
-      mockCjpyOS.feed.returns(mockFeed.address);
-      mockCjpyOS.feePool.returns(mockFeePool.address);
-      mockCjpyOS.currency.returns(mockCJPY.address);
+      mockCurrencyOS = await smock.fake<CurrencyOS>("CurrencyOS");
+      mockCurrencyOS.feed.returns(mockFeed.address);
+      mockCurrencyOS.feePool.returns(mockFeePool.address);
+      mockCurrencyOS.currency.returns(mockCJPY.address);
 
       const PledgeLib = (
         await (await ethers.getContractFactory("PledgeLib")).deploy()
       ).address;
 
-      mockYamatoHelper = await getFakeProxy<YamatoHelper>("YamatoHelper");
+      mockYamatoDepositor = await getFakeProxy<YamatoDepositor>("YamatoDepositor");
+      mockYamatoBorrower = await getFakeProxy<YamatoBorrower>("YamatoBorrower");
+      mockYamatoRepayer = await getFakeProxy<YamatoRepayer>("YamatoRepayer");
+      mockYamatoWithdrawer = await getFakeProxy<YamatoWithdrawer>("YamatoWithdrawer");
+      mockYamatoRedeemer = await getFakeProxy<YamatoRedeemer>("YamatoRedeemer");
+      mockYamatoSweeper = await getFakeProxy<YamatoSweeper>("YamatoSweeper");
+      let yamatoDepositor: YamatoDepositor;
 
       yamatoDummy = await (<YamatoDummy__factory>(
         await ethers.getContractFactory("YamatoDummy", {
           libraries: { PledgeLib },
         })
-      )).deploy(mockCjpyOS.address);
+      )).deploy(mockCurrencyOS.address);
 
-      mockYamatoHelper.yamato.returns(yamatoDummy.address);
+      mockYamatoDepositor.yamato.returns(yamatoDummy.address);
+      mockYamatoBorrower.yamato.returns(yamatoDummy.address);
+      mockYamatoRepayer.yamato.returns(yamatoDummy.address);
+      mockYamatoWithdrawer.yamato.returns(yamatoDummy.address);
+      mockYamatoRedeemer.yamato.returns(yamatoDummy.address);
+      mockYamatoSweeper.yamato.returns(yamatoDummy.address);
 
-      pool = await (<Pool__factory>(
-        await ethers.getContractFactory("Pool")
-      )).deploy(mockYamatoHelper.address);
-
+      pool = await getProxy<Pool, Pool__factory>(
+        "Pool",
+        [yamatoDummy.address]
+      );
+  
       await accounts[0].sendTransaction({
         to: pool.address,
         value: BigNumber.from(1e18 + ""),
@@ -367,7 +435,7 @@ describe("story Events", function () {
     describe("event CJPYSent", function () {
       it(`should be emitted`, async function () {
         await expect(
-          yamatoDummy.bypassSendCJPY(
+          yamatoDummy.bypassSendCurrency(
             await accounts[0].getAddress(),
             BigNumber.from(1e18 + "")
           )
