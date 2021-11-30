@@ -38,12 +38,6 @@ chai.use(solidity);
 
 describe.only("contract Yamato", function () {
   let mockPool: FakeContract<Pool>;
-  let mockYamatoDepositor: FakeContract<YamatoDepositor>;
-  let mockYamatoBorrower: FakeContract<YamatoBorrower>;
-  let mockYamatoRepayer: FakeContract<YamatoRepayer>;
-  let mockYamatoWithdrawer: FakeContract<YamatoWithdrawer>;
-  let mockYamatoRedeemer: FakeContract<YamatoRedeemer>;
-  let mockYamatoSweeper: FakeContract<YamatoSweeper>;
   let mockFeePool: FakeContract<FeePool>;
   let mockFeed: FakeContract<PriceFeed>;
   let mockYMT: FakeContract<YMT>;
@@ -199,12 +193,12 @@ describe.only("contract Yamato", function () {
   describe("setPledge()", function () {
     beforeEach(async () => {
       await (await yamato.setDeps(
-        mockYamatoDepositor.address,
-        mockYamatoBorrower.address,
-        mockYamatoRepayer.address,
-        mockYamatoWithdrawer.address,
-        mockYamatoRedeemer.address,
-        mockYamatoSweeper.address,
+        yamatoDepositor.address,
+        yamatoBorrower.address,
+        yamatoRepayer.address,
+        yamatoWithdrawer.address,
+        yamatoRedeemer.address,
+        yamatoSweeper.address,
         mockPool.address,
         mockPriorityRegistry.address
       )).wait();
@@ -215,11 +209,11 @@ describe.only("contract Yamato", function () {
       let owner = await accounts[0].getAddress();
       await (await yamato.setDeps(
         owner, // Note: dirty hack to pass this test
-        mockYamatoBorrower.address,
-        mockYamatoRepayer.address,
-        mockYamatoWithdrawer.address,
-        mockYamatoRedeemer.address,
-        mockYamatoSweeper.address,
+        yamatoBorrower.address,
+        yamatoRepayer.address,
+        yamatoWithdrawer.address,
+        yamatoRedeemer.address,
+        yamatoRedeemer.address,
         mockPool.address,
         mockPriorityRegistry.address
       )).wait();
@@ -542,7 +536,7 @@ describe.only("contract Yamato", function () {
 
       expect(TCRafter).to.gt(TCRbefore);
     });
-    it(`fails for empty cjpy amount`, async function () {
+    it.only(`fails for empty cjpy amount`, async function () {
       const MCR = BigNumber.from(110);
       const toCollateralize = 1;
       const toBorrow = PRICE.mul(toCollateralize)
@@ -567,9 +561,6 @@ describe.only("contract Yamato", function () {
         "You are repaying more than you are owing."
       );
     });
-
-    // TODO: Have a attack contract to recursively calls the deposit and borrow function
-    it.skip(`TODO: should validate locked state`);
   });
 
   describe("withdraw()", function () {
@@ -580,7 +571,7 @@ describe.only("contract Yamato", function () {
       mockPool.sendETH.returns(0);
     });
 
-    it(`should validate locked state`, async function () {
+    it.only(`should validate locked state`, async function () {
       const MCR = BigNumber.from(110);
       const toCollateralize = 1;
       const toBorrow = PRICE.mul(toCollateralize)
@@ -593,7 +584,7 @@ describe.only("contract Yamato", function () {
         yamato.withdraw(toERC20(toCollateralize / 10 + ""))
       ).to.revertedWith("Withdrawal is being locked for this sender.");
     });
-    it(`should reduce coll`, async function () {
+    it.only(`should reduce coll`, async function () {
       const MCR = BigNumber.from(110);
       const toCollateralize = 1;
       const toBorrow = PRICE.mul(toCollateralize)
@@ -624,7 +615,7 @@ describe.only("contract Yamato", function () {
       );
       expect(pledgeAfter.debt.toString()).to.eq("118181000000000000000000");
     });
-    it(`can't be executed in the ICR < MCR`, async function () {
+    it.only(`can't be executed in the ICR < MCR`, async function () {
       const MCR = BigNumber.from(110);
       mockFeed.fetchPrice.returns(PRICE);
       mockFeed.lastGoodPrice.returns(PRICE);
@@ -654,7 +645,7 @@ describe.only("contract Yamato", function () {
         yamato.withdraw(toERC20(toCollateralize / 10 + ""))
       ).to.revertedWith("Withdrawal failure: ICR is not more than MCR.");
     });
-    it(`can't make ICR < MCR by this withdrawal`, async function () {
+    it.only(`can't make ICR < MCR by this withdrawal`, async function () {
       const MCR = BigNumber.from(110);
       mockFeed.fetchPrice.returns(PRICE);
       mockFeed.lastGoodPrice.returns(PRICE);
@@ -683,7 +674,7 @@ describe.only("contract Yamato", function () {
         "Withdrawal failure: ICR can't be less than MCR after withdrawal."
       );
     });
-    it(`should neutralize a pledge if clean full withdrawal happens`, async function () {
+    it.only(`should neutralize a pledge if clean full withdrawal happens`, async function () {
       const MCR = BigNumber.from(110);
       const toCollateralize = 1;
       await yamato.deposit({ value: toERC20(toCollateralize + "") });
@@ -701,7 +692,7 @@ describe.only("contract Yamato", function () {
 
       expect(mockPriorityRegistry.remove).to.have.calledOnce;
     });
-    it(`should run sendETH() of Pool.sol`, async function () {
+    it.only(`should run sendETH() of Pool.sol`, async function () {
       const toCollateralize = 1;
       await yamato.deposit({ value: toERC20(toCollateralize + "") });
       await yamato.withdraw(toERC20(toCollateralize + ""));
@@ -734,12 +725,12 @@ describe.only("contract Yamato", function () {
       mockPool.redemptionReserve.returns(1000000000000);
 
       await (await yamato.setDeps(
-        mockYamatoDepositor.address,
-        mockYamatoBorrower.address,
-        mockYamatoRepayer.address,
-        mockYamatoWithdrawer.address,
-        mockYamatoRedeemer.address,
-        mockYamatoSweeper.address,
+        yamatoDepositor.address,
+        yamatoBorrower.address,
+        yamatoRepayer.address,
+        yamatoWithdrawer.address,
+        yamatoRedeemer.address,
+        yamatoSweeper.address,
         mockPool.address,
         priorityRegistry.address
       )).wait();
