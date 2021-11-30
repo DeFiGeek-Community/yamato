@@ -10,26 +10,13 @@ pragma solidity 0.8.4;
 //solhint-disable no-inline-assembly
 
 import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
+import "./Interfaces/IveYMT.sol";
 
 /**
  * @author 0xMotoko
  * @title veYMT Token
  * @notice Locked YMT. An ERC-20 but w/o transfer()
  */
-
-interface IveYMT {
-    function mintableInTimeframe(uint256 _start, uint256 _end)
-        external
-        view
-        returns (uint256);
-
-    function balanceOfAt(address _addr, uint256 _at)
-        external
-        view
-        returns (uint256);
-
-    function totalSupplyAt(uint256 _at) external view returns (uint256);
-}
 
 contract veYMT is IveYMT {
     string name;

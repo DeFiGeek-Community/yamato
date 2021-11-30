@@ -11,16 +11,10 @@ pragma solidity 0.8.4;
 
 import "./Interfaces/IPriceFeed.sol";
 import "./Interfaces/ITellorCaller.sol";
-import "./Interfaces/IUUPSEtherscanVerifiable.sol";
 import "./Dependencies/AggregatorV3Interface.sol";
-import "./Dependencies/SafeMath.sol";
-// import "@openzeppelin/contracts/math/SafeMath.sol";
-import "./Dependencies/Ownable.sol";
 import "./Dependencies/BaseMath.sol";
 import "./Dependencies/LiquityMath.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "./Dependencies/UUPSBase.sol";
 
 import "hardhat/console.sol";
 
@@ -33,27 +27,19 @@ import "hardhat/console.sol";
  * Chainlink oracle.
  */
 contract PriceFeed is
-    BaseMath,
     IPriceFeed,
-    IUUPSEtherscanVerifiable,
-    Initializable,
-    UUPSUpgradeable,
-    OwnableUpgradeable
+    UUPSBase,
+    BaseMath
 {
-    using SafeMath for uint256;
-
-    string public constant NAME = "PriceFeed";
-
-    AggregatorV3Interface public ethPriceAggregatorInUSD; // Mainnet Chainlink aggregator
-    AggregatorV3Interface public jpyPriceAggregatorInUSD; // Mainnet Chainlink aggregator
-    ITellorCaller public tellorCaller; // Wrapper contract that calls the Tellor system
-
-    // Core Liquity contracts
-    // address borrowerOperationsAddress;
-    // address troveManagerAddress;
-
+    /*
+        =========================
+        ~~~ SAFE HAVEN ~~~
+        =========================
+    */
+    string constant EthPriceAggregatorInUSD_SLOT_ID = "deps.EthPriceAggregatorInUSD";
+    string constant JpyPriceAggregatorInUSD_SLOT_ID = "deps.JpyPriceAggregatorInUSD";
+    string constant TellorCaller_SLOT_ID = "deps.TellorCaller";
     uint256 public constant ETHUSD_TELLOR_REQ_ID = 59;
-
     // Use to convert a price answer to an 18-digit precision uint
     uint256 public constant TARGET_DIGITS = 18;
     uint8 constant ETHUSD_DIGITS = 8;
@@ -71,10 +57,34 @@ contract PriceFeed is
      * to return to using the Chainlink oracle. 18-digit precision.
      */
     uint256 public constant MAX_PRICE_DIFFERENCE_BETWEEN_ORACLES = 5e16; // 5%
+    /*
+        =========================
+        ~~~ SAFE HAVEN ~~~
+        =========================
+    */
 
+
+
+    /*
+        =========================
+        !!! DANGER ZONE !!!
+        - Proxy patterns (UUPS) stores state onto ERC1967Proxy via `delegatecall` opcode.
+        - So modifying storage slot order in the next version of implementation would cause storage layout confliction.
+        - You can check whether your change will conflict or not by using `@openzeppelin/upgrades`
+        - Read more => https://docs.openzeppelin.com/upgrades-plugins/1.x/writing-upgradeable#modifying-your-contracts
+        =========================
+    */
     // The last good price seen from an oracle by Liquity
     uint256 public override lastGoodPrice;
     uint256 lastSeen;
+    /*
+        =========================
+        !!! DANGER ZONE !!!
+        =========================
+    */
+
+
+
 
     struct ChainlinkResponse {
         uint80 roundId;
@@ -107,23 +117,21 @@ contract PriceFeed is
     event LastGoodPriceUpdated(uint256 _lastGoodPrice);
     event PriceFeedStatusChanged(Status newStatus);
 
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() initializer {}
-
     function initialize(
         address _ethPriceAggregatorInUSDAddress,
         address _jpyPriceAggregatorInUSDAddress,
         address _tellorCallerAddress
     ) public initializer {
-        __Ownable_init();
+        __UUPSBase_init();
 
-        ethPriceAggregatorInUSD = AggregatorV3Interface(
-            _ethPriceAggregatorInUSDAddress
-        );
-        jpyPriceAggregatorInUSD = AggregatorV3Interface(
-            _jpyPriceAggregatorInUSDAddress
-        );
-        tellorCaller = ITellorCaller(_tellorCallerAddress);
+        bytes32 EthPriceAggregatorInUSD_KEY = bytes32(keccak256(abi.encode(EthPriceAggregatorInUSD_SLOT_ID)));
+        bytes32 JpyPriceAggregatorInUSD_KEY = bytes32(keccak256(abi.encode(JpyPriceAggregatorInUSD_SLOT_ID)));
+        bytes32 TellorCaller_KEY = bytes32(keccak256(abi.encode(TellorCaller_SLOT_ID)));
+        assembly {
+            sstore(EthPriceAggregatorInUSD_KEY, _ethPriceAggregatorInUSDAddress)
+            sstore(JpyPriceAggregatorInUSD_KEY, _jpyPriceAggregatorInUSDAddress)
+            sstore(TellorCaller_KEY, _tellorCallerAddress)
+        }
 
         // Explicitly set initial system status
         status = Status.chainlinkWorking;
@@ -147,10 +155,10 @@ contract PriceFeed is
 
         _storeChainlinkPrice(chainlinkResponse);
 
-        renounceOwnership();
+        revokeGovernance();
     }
 
-    function _authorizeUpgrade(address) internal override onlyOwner {}
+
 
     // --- Functions ---
 
@@ -479,7 +487,7 @@ contract PriceFeed is
         view
         returns (bool)
     {
-        return block.timestamp.sub(_response.timestamp) > TIMEOUT;
+        return block.timestamp - _response.timestamp > TIMEOUT;
     }
 
     function _chainlinkPriceChangeAboveMax(
@@ -509,10 +517,7 @@ contract PriceFeed is
          * - If price decreased, the percentage deviation is in relation to the the previous price.
          * - If price increased, the percentage deviation is in relation to the current price.
          */
-        uint256 percentDeviation = maxPrice
-            .sub(minPrice)
-            .mul(DECIMAL_PRECISION)
-            .div(maxPrice);
+        uint256 percentDeviation = (maxPrice - minPrice) * DECIMAL_PRECISION / maxPrice;
 
         // Return true if price has more than doubled, or more than halved.
         return percentDeviation > MAX_PRICE_DEVIATION_FROM_PREVIOUS_ROUND;
@@ -544,7 +549,7 @@ contract PriceFeed is
         view
         returns (bool)
     {
-        return block.timestamp.sub(_tellorResponse.timestamp) > TIMEOUT;
+        return block.timestamp - _tellorResponse.timestamp > TIMEOUT;
     }
 
     function _bothOraclesLiveAndUnbrokenAndSimilarPrice(
@@ -586,10 +591,7 @@ contract PriceFeed is
             scaledTellorPrice,
             scaledChainlinkPrice
         );
-        uint256 percentPriceDifference = maxPrice
-            .sub(minPrice)
-            .mul(DECIMAL_PRECISION)
-            .div(minPrice);
+        uint256 percentPriceDifference = (maxPrice - minPrice) * DECIMAL_PRECISION / minPrice;
 
         /*
          * Return true if the relative price difference is <= 3%: if so, we assume both oracles are probably reporting
@@ -612,10 +614,10 @@ contract PriceFeed is
         uint256 price;
         if (_answerDigits >= TARGET_DIGITS) {
             // Scale the returned price value down to Liquity's target precision
-            price = _price.div(10**(_answerDigits - TARGET_DIGITS));
+            price = _price / (10**(_answerDigits - TARGET_DIGITS));
         } else if (_answerDigits < TARGET_DIGITS) {
             // Scale the returned price value up to Liquity's target precision
-            price = _price.mul(10**(TARGET_DIGITS - _answerDigits));
+            price = _price * (10**(TARGET_DIGITS - _answerDigits));
         }
         return price;
     }
@@ -625,7 +627,7 @@ contract PriceFeed is
         pure
         returns (uint256)
     {
-        return _price.mul(10**(TARGET_DIGITS - TELLOR_DIGITS));
+        return _price *  ( 10**(TARGET_DIGITS - TELLOR_DIGITS)  );
     }
 
     function _changeStatus(Status _status) internal {
@@ -670,7 +672,7 @@ contract PriceFeed is
         internal
         returns (TellorResponse memory tellorResponse)
     {
-        try tellorCaller.getTellorCurrentValue(ETHUSD_TELLOR_REQ_ID) returns (
+        try ITellorCaller(tellorCaller()).getTellorCurrentValue(ETHUSD_TELLOR_REQ_ID) returns (
             bool ifRetrieve,
             uint256 value,
             uint256 _timestampRetrieved
@@ -695,14 +697,14 @@ contract PriceFeed is
         ChainlinkResponse memory ethChainlinkResponseInUSD;
         ChainlinkResponse memory jpyChainlinkResponseInUSD;
         // First, try to get current decimal precision:
-        try ethPriceAggregatorInUSD.decimals() returns (uint8 decimals) {
+        try AggregatorV3Interface(ethPriceAggregatorInUSD()).decimals() returns (uint8 decimals) {
             // If call to Chainlink succeeds, record the current decimal precision
             ethChainlinkResponseInUSD.decimals = decimals;
         } catch {
             // If call to Chainlink aggregator reverts, return a zero response with success = false
             return chainlinkResponse;
         }
-        try jpyPriceAggregatorInUSD.decimals() returns (uint8 decimals) {
+        try AggregatorV3Interface(jpyPriceAggregatorInUSD()).decimals() returns (uint8 decimals) {
             // If call to Chainlink succeeds, record the current decimal precision
             jpyChainlinkResponseInUSD.decimals = decimals;
         } catch {
@@ -711,7 +713,7 @@ contract PriceFeed is
         }
 
         // Secondly, try to get latest price data:
-        try ethPriceAggregatorInUSD.latestRoundData() returns (
+        try AggregatorV3Interface(ethPriceAggregatorInUSD()).latestRoundData() returns (
             uint80 roundId,
             int256 answer,
             uint256, /* startedAt */
@@ -727,7 +729,7 @@ contract PriceFeed is
             // If call to Chainlink aggregator reverts, return a zero response with success = false
             return chainlinkResponse;
         }
-        try jpyPriceAggregatorInUSD.latestRoundData() returns (
+        try AggregatorV3Interface(jpyPriceAggregatorInUSD()).latestRoundData() returns (
             uint80 roundId,
             int256 answer,
             uint256, /* startedAt */
@@ -748,15 +750,12 @@ contract PriceFeed is
         chainlinkResponse.decimals = uint8(TARGET_DIGITS);
         chainlinkResponse.answer = int256(
             uint256(ethChainlinkResponseInUSD.answer)
-                .mul(
-                    pow(
-                        10,
-                        TARGET_DIGITS -
-                            ethChainlinkResponseInUSD.decimals +
-                            jpyChainlinkResponseInUSD.decimals
-                    )
-                )
-                .div(uint256(jpyChainlinkResponseInUSD.answer))
+                * (
+                    10 ** 
+                    ( TARGET_DIGITS -
+                        ethChainlinkResponseInUSD.decimals +
+                        jpyChainlinkResponseInUSD.decimals )
+                ) / uint256(jpyChainlinkResponseInUSD.answer)
         );
         chainlinkResponse.timestamp = ethChainlinkResponseInUSD.timestamp;
         chainlinkResponse.success = true;
@@ -777,7 +776,7 @@ contract PriceFeed is
          */
 
         // Try to get the price data from the previous round:
-        try ethPriceAggregatorInUSD.getRoundData(_currentRoundId - 1) returns (
+        try AggregatorV3Interface(ethPriceAggregatorInUSD()).getRoundData(_currentRoundId - 1) returns (
             uint80 roundId,
             int256 answer,
             uint256, /* startedAt */
@@ -788,15 +787,12 @@ contract PriceFeed is
             prevChainlinkResponse.roundId = roundId;
             prevChainlinkResponse.answer = int256(
                 uint256(answer)
-                    .mul(
-                        pow(
-                            10,
-                            TARGET_DIGITS -
-                                _currentDecimals +
-                                _jpyOracleDecimals
-                        )
-                    )
-                    .div(uint256(_jpyInUSD))
+                    * (
+                        10 **
+                        (TARGET_DIGITS -
+                            _currentDecimals +
+                            _jpyOracleDecimals)
+                    ) / uint256(_jpyInUSD)
             );
             prevChainlinkResponse.timestamp = timestamp;
             prevChainlinkResponse.decimals = _currentDecimals;
@@ -808,25 +804,23 @@ contract PriceFeed is
         }
     }
 
-    function pow(uint256 base, uint256 exponent)
-        internal
-        pure
-        returns (uint256)
-    {
-        if (exponent == 0) {
-            return 1;
-        } else if (exponent == 1) {
-            return base;
-        } else if (base == 0 && exponent != 0) {
-            return 0;
-        } else {
-            uint256 z = base;
-            for (uint256 i = 1; i < exponent; i++) z = z.mul(base);
-            return z;
+    function ethPriceAggregatorInUSD() public view override returns (address _ethPriceAggregatorInUSD) {
+        bytes32 EthPriceAggregatorInUSD_KEY = bytes32(keccak256(abi.encode(EthPriceAggregatorInUSD_SLOT_ID)));
+        assembly {
+            _ethPriceAggregatorInUSD := sload(EthPriceAggregatorInUSD_KEY)
+        }
+    }
+    function jpyPriceAggregatorInUSD() public view override returns (address _jpyPriceAggregatorInUSD) {
+        bytes32 JpyPriceAggregatorInUSD_KEY = bytes32(keccak256(abi.encode(JpyPriceAggregatorInUSD_SLOT_ID)));
+        assembly {
+            _jpyPriceAggregatorInUSD := sload(JpyPriceAggregatorInUSD_KEY)
+        }
+    }
+    function tellorCaller() public view override returns (address _tellorCaller) {
+        bytes32 TellorCaller_KEY = bytes32(keccak256(abi.encode(TellorCaller_SLOT_ID)));
+        assembly {
+            _tellorCaller := sload(TellorCaller_KEY)
         }
     }
 
-    function getImplementation() external view override returns (address) {
-        return _getImplementation();
-    }
 }

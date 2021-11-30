@@ -15,21 +15,30 @@ import "./Interfaces/IYMT.sol";
 import "./veYMT.sol";
 import "./PriceFeed.sol";
 import "./Interfaces/IYamato.sol";
-import "./YmtOSV1.sol";
+import "./YmtOS.sol";
 import "./Dependencies/UUPSBase.sol";
 import "hardhat/console.sol";
 
 contract CurrencyOS is ICurrencyOS, UUPSBase {
-    IYMT public YMT;
-    IveYMT public veYMT;
-    address ymtOSProxyAddr;
+    string constant CURRENCY_SLOT_ID = "deps.Currency";
+    string constant PRICEFEED_SLOT_ID = "deps.PriceFeed";
+    string constant FEEPOOL_SLOT_ID = "deps.FeePool";
+    string constant YMTOS_SLOT_ID = "deps.YmtOS";
 
+
+    /*
+        ===========================
+        !!! DANGER ZONE BEGINS !!!
+        ===========================
+    */
     address[] public yamatoes;
-    bool isYmtOSInitialized = false;
+    /*
+        ===========================
+        !!! DANGER ZONE ENDED !!!
+        ===========================
+    */
 
-    string CURRENCY_SLOT_ID;
-    string PRICEFEED_SLOT_ID;
-    string FEEPOOL_SLOT_ID;
+
 
     function initialize(
         address currencyAddr,
@@ -37,9 +46,6 @@ contract CurrencyOS is ICurrencyOS, UUPSBase {
         address feePoolAddr
     ) public initializer {
         __UUPSBase_init();
-        CURRENCY_SLOT_ID = "deps.Currency";
-        PRICEFEED_SLOT_ID = "deps.PriceFeed";
-        FEEPOOL_SLOT_ID = "deps.FeePool";
 
         bytes32 CURRENCY_KEY = bytes32(keccak256(abi.encode(CURRENCY_SLOT_ID)));
         bytes32 PRICEFEED_KEY = bytes32(
@@ -52,36 +58,12 @@ contract CurrencyOS is ICurrencyOS, UUPSBase {
             sstore(FEEPOOL_KEY, feePoolAddr)
         }
     }
-
-    function setGovernanceTokens(address _ymtAddr, address _veYmtAddr)
-        external
-        onlyGovernance
-    {
-        YMT = IYMT(_ymtAddr);
-        veYMT = IveYMT(_veYmtAddr);
-    }
-
-    function setYmtOSProxy(address _ymtOSProxyAddr)
-        external
-        onlyGovernance
-        onlyOnce
-    {
-        ymtOSProxyAddr = _ymtOSProxyAddr;
-    }
-
-    modifier onlyOnce() {
-        require(!isYmtOSInitialized, "YmtOS is already initialized.");
-        isYmtOSInitialized = true;
-        _;
-    }
-
-    function addYamato(address _yamatoAddr) external onlyGovernance {
-        yamatoes.push(_yamatoAddr);
-        if (ymtOSProxyAddr != address(0)) {
-            IYmtOSV1(ymtOSProxyAddr).addYamatoOfCurrencyOS(_yamatoAddr);
+    function setDeps(address _ymtOS) public onlyGovernance {
+        bytes32 YMTOS_KEY = bytes32(keccak256(abi.encode(YMTOS_SLOT_ID)));
+        assembly {
+            sstore(YMTOS_KEY, _ymtOS)
         }
     }
-
     modifier onlyYamato() {
         if (yamatoes.length == 0) {
             revert("No Yamato is registered.");
@@ -94,6 +76,19 @@ contract CurrencyOS is ICurrencyOS, UUPSBase {
         }
     }
 
+
+
+    /*
+        =====================
+        Public Functions
+        =====================
+    */
+    function addYamato(address _yamatoAddr) external onlyGovernance {
+        yamatoes.push(_yamatoAddr);
+        if (ymtOS() != address(0)) {
+            IYmtOS(ymtOS()).addYamatoOfCurrencyOS(_yamatoAddr);
+        }
+    }
     function mintCurrency(address to, uint256 amount)
         public
         override
@@ -110,6 +105,12 @@ contract CurrencyOS is ICurrencyOS, UUPSBase {
         ICurrency(currency()).burn(to, amount);
     }
 
+
+    /*
+        =====================
+        Getter Functions
+        =====================
+    */
     function currency() public view override returns (address _currency) {
         bytes32 CURRENCY_KEY = bytes32(keccak256(abi.encode(CURRENCY_SLOT_ID)));
         assembly {
@@ -132,4 +133,20 @@ contract CurrencyOS is ICurrencyOS, UUPSBase {
             _feePool := sload(FEEPOOL_KEY)
         }
     }
+
+    function ymtOS() public view override returns (address _ymtOS) {
+        bytes32 YMTOS_KEY = bytes32(keccak256(abi.encode(YMTOS_SLOT_ID)));
+        assembly {
+            _ymtOS := sload(YMTOS_KEY)
+        }
+    }
+
+    function YMT() public view override returns (address _YMT) {
+        _YMT = IYmtOS(ymtOS()).YMT();
+    }
+
+    function veYMT() public view override returns (address _veYMT) {
+        _veYMT = IYmtOS(ymtOS()).veYMT();
+    }
+
 }

@@ -38,30 +38,77 @@ contract Yamato is
     ReentrancyGuardUpgradeable,
     PausableUpgradeable
 {
+    /*
+        ===========================
+        Lib for struct Pledge
+        ===========================
+    */
     using PledgeLib for IYamato.Pledge;
     using PledgeLib for uint256;
 
+
+
+
+    /*
+        ===========================
+        ~~~ SAFE HAVEN ~~~
+        ===========================
+        - Constants don't take slots
+        - You can add or remove them in upgrade timing
+        - Read more => https://docs.openzeppelin.com/upgrades-plugins/1.x/writing-upgradeable#avoid-initial-values-in-field-declarations
+    */
+
+    uint8 constant public override MCR = 110; // MinimumCollateralizationRatio in pertenk
+    uint8 constant public RRR = 80; // RedemptionReserveRate in pertenk
+    uint8 constant public SRR = 20; // SweepReserveRate in pertenk
+    uint8 constant public override GRR = 1; // GasReserveRate in pertenk
+
+    // Use hash-slot pointer. You will be less anxious to modularise contracts later.
+    string constant CURRENCY_OS_SLOT_ID = "deps.CurrencyOS";
+    string constant YAMATO_DEPOSITOR_SLOT_ID = "deps.YamatoDepositor";
+    string constant YAMATO_BORROWER_SLOT_ID = "deps.YamatoBorrower";
+    string constant YAMATO_REPAYER_SLOT_ID = "deps.YamatoRepayer";
+    string constant YAMATO_WITHDRAWER_SLOT_ID = "deps.YamatoWithdrawer";
+    string constant YAMATO_REDEEMER_SLOT_ID = "deps.YamatoRedeemer";
+    string constant YAMATO_SWEEPER_SLOT_ID = "deps.YamatoSweeper";
+    string constant POOL_SLOT_ID = "deps.Pool";
+    string constant PRIORITY_REGISTRY_SLOT_ID = "deps.PriorityRegistry";
+
+    /*
+        ===========================
+        ~~~ SAFE HAVEN ENDED ~~~
+        ===========================
+    */
+
+
+
+
+    /*
+        ===========================
+        !!! DANGER ZONE BEGINS !!!
+        ===========================
+        - Proxy patterns (UUPS) stores state onto ERC1967Proxy via `delegatecall` opcode.
+        - So modifying storage slot order in the next version of implementation would cause storage layout confliction.
+        - You can check whether your change will conflict or not by using `@openzeppelin/upgrades`
+        - Read more => https://docs.openzeppelin.com/upgrades-plugins/1.x/writing-upgradeable#modifying-your-contracts
+    */
     uint256 totalColl;
     uint256 totalDebt;
 
     mapping(address => Pledge) pledges;
     mapping(address => uint256) public override withdrawLocks;
     mapping(address => uint256) public override depositAndBorrowLocks;
+    /*
+        ===========================
+        !!! DANGER ZONE ENDED !!!
+        ===========================
+    */
 
-    uint8 public override MCR; // MinimumCollateralizationRatio in pertenk
-    uint8 public RRR; // RedemptionReserveRate in pertenk
-    uint8 public SRR; // SweepReserveRate in pertenk
-    uint8 public override GRR; // GasReserveRate in pertenk
 
-    string CURRENCY_OS_SLOT_ID;
-    string YAMATO_DEPOSITOR_SLOT_ID;
-    string YAMATO_BORROWER_SLOT_ID;
-    string YAMATO_REPAYER_SLOT_ID;
-    string YAMATO_WITHDRAWER_SLOT_ID;
-    string YAMATO_REDEEMER_SLOT_ID;
-    string YAMATO_SWEEPER_SLOT_ID;
-    string POOL_SLOT_ID;
-    string PRIORITY_REGISTRY_SLOT_ID;
+
+
+
+
 
     /*
         ==============================
@@ -71,22 +118,6 @@ contract Yamato is
         - setDeps
     */
     function initialize(address _currencyOS) public initializer {
-        // Note: UUPS can't have constants above
-        CURRENCY_OS_SLOT_ID = "deps.CurrencyOS";
-        YAMATO_DEPOSITOR_SLOT_ID = "deps.YamatoDepositor";
-        YAMATO_BORROWER_SLOT_ID = "deps.YamatoBorrower";
-        YAMATO_REPAYER_SLOT_ID = "deps.YamatoRepayer";
-        YAMATO_WITHDRAWER_SLOT_ID = "deps.YamatoWithdrawer";
-        YAMATO_REDEEMER_SLOT_ID = "deps.YamatoRedeemer";
-        YAMATO_SWEEPER_SLOT_ID = "deps.YamatoSweeper";
-        POOL_SLOT_ID = "deps.Pool";
-        PRIORITY_REGISTRY_SLOT_ID = "deps.PriorityRegistry";
-
-        MCR = 110;
-        RRR = 80;
-        SRR = 20;
-        GRR = 1;
-
         bytes32 CURRENCY_OS_KEY = bytes32(
             keccak256(abi.encode(CURRENCY_OS_SLOT_ID))
         );

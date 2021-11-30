@@ -9,51 +9,34 @@ pragma solidity 0.8.4;
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 
-import "./Interfaces/IUUPSEtherscanVerifiable.sol";
-import "./veYMT.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "./Interfaces/IveYMT.sol";
+import "./Interfaces/IFeePool.sol";
+import "./Dependencies/UUPSBase.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 contract FeePool is
-    IUUPSEtherscanVerifiable,
-    Initializable,
-    UUPSUpgradeable,
+    IFeePool,
+    UUPSBase,
     ReentrancyGuardUpgradeable
 {
-    address veYMT;
+    string constant VEYMT_SLOT_ID = "deps.veYMT";
+
+ 
+ 
     mapping(address => bool) protocolWhitelist;
-    address governance;
+
+
 
     event Withdrawn(address, uint256);
     event WithdrawnByProtocol(address, uint256);
     event Received(address, uint256);
     event VeYMTSet(address, address);
 
-    /*
-        ====================
-        Proxy Functions Start
-        ====================
-    */
     function initialize() public initializer {
+        __UUPSBase_init();
         __ReentrancyGuard_init();
-        governance = msg.sender;
     }
 
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() initializer {}
-
-    function _authorizeUpgrade(address) internal override onlyGovernance {}
-
-    function getImplementation() external view override returns (address) {
-        return _getImplementation();
-    }
-
-    /*
-        ====================
-        Proxy Functions End
-        ====================
-    */
 
     /*
         ====================
@@ -67,6 +50,7 @@ contract FeePool is
 
     function withdrawFromProtocol(uint256 amount)
         public
+        override
         onlyProtocols
         nonReentrant
     {
@@ -75,20 +59,25 @@ contract FeePool is
 
     function addProtocol(address protocol) public onlyGovernance {}
 
-    function setVeYMT(address _veYMT) public onlyGovernance {
-        veYMT = _veYMT;
-        emit VeYMTSet(msg.sender, _veYMT);
+    function setVeYMT(address _veymt) public onlyGovernance {
+        bytes32 VEYMT_KEY = bytes32(keccak256(abi.encode(VEYMT_SLOT_ID)));
+        assembly {
+            sstore(VEYMT_KEY, _veymt)
+        }
+        emit VeYMTSet(msg.sender, _veymt);
+    }
+    function veYMT() public view override returns (address _veYMT) {
+        bytes32 VEYMT_KEY = bytes32(keccak256(abi.encode(VEYMT_SLOT_ID)));
+        assembly {
+            _veYMT := sload(VEYMT_KEY)
+        }
     }
 
     modifier onlyVeYMT() {
         require(
-            IveYMT(veYMT).balanceOfAt(msg.sender, block.number) > 0,
+            IveYMT(veYMT()).balanceOfAt(msg.sender, block.number) > 0,
             "You are not a veYMT holder."
         );
-        _;
-    }
-    modifier onlyGovernance() {
-        require(msg.sender == governance, "You are not the governer.");
         _;
     }
     modifier onlyProtocols() {
@@ -99,4 +88,6 @@ contract FeePool is
     receive() external payable {
         emit Received(msg.sender, msg.value);
     }
+
+
 }

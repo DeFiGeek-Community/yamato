@@ -4,17 +4,13 @@ import chai, { expect } from "chai";
 import { solidity } from "ethereum-waffle";
 import { Signer, BigNumber } from "ethers";
 import {
-  CjpyOS,
+  CurrencyOS,
   FeePool,
   PledgeLib__factory,
   PriceFeed,
   Yamato,
-  YamatoHelper,
   YamatoDummy,
-  Yamato__factory,
-  YamatoHelper__factory,
   YamatoDummy__factory,
-  FeePool__factory,
   PriorityRegistry,
   PriorityRegistry__factory,
 } from "../../typechain";
@@ -25,11 +21,9 @@ chai.use(solidity);
 
 describe("contract PriorityRegistry", function () {
   let mockYamato: FakeContract<Yamato>;
-  let mockCjpyOS: FakeContract<CjpyOS>;
+  let mockCurrencyOS: FakeContract<CurrencyOS>;
   let mockFeePool: FakeContract<FeePool>;
   let mockFeed: FakeContract<PriceFeed>;
-  let yamato;
-  let mockYamatoHelper;
   let yamatoDummy: YamatoDummy;
   let priorityRegistryWithYamatoMock;
   let priorityRegistry;
@@ -41,9 +35,9 @@ describe("contract PriorityRegistry", function () {
     accounts = await ethers.getSigners();
     address0 = await accounts[0].getAddress();
 
-    mockFeed = await smock.fake<PriceFeed>("PriceFeed");
+    mockFeed = await getFakeProxy<PriceFeed>("PriceFeed");
     mockFeePool = await getFakeProxy<FeePool>("FeePool");
-    mockCjpyOS = await smock.fake<CjpyOS>("CjpyOS");
+    mockCurrencyOS = await getFakeProxy<CurrencyOS>("CurrencyOS");
     const PledgeLib = (
       await (<PledgeLib__factory>(
         await ethers.getContractFactory("PledgeLib")
@@ -55,18 +49,13 @@ describe("contract PriorityRegistry", function () {
       })
     );
     mockYamato = await getFakeProxy<Yamato>("Yamato");
-    mockYamato.cjpyOS.returns(mockCjpyOS.address);
-    let yamatoHelperWithMockYamato = await getLinkedProxy<
-      YamatoHelper,
-      YamatoHelper__factory
-    >("YamatoHelper", [mockYamato.address], ["PledgeLib"]);
+    mockYamato.currencyOS.returns(mockCurrencyOS.address);
 
     mockFeed.fetchPrice.returns(PRICE);
     mockFeed.lastGoodPrice.returns(PRICE);
-    mockCjpyOS.feed.returns(mockFeed.address);
-    mockCjpyOS.feePool.returns(mockFeePool.address);
+    mockCurrencyOS.feed.returns(mockFeed.address);
+    mockCurrencyOS.feePool.returns(mockFeePool.address);
     mockYamato.feed.returns(mockFeed.address);
-    mockYamato.yamatoHelper.returns(yamatoHelperWithMockYamato.address);
 
     /*
         For unit tests
@@ -74,21 +63,17 @@ describe("contract PriorityRegistry", function () {
     priorityRegistryWithYamatoMock = await getLinkedProxy<
       PriorityRegistry,
       PriorityRegistry__factory
-    >("PriorityRegistry", [yamatoHelperWithMockYamato.address], ["PledgeLib"]);
+    >("PriorityRegistry", [mockYamato.address], ["PledgeLib"]);
 
     /*
         For onlyYamato tests
       */
-    yamatoDummy = await yamatoDummyContractFactory.deploy(mockCjpyOS.address);
-    let yamatoHelperWithYamatoDummy = await getLinkedProxy<
-      YamatoHelper,
-      YamatoHelper__factory
-    >("YamatoHelper", [yamatoDummy.address], ["PledgeLib"]);
+    yamatoDummy = await yamatoDummyContractFactory.deploy(mockCurrencyOS.address);
 
     priorityRegistry = await getLinkedProxy<
       PriorityRegistry,
       PriorityRegistry__factory
-    >("PriorityRegistry", [yamatoHelperWithYamatoDummy.address], ["PledgeLib"]);
+    >("PriorityRegistry", [yamatoDummy.address], ["PledgeLib"]);
 
     await (
       await yamatoDummy.setPriorityRegistry(priorityRegistry.address)
