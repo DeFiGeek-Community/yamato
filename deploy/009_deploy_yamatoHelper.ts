@@ -7,26 +7,58 @@ import {
 } from "../src/deployUtil";
 import { getLinkedProxy } from "../src/testUtil";
 import { readFileSync, writeFileSync } from "fs";
-import { YamatoHelper, YamatoHelper__factory } from "../typechain";
+import { BaseContract, ContractFactory } from "ethers";
+import {
+  YamatoDepositor,
+  YamatoBorrower,
+  YamatoRepayer,
+  YamatoWithdrawer,
+  YamatoRedeemer,
+  YamatoSweeper,
+  YamatoDepositor__factory,
+  YamatoBorrower__factory,
+  YamatoRepayer__factory,
+  YamatoWithdrawer__factory,
+  YamatoRedeemer__factory,
+  YamatoSweeper__factory,
+} from "../typechain";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const p = await setProvider();
   const { ethers, deployments } = hre;
   const { getContractFactory } = ethers;
 
+  await deployYamatoAction<YamatoDepositor, YamatoDepositor__factory>(
+    "Depositor"
+  );
+  await deployYamatoAction<YamatoBorrower, YamatoBorrower__factory>("Borrower");
+  await deployYamatoAction<YamatoRepayer, YamatoRepayer__factory>("Repayer");
+  await deployYamatoAction<YamatoWithdrawer, YamatoWithdrawer__factory>(
+    "Withdrawer"
+  );
+  await deployYamatoAction<YamatoRedeemer, YamatoRedeemer__factory>("Redeemer");
+  await deployYamatoAction<YamatoSweeper, YamatoSweeper__factory>("Sweeper");
+};
+export default func;
+func.tags = ["Yamato"];
+
+async function deployYamatoAction<
+  T extends BaseContract,
+  S extends ContractFactory
+>(actionName) {
   const _yamatoAddr = readFileSync(
     getDeploymentAddressPathWithTag("Yamato", "ERC1967Proxy")
   ).toString();
 
-  const inst = await getLinkedProxy<YamatoHelper, YamatoHelper__factory>(
-    "YamatoHelper",
+  const inst = await getLinkedProxy<T, S>(
+    `Yamato${actionName}`,
     [_yamatoAddr],
     ["PledgeLib"]
   );
-  const implAddr = await inst.getImplementation();
+  const implAddr = await (<any>inst).getImplementation();
 
   console.log(
-    `YamatoHelper is deployed as ${
+    `Yamato${actionName} is deployed as ${
       inst.address
     } with impl(${implAddr}) by ${await inst.signer.getAddress()} on ${
       (await inst.provider.getNetwork()).name
@@ -34,13 +66,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   );
 
   writeFileSync(
-    getDeploymentAddressPathWithTag("YamatoHelper", "ERC1967Proxy"),
+    getDeploymentAddressPathWithTag(`Yamato${actionName}`, "ERC1967Proxy"),
     inst.address
   );
   writeFileSync(
-    getDeploymentAddressPathWithTag("YamatoHelper", "UUPSImpl"),
+    getDeploymentAddressPathWithTag(`Yamato${actionName}`, "UUPSImpl"),
     implAddr
   );
-};
-export default func;
-func.tags = ["Yamato"];
+}

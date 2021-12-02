@@ -13,17 +13,19 @@ import { Contract } from "ethers";
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const p = await setProvider();
 
-  const _cjpyosAddr = readFileSync(
-    getDeploymentAddressPath("CjpyOS")
+  const _currencyOSAddr = readFileSync(
+    getDeploymentAddressPath("CurrencyOS")
   ).toString();
-  const CjpyOS = new Contract(_cjpyosAddr, genABI("CjpyOS"), p);
+  const CurrencyOS = new Contract(_currencyOSAddr, genABI("CurrencyOS"), p);
 
   const _yamatoAddr = readFileSync(
     getDeploymentAddressPathWithTag("Yamato", "ERC1967Proxy")
   ).toString();
-  await (await CjpyOS.connect(getFoundation()).addYamato(_yamatoAddr)).wait();
+  await (
+    await CurrencyOS.connect(getFoundation()).addYamato(_yamatoAddr)
+  ).wait();
 
-  console.log(`log: CjpyOS.addYamato() executed.`);
+  console.log(`log: CurrencyOS.addYamato() executed.`);
 };
 export default func;
 func.tags = [""];

@@ -199,16 +199,30 @@ export function verifyWithEtherscan() {
   let FeePoolUUPSImpl = readFileSync(
     getDeploymentAddressPathWithTag("FeePool", "UUPSImpl")
   ).toString();
-  let CjpyOS = readFileSync(getDeploymentAddressPath("CjpyOS")).toString();
-
+  let CurrencyOSUUPSImpl = readFileSync(
+    getDeploymentAddressPathWithTag("CurrencyOS", "UUPSImpl")
+  ).toString();
   let YamatoUUPSImpl = readFileSync(
     getDeploymentAddressPathWithTag("Yamato", "UUPSImpl")
   ).toString();
-  let YamatoHelperERC1967Proxy = readFileSync(
-    getDeploymentAddressPathWithTag("YamatoHelper", "ERC1967Proxy")
+
+  let YamatoDepositorUUPSImpl = readFileSync(
+    getDeploymentAddressPathWithTag("YamatoDepositor", "UUPSImpl")
   ).toString();
-  let YamatoHelperUUPSImpl = readFileSync(
-    getDeploymentAddressPathWithTag("YamatoHelper", "UUPSImpl")
+  let YamatoBorrowerUUPSImpl = readFileSync(
+    getDeploymentAddressPathWithTag("YamatoBorrower", "UUPSImpl")
+  ).toString();
+  let YamatoRepayerUUPSImpl = readFileSync(
+    getDeploymentAddressPathWithTag("YamatoRepayer", "UUPSImpl")
+  ).toString();
+  let YamatoWithdrawerUUPSImpl = readFileSync(
+    getDeploymentAddressPathWithTag("YamatoWithdrawer", "UUPSImpl")
+  ).toString();
+  let YamatoRedeemerUUPSImpl = readFileSync(
+    getDeploymentAddressPathWithTag("YamatoRedeemer", "UUPSImpl")
+  ).toString();
+  let YamatoSweeperUUPSImpl = readFileSync(
+    getDeploymentAddressPathWithTag("YamatoSweeper", "UUPSImpl")
   ).toString();
 
   let Pool = readFileSync(getDeploymentAddressPath("Pool")).toString();
@@ -267,10 +281,12 @@ export function verifyWithEtherscan() {
   }
   try {
     execSync(
-      `npm run verify:rinkeby -- --contract contracts/CjpyOS.sol:CjpyOS ${CjpyOS} ${CJPY} ${PriceFeedERC1967Proxy} ${FeePoolERC1967Proxy}`
+      `npm run verify:rinkeby -- --contract contracts/CurrencyOS.sol:CurrencyOS ${CurrencyOSUUPSImpl} ${CJPY} ${PriceFeedERC1967Proxy} ${FeePoolERC1967Proxy}`
     );
   } catch (e) {
-    console.log(e.message);
+    console.log(
+      "Etherscan Verification of CurrencyOS.sol is failed. Maybe because of oz-upgrades reusing unused impl."
+    );
   }
 
   try {
@@ -285,17 +301,61 @@ export function verifyWithEtherscan() {
 
   try {
     execSync(
-      `npm run verify:rinkeby -- --contract contracts/YamatoHelper.sol:YamatoHelper ${YamatoHelperUUPSImpl} 2> /dev/null`
+      `npm run verify:rinkeby -- --contract contracts/YamatoDepositor.sol:YamatoDepositor ${YamatoDepositorUUPSImpl} 2> /dev/null`
     );
   } catch (e) {
     console.log(
-      "Etherscan Verification of YamatoHelper.sol is failed. Maybe because of oz-upgrades reusing unused impl."
+      "Etherscan Verification of YamatoDepositor.sol is failed. Maybe because of oz-upgrades reusing unused impl."
     );
   }
-
   try {
     execSync(
-      `npm run verify:rinkeby -- --contract contracts/Pool.sol:Pool ${Pool} ${YamatoHelperERC1967Proxy}`
+      `npm run verify:rinkeby -- --contract contracts/YamatoBorrower.sol:YamatoBorrower ${YamatoBorrowerUUPSImpl} 2> /dev/null`
+    );
+  } catch (e) {
+    console.log(
+      "Etherscan Verification of YamatoBorrower.sol is failed. Maybe because of oz-upgrades reusing unused impl."
+    );
+  }
+  try {
+    execSync(
+      `npm run verify:rinkeby -- --contract contracts/YamatoRepayer.sol:YamatoRepayer ${YamatoRepayerUUPSImpl} 2> /dev/null`
+    );
+  } catch (e) {
+    console.log(
+      "Etherscan Verification of YamatoRepayer.sol is failed. Maybe because of oz-upgrades reusing unused impl."
+    );
+  }
+  try {
+    execSync(
+      `npm run verify:rinkeby -- --contract contracts/YamatoWithdrawer.sol:YamatoWithdrawer ${YamatoWithdrawerUUPSImpl} 2> /dev/null`
+    );
+  } catch (e) {
+    console.log(
+      "Etherscan Verification of YamatoWithdrawer.sol is failed. Maybe because of oz-upgrades reusing unused impl."
+    );
+  }
+  try {
+    execSync(
+      `npm run verify:rinkeby -- --contract contracts/YamatoRedeemer.sol:YamatoRedeemer ${YamatoRedeemerUUPSImpl} 2> /dev/null`
+    );
+  } catch (e) {
+    console.log(
+      "Etherscan Verification of YamatoRedeemer.sol is failed. Maybe because of oz-upgrades reusing unused impl."
+    );
+  }
+  try {
+    execSync(
+      `npm run verify:rinkeby -- --contract contracts/YamatoSweeper.sol:YamatoSweeper ${YamatoSweeperUUPSImpl} 2> /dev/null`
+    );
+  } catch (e) {
+    console.log(
+      "Etherscan Verification of YamatoSweeper.sol is failed. Maybe because of oz-upgrades reusing unused impl."
+    );
+  }
+  try {
+    execSync(
+      `npm run verify:rinkeby -- --contract contracts/Pool.sol:Pool ${Pool}`
     );
   } catch (e) {
     console.log(e.message);
@@ -333,8 +393,23 @@ export function showProxyVerificationURLs() {
   let YamatoERC1967Proxy = readFileSync(
     getDeploymentAddressPathWithTag("Yamato", "ERC1967Proxy")
   ).toString();
-  let YamatoHelperERC1967Proxy = readFileSync(
-    getDeploymentAddressPathWithTag("YamatoHelper", "ERC1967Proxy")
+  let YamatoDepositorERC1967Proxy = readFileSync(
+    getDeploymentAddressPathWithTag("YamatoDepositor", "ERC1967Proxy")
+  ).toString();
+  let YamatoBorrowerERC1967Proxy = readFileSync(
+    getDeploymentAddressPathWithTag("YamatoBorrower", "ERC1967Proxy")
+  ).toString();
+  let YamatoRepayerERC1967Proxy = readFileSync(
+    getDeploymentAddressPathWithTag("YamatoRepayer", "ERC1967Proxy")
+  ).toString();
+  let YamatoWithdrawerERC1967Proxy = readFileSync(
+    getDeploymentAddressPathWithTag("YamatoWithdrawer", "ERC1967Proxy")
+  ).toString();
+  let YamatoRedeemerERC1967Proxy = readFileSync(
+    getDeploymentAddressPathWithTag("YamatoRedeemer", "ERC1967Proxy")
+  ).toString();
+  let YamatoSweeperERC1967Proxy = readFileSync(
+    getDeploymentAddressPathWithTag("YamatoSweeper", "ERC1967Proxy")
   ).toString();
   let PriorityRegistryERC1967Proxy = readFileSync(
     getDeploymentAddressPathWithTag("PriorityRegistry", "ERC1967Proxy")
@@ -345,12 +420,21 @@ export function showProxyVerificationURLs() {
   let FeePoolERC1967Proxy = readFileSync(
     getDeploymentAddressPathWithTag("FeePool", "ERC1967Proxy")
   ).toString();
+  let CurrencyOSERC1967Proxy = readFileSync(
+    getDeploymentAddressPathWithTag("CurrencyOS", "ERC1967Proxy")
+  ).toString();
 
   _logProxyProcedure(YamatoERC1967Proxy);
-  _logProxyProcedure(YamatoHelperERC1967Proxy);
+  _logProxyProcedure(YamatoDepositorERC1967Proxy);
+  _logProxyProcedure(YamatoBorrowerERC1967Proxy);
+  _logProxyProcedure(YamatoRepayerERC1967Proxy);
+  _logProxyProcedure(YamatoWithdrawerERC1967Proxy);
+  _logProxyProcedure(YamatoRedeemerERC1967Proxy);
+  _logProxyProcedure(YamatoSweeperERC1967Proxy);
   _logProxyProcedure(PriorityRegistryERC1967Proxy);
   _logProxyProcedure(PriceFeedERC1967Proxy);
   _logProxyProcedure(FeePoolERC1967Proxy);
+  _logProxyProcedure(CurrencyOSERC1967Proxy);
 }
 
 let provider;

@@ -8,19 +8,19 @@ import { Contract } from "ethers";
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const p = await setProvider();
 
-  const _cjpyosAddr = readFileSync(
-    getDeploymentAddressPath("CjpyOS")
+  const _currencyOSAddr = readFileSync(
+    getDeploymentAddressPath("CurrencyOS")
   ).toString();
-  const CjpyOS = new Contract(_cjpyosAddr, genABI("CjpyOS"), p);
+  const CurrencyOS = new Contract(_currencyOSAddr, genABI("CurrencyOS"), p);
 
   // const _ymtOSProxyAddr = readFileSync(getDeploymentAddressPath('YmtOSProxy')).toString()
   // const _ymtAddr = readFileSync(getDeploymentAddressPath('YMT')).toString()
   // const _veymtAddr = readFileSync(getDeploymentAddressPath('veYMT')).toString()
-  // await ( await CjpyOS.setYmtOSProxy(_ymtOSProxyAddr) ).wait();
-  // await ( await CjpyOS.setGovernanceTokens(_ymtAddr, _veymtAddr) ).wait();
+  // await ( await CurrencyOS.setYmtOSProxy(_ymtOSProxyAddr) ).wait();
+  // await ( await CurrencyOS.setGovernanceTokens(_ymtAddr, _veymtAddr) ).wait();
 
-  // console.log(`log: CjpyOS.setYmtOSProxy() executed.`);
-  // console.log(`log: CjpyOS.setGovernanceTokens() executed.`);
+  // console.log(`log: CurrencyOS.setYmtOSProxy() executed.`);
+  // console.log(`log: CurrencyOS.setGovernanceTokens() executed.`);
 };
 export default func;
 func.tags = [""];

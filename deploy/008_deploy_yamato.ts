@@ -15,8 +15,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { ethers, deployments } = hre;
   const { getContractFactory } = ethers;
 
-  const _cjpyosAddr = readFileSync(
-    getDeploymentAddressPath("CjpyOS")
+  const _currencyOSAddr = readFileSync(
+    getDeploymentAddressPathWithTag("CurrencyOS", "ERC1967Proxy")
   ).toString();
 
   await deploy("PledgeLib", {
@@ -33,7 +33,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const inst = await getLinkedProxy<Yamato, Yamato__factory>(
     "Yamato",
-    [_cjpyosAddr],
+    [_currencyOSAddr],
     ["PledgeLib"]
   );
   const implAddr = await inst.getImplementation();

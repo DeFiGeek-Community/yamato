@@ -25,7 +25,7 @@ import { getFakeProxy, getProxy } from "../../src/testUtil";
 chai.use(smock.matchers);
 chai.use(solidity);
 
-describe("CjpyOS", () => {
+describe("CurrencyOS", () => {
   let mockCJPY: FakeContract<CJPY>;
   let mockYMT: FakeContract<YMT>;
   let mockVeYMT: FakeContract<VeYMT>;

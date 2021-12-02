@@ -4,8 +4,11 @@ import {
   deploy,
   setProvider,
   getDeploymentAddressPath,
+  getDeploymentAddressPathWithTag,
 } from "../src/deployUtil";
-import { readFileSync } from "fs";
+import { readFileSync, writeFileSync } from "fs";
+import { CurrencyOS, CurrencyOS__factory } from "../typechain";
+import { getProxy } from "../src/testUtil";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const p = await setProvider();
@@ -20,11 +23,20 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     getDeploymentAddressPath("PriceFeedERC1967Proxy")
   ).toString();
 
-  await deploy("CjpyOS", {
-    args: [cjpyAddr, feedAddr, feePoolAddr],
-    getContractFactory,
-    deployments,
-  }).catch((e) => console.trace(e.message));
+  const inst = await getProxy<CurrencyOS, CurrencyOS__factory>("CurrencyOS", [
+    cjpyAddr,
+    feedAddr,
+    feePoolAddr,
+  ]);
+
+  writeFileSync(
+    getDeploymentAddressPathWithTag("CurrencyOS", "ERC1967Proxy"),
+    inst.address
+  );
+  writeFileSync(
+    getDeploymentAddressPathWithTag("CurrencyOS", "UUPSImpl"),
+    implAddr
+  );
 };
 export default func;
-func.tags = ["CjpyOS"];
+func.tags = ["CurrencyOS"];
