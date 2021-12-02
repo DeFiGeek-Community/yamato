@@ -140,7 +140,8 @@ contract PriorityRegistry is IPriorityRegistry, YamatoStore {
         }
 
         if (_traverseStartICR > 0) _traverseToNextLICR(_traverseStartICR);
-        // console.log("gasUsed:upsert(): %s", gasStart - gasleft());
+
+        _newICRpercent = _newICRpercent * 100; // Note: priority is percent in PriorityRegistry and pertenk in Yamato
     }
 
     /*

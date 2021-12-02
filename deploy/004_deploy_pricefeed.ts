@@ -11,14 +11,11 @@ import { genABI } from "../src/genABI";
 import { Contract } from "ethers";
 import { PriceFeed, PriceFeed__factory } from "../typechain";
 import { getProxy } from "../src/testUtil";
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync, writeFileSync, existsSync } from "fs";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  if(
-    readFileSync(
-      getDeploymentAddressPathWithTag("PriceFeed", "ERC1967Proxy")
-    ).toString()
-  ) return;
+  if (existsSync(getDeploymentAddressPathWithTag("PriceFeed", "ERC1967Proxy")))
+    return;
 
   const p = await setProvider();
   const { ethers, deployments } = hre;

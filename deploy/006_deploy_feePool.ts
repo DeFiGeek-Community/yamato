@@ -8,14 +8,11 @@ import {
 import { readFileSync } from "fs";
 import { FeePool, FeePool__factory } from "../typechain";
 import { getProxy } from "../src/testUtil";
-import { writeFileSync } from "fs";
+import { writeFileSync, existsSync } from "fs";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  if(
-    readFileSync(
-      getDeploymentAddressPathWithTag("FeePool", "ERC1967Proxy")
-    ).toString()
-  ) return;
+  if (existsSync(getDeploymentAddressPathWithTag("FeePool", "ERC1967Proxy")))
+    return;
 
   const p = await setProvider();
   const { ethers, deployments } = hre;

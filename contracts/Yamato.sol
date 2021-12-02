@@ -200,7 +200,7 @@ contract Yamato is
         p.debt = _p.debt;
         p.owner = _p.owner;
         p.isCreated = _p.isCreated;
-        p.priority = _p.coll;
+        p.priority = _p.priority;
     }
 
     function setTotalColl(uint256 _totalColl) public override onlyYamato {

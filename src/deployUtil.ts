@@ -219,7 +219,9 @@ export function verifyWithEtherscan() {
     getDeploymentAddressPathWithTag("YamatoSweeper", "UUPSImpl")
   ).toString();
 
-  let Pool = readFileSync(getDeploymentAddressPath("Pool")).toString();
+  let PoolUUPSImpl = readFileSync(
+    getDeploymentAddressPathWithTag("Pool", "UUPSImpl")
+  ).toString();
   let PriorityRegistryUUPSImpl = readFileSync(
     getDeploymentAddressPathWithTag("PriorityRegistry", "UUPSImpl")
   ).toString();
@@ -349,7 +351,7 @@ export function verifyWithEtherscan() {
   }
   try {
     execSync(
-      `npm run verify:rinkeby -- --contract contracts/Pool.sol:Pool ${Pool}`
+      `npm run verify:rinkeby -- --contract contracts/Pool.sol:Pool ${PoolUUPSImpl}`
     );
   } catch (e) {
     console.log(e.message);
@@ -405,6 +407,9 @@ export function showProxyVerificationURLs() {
   let YamatoSweeperERC1967Proxy = readFileSync(
     getDeploymentAddressPathWithTag("YamatoSweeper", "ERC1967Proxy")
   ).toString();
+  let PoolERC1967Proxy = readFileSync(
+    getDeploymentAddressPathWithTag("Pool", "ERC1967Proxy")
+  ).toString();
   let PriorityRegistryERC1967Proxy = readFileSync(
     getDeploymentAddressPathWithTag("PriorityRegistry", "ERC1967Proxy")
   ).toString();
@@ -425,6 +430,7 @@ export function showProxyVerificationURLs() {
   _logProxyProcedure(YamatoWithdrawerERC1967Proxy);
   _logProxyProcedure(YamatoRedeemerERC1967Proxy);
   _logProxyProcedure(YamatoSweeperERC1967Proxy);
+  _logProxyProcedure(PoolERC1967Proxy);
   _logProxyProcedure(PriorityRegistryERC1967Proxy);
   _logProxyProcedure(PriceFeedERC1967Proxy);
   _logProxyProcedure(FeePoolERC1967Proxy);

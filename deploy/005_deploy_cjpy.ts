@@ -1,17 +1,11 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { deploy, setProvider } from "../src/deployUtil";
-import { 
-getDeploymentAddressPath,
-} from "../src/deployUtil";
-import { readFileSync } from "fs";
+import { getDeploymentAddressPath } from "../src/deployUtil";
+import { existsSync } from "fs";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  if(
-    readFileSync(
-      getDeploymentAddressPath("CJPY")
-    ).toString()
-  ) return;
+  if (existsSync(getDeploymentAddressPath("CJPY"))) return;
 
   const p = await setProvider();
   const { ethers, deployments } = hre;

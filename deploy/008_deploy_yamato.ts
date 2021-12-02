@@ -7,15 +7,12 @@ import {
   getDeploymentAddressPathWithTag,
 } from "../src/deployUtil";
 import { getLinkedProxy } from "../src/testUtil";
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync, writeFileSync, existsSync } from "fs";
 import { Yamato, Yamato__factory } from "../typechain";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  if(
-    readFileSync(
-      getDeploymentAddressPathWithTag("Yamato", "ERC1967Proxy")
-    ).toString()
-  ) return;
+  if (existsSync(getDeploymentAddressPathWithTag("Yamato", "ERC1967Proxy")))
+    return;
 
   const p = await setProvider();
   const { ethers, deployments } = hre;

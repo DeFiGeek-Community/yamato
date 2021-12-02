@@ -341,8 +341,8 @@ describe("contract Yamato", function () {
 
       const pledge = await yamato.getPledge(await yamato.signer.getAddress());
 
-      expect(pledge.coll.toString()).to.eq("1000000000000000000");
-      expect(pledge.debt.toString()).to.eq("236363000000000000000000");
+      expect(pledge.coll).to.eq("1000000000000000000");
+      expect(pledge.debt).to.eq("236363000000000000000000");
     });
     it(`should have zero ETH balance after issuance`, async function () {
       const toCollateralize = 1;
@@ -354,7 +354,7 @@ describe("contract Yamato", function () {
       await yamato.borrow(toERC20(toBorrow + ""));
 
       const balance = await yamato.provider.getBalance(yamato.address);
-      expect(balance.toString()).to.eq("0");
+      expect(balance).to.eq("0");
     });
 
     it(`should run fetchPrice() of Pool.sol`, async function () {
@@ -417,6 +417,33 @@ describe("contract Yamato", function () {
       await yamato.borrow(toERC20(toBorrow + ""));
       expect(mockPool.depositRedemptionReserve).to.have.callCount(0);
       expect(mockPool.depositSweepReserve).to.have.calledOnce;
+    });
+    describe("Context - priorityRegistry", async function () {
+      it("should have priority 11000", async function () {
+        await (
+          await yamato.setDeps(
+            yamatoDepositor.address,
+            yamatoBorrower.address,
+            yamatoRepayer.address,
+            yamatoWithdrawer.address,
+            yamatoRedeemer.address,
+            yamatoRedeemer.address,
+            mockPool.address,
+            priorityRegistry.address
+          )
+        ).wait();
+
+        const toCollateralize = 1;
+        const toBorrow = PRICE.mul(toCollateralize)
+          .mul(100)
+          .div(MCR)
+          .div(1e18 + "");
+        await yamato.deposit({ value: toERC20(toCollateralize + "") });
+        await yamato.borrow(toERC20(toBorrow + ""));
+
+        const pledge = await yamato.getPledge(await yamato.signer.getAddress());
+        expect(pledge.priority).to.eq("11000");
+      });
     });
   });
   describe("repay()", function () {

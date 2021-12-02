@@ -17,15 +17,11 @@ import {
   sleep,
   getDeploymentAddressPath,
 } from "../src/deployUtil";
-import { readFileSync } from "fs";
+import { existsSync } from "fs";
 import { Wallet } from "ethers";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  if(
-    readFileSync(
-      getDeploymentAddressPath("TellorCallerMock")
-    ).toString()
-  ) return;
+  if (existsSync(getDeploymentAddressPath("TellorCallerMock"))) return;
 
   await setProvider();
   const { ethers, deployments } = hre;

@@ -6,7 +6,7 @@ import {
   getDeploymentAddressPathWithTag,
 } from "../src/deployUtil";
 import { getLinkedProxy } from "../src/testUtil";
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync, writeFileSync, existsSync } from "fs";
 import { BaseContract, ContractFactory } from "ethers";
 import {
   YamatoDepositor,
@@ -24,26 +24,65 @@ import {
 } from "../typechain";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  if(
-    readFileSync(
-      getDeploymentAddressPathWithTag("YamatoDepositor", "ERC1967Proxy")
-    ).toString()
-  ) return;
-
   const p = await setProvider();
   const { ethers, deployments } = hre;
   const { getContractFactory } = ethers;
 
-  await deployYamatoAction<YamatoDepositor, YamatoDepositor__factory>(
-    "Depositor"
-  );
-  await deployYamatoAction<YamatoBorrower, YamatoBorrower__factory>("Borrower");
-  await deployYamatoAction<YamatoRepayer, YamatoRepayer__factory>("Repayer");
-  await deployYamatoAction<YamatoWithdrawer, YamatoWithdrawer__factory>(
-    "Withdrawer"
-  );
-  await deployYamatoAction<YamatoRedeemer, YamatoRedeemer__factory>("Redeemer");
-  await deployYamatoAction<YamatoSweeper, YamatoSweeper__factory>("Sweeper");
+  if (
+    !existsSync(
+      getDeploymentAddressPathWithTag("YamatoDepositor", "ERC1967Proxy")
+    )
+  ) {
+    await deployYamatoAction<YamatoDepositor, YamatoDepositor__factory>(
+      "Depositor"
+    );
+  }
+
+  if (
+    !existsSync(
+      getDeploymentAddressPathWithTag("YamatoBorrower", "ERC1967Proxy")
+    )
+  ) {
+    await deployYamatoAction<YamatoBorrower, YamatoBorrower__factory>(
+      "Borrower"
+    );
+  }
+
+  if (
+    !existsSync(
+      getDeploymentAddressPathWithTag("YamatoRepayer", "ERC1967Proxy")
+    )
+  ) {
+    await deployYamatoAction<YamatoRepayer, YamatoRepayer__factory>("Repayer");
+  }
+
+  if (
+    !existsSync(
+      getDeploymentAddressPathWithTag("YamatoWithdrawer", "ERC1967Proxy")
+    )
+  ) {
+    await deployYamatoAction<YamatoWithdrawer, YamatoWithdrawer__factory>(
+      "Withdrawer"
+    );
+  }
+
+  if (
+    !existsSync(
+      getDeploymentAddressPathWithTag("YamatoRedeemer", "ERC1967Proxy")
+    )
+  ) {
+    await deployYamatoAction<YamatoRedeemer, YamatoRedeemer__factory>(
+      "Redeemer"
+    );
+  }
+
+  if (
+    !existsSync(
+      getDeploymentAddressPathWithTag("YamatoSweeper", "ERC1967Proxy")
+    )
+  ) {
+    await deployYamatoAction<YamatoSweeper, YamatoSweeper__factory>("Sweeper");
+  }
 };
 export default func;
 func.tags = ["Yamato"];

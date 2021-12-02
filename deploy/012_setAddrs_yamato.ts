@@ -36,7 +36,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const _yamatoSweeperAddr = readFileSync(
     getDeploymentAddressPathWithTag("YamatoSweeper", "ERC1967Proxy")
   ).toString();
-  const _poolAddr = readFileSync(getDeploymentAddressPath("Pool")).toString();
+  const _poolAddr = readFileSync(
+    getDeploymentAddressPathWithTag("Pool", "ERC1967Proxy")
+  ).toString();
   let _priorityRegistryAddr = readFileSync(
     getDeploymentAddressPathWithTag("PriorityRegistry", "ERC1967Proxy")
   ).toString();

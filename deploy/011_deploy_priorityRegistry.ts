@@ -6,15 +6,16 @@ import {
   getDeploymentAddressPathWithTag,
 } from "../src/deployUtil";
 import { getLinkedProxy } from "../src/testUtil";
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync, writeFileSync, existsSync } from "fs";
 import { PriorityRegistry, PriorityRegistry__factory } from "../typechain";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  if(
-    readFileSync(
+  if (
+    existsSync(
       getDeploymentAddressPathWithTag("PriorityRegistry", "ERC1967Proxy")
-    ).toString()
-  ) return;
+    )
+  )
+    return;
 
   const p = await setProvider();
   const { ethers, deployments } = hre;
