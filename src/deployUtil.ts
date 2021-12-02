@@ -186,16 +186,10 @@ export function verifyWithEtherscan() {
   let Tellor = readFileSync(
     getDeploymentAddressPath("TellorCallerMock")
   ).toString();
-  let PriceFeedERC1967Proxy = readFileSync(
-    getDeploymentAddressPathWithTag("PriceFeed", "ERC1967Proxy")
-  ).toString();
   let PriceFeedUUPSImpl = readFileSync(
     getDeploymentAddressPathWithTag("PriceFeed", "UUPSImpl")
   ).toString();
   let CJPY = readFileSync(getDeploymentAddressPath("CJPY")).toString();
-  let FeePoolERC1967Proxy = readFileSync(
-    getDeploymentAddressPathWithTag("FeePool", "ERC1967Proxy")
-  ).toString();
   let FeePoolUUPSImpl = readFileSync(
     getDeploymentAddressPathWithTag("FeePool", "UUPSImpl")
   ).toString();
@@ -281,7 +275,7 @@ export function verifyWithEtherscan() {
   }
   try {
     execSync(
-      `npm run verify:rinkeby -- --contract contracts/CurrencyOS.sol:CurrencyOS ${CurrencyOSUUPSImpl} ${CJPY} ${PriceFeedERC1967Proxy} ${FeePoolERC1967Proxy}`
+      `npm run verify:rinkeby -- --contract contracts/CurrencyOS.sol:CurrencyOS ${CurrencyOSUUPSImpl}`
     );
   } catch (e) {
     console.log(
