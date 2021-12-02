@@ -25,20 +25,18 @@ contract CurrencyOS is ICurrencyOS, UUPSBase {
     string constant FEEPOOL_SLOT_ID = "deps.FeePool";
     string constant YMTOS_SLOT_ID = "deps.YmtOS";
 
-
     /*
         ===========================
         !!! DANGER ZONE BEGINS !!!
         ===========================
     */
     address[] public yamatoes;
+
     /*
         ===========================
         !!! DANGER ZONE ENDED !!!
         ===========================
     */
-
-
 
     function initialize(
         address currencyAddr,
@@ -58,12 +56,14 @@ contract CurrencyOS is ICurrencyOS, UUPSBase {
             sstore(FEEPOOL_KEY, feePoolAddr)
         }
     }
+
     function setDeps(address _ymtOS) public onlyGovernance {
         bytes32 YMTOS_KEY = bytes32(keccak256(abi.encode(YMTOS_SLOT_ID)));
         assembly {
             sstore(YMTOS_KEY, _ymtOS)
         }
     }
+
     modifier onlyYamato() {
         if (yamatoes.length == 0) {
             revert("No Yamato is registered.");
@@ -76,8 +76,6 @@ contract CurrencyOS is ICurrencyOS, UUPSBase {
         }
     }
 
-
-
     /*
         =====================
         Public Functions
@@ -89,6 +87,7 @@ contract CurrencyOS is ICurrencyOS, UUPSBase {
             IYmtOS(ymtOS()).addYamatoOfCurrencyOS(_yamatoAddr);
         }
     }
+
     function mintCurrency(address to, uint256 amount)
         public
         override
@@ -104,7 +103,6 @@ contract CurrencyOS is ICurrencyOS, UUPSBase {
     {
         ICurrency(currency()).burn(to, amount);
     }
-
 
     /*
         =====================
@@ -148,5 +146,4 @@ contract CurrencyOS is ICurrencyOS, UUPSBase {
     function veYMT() public view override returns (address _veYMT) {
         _veYMT = IYmtOS(ymtOS()).veYMT();
     }
-
 }

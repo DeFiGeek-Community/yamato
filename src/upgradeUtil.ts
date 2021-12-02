@@ -7,10 +7,12 @@ export async function upgradeProxy<
   S extends ContractFactory
 >(olderInstanceAddress: string, contractNameTo: string): Promise<T> {
   let contractFactory: S = <S>await ethers.getContractFactory(contractNameTo);
-  const instance: T = <T>(
-    await upgrades.upgradeProxy(olderInstanceAddress, contractFactory, {
+  const instance: T = <T>await upgrades.upgradeProxy(
+    olderInstanceAddress,
+    contractFactory,
+    {
       kind: "uups",
-    })
+    }
   );
   return instance;
 }

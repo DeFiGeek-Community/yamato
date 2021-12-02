@@ -14,18 +14,10 @@ import "./Interfaces/IFeePool.sol";
 import "./Dependencies/UUPSBase.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
-contract FeePool is
-    IFeePool,
-    UUPSBase,
-    ReentrancyGuardUpgradeable
-{
+contract FeePool is IFeePool, UUPSBase, ReentrancyGuardUpgradeable {
     string constant VEYMT_SLOT_ID = "deps.veYMT";
 
- 
- 
     mapping(address => bool) protocolWhitelist;
-
-
 
     event Withdrawn(address, uint256);
     event WithdrawnByProtocol(address, uint256);
@@ -36,7 +28,6 @@ contract FeePool is
         __UUPSBase_init();
         __ReentrancyGuard_init();
     }
-
 
     /*
         ====================
@@ -66,6 +57,7 @@ contract FeePool is
         }
         emit VeYMTSet(msg.sender, _veymt);
     }
+
     function veYMT() public view override returns (address _veYMT) {
         bytes32 VEYMT_KEY = bytes32(keccak256(abi.encode(VEYMT_SLOT_ID)));
         assembly {
@@ -88,6 +80,4 @@ contract FeePool is
     receive() external payable {
         emit Received(msg.sender, msg.value);
     }
-
-
 }

@@ -10,5 +10,6 @@ pragma solidity 0.8.4;
 //solhint-disable no-inline-assembly
 interface IFeePool {
     function veYMT() external view returns (address);
+
     function withdrawFromProtocol(uint256 amount) external;
 }

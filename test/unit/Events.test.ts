@@ -90,58 +90,53 @@ describe("story Events", function () {
         [mockCurrencyOS.address],
         ["PledgeLib"]
       );
-      yamatoDepositor = await getLinkedProxy<YamatoDepositor, YamatoDepositor__factory>(
-        "YamatoDepositor",
-        [yamato.address],
-        ["PledgeLib"]
-      );
-  
-      yamatoBorrower = await getLinkedProxy<YamatoBorrower, YamatoBorrower__factory>(
-        "YamatoBorrower",
-        [yamato.address],
-        ["PledgeLib"]
-      );
-  
-      yamatoRepayer = await getLinkedProxy<YamatoRepayer, YamatoRepayer__factory>(
-        "YamatoRepayer",
-        [yamato.address],
-        ["PledgeLib"]
-      );
-  
-      yamatoWithdrawer = await getLinkedProxy<YamatoWithdrawer, YamatoWithdrawer__factory>(
-        "YamatoDepositor",
-        [yamato.address],
-        ["PledgeLib"]
-      );
-  
-      yamatoRedeemer = await getLinkedProxy<YamatoRedeemer, YamatoRedeemer__factory>(
-        "YamatoRedeemer",
-        [yamato.address],
-        ["PledgeLib"]
-      );
-  
-      yamatoSweeper = await getLinkedProxy<YamatoSweeper, YamatoSweeper__factory>(
-        "YamatoSweeper",
-        [yamato.address],
-        ["PledgeLib"]
-      );
-  
+      yamatoDepositor = await getLinkedProxy<
+        YamatoDepositor,
+        YamatoDepositor__factory
+      >("YamatoDepositor", [yamato.address], ["PledgeLib"]);
+
+      yamatoBorrower = await getLinkedProxy<
+        YamatoBorrower,
+        YamatoBorrower__factory
+      >("YamatoBorrower", [yamato.address], ["PledgeLib"]);
+
+      yamatoRepayer = await getLinkedProxy<
+        YamatoRepayer,
+        YamatoRepayer__factory
+      >("YamatoRepayer", [yamato.address], ["PledgeLib"]);
+
+      yamatoWithdrawer = await getLinkedProxy<
+        YamatoWithdrawer,
+        YamatoWithdrawer__factory
+      >("YamatoDepositor", [yamato.address], ["PledgeLib"]);
+
+      yamatoRedeemer = await getLinkedProxy<
+        YamatoRedeemer,
+        YamatoRedeemer__factory
+      >("YamatoRedeemer", [yamato.address], ["PledgeLib"]);
+
+      yamatoSweeper = await getLinkedProxy<
+        YamatoSweeper,
+        YamatoSweeper__factory
+      >("YamatoSweeper", [yamato.address], ["PledgeLib"]);
 
       mockPriorityRegistry = await getFakeProxy<PriorityRegistry>(
         "PriorityRegistry"
       );
 
-      await (await yamato.setDeps(
-        yamatoDepositor.address,
-        yamatoBorrower.address,
-        yamatoRepayer.address,
-        yamatoWithdrawer.address,
-        yamatoRedeemer.address,
-        yamatoSweeper.address,
-        mockPool.address,
-        mockPriorityRegistry.address
-      )).wait();
-  
+      await (
+        await yamato.setDeps(
+          yamatoDepositor.address,
+          yamatoBorrower.address,
+          yamatoRepayer.address,
+          yamatoWithdrawer.address,
+          yamatoRedeemer.address,
+          yamatoSweeper.address,
+          mockPool.address,
+          mockPriorityRegistry.address
+        )
+      ).wait();
+
       PRICE = BigNumber.from(260000).mul(1e18 + "");
       MCR = BigNumber.from(110);
 
@@ -325,7 +320,7 @@ describe("story Events", function () {
     let mockYamatoWithdrawer: FakeContract<YamatoWithdrawer>;
     let mockYamatoRedeemer: FakeContract<YamatoRedeemer>;
     let mockYamatoSweeper: FakeContract<YamatoSweeper>;
-      let accounts;
+    let accounts;
 
     beforeEach(async () => {
       accounts = await ethers.getSigners();
@@ -343,10 +338,14 @@ describe("story Events", function () {
         await (await ethers.getContractFactory("PledgeLib")).deploy()
       ).address;
 
-      mockYamatoDepositor = await getFakeProxy<YamatoDepositor>("YamatoDepositor");
+      mockYamatoDepositor = await getFakeProxy<YamatoDepositor>(
+        "YamatoDepositor"
+      );
       mockYamatoBorrower = await getFakeProxy<YamatoBorrower>("YamatoBorrower");
       mockYamatoRepayer = await getFakeProxy<YamatoRepayer>("YamatoRepayer");
-      mockYamatoWithdrawer = await getFakeProxy<YamatoWithdrawer>("YamatoWithdrawer");
+      mockYamatoWithdrawer = await getFakeProxy<YamatoWithdrawer>(
+        "YamatoWithdrawer"
+      );
       mockYamatoRedeemer = await getFakeProxy<YamatoRedeemer>("YamatoRedeemer");
       mockYamatoSweeper = await getFakeProxy<YamatoSweeper>("YamatoSweeper");
       let yamatoDepositor: YamatoDepositor;
@@ -364,11 +363,8 @@ describe("story Events", function () {
       mockYamatoRedeemer.yamato.returns(yamatoDummy.address);
       mockYamatoSweeper.yamato.returns(yamatoDummy.address);
 
-      pool = await getProxy<Pool, Pool__factory>(
-        "Pool",
-        [yamatoDummy.address]
-      );
-  
+      pool = await getProxy<Pool, Pool__factory>("Pool", [yamatoDummy.address]);
+
       await accounts[0].sendTransaction({
         to: pool.address,
         value: BigNumber.from(1e18 + ""),

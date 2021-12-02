@@ -110,19 +110,13 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       await ethers.getContractFactory("CJPY")
     )).deploy();
 
-    FeePool = await getProxy<FeePool, FeePool__factory>(
-      "FeePool",
-      []
-    );
+    FeePool = await getProxy<FeePool, FeePool__factory>("FeePool", []);
 
-    CurrencyOS = await getProxy<CurrencyOS, CurrencyOS__factory>(
-      "CurrencyOS",
-      [
-        CJPY.address,
-        PriceFeed.address,
-        FeePool.address
-      ]
-    );
+    CurrencyOS = await getProxy<CurrencyOS, CurrencyOS__factory>("CurrencyOS", [
+      CJPY.address,
+      PriceFeed.address,
+      FeePool.address,
+    ]);
 
     const PledgeLib = (
       await (await ethers.getContractFactory("PledgeLib")).deploy()
@@ -134,18 +128,15 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       ["PledgeLib"]
     );
 
+    YamatoDepositor = await getLinkedProxy<
+      YamatoDepositor,
+      YamatoDepositor__factory
+    >("YamatoDepositor", [Yamato.address], ["PledgeLib"]);
 
-    YamatoDepositor = await getLinkedProxy<YamatoDepositor, YamatoDepositor__factory>(
-      "YamatoDepositor",
-      [Yamato.address],
-      ["PledgeLib"]
-    );
-
-    YamatoBorrower = await getLinkedProxy<YamatoBorrower, YamatoBorrower__factory>(
-      "YamatoBorrower",
-      [Yamato.address],
-      ["PledgeLib"]
-    );
+    YamatoBorrower = await getLinkedProxy<
+      YamatoBorrower,
+      YamatoBorrower__factory
+    >("YamatoBorrower", [Yamato.address], ["PledgeLib"]);
 
     YamatoRepayer = await getLinkedProxy<YamatoRepayer, YamatoRepayer__factory>(
       "YamatoRepayer",
@@ -153,17 +144,15 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       ["PledgeLib"]
     );
 
-    YamatoWithdrawer = await getLinkedProxy<YamatoWithdrawer, YamatoWithdrawer__factory>(
-      "YamatoDepositor",
-      [Yamato.address],
-      ["PledgeLib"]
-    );
+    YamatoWithdrawer = await getLinkedProxy<
+      YamatoWithdrawer,
+      YamatoWithdrawer__factory
+    >("YamatoDepositor", [Yamato.address], ["PledgeLib"]);
 
-    YamatoRedeemer = await getLinkedProxy<YamatoRedeemer, YamatoRedeemer__factory>(
-      "YamatoRedeemer",
-      [Yamato.address],
-      ["PledgeLib"]
-    );
+    YamatoRedeemer = await getLinkedProxy<
+      YamatoRedeemer,
+      YamatoRedeemer__factory
+    >("YamatoRedeemer", [Yamato.address], ["PledgeLib"]);
 
     YamatoSweeper = await getLinkedProxy<YamatoSweeper, YamatoSweeper__factory>(
       "YamatoSweeper",
@@ -171,26 +160,25 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       ["PledgeLib"]
     );
 
-    Pool = await getProxy<Pool, Pool__factory>(
-      "Pool",
-      [Yamato.address]
-    );
+    Pool = await getProxy<Pool, Pool__factory>("Pool", [Yamato.address]);
 
     PriorityRegistry = await getLinkedProxy<
       PriorityRegistry,
       PriorityRegistry__factory
     >("PriorityRegistry", [Yamato.address], ["PledgeLib"]);
 
-    await (await Yamato.setDeps(
-      YamatoDepositor.address,
-      YamatoBorrower.address,
-      YamatoRepayer.address,
-      YamatoWithdrawer.address,
-      YamatoRedeemer.address,
-      YamatoSweeper.address,
-      Pool.address,
-      PriorityRegistry.address
-    )).wait();
+    await (
+      await Yamato.setDeps(
+        YamatoDepositor.address,
+        YamatoBorrower.address,
+        YamatoRepayer.address,
+        YamatoWithdrawer.address,
+        YamatoRedeemer.address,
+        YamatoSweeper.address,
+        Pool.address,
+        PriorityRegistry.address
+      )
+    ).wait();
 
     await (await CurrencyOS.addYamato(Yamato.address)).wait();
     await (await CJPY.setCurrencyOS(CurrencyOS.address)).wait();

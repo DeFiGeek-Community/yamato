@@ -26,18 +26,16 @@ import "hardhat/console.sol";
  * switching oracles based on oracle failures, timeouts, and conditions for returning to the primary
  * Chainlink oracle.
  */
-contract PriceFeed is
-    IPriceFeed,
-    UUPSBase,
-    BaseMath
-{
+contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
     /*
         =========================
         ~~~ SAFE HAVEN ~~~
         =========================
     */
-    string constant EthPriceAggregatorInUSD_SLOT_ID = "deps.EthPriceAggregatorInUSD";
-    string constant JpyPriceAggregatorInUSD_SLOT_ID = "deps.JpyPriceAggregatorInUSD";
+    string constant EthPriceAggregatorInUSD_SLOT_ID =
+        "deps.EthPriceAggregatorInUSD";
+    string constant JpyPriceAggregatorInUSD_SLOT_ID =
+        "deps.JpyPriceAggregatorInUSD";
     string constant TellorCaller_SLOT_ID = "deps.TellorCaller";
     uint256 public constant ETHUSD_TELLOR_REQ_ID = 59;
     // Use to convert a price answer to an 18-digit precision uint
@@ -63,8 +61,6 @@ contract PriceFeed is
         =========================
     */
 
-
-
     /*
         =========================
         !!! DANGER ZONE !!!
@@ -82,9 +78,6 @@ contract PriceFeed is
         !!! DANGER ZONE !!!
         =========================
     */
-
-
-
 
     struct ChainlinkResponse {
         uint80 roundId;
@@ -124,9 +117,15 @@ contract PriceFeed is
     ) public initializer {
         __UUPSBase_init();
 
-        bytes32 EthPriceAggregatorInUSD_KEY = bytes32(keccak256(abi.encode(EthPriceAggregatorInUSD_SLOT_ID)));
-        bytes32 JpyPriceAggregatorInUSD_KEY = bytes32(keccak256(abi.encode(JpyPriceAggregatorInUSD_SLOT_ID)));
-        bytes32 TellorCaller_KEY = bytes32(keccak256(abi.encode(TellorCaller_SLOT_ID)));
+        bytes32 EthPriceAggregatorInUSD_KEY = bytes32(
+            keccak256(abi.encode(EthPriceAggregatorInUSD_SLOT_ID))
+        );
+        bytes32 JpyPriceAggregatorInUSD_KEY = bytes32(
+            keccak256(abi.encode(JpyPriceAggregatorInUSD_SLOT_ID))
+        );
+        bytes32 TellorCaller_KEY = bytes32(
+            keccak256(abi.encode(TellorCaller_SLOT_ID))
+        );
         assembly {
             sstore(EthPriceAggregatorInUSD_KEY, _ethPriceAggregatorInUSDAddress)
             sstore(JpyPriceAggregatorInUSD_KEY, _jpyPriceAggregatorInUSDAddress)
@@ -157,8 +156,6 @@ contract PriceFeed is
 
         revokeGovernance();
     }
-
-
 
     // --- Functions ---
 
@@ -517,7 +514,8 @@ contract PriceFeed is
          * - If price decreased, the percentage deviation is in relation to the the previous price.
          * - If price increased, the percentage deviation is in relation to the current price.
          */
-        uint256 percentDeviation = (maxPrice - minPrice) * DECIMAL_PRECISION / maxPrice;
+        uint256 percentDeviation = ((maxPrice - minPrice) * DECIMAL_PRECISION) /
+            maxPrice;
 
         // Return true if price has more than doubled, or more than halved.
         return percentDeviation > MAX_PRICE_DEVIATION_FROM_PREVIOUS_ROUND;
@@ -591,7 +589,8 @@ contract PriceFeed is
             scaledTellorPrice,
             scaledChainlinkPrice
         );
-        uint256 percentPriceDifference = (maxPrice - minPrice) * DECIMAL_PRECISION / minPrice;
+        uint256 percentPriceDifference = ((maxPrice - minPrice) *
+            DECIMAL_PRECISION) / minPrice;
 
         /*
          * Return true if the relative price difference is <= 3%: if so, we assume both oracles are probably reporting
@@ -627,7 +626,7 @@ contract PriceFeed is
         pure
         returns (uint256)
     {
-        return _price *  ( 10**(TARGET_DIGITS - TELLOR_DIGITS)  );
+        return _price * (10**(TARGET_DIGITS - TELLOR_DIGITS));
     }
 
     function _changeStatus(Status _status) internal {
@@ -672,11 +671,11 @@ contract PriceFeed is
         internal
         returns (TellorResponse memory tellorResponse)
     {
-        try ITellorCaller(tellorCaller()).getTellorCurrentValue(ETHUSD_TELLOR_REQ_ID) returns (
-            bool ifRetrieve,
-            uint256 value,
-            uint256 _timestampRetrieved
-        ) {
+        try
+            ITellorCaller(tellorCaller()).getTellorCurrentValue(
+                ETHUSD_TELLOR_REQ_ID
+            )
+        returns (bool ifRetrieve, uint256 value, uint256 _timestampRetrieved) {
             // If call to Tellor succeeds, return the response and success = true
             tellorResponse.ifRetrieve = ifRetrieve;
             tellorResponse.value = value;
@@ -697,14 +696,18 @@ contract PriceFeed is
         ChainlinkResponse memory ethChainlinkResponseInUSD;
         ChainlinkResponse memory jpyChainlinkResponseInUSD;
         // First, try to get current decimal precision:
-        try AggregatorV3Interface(ethPriceAggregatorInUSD()).decimals() returns (uint8 decimals) {
+        try
+            AggregatorV3Interface(ethPriceAggregatorInUSD()).decimals()
+        returns (uint8 decimals) {
             // If call to Chainlink succeeds, record the current decimal precision
             ethChainlinkResponseInUSD.decimals = decimals;
         } catch {
             // If call to Chainlink aggregator reverts, return a zero response with success = false
             return chainlinkResponse;
         }
-        try AggregatorV3Interface(jpyPriceAggregatorInUSD()).decimals() returns (uint8 decimals) {
+        try
+            AggregatorV3Interface(jpyPriceAggregatorInUSD()).decimals()
+        returns (uint8 decimals) {
             // If call to Chainlink succeeds, record the current decimal precision
             jpyChainlinkResponseInUSD.decimals = decimals;
         } catch {
@@ -713,7 +716,9 @@ contract PriceFeed is
         }
 
         // Secondly, try to get latest price data:
-        try AggregatorV3Interface(ethPriceAggregatorInUSD()).latestRoundData() returns (
+        try
+            AggregatorV3Interface(ethPriceAggregatorInUSD()).latestRoundData()
+        returns (
             uint80 roundId,
             int256 answer,
             uint256, /* startedAt */
@@ -729,7 +734,9 @@ contract PriceFeed is
             // If call to Chainlink aggregator reverts, return a zero response with success = false
             return chainlinkResponse;
         }
-        try AggregatorV3Interface(jpyPriceAggregatorInUSD()).latestRoundData() returns (
+        try
+            AggregatorV3Interface(jpyPriceAggregatorInUSD()).latestRoundData()
+        returns (
             uint80 roundId,
             int256 answer,
             uint256, /* startedAt */
@@ -749,13 +756,12 @@ contract PriceFeed is
         chainlinkResponse.roundId = ethChainlinkResponseInUSD.roundId;
         chainlinkResponse.decimals = uint8(TARGET_DIGITS);
         chainlinkResponse.answer = int256(
-            uint256(ethChainlinkResponseInUSD.answer)
-                * (
-                    10 ** 
-                    ( TARGET_DIGITS -
+            (uint256(ethChainlinkResponseInUSD.answer) *
+                (10 **
+                    (TARGET_DIGITS -
                         ethChainlinkResponseInUSD.decimals +
-                        jpyChainlinkResponseInUSD.decimals )
-                ) / uint256(jpyChainlinkResponseInUSD.answer)
+                        jpyChainlinkResponseInUSD.decimals))) /
+                uint256(jpyChainlinkResponseInUSD.answer)
         );
         chainlinkResponse.timestamp = ethChainlinkResponseInUSD.timestamp;
         chainlinkResponse.success = true;
@@ -776,7 +782,11 @@ contract PriceFeed is
          */
 
         // Try to get the price data from the previous round:
-        try AggregatorV3Interface(ethPriceAggregatorInUSD()).getRoundData(_currentRoundId - 1) returns (
+        try
+            AggregatorV3Interface(ethPriceAggregatorInUSD()).getRoundData(
+                _currentRoundId - 1
+            )
+        returns (
             uint80 roundId,
             int256 answer,
             uint256, /* startedAt */
@@ -786,13 +796,11 @@ contract PriceFeed is
             // If call to Chainlink succeeds, return the response and success = true
             prevChainlinkResponse.roundId = roundId;
             prevChainlinkResponse.answer = int256(
-                uint256(answer)
-                    * (
-                        10 **
+                (uint256(answer) *
+                    (10 **
                         (TARGET_DIGITS -
                             _currentDecimals +
-                            _jpyOracleDecimals)
-                    ) / uint256(_jpyInUSD)
+                            _jpyOracleDecimals))) / uint256(_jpyInUSD)
             );
             prevChainlinkResponse.timestamp = timestamp;
             prevChainlinkResponse.decimals = _currentDecimals;
@@ -804,23 +812,45 @@ contract PriceFeed is
         }
     }
 
-    function ethPriceAggregatorInUSD() public view override returns (address _ethPriceAggregatorInUSD) {
-        bytes32 EthPriceAggregatorInUSD_KEY = bytes32(keccak256(abi.encode(EthPriceAggregatorInUSD_SLOT_ID)));
+    function ethPriceAggregatorInUSD()
+        public
+        view
+        override
+        returns (address _ethPriceAggregatorInUSD)
+    {
+        bytes32 EthPriceAggregatorInUSD_KEY = bytes32(
+            keccak256(abi.encode(EthPriceAggregatorInUSD_SLOT_ID))
+        );
         assembly {
             _ethPriceAggregatorInUSD := sload(EthPriceAggregatorInUSD_KEY)
         }
     }
-    function jpyPriceAggregatorInUSD() public view override returns (address _jpyPriceAggregatorInUSD) {
-        bytes32 JpyPriceAggregatorInUSD_KEY = bytes32(keccak256(abi.encode(JpyPriceAggregatorInUSD_SLOT_ID)));
+
+    function jpyPriceAggregatorInUSD()
+        public
+        view
+        override
+        returns (address _jpyPriceAggregatorInUSD)
+    {
+        bytes32 JpyPriceAggregatorInUSD_KEY = bytes32(
+            keccak256(abi.encode(JpyPriceAggregatorInUSD_SLOT_ID))
+        );
         assembly {
             _jpyPriceAggregatorInUSD := sload(JpyPriceAggregatorInUSD_KEY)
         }
     }
-    function tellorCaller() public view override returns (address _tellorCaller) {
-        bytes32 TellorCaller_KEY = bytes32(keccak256(abi.encode(TellorCaller_SLOT_ID)));
+
+    function tellorCaller()
+        public
+        view
+        override
+        returns (address _tellorCaller)
+    {
+        bytes32 TellorCaller_KEY = bytes32(
+            keccak256(abi.encode(TellorCaller_SLOT_ID))
+        );
         assembly {
             _tellorCaller := sload(TellorCaller_KEY)
         }
     }
-
 }

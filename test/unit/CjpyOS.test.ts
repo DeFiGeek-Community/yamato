@@ -51,10 +51,14 @@ describe("CjpyOS", () => {
     mockFeed = await getFakeProxy<PriceFeed>("PriceFeed");
     mockFeePool = await getFakeProxy<FeePool>("FeePool");
     mockYamato = await getFakeProxy<Yamato>("Yamato");
-    mockYamatoDepositor = await getFakeProxy<YamatoDepositor>("YamatoDepositor");
+    mockYamatoDepositor = await getFakeProxy<YamatoDepositor>(
+      "YamatoDepositor"
+    );
     mockYamatoBorrower = await getFakeProxy<YamatoBorrower>("YamatoBorrower");
     mockYamatoRepayer = await getFakeProxy<YamatoRepayer>("YamatoRepayer");
-    mockYamatoWithdrawer = await getFakeProxy<YamatoWithdrawer>("YamatoWithdrawer");
+    mockYamatoWithdrawer = await getFakeProxy<YamatoWithdrawer>(
+      "YamatoWithdrawer"
+    );
     mockYamatoRedeemer = await getFakeProxy<YamatoRedeemer>("YamatoRedeemer");
     mockYamatoSweeper = await getFakeProxy<YamatoSweeper>("YamatoSweeper");
     mockYamato.depositor.returns(mockYamatoDepositor.address);
@@ -65,16 +69,11 @@ describe("CjpyOS", () => {
     mockYamato.sweeper.returns(mockYamatoSweeper.address);
     mockYamato.permitDeps.returns(true);
 
-
-
-    currencyOS = await getProxy<CurrencyOS, CurrencyOS__factory>(
-      "CurrencyOS",
-      [
-        mockCJPY.address,
-        mockFeed.address,
-        mockFeePool.address
-      ]
-    );
+    currencyOS = await getProxy<CurrencyOS, CurrencyOS__factory>("CurrencyOS", [
+      mockCJPY.address,
+      mockFeed.address,
+      mockFeePool.address,
+    ]);
 
     mockCJPY.mint.returns(0);
     mockCJPY.burn.returns(0);
@@ -97,9 +96,9 @@ describe("CjpyOS", () => {
   describe("mintCJPY()", function () {
     it(`fails to mint CJPY`, async function () {
       // await currencyOS.mintCJPY(ownerAddress, 10000);
-      await expect(currencyOS.mintCurrency(ownerAddress, 10000)).to.be.revertedWith(
-        "No Yamato is registered."
-      );
+      await expect(
+        currencyOS.mintCurrency(ownerAddress, 10000)
+      ).to.be.revertedWith("No Yamato is registered.");
     });
 
     it(`succeeds to mint CJPY`, async function () {
@@ -111,9 +110,9 @@ describe("CjpyOS", () => {
 
   describe("burnCurrency()", function () {
     it(`fails to burn CJPY`, async function () {
-      await expect(currencyOS.burnCurrency(ownerAddress, 10000)).to.be.revertedWith(
-        "No Yamato is registered."
-      );
+      await expect(
+        currencyOS.burnCurrency(ownerAddress, 10000)
+      ).to.be.revertedWith("No Yamato is registered.");
     });
 
     it(`succeeds to burn CJPY`, async function () {

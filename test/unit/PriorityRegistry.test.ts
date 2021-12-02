@@ -68,7 +68,9 @@ describe("contract PriorityRegistry", function () {
     /*
         For onlyYamato tests
       */
-    yamatoDummy = await yamatoDummyContractFactory.deploy(mockCurrencyOS.address);
+    yamatoDummy = await yamatoDummyContractFactory.deploy(
+      mockCurrencyOS.address
+    );
 
     priorityRegistry = await getLinkedProxy<
       PriorityRegistry,

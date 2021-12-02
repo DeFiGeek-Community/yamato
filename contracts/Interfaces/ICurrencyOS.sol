@@ -18,7 +18,10 @@ interface ICurrencyOS {
     function feePool() external view returns (address);
 
     function currency() external view returns (address);
+
     function ymtOS() external view returns (address);
+
     function YMT() external view returns (address);
+
     function veYMT() external view returns (address);
 }

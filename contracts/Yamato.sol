@@ -46,9 +46,6 @@ contract Yamato is
     using PledgeLib for IYamato.Pledge;
     using PledgeLib for uint256;
 
-
-
-
     /*
         ===========================
         ~~~ SAFE HAVEN ~~~
@@ -58,10 +55,10 @@ contract Yamato is
         - Read more => https://docs.openzeppelin.com/upgrades-plugins/1.x/writing-upgradeable#avoid-initial-values-in-field-declarations
     */
 
-    uint8 constant public override MCR = 110; // MinimumCollateralizationRatio in pertenk
-    uint8 constant public RRR = 80; // RedemptionReserveRate in pertenk
-    uint8 constant public SRR = 20; // SweepReserveRate in pertenk
-    uint8 constant public override GRR = 1; // GasReserveRate in pertenk
+    uint8 public constant override MCR = 110; // MinimumCollateralizationRatio in pertenk
+    uint8 public constant RRR = 80; // RedemptionReserveRate in pertenk
+    uint8 public constant SRR = 20; // SweepReserveRate in pertenk
+    uint8 public constant override GRR = 1; // GasReserveRate in pertenk
 
     // Use hash-slot pointer. You will be less anxious to modularise contracts later.
     string constant CURRENCY_OS_SLOT_ID = "deps.CurrencyOS";
@@ -80,9 +77,6 @@ contract Yamato is
         ===========================
     */
 
-
-
-
     /*
         ===========================
         !!! DANGER ZONE BEGINS !!!
@@ -98,17 +92,12 @@ contract Yamato is
     mapping(address => Pledge) pledges;
     mapping(address => uint256) public override withdrawLocks;
     mapping(address => uint256) public override depositAndBorrowLocks;
+
     /*
         ===========================
         !!! DANGER ZONE ENDED !!!
         ===========================
     */
-
-
-
-
-
-
 
     /*
         ==============================
@@ -252,10 +241,7 @@ contract Yamato is
     /// @notice Make a Pledge with ETH. "Top-up" supported.
     /// @dev We haven't supported ERC-20 pledges and pool
     function deposit() public payable nonReentrant whenNotPaused {
-        (bool success, ) = payable(depositor()).call{value: msg.value}(
-            abi.encodeWithSignature("runDeposit(address)", msg.sender)
-        );
-        require(success, "runDeposit failed");
+        IYamatoDepositor(depositor()).runDeposit{value: msg.value}(msg.sender);
         emit Deposited(msg.sender, msg.value);
     }
 
@@ -463,12 +449,12 @@ contract Yamato is
         }
     }
 
-    function repayer() public view override returns (address _depositor) {
+    function repayer() public view override returns (address _repayer) {
         bytes32 YAMATO_REPAYER_KEY = bytes32(
             keccak256(abi.encode(YAMATO_REPAYER_SLOT_ID))
         );
         assembly {
-            _depositor := sload(YAMATO_REPAYER_KEY)
+            _repayer := sload(YAMATO_REPAYER_KEY)
         }
     }
 

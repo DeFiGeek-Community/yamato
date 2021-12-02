@@ -16,12 +16,10 @@ import "./Interfaces/IYmtOS.sol";
 import "./Dependencies/UUPSBase.sol";
 import "hardhat/console.sol";
 
-
 contract YmtOS is IYmtOS, UUPSBase {
     string constant YMT_SLOT_ID = "deps.YMT";
     string constant VEYMT_SLOT_ID = "deps.veYMT";
     uint256 constant CYCLE_SIZE = 1;
-
 
     address[] currencyOSs;
     mapping(address => address[]) yamatoesOfCurrencyOS;
@@ -30,15 +28,11 @@ contract YmtOS is IYmtOS, UUPSBase {
     mapping(address => address) decisions;
     mapping(address => uint256) memScore;
 
-
-
-
-
-
-    function initialize(
-        address _YMT,
-        address _veYMT
-    ) public override initializer {
+    function initialize(address _YMT, address _veYMT)
+        public
+        override
+        initializer
+    {
         __UUPSBase_init();
 
         bytes32 YMT_KEY = bytes32(keccak256(abi.encode(YMT_SLOT_ID)));
@@ -139,9 +133,8 @@ contract YmtOS is IYmtOS, UUPSBase {
             // This document shows CJPY-denominated score result, but you still should normalize the score with "TotalScore"
             // And then multiply that scoreShare with the
 
-            uint256 _mintThisPerson = _mintableInTimeframe
-                * getScore(_pledge, _at)
-                / _totalScore;
+            uint256 _mintThisPerson = (_mintableInTimeframe *
+                getScore(_pledge, _at)) / _totalScore;
             IYMT(YMT()).mint(_voter, _mintThisPerson);
             delete memScore[_voter];
         }
@@ -192,19 +185,17 @@ contract YmtOS is IYmtOS, UUPSBase {
         return 1;
     }
 
-
     function YMT() public view override returns (address _YMT) {
         bytes32 YMT_KEY = bytes32(keccak256(abi.encode(YMT_SLOT_ID)));
         assembly {
             _YMT := sload(YMT_KEY)
         }
     }
+
     function veYMT() public view override returns (address _veYMT) {
         bytes32 VEYMT_KEY = bytes32(keccak256(abi.encode(VEYMT_SLOT_ID)));
         assembly {
             _veYMT := sload(VEYMT_KEY)
         }
     }
-
-
 }

@@ -7,7 +7,15 @@ interface IPriceFeed {
 
     function lastGoodPrice() external view returns (uint256);
 
-    function ethPriceAggregatorInUSD() external view returns (address _ethPriceAggregatorInUSD);
-    function jpyPriceAggregatorInUSD() external view returns (address _jpyPriceAggregatorInUSD);
+    function ethPriceAggregatorInUSD()
+        external
+        view
+        returns (address _ethPriceAggregatorInUSD);
+
+    function jpyPriceAggregatorInUSD()
+        external
+        view
+        returns (address _jpyPriceAggregatorInUSD);
+
     function tellorCaller() external view returns (address _tellorCaller);
 }
