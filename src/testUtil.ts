@@ -1,6 +1,9 @@
 import { ethers, upgrades, artifacts } from "hardhat";
 import { BaseContract, ContractFactory, BigNumber } from "ethers";
 import { FakeContract, smock } from "@defi-wonderland/smock";
+import { existsSync, readFileSync } from "fs";
+import { getDeploymentAddressPath } from "./deployUtil";
+import { genABI } from "./genABI";
 
 // @dev UUPS
 export async function getFakeProxy<T extends BaseContract>(
@@ -33,11 +36,13 @@ export async function getLinkedProxy<
   T extends BaseContract,
   S extends ContractFactory
 >(contractName: string, args: Array<any>, libralies: string[]): Promise<T> {
+  console.log(`getLinkedProxy: deploying libs...`);
   let Libraries = {};
   for (var i = 0; i < libralies.length; i++) {
     let libraryName = libralies[i];
     Libraries[libraryName] = (await deployLibrary(libraryName)).address;
   }
+  console.log(`getLinkedProxy: libs deployed.`);
 
   let contractFactory: S = <S>(
     await getLinkedContractFactory(contractName, Libraries)
@@ -50,6 +55,12 @@ export async function getLinkedProxy<
 }
 
 export async function deployLibrary(libraryName) {
+  const filepath = getDeploymentAddressPath(libraryName);
+  if ( (await ethers.provider.getNetwork()).name == "rinkeby" && existsSync(filepath) ) {
+    const _LibAddr = readFileSync(filepath).toString();
+    console.log(`${libraryName} is already deployed and use ${_LibAddr}`)
+    return new ethers.Contract(_LibAddr, genABI("PledgeLib", true))
+  }
   const Library = await ethers.getContractFactory(libraryName);
   const library = await Library.deploy();
   await library.deployed();

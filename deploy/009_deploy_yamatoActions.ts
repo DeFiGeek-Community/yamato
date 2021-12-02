@@ -91,6 +91,9 @@ async function deployYamatoAction<
   T extends BaseContract,
   S extends ContractFactory
 >(actionName) {
+
+  console.log(`Yamato${actionName} is being deployed...`);
+
   const _yamatoAddr = readFileSync(
     getDeploymentAddressPathWithTag("Yamato", "ERC1967Proxy")
   ).toString();
