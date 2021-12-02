@@ -1,0 +1,40 @@
+diff --git a/node_modules/@openzeppelin/upgrades-core/dist/validate/overrides.js b/node_modules/@openzeppelin/upgrades-core/dist/validate/overrides.js
+index 70d04ff..8f2cbd8 100644
+--- a/node_modules/@openzeppelin/upgrades-core/dist/validate/overrides.js
++++ b/node_modules/@openzeppelin/upgrades-core/dist/validate/overrides.js
+@@ -50,6 +50,7 @@ function withValidationDefaults(opts) {
+ exports.withValidationDefaults = withValidationDefaults;
+ function processExceptions(contractName, errors, opts) {
+     const { unsafeAllow } = withValidationDefaults(opts);
++
+     if (opts.kind === 'transparent') {
+         errors = errors.filter(error => error.kind !== 'missing-public-upgradeto');
+     }
+diff --git a/node_modules/@openzeppelin/upgrades-core/src/deployment.ts b/node_modules/@openzeppelin/upgrades-core/src/deployment.ts
+index d1d3582..2fe227a 100644
+--- a/node_modules/@openzeppelin/upgrades-core/src/deployment.ts
++++ b/node_modules/@openzeppelin/upgrades-core/src/deployment.ts
+@@ -56,8 +56,8 @@ export async function waitAndValidateDeployment(provider: EthereumProvider, depl
+ 
+   // Poll for 60 seconds with a 5 second poll interval.
+   // TODO: Make these parameters configurable.
+-  const pollTimeout = 60e3;
+-  const pollInterval = 5e3;
++  const pollTimeout = 160e3;
++  const pollInterval = 1e3;
+ 
+   if (txHash !== undefined) {
+     const startTime = Date.now();
+diff --git a/node_modules/@openzeppelin/upgrades-core/src/validate/query.ts b/node_modules/@openzeppelin/upgrades-core/src/validate/query.ts
+index 1995421..7786e7a 100644
+--- a/node_modules/@openzeppelin/upgrades-core/src/validate/query.ts
++++ b/node_modules/@openzeppelin/upgrades-core/src/validate/query.ts
+@@ -7,6 +7,8 @@ import { ValidationErrors } from './error';
+ import { ValidationData, normalizeValidationData } from './data';
+ 
+ export function assertUpgradeSafe(data: ValidationData, version: Version, opts: ValidationOptions): void {
++  console.log(`opts:${JSON.stringify(opts)}`);
++
+   const dataV3 = normalizeValidationData(data);
+   const [contractName] = getContractNameAndRunValidation(dataV3, version);
+ 

@@ -24,6 +24,12 @@ import {
 } from "../typechain";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+  if(
+    readFileSync(
+      getDeploymentAddressPathWithTag("YamatoDepositor", "ERC1967Proxy")
+    ).toString()
+  ) return;
+
   const p = await setProvider();
   const { ethers, deployments } = hre;
   const { getContractFactory } = ethers;

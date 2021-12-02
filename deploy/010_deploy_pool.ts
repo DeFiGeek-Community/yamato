@@ -4,23 +4,57 @@ import {
   deploy,
   setProvider,
   getDeploymentAddressPath,
+  getDeploymentAddressPathWithTag
 } from "../src/deployUtil";
-import { readFileSync } from "fs";
+import { getLinkedProxy } from '../src/testUtil';
+import { readFileSync, writeFileSync } from "fs";
+import { Pool, Pool__factory } from "../typechain";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+  if(
+    readFileSync(
+      getDeploymentAddressPathWithTag("Yamato", "ERC1967Proxy")
+    ).toString()
+  ) return;
+
   const p = await setProvider();
   const { ethers, deployments } = hre;
   const { getContractFactory } = ethers;
 
-  const _yamatoHelperAddr = readFileSync(
-    getDeploymentAddressPath("YamatoHelperERC1967Proxy")
+  const _yamatoAddr = readFileSync(
+    getDeploymentAddressPathWithTag("Yamato","ERC1967Proxy")
   ).toString();
 
+
   await deploy("Pool", {
-    args: [_yamatoHelperAddr],
+    args: [_yamatoAddr],
     getContractFactory,
     deployments,
   }).catch((e) => console.trace(e.message));
+
+  const inst = await getLinkedProxy<
+    Pool,
+    Pool__factory
+  >("Pool", [_yamatoAddr], ["PledgeLib"]);
+  const implAddr = await inst.getImplementation();
+
+  console.log(
+    `Pool is deployed as ${
+      inst.address
+    } with impl(${implAddr}) by ${await inst.signer.getAddress()} on ${
+      (await inst.provider.getNetwork()).name
+    } at ${await inst.provider.getBlockNumber()}`
+  );
+
+  writeFileSync(
+    getDeploymentAddressPathWithTag("Pool", "ERC1967Proxy"),
+    inst.address
+  );
+  writeFileSync(
+    getDeploymentAddressPathWithTag("Pool", "UUPSImpl"),
+    implAddr
+  );
+
 };
 export default func;
 func.tags = ["Pool"];

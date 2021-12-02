@@ -10,18 +10,24 @@ import { readFileSync, writeFileSync } from "fs";
 import { PriorityRegistry, PriorityRegistry__factory } from "../typechain";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+  if(
+    readFileSync(
+      getDeploymentAddressPathWithTag("PriorityRegistry", "ERC1967Proxy")
+    ).toString()
+  ) return;
+
   const p = await setProvider();
   const { ethers, deployments } = hre;
   const { getContractFactory } = ethers;
 
-  const _yamatoHelperAddr = readFileSync(
-    getDeploymentAddressPathWithTag("YamatoHelper", "ERC1967Proxy")
+  const _yamatoAddr = readFileSync(
+    getDeploymentAddressPathWithTag("Yamato", "ERC1967Proxy")
   ).toString();
 
   const inst = await getLinkedProxy<
     PriorityRegistry,
     PriorityRegistry__factory
-  >("PriorityRegistry", [_yamatoHelperAddr], ["PledgeLib"]);
+  >("PriorityRegistry", [_yamatoAddr], ["PledgeLib"]);
   const implAddr = await inst.getImplementation();
 
   console.log(

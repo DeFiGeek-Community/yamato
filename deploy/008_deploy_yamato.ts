@@ -11,6 +11,12 @@ import { readFileSync, writeFileSync } from "fs";
 import { Yamato, Yamato__factory } from "../typechain";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+  if(
+    readFileSync(
+      getDeploymentAddressPathWithTag("Yamato", "ERC1967Proxy")
+    ).toString()
+  ) return;
+
   const p = await setProvider();
   const { ethers, deployments } = hre;
   const { getContractFactory } = ethers;

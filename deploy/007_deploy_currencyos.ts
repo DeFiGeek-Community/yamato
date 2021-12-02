@@ -11,6 +11,12 @@ import { CurrencyOS, CurrencyOS__factory } from "../typechain";
 import { getProxy } from "../src/testUtil";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+  if(
+    readFileSync(
+      getDeploymentAddressPathWithTag("CurrencyOS", "ERC1967Proxy")
+    ).toString()
+  ) return;
+
   const p = await setProvider();
   const { ethers, deployments } = hre;
   const { getContractFactory } = ethers;
@@ -28,6 +34,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     feedAddr,
     feePoolAddr,
   ]);
+  const implAddr = await inst.getImplementation();
 
   writeFileSync(
     getDeploymentAddressPathWithTag("CurrencyOS", "ERC1967Proxy"),

@@ -15,10 +15,18 @@ import {
   isEmbeddedMode,
   backToInitMode,
   sleep,
+  getDeploymentAddressPathWithTag,
 } from "../src/deployUtil";
+import { readFileSync } from "fs";
 import { Wallet } from "ethers";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+  if(
+    readFileSync(
+      getDeploymentAddressPathWithTag("ChainLinkMock", "JpyUsd")
+    ).toString()
+  ) return;
+
   await setProvider();
   const { ethers, deployments } = hre;
   const { getContractFactory, Contract, BigNumber, Signer, getSigners } =

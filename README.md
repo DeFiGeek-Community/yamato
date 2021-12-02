@@ -27,7 +27,7 @@ As of this writing, the following library versions have been confirmed working f
 - Node: 14.16.1
 - npm: 6.14.12
 - hardhat: 2.1.1
-- smock: 1.1.5
+- smock: 2.x
 
 Please note, using a different version might result in commands like "npm i" and test to fail.
 
@@ -50,7 +50,9 @@ If not, please check that the npm dependencies are installed as expected referri
 
 ### Running deployment
 
-`npm run deploy:rinkeby`
+- `npm run deploy:rinkeby`
+- `npm run deploy:rinkeby:cached`
+- `npm run verify:rinkeby:all`
 
 #### For only etherscan verification
 
