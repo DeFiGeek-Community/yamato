@@ -50,8 +50,8 @@ If not, please check that the npm dependencies are installed as expected referri
 
 ### Running deployment
 
-- `npm run deploy:rinkeby`
-- `npm run deploy:rinkeby:cached`
+- `npm run deploy:rinkeby:reset`
+- `npm run deploy:rinkeby` (with cached contracts / continue from resumed deployment)
 - `npm run verify:rinkeby:all`
 
 #### For only etherscan verification

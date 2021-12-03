@@ -338,9 +338,9 @@ contract Yamato is
 
     function toggle() public onlyGovernance {
         if (paused()) {
-            _pause();
-        } else {
             _unpause();
+        } else {
+            _pause();
         }
     }
 

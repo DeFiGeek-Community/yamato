@@ -198,9 +198,11 @@ describe("MintCJPY :: contract Yamato", () => {
       expect(totalSupplyAfter).to.be.gt(totalSupplyBefore);
 
       const eoaBalance = await CJPY.balanceOf(await accounts[0].getAddress());
-      expect(eoaBalance).to.be.gt(0);
+      expect(eoaBalance).to.be.lt(toERC20(toBorrow + ""));
+      expect(eoaBalance).to.be.gt(toERC20(toBorrow.mul(79).div(100) + ""));
 
       const caBalance = await CJPY.balanceOf(Pool.address);
+      expect(caBalance).to.be.lt(toERC20(toBorrow.mul(21).div(100) + ""));
       expect(caBalance).to.be.gt(0);
 
       expect(eoaBalance.add(caBalance)).to.eq(toBorrow.mul(1e18 + ""));

@@ -17,19 +17,19 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 /// @title Universal Upgradeability Proxy Standard Base Contract
 /// @author 0xMotoko
 contract UUPSBase is IUUPSEtherscanVerifiable, Initializable, UUPSUpgradeable {
-    address governance;
-    address pendingGovernance;
-    address tester;
+    address public governance;
+    address public pendingGovernance;
+    address public tester;
 
     event NewPendingGovernance(address _sender);
     event UpdateGovernance(address _sender);
     event RevokeGovernance(address _sender);
 
-    function __UUPSBase_init() public initializer {
+    function __UUPSBase_init() internal initializer {
         __UUPSBase_init_unchained();
     }
 
-    function __UUPSBase_init_unchained() public initializer {
+    function __UUPSBase_init_unchained() internal initializer {
         governance = msg.sender;
         tester = msg.sender;
     }

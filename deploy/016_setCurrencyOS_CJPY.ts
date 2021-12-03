@@ -20,11 +20,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const CJPY = new Contract(_CJPY, genABI("CJPY"), p);
 
   await (
-    await CJPY.connect(getFoundation()).setCurrencyOS(_currencyOSAddr)
+    await CJPY.connect(getFoundation()).setCurrencyOS(_currencyOSAddr, { gasLimit: 10000000, gasPrice: 30 })
   ).wait();
   console.log(`log: CJPY.setCurrencyOS() executed.`);
-  await (await CJPY.connect(getFoundation()).renounceGovernance()).wait();
-  console.log(`log: CJPY.renounceGovernance() executed.`);
+  await (await CJPY.connect(getFoundation()).revokeGovernance()).wait();
+  console.log(`log: CJPY.revokeGovernance() executed.`);
 };
 export default func;
 func.tags = [""];

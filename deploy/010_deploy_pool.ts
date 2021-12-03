@@ -11,7 +11,13 @@ import { existsSync, readFileSync, writeFileSync } from "fs";
 import { Pool, Pool__factory } from "../typechain";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  if (existsSync(getDeploymentAddressPathWithTag("Pool", "ERC1967Proxy")))
+  if (
+    existsSync(
+      getDeploymentAddressPathWithTag("Yamato", "ERC1967Proxy")
+    )
+    &&
+    existsSync(getDeploymentAddressPathWithTag("Pool", "ERC1967Proxy"))
+    )
     return;
 
   const p = await setProvider();

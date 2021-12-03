@@ -15,10 +15,10 @@ import "hardhat/console.sol";
 /// @title Yamato Store Base Contract
 /// @author 0xMotoko
 contract YamatoStore is YamatoBase {
-    function __YamatoStore_init(address _yamato) public initializer {
+    function __YamatoStore_init(address _yamato) internal initializer {
         __YamatoBase_init(_yamato);
         __YamatoStore_init_unchained();
     }
 
-    function __YamatoStore_init_unchained() public initializer {}
+    function __YamatoStore_init_unchained() internal initializer {}
 }

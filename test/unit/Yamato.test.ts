@@ -1058,4 +1058,48 @@ describe("contract Yamato", function () {
       expect(afterValues[2]).to.eq(true);
     });
   });
+
+  describe("toggle()", () => {
+    let accounts;
+
+    beforeEach(async () => {
+      accounts = await ethers.getSigners();
+    });
+
+    it("should pause Yamato.sol", async () => {
+
+      const beforePaused = await yamato.paused();
+      expect(beforePaused).to.be.false;
+
+      await yamato
+        .connect(accounts[0])
+        .toggle();
+
+      const afterPaused = await yamato.paused();
+      expect(afterPaused).to.be.true;
+  
+    });
+  });
+
+  it("should work after pause", async () => {
+
+    const beforePaused = await yamato.paused();
+    expect(beforePaused).to.be.false;
+
+    await yamato
+      .connect(accounts[0])
+      .toggle();
+
+    const afterPaused = await yamato.paused();
+    expect(afterPaused).to.be.true;
+  
+    await yamato
+      .connect(accounts[0])
+      .toggle();
+
+    const lastPaused = await yamato.paused();
+    expect(lastPaused).to.be.false;
+
+  });
 });
+

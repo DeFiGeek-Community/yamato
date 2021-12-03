@@ -22,18 +22,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     getDeploymentAddressPathWithTag("CurrencyOS", "ERC1967Proxy")
   ).toString();
 
-  await deploy("PledgeLib", {
-    args: [],
-    getContractFactory,
-    deployments,
-    isDependency: true,
-  }).catch((e) => console.trace(e.message));
-
-  const PledgeLib = readFileSync(
-    getDeploymentAddressPath("PledgeLib")
-  ).toString();
-  console.log(`PledgeLib: ${PledgeLib}`);
-
   const inst = await getLinkedProxy<Yamato, Yamato__factory>(
     "Yamato",
     [_currencyOSAddr],

@@ -60,7 +60,7 @@ contract Currency is ERC20Permit, ICurrency {
         currencyOS = _currencyOSAddr;
     }
 
-    function renounceGovernance() public onlyGovernance {
+    function revokeGovernance() public onlyGovernance {
         governance = address(0);
     }
 
