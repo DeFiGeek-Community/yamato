@@ -61,11 +61,14 @@ contract YmtOS is IYmtOS, UUPSBase {
     }
 
     modifier onlyCurrencyOSs() {
+        require(_exists(), "You are not the registered CurrencyOS.");
+        _;
+    }
+    function _exists() internal returns (bool) {
         for (uint256 i = 0; i < currencyOSs.length; ++i) {
-            if (msg.sender == currencyOSs[i]) {
-                _;
-            }
+            if (msg.sender == currencyOSs[i]) return true;
         }
+        return false;
     }
 
     function addCurrencyOS(address _currencyOS) external onlyGovernance {

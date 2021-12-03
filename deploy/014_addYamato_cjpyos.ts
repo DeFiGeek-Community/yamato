@@ -21,6 +21,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const _yamatoAddr = readFileSync(
     getDeploymentAddressPathWithTag("Yamato", "ERC1967Proxy")
   ).toString();
+
+
+  if( await CurrencyOS.exists(_yamatoAddr) ) {
+    console.log(`log: CurrencyOS.addYamato() skipped.`);
+    return;
+  }
   await (
     await CurrencyOS.connect(getFoundation()).addYamato(_yamatoAddr)
   ).wait();

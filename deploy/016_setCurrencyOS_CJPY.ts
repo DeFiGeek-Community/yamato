@@ -19,8 +19,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const _CJPY = readFileSync(getDeploymentAddressPath("CJPY")).toString();
   const CJPY = new Contract(_CJPY, genABI("CJPY"), p);
 
+  console.log(`log: CJPY.setCurrencyOS() will be executed.`);
   await (
-    await CJPY.connect(getFoundation()).setCurrencyOS(_currencyOSAddr, { gasLimit: 10000000, gasPrice: 30 })
+    await CJPY.connect(getFoundation()).setCurrencyOS(_currencyOSAddr, { gasLimit: 10000000 })
   ).wait();
   console.log(`log: CJPY.setCurrencyOS() executed.`);
   await (await CJPY.connect(getFoundation()).revokeGovernance()).wait();

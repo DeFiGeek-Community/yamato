@@ -68,11 +68,8 @@ contract CurrencyOS is ICurrencyOS, UUPSBase {
         if (yamatoes.length == 0) {
             revert("No Yamato is registered.");
         } else {
-            for (uint256 i = 0; i < yamatoes.length; i++) {
-                if (IYamato(yamatoes[i]).permitDeps(msg.sender)) {
-                    _;
-                }
-            }
+            require(_permitMe(), "You are not Yamato deps.");
+            _;
         }
     }
 
@@ -82,6 +79,7 @@ contract CurrencyOS is ICurrencyOS, UUPSBase {
         =====================
     */
     function addYamato(address _yamatoAddr) external onlyGovernance {
+        require(!exists(_yamatoAddr), "Duplicated Yamato.");
         yamatoes.push(_yamatoAddr);
         if (ymtOS() != address(0)) {
             IYmtOS(ymtOS()).addYamatoOfCurrencyOS(_yamatoAddr);
@@ -145,5 +143,18 @@ contract CurrencyOS is ICurrencyOS, UUPSBase {
 
     function veYMT() public view override returns (address _veYMT) {
         _veYMT = IYmtOS(ymtOS()).veYMT();
+    }
+
+    function exists(address _yamato) public view returns (bool) {
+        for (uint256 i = 0; i < yamatoes.length; i++) {
+            if(yamatoes[i] == _yamato) return true;
+        }
+        return false;
+    }
+    function _permitMe() internal returns (bool) {
+        for (uint256 i = 0; i < yamatoes.length; i++) {
+            if (IYamato(yamatoes[i]).permitDeps(msg.sender)) return true;
+        }
+        return false;
     }
 }

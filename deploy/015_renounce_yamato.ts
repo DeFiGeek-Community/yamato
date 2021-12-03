@@ -70,17 +70,17 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await (await Yamato.connect(getFoundation()).revokeTester()).wait();
   console.log(`log: Yamato.revokeTester() executed.`);
 
-  await (await YamatoDepositor.connect(getFoundation()).revokeTester()).wait();
+  await YamatoDepositor.connect(getFoundation()).revokeTester()
   console.log(`log: YamatoDepositor.revokeTester() executed.`);
-  await (await YamatoBorrower.connect(getFoundation()).revokeTester()).wait();
+  await YamatoBorrower.connect(getFoundation()).revokeTester()
   console.log(`log: YamatoBorrower.revokeTester() executed.`);
-  await (await YamatoRepayer.connect(getFoundation()).revokeTester()).wait();
+  await YamatoRepayer.connect(getFoundation()).revokeTester()
   console.log(`log: YamatoRepayer.revokeTester() executed.`);
-  await (await YamatoWithdrawer.connect(getFoundation()).revokeTester()).wait();
+  await YamatoWithdrawer.connect(getFoundation()).revokeTester()
   console.log(`log: YamatoWithdrawer.revokeTester() executed.`);
-  await (await YamatoRedeemer.connect(getFoundation()).revokeTester()).wait();
+  await YamatoRedeemer.connect(getFoundation()).revokeTester()
   console.log(`log: YamatoRedeemer.revokeTester() executed.`);
-  await (await YamatoSweeper.connect(getFoundation()).revokeTester()).wait();
+  await YamatoSweeper.connect(getFoundation()).revokeTester()
   console.log(`log: YamatoSweeper.revokeTester() executed.`);
 };
 export default func;

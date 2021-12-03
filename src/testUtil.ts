@@ -1,7 +1,7 @@
 import { ethers, upgrades, artifacts } from "hardhat";
 import { BaseContract, ContractFactory, BigNumber } from "ethers";
 import { FakeContract, smock } from "@defi-wonderland/smock";
-import { existsSync, readFileSync } from "fs";
+import { existsSync, readFileSync, writeFileSync } from "fs";
 import { getDeploymentAddressPath } from "./deployUtil";
 import { genABI } from "./genABI";
 
@@ -63,6 +63,9 @@ export async function deployLibrary(libraryName) {
   }
   const Library = await ethers.getContractFactory(libraryName);
   const library = await Library.deploy();
+
+  writeFileSync(filepath, library.address);
+  
   await library.deployed();
   return library;
 }

@@ -91,6 +91,15 @@ describe("CurrencyOS", () => {
       const _yamato = await currencyOS.yamatoes(0);
       expect(_yamato).to.equal(mockYamato.address);
     });
+
+    it(`fails to add the same Yamato twice.`, async function () {
+      await currencyOS.addYamato(mockYamato.address)
+
+      await expect(
+        currencyOS.addYamato(mockYamato.address)
+      ).to.be.revertedWith("Duplicated Yamato.");
+    });
+
   });
 
   describe("mintCJPY()", function () {
