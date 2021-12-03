@@ -29,10 +29,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { getContractFactory } = ethers;
 
   if (
-    !existsSync(
-      getDeploymentAddressPathWithTag("Yamato", "ERC1967Proxy")
-    )
-    ||
+    !existsSync(getDeploymentAddressPathWithTag("Yamato", "ERC1967Proxy")) ||
     !existsSync(
       getDeploymentAddressPathWithTag("YamatoDepositor", "ERC1967Proxy")
     )
@@ -43,10 +40,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   }
 
   if (
-    !existsSync(
-      getDeploymentAddressPathWithTag("Yamato", "ERC1967Proxy")
-    )
-    ||
+    !existsSync(getDeploymentAddressPathWithTag("Yamato", "ERC1967Proxy")) ||
     !existsSync(
       getDeploymentAddressPathWithTag("YamatoBorrower", "ERC1967Proxy")
     )
@@ -57,10 +51,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   }
 
   if (
-    !existsSync(
-      getDeploymentAddressPathWithTag("Yamato", "ERC1967Proxy")
-    )
-    ||
+    !existsSync(getDeploymentAddressPathWithTag("Yamato", "ERC1967Proxy")) ||
     !existsSync(
       getDeploymentAddressPathWithTag("YamatoRepayer", "ERC1967Proxy")
     )
@@ -69,10 +60,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   }
 
   if (
-    !existsSync(
-      getDeploymentAddressPathWithTag("Yamato", "ERC1967Proxy")
-    )
-    ||
+    !existsSync(getDeploymentAddressPathWithTag("Yamato", "ERC1967Proxy")) ||
     !existsSync(
       getDeploymentAddressPathWithTag("YamatoWithdrawer", "ERC1967Proxy")
     )
@@ -83,10 +71,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   }
 
   if (
-    !existsSync(
-      getDeploymentAddressPathWithTag("Yamato", "ERC1967Proxy")
-    )
-    ||
+    !existsSync(getDeploymentAddressPathWithTag("Yamato", "ERC1967Proxy")) ||
     !existsSync(
       getDeploymentAddressPathWithTag("YamatoRedeemer", "ERC1967Proxy")
     )
@@ -97,10 +82,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   }
 
   if (
-    !existsSync(
-      getDeploymentAddressPathWithTag("Yamato", "ERC1967Proxy")
-    )
-    ||
+    !existsSync(getDeploymentAddressPathWithTag("Yamato", "ERC1967Proxy")) ||
     !existsSync(
       getDeploymentAddressPathWithTag("YamatoSweeper", "ERC1967Proxy")
     )
@@ -115,7 +97,6 @@ async function deployYamatoAction<
   T extends BaseContract,
   S extends ContractFactory
 >(actionName) {
-
   console.log(`Yamato${actionName} is being deployed...`);
 
   const _yamatoAddr = readFileSync(

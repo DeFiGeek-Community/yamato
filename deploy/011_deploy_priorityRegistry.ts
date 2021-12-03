@@ -11,10 +11,7 @@ import { PriorityRegistry, PriorityRegistry__factory } from "../typechain";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   if (
-    existsSync(
-      getDeploymentAddressPathWithTag("Yamato", "ERC1967Proxy")
-    )
-    &&
+    existsSync(getDeploymentAddressPathWithTag("Yamato", "ERC1967Proxy")) &&
     existsSync(
       getDeploymentAddressPathWithTag("PriorityRegistry", "ERC1967Proxy")
     )

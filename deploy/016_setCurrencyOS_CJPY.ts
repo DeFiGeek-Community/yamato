@@ -21,7 +21,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   console.log(`log: CJPY.setCurrencyOS() will be executed.`);
   await (
-    await CJPY.connect(getFoundation()).setCurrencyOS(_currencyOSAddr, { gasLimit: 10000000 })
+    await CJPY.connect(getFoundation()).setCurrencyOS(_currencyOSAddr, {
+      gasLimit: 10000000,
+    })
   ).wait();
   console.log(`log: CJPY.setCurrencyOS() executed.`);
   await (await CJPY.connect(getFoundation()).revokeGovernance()).wait();

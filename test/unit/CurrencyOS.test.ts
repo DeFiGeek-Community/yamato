@@ -93,13 +93,12 @@ describe("CurrencyOS", () => {
     });
 
     it(`fails to add the same Yamato twice.`, async function () {
-      await currencyOS.addYamato(mockYamato.address)
+      await currencyOS.addYamato(mockYamato.address);
 
-      await expect(
-        currencyOS.addYamato(mockYamato.address)
-      ).to.be.revertedWith("Duplicated Yamato.");
+      await expect(currencyOS.addYamato(mockYamato.address)).to.be.revertedWith(
+        "Duplicated Yamato."
+      );
     });
-
   });
 
   describe("mintCJPY()", function () {

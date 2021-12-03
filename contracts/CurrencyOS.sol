@@ -147,10 +147,11 @@ contract CurrencyOS is ICurrencyOS, UUPSBase {
 
     function exists(address _yamato) public view returns (bool) {
         for (uint256 i = 0; i < yamatoes.length; i++) {
-            if(yamatoes[i] == _yamato) return true;
+            if (yamatoes[i] == _yamato) return true;
         }
         return false;
     }
+
     function _permitMe() internal returns (bool) {
         for (uint256 i = 0; i < yamatoes.length; i++) {
             if (IYamato(yamatoes[i]).permitDeps(msg.sender)) return true;
