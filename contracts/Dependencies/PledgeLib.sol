@@ -114,7 +114,7 @@ library PledgeLib {
         require(_ICRpertenk >= 13000, "ICR too low to get fee data.");
         // if (11000 <= _ICRpertenk && _ICRpertenk < 13000) {
         //     _FRpertenk = 2000 - ((_ICRpertenk - 11000) * 80) / 100;
-        // } else 
+        // } else
         if (13000 <= _ICRpertenk && _ICRpertenk < 15000) {
             _FRpertenk = 400 - ((_ICRpertenk - 13000) * 10) / 100;
         } else if (15000 <= _ICRpertenk && _ICRpertenk < 20000) {

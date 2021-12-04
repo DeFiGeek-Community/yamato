@@ -93,9 +93,9 @@ type Options = {
 };
 
 export function getCurrentNetwork() {
-  if ( process.argv.join("").toLowerCase().indexOf("rinkeby") >= 0 ) {
+  if (process.argv.join("").toLowerCase().indexOf("rinkeby") >= 0) {
     return "rinkeby";
-  } else if (process.argv.join("").toLowerCase().indexOf("mainnet") >= 0 ) {
+  } else if (process.argv.join("").toLowerCase().indexOf("mainnet") >= 0) {
     return "mainnet";
   } else {
     return "localnet";
