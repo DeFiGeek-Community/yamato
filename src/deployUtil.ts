@@ -93,6 +93,14 @@ type Options = {
 };
 
 export function getCurrentNetwork() {
+  if (process.argv.join("").toLowerCase().indexOf("rinkeby") >= 0) {
+    return "rinkeby";
+  } else if (process.argv.join("").toLowerCase().indexOf("mainnet") >= 0) {
+    return "mainnet";
+  } else {
+    return "localnet";
+  }
+
   return process.argv.join("").toLowerCase().indexOf("rinkeby") >= 0
     ? "rinkeby"
     : ""; // node hardhat deploy --network <network> / npm run verify:rinkeby:all

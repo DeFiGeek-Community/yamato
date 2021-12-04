@@ -183,7 +183,7 @@ describe("MintCJPY :: contract Yamato", () => {
       await (await PriceFeed.fetchPrice()).wait();
       const PRICE = await PriceFeed.lastGoodPrice();
 
-      const MCR = BigNumber.from(110);
+      const MCR = BigNumber.from(130);
       const toCollateralize = 1;
       const toBorrow = PRICE.mul(toCollateralize)
         .mul(100)

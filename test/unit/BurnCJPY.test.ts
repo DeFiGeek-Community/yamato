@@ -180,7 +180,7 @@ describe("burnCurrency :: contract Yamato", () => {
 
   describe("redeem()", function () {
     let PRICE;
-    const MCR = BigNumber.from(110);
+    const MCR = BigNumber.from(130);
     let toCollateralize;
     let toBorrow;
 

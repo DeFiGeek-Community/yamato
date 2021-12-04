@@ -138,7 +138,7 @@ describe("story Events", function () {
       ).wait();
 
       PRICE = BigNumber.from(260000).mul(1e18 + "");
-      MCR = BigNumber.from(110);
+      MCR = BigNumber.from(130);
 
       mockPool.depositRedemptionReserve.returns(0);
       mockPool.depositSweepReserve.returns(0);
