@@ -18,12 +18,12 @@ interface IYamato {
         uint256 priority;
     }
     event Deposited(address indexed sender, uint256 ethAmount);
-    event Borrowed(address indexed sender, uint256 cjpyAmount, uint256 fee);
-    event Repaid(address indexed sender, uint256 cjpyAmount);
+    event Borrowed(address indexed sender, uint256 currencyAmount, uint256 fee);
+    event Repaid(address indexed sender, uint256 currencyAmount);
     event Withdrawn(address indexed sender, uint256 ethAmount);
     event Redeemed(
         address indexed sender,
-        uint256 cjpyAmount,
+        uint256 currencyAmount,
         uint256 ethAmount,
         address[] pledgesOwner
     );
@@ -35,10 +35,12 @@ interface IYamato {
     );
     event Swept(
         address indexed sender,
-        uint256 cjpyAmount,
+        uint256 currencyAmount,
         uint256 gasCompensationAmount,
         address[] pledgesOwner
     );
+
+    function permitDeps(address _sender) external view returns (bool);
 
     function getPledge(address _owner) external view returns (Pledge memory);
 
@@ -61,17 +63,35 @@ interface IYamato {
             uint8
         );
 
-    function yamatoHelper() external view returns (address);
-
     function feed() external view returns (address);
 
-    function cjpyOS() external view returns (address);
+    function currencyOS() external view returns (address);
+
+    function pool() external view returns (address);
+
+    function priorityRegistry() external view returns (address);
+
+    function depositor() external view returns (address);
+
+    function borrower() external view returns (address);
+
+    function repayer() external view returns (address);
+
+    function withdrawer() external view returns (address);
+
+    function redeemer() external view returns (address);
+
+    function sweeper() external view returns (address);
 
     function setPledge(address _owner, Pledge memory _p) external;
 
     function setTotalColl(uint256 _totalColl) external;
 
     function setTotalDebt(uint256 _totalDebt) external;
+
+    function setDepositAndBorrowLocks(address _owner) external;
+
+    function setWithdrawLocks(address _owner) external;
 
     function MCR() external view returns (uint8);
 

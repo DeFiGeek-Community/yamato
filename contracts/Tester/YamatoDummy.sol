@@ -13,8 +13,8 @@ import "../PriorityRegistry.sol";
 import "../Dependencies/PledgeLib.sol";
 import "../Interfaces/IYamato.sol";
 import "../Interfaces/IFeePool.sol";
+import "../Interfaces/ICurrencyOS.sol";
 import "../Pool.sol";
-import "../CjpyOS.sol";
 import "../PriceFeed.sol";
 import "hardhat/console.sol";
 
@@ -23,19 +23,19 @@ contract YamatoDummy {
     using PledgeLib for uint256;
     IPriorityRegistry priorityRegistry;
     IPool pool;
-    address public cjpyOS;
+    address public currencyOS;
     address public feePool;
     address public feed;
     address governance;
     address tester;
     uint8 public MCR = 110; // MinimumCollateralizationRatio in pertenk
 
-    constructor(address _cjpyOS) {
-        cjpyOS = _cjpyOS;
+    constructor(address _currencyOS) {
+        currencyOS = _currencyOS;
         governance = msg.sender;
         tester = msg.sender;
-        feePool = ICjpyOS(cjpyOS).feePool();
-        feed = ICjpyOS(cjpyOS).feed();
+        feePool = ICurrencyOS(currencyOS).feePool();
+        feed = ICurrencyOS(currencyOS).feed();
     }
 
     function setPriorityRegistry(address _priorityRegistry)
@@ -122,14 +122,32 @@ contract YamatoDummy {
         pool.sendETH(_recipient, _amount);
     }
 
-    function bypassSendCJPY(address _recipient, uint256 _amount)
+    function bypassSendCurrency(address _recipient, uint256 _amount)
         external
         onlyTester
     {
-        pool.sendCJPY(_recipient, _amount);
+        pool.sendCurrency(_recipient, _amount);
     }
 
     function getICR(uint256 _coll, uint256 _debt) external returns (uint256) {
         return IYamato.Pledge(_coll, _debt, true, msg.sender, 0).getICR(feed);
+    }
+
+    function getDeps() public view returns (address[4] memory) {
+        return [
+            address(this),
+            address(this),
+            address(pool),
+            address(priorityRegistry)
+        ];
+    }
+
+    function permitDeps(address _sender) public view returns (bool) {
+        bool permit;
+        address[4] memory deps = getDeps();
+        for (uint256 i = 0; i < deps.length; i++) {
+            if (_sender == deps[i]) permit = true;
+        }
+        return permit;
     }
 }

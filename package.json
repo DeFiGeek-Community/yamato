@@ -19,6 +19,7 @@
     "compile": "hardhat compile",
     "compile?": "[[ ! $(git diff contracts) ]] || hardhat compile",
     "deploy:rinkeby": "hardhat deploy --network rinkeby",
+    "deploy:rinkeby:reset": "rm -f ./deployments/rinkeby/*",
     "format": "sort-package-json && prettier --write .",
     "lint:check": "solhint 'contracts/**/*.sol' && prettier --check .",
     "test": "hardhat test",
@@ -67,6 +68,7 @@
     "hardhat-gas-reporter": "^1.0.4",
     "hardhat-tracer": "^1.0.0-alpha.6",
     "jasmine": "^3.7.0",
+    "patch-package": "^6.4.7",
     "solc": "^0.8.4",
     "solhint": "^3.3.6",
     "solhint-plugin-prettier": "0.0.5",
@@ -79,5 +81,6 @@
   },
   "engines": {
     "node": ">=14"
-  }
+  },
+  "postinstall": "patch-package"
 }

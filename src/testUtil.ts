@@ -1,6 +1,9 @@
 import { ethers, upgrades, artifacts } from "hardhat";
 import { BaseContract, ContractFactory, BigNumber } from "ethers";
 import { FakeContract, smock } from "@defi-wonderland/smock";
+import { existsSync, readFileSync, writeFileSync } from "fs";
+import { getDeploymentAddressPath } from "./deployUtil";
+import { genABI } from "./genABI";
 
 // @dev UUPS
 export async function getFakeProxy<T extends BaseContract>(
@@ -33,11 +36,13 @@ export async function getLinkedProxy<
   T extends BaseContract,
   S extends ContractFactory
 >(contractName: string, args: Array<any>, libralies: string[]): Promise<T> {
+  console.log(`getLinkedProxy: deploying libs...`);
   let Libraries = {};
   for (var i = 0; i < libralies.length; i++) {
     let libraryName = libralies[i];
     Libraries[libraryName] = (await deployLibrary(libraryName)).address;
   }
+  console.log(`getLinkedProxy: libs deployed.`);
 
   let contractFactory: S = <S>(
     await getLinkedContractFactory(contractName, Libraries)
@@ -49,14 +54,26 @@ export async function getLinkedProxy<
   return instance;
 }
 
-async function deployLibrary(libraryName) {
+export async function deployLibrary(libraryName) {
+  const filepath = getDeploymentAddressPath(libraryName);
+  if (
+    (await ethers.provider.getNetwork()).name == "rinkeby" &&
+    existsSync(filepath)
+  ) {
+    const _LibAddr = readFileSync(filepath).toString();
+    console.log(`${libraryName} is already deployed and use ${_LibAddr}`);
+    return new ethers.Contract(_LibAddr, genABI("PledgeLib", true));
+  }
   const Library = await ethers.getContractFactory(libraryName);
   const library = await Library.deploy();
+
+  writeFileSync(filepath, library.address);
+
   await library.deployed();
   return library;
 }
 
-async function getLinkedContractFactory(contractName, libraries) {
+export async function getLinkedContractFactory(contractName, libraries) {
   const cArtifact = await artifacts.readArtifact(contractName);
   const linkedBytecode = linkBytecode(cArtifact, libraries);
   const ContractFactory = await ethers.getContractFactory(

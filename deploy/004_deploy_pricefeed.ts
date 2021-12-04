@@ -1,6 +1,5 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
-import { readFileSync } from "fs";
 import {
   deploy,
   getFoundation,
@@ -12,9 +11,12 @@ import { genABI } from "../src/genABI";
 import { Contract } from "ethers";
 import { PriceFeed, PriceFeed__factory } from "../typechain";
 import { getProxy } from "../src/testUtil";
-import { writeFileSync } from "fs";
+import { readFileSync, writeFileSync, existsSync } from "fs";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+  if (existsSync(getDeploymentAddressPathWithTag("PriceFeed", "ERC1967Proxy")))
+    return;
+
   const p = await setProvider();
   const { ethers, deployments } = hre;
   const { getContractFactory } = ethers;

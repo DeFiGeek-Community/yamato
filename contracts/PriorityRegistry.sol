@@ -9,9 +9,9 @@ pragma solidity 0.8.4;
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 import "./Yamato.sol";
-import "./YamatoHelper.sol";
 import "./Interfaces/IPriceFeed.sol";
 import "./Dependencies/PledgeLib.sol";
+import "./Dependencies/YamatoStore.sol";
 import "./Dependencies/SafeMath.sol";
 import "./Dependencies/LiquityMath.sol";
 import "hardhat/console.sol";
@@ -40,12 +40,7 @@ interface IPriorityRegistry {
 }
 
 // @dev For gas saving reason, we use percent denominated ICR only in this contract.
-contract PriorityRegistry is
-    IPriorityRegistry,
-    IUUPSEtherscanVerifiable,
-    Initializable,
-    UUPSUpgradeable
-{
+contract PriorityRegistry is IPriorityRegistry, YamatoStore {
     using SafeMath for uint256;
     using PledgeLib for IYamato.Pledge;
 
@@ -53,23 +48,9 @@ contract PriorityRegistry is
     mapping(uint256 => address[]) private levelIndice; // ICR => owner[]
     uint256 public override pledgeLength;
     uint256 public override LICR; // Note: Lowest ICR in percent
-    address public yamato;
-    IYamatoHelper helper;
-    address public governance;
 
-    function initialize(address _yamatoHepler) public initializer {
-        helper = IYamatoHelper(_yamatoHepler);
-        yamato = helper.yamato();
-        governance = msg.sender;
-    }
-
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() initializer {}
-
-    function _authorizeUpgrade(address) internal override onlyGovernance {}
-
-    function getImplementation() external view override returns (address) {
-        return _getImplementation();
+    function initialize(address _yamato) public initializer {
+        __YamatoStore_init(_yamato);
     }
 
     /*
@@ -81,7 +62,7 @@ contract PriorityRegistry is
     */
 
     /*
-        @notice The upsert process is  1. update coll/debt  2. upsert and return "upsert-time ICR"  3. update priority with the "upsert-time ICR"
+        @notice The upsert process is  1. update coll/debt in Yamato-side 2. floor the last ICR to make "level" 3. upsert and return the new "upsert-time ICR"  4. update padded-priority to the Yamato
         @dev It upserts "deposited", "borrowed", "repayed", "partially withdrawn", "redeemed", or "partially swept" pledges.
         @return _newICRpercent is for overwriting Yamato.sol's pledge info
     */
@@ -89,7 +70,7 @@ contract PriorityRegistry is
         public
         override
         onlyYamato
-        returns (uint256 _newICRpercent)
+        returns (uint256)
     {
         // uint256 gasStart = gasleft();
         require(
@@ -100,7 +81,7 @@ contract PriorityRegistry is
             !(_pledge.coll > 0 && _pledge.debt > 0 && _pledge.priority == 0),
             "Upsert Error: Such a pledge can't exist!"
         );
-        uint256 _oldICRpercent = _pledge.priority;
+        uint256 _oldICRpercent = floor(_pledge.priority);
 
         /*
             1. delete current pledge from sorted pledge and update LICR
@@ -117,13 +98,13 @@ contract PriorityRegistry is
         /* 
             2. insert new pledge
         */
-        _newICRpercent = floor(_pledge.getICR(IYamato(yamato).feed()));
+        uint256 _newICRpercent = floor(_pledge.getICR(feed()));
         require(
             _newICRpercent <= floor(2**256 - 1),
             "priority can't be that big."
         );
 
-        _pledge.priority = _newICRpercent;
+        _pledge.priority = _newICRpercent * 100;
 
         leveledPledges[_newICRpercent][_pledge.owner] = _pledge;
         levelIndice[_newICRpercent].push(_pledge.owner);
@@ -159,7 +140,8 @@ contract PriorityRegistry is
         }
 
         if (_traverseStartICR > 0) _traverseToNextLICR(_traverseStartICR);
-        // console.log("gasUsed:upsert(): %s", gasStart - gasleft());
+
+        return _newICRpercent * 100;
     }
 
     /*
@@ -178,23 +160,14 @@ contract PriorityRegistry is
             _pledge.debt == 0,
             "Removal Error: debt has to be zero for removal."
         );
-        require(
-            _pledge.priority <= floor(2**256 - 1),
-            "Such big priority is not supported by PriorityRegistry."
-        );
 
         // Note: In full withdrawal scenario, this value is MAX_UINT
         require(
-            _pledge.priority == 0 || _pledge.priority == floor(2**256 - 1),
+            _pledge.priority == 0 || _pledge.priority == 2**256 - 1,
             "Unintentional priority is given to the remove function."
         );
 
         _deletePledge(_pledge);
-    }
-
-    modifier onlyYamato() {
-        require(helper.permitDeps(msg.sender), "You are not Yamato contract.");
-        _;
     }
 
     /*
@@ -244,8 +217,8 @@ contract PriorityRegistry is
 
         // Note: Don't check LICR, real ICR is the matter.
         require(
-            floor(poppedPledge.getICR(IYamato(yamato).feed())) <
-                uint256(IYamato(yamato).MCR()),
+            floor(poppedPledge.getICR(feed())) <
+                uint256(IYamato(yamato()).MCR()),
             "You can't redeem if redeemable candidate is more than MCR."
         );
 
@@ -301,7 +274,7 @@ contract PriorityRegistry is
         @param _pledge the delete target
     */
     function _deletePledge(IYamato.Pledge memory _pledge) internal {
-        uint256 icr = _pledge.priority;
+        uint256 icr = floor(_pledge.priority);
         address _owner = _pledge.owner;
 
         if (leveledPledges[icr][_owner].isCreated) {
@@ -325,7 +298,7 @@ contract PriorityRegistry is
     }
 
     function _traverseToNextLICR(uint256 _icr) internal {
-        uint256 _mcr = uint256(IYamato(yamato).MCR());
+        uint256 _mcr = uint256(IYamato(yamato()).MCR());
         bool infLoopish = pledgeLength ==
             levelIndice[0].length + levelIndice[floor(2**256 - 1)].length;
         // Note: The _oldICRpercent == LICR now, and that former LICR-level has just been nullified. New licr is needed.
@@ -395,7 +368,7 @@ contract PriorityRegistry is
         override
         returns (address)
     {
-        uint256 _mcr = uint256(IYamato(yamato).MCR());
+        uint256 _mcr = uint256(IYamato(yamato()).MCR());
         if (icr == _mcr && icr == LICR && levelIndice[icr].length == 0) {
             return address(0);
         }
@@ -403,11 +376,11 @@ contract PriorityRegistry is
     }
 
     function getRedeemablesCap() external view returns (uint256 _cap) {
-        for (uint256 i = 1; i < uint256(IYamato(yamato).MCR()); i++) {
+        for (uint256 i = 1; i < uint256(IYamato(yamato()).MCR()); i++) {
             for (uint256 j = 0; j < levelIndice[i].length; j++) {
                 _cap +=
                     (leveledPledges[i][levelIndice[i][j]].coll *
-                        IPriceFeed(IYamato(yamato).feed()).lastGoodPrice()) /
+                        IPriceFeed(feed()).lastGoodPrice()) /
                     1e18;
             }
         }
@@ -421,10 +394,5 @@ contract PriorityRegistry is
 
     function floor(uint256 _ICRpertenk) internal returns (uint256) {
         return _ICRpertenk / 100;
-    }
-
-    modifier onlyGovernance() {
-        require(msg.sender == governance, "You are not the governer.");
-        _;
     }
 }

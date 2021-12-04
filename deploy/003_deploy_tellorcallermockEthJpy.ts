@@ -15,10 +15,14 @@ import {
   isEmbeddedMode,
   backToInitMode,
   sleep,
+  getDeploymentAddressPath,
 } from "../src/deployUtil";
+import { existsSync } from "fs";
 import { Wallet } from "ethers";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+  if (existsSync(getDeploymentAddressPath("TellorCallerMock"))) return;
+
   await setProvider();
   const { ethers, deployments } = hre;
   const { getContractFactory, Contract, BigNumber, Signer, getSigners } =

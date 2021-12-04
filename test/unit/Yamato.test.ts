@@ -5,17 +5,27 @@ import { solidity } from "ethereum-waffle";
 import { Signer, BigNumber } from "ethers";
 import {
   CJPY,
-  CjpyOS,
+  CurrencyOS,
   Pool,
   FeePool,
   PriceFeed,
   PriorityRegistry,
   PriorityRegistry__factory,
   Yamato,
-  YamatoHelper,
+  YamatoDepositor,
+  YamatoBorrower,
+  YamatoRepayer,
+  YamatoWithdrawer,
+  YamatoRedeemer,
+  YamatoSweeper,
   YamatoDummy,
   Yamato__factory,
-  YamatoHelper__factory,
+  YamatoDepositor__factory,
+  YamatoBorrower__factory,
+  YamatoRepayer__factory,
+  YamatoWithdrawer__factory,
+  YamatoRedeemer__factory,
+  YamatoSweeper__factory,
   YamatoDummy__factory,
   FeePool__factory,
   YMT,
@@ -28,15 +38,19 @@ chai.use(solidity);
 
 describe("contract Yamato", function () {
   let mockPool: FakeContract<Pool>;
-  let mockYamatoHelper: FakeContract<YamatoHelper>;
   let mockFeePool: FakeContract<FeePool>;
   let mockFeed: FakeContract<PriceFeed>;
   let mockYMT: FakeContract<YMT>;
   let mockCJPY: FakeContract<CJPY>;
-  let mockCjpyOS: FakeContract<CjpyOS>;
+  let mockCurrencyOS: FakeContract<CurrencyOS>;
   let mockPriorityRegistry: FakeContract<PriorityRegistry>;
   let yamato: Yamato;
-  let yamatoHelper: YamatoHelper;
+  let yamatoDepositor: YamatoDepositor;
+  let yamatoBorrower: YamatoBorrower;
+  let yamatoRepayer: YamatoRepayer;
+  let yamatoWithdrawer: YamatoWithdrawer;
+  let yamatoRedeemer: YamatoRedeemer;
+  let yamatoSweeper: YamatoSweeper;
   let yamatoDummy: YamatoDummy;
   let priorityRegistry: PriorityRegistry;
   let PRICE: BigNumber;
@@ -53,23 +67,50 @@ describe("contract Yamato", function () {
     mockFeed = await getFakeProxy<PriceFeed>("PriceFeed");
     mockYMT = await smock.fake<YMT>("YMT");
     mockCJPY = await smock.fake<CJPY>("CJPY");
-    mockCjpyOS = await smock.fake<CjpyOS>("CjpyOS");
+    mockCurrencyOS = await smock.fake<CurrencyOS>("CurrencyOS");
 
     const PledgeLib = (
       await (await ethers.getContractFactory("PledgeLib")).deploy()
     ).address;
 
     // Note: Yamato's constructor needs this mock and so the line below has to be called here.
-    mockCjpyOS.feed.returns(mockFeed.address);
-    mockCjpyOS.feePool.returns(mockFeePool.address);
+    mockCurrencyOS.feed.returns(mockFeed.address);
+    mockCurrencyOS.feePool.returns(mockFeePool.address);
 
     yamato = await getLinkedProxy<Yamato, Yamato__factory>(
       "Yamato",
-      [mockCjpyOS.address],
+      [mockCurrencyOS.address],
       ["PledgeLib"]
     );
-    yamatoHelper = await getLinkedProxy<YamatoHelper, YamatoHelper__factory>(
-      "YamatoHelper",
+
+    yamatoDepositor = await getLinkedProxy<
+      YamatoDepositor,
+      YamatoDepositor__factory
+    >("YamatoDepositor", [yamato.address], ["PledgeLib"]);
+
+    yamatoBorrower = await getLinkedProxy<
+      YamatoBorrower,
+      YamatoBorrower__factory
+    >("YamatoBorrower", [yamato.address], ["PledgeLib"]);
+
+    yamatoRepayer = await getLinkedProxy<YamatoRepayer, YamatoRepayer__factory>(
+      "YamatoRepayer",
+      [yamato.address],
+      ["PledgeLib"]
+    );
+
+    yamatoWithdrawer = await getLinkedProxy<
+      YamatoWithdrawer,
+      YamatoWithdrawer__factory
+    >("YamatoWithdrawer", [yamato.address], ["PledgeLib"]);
+
+    yamatoRedeemer = await getLinkedProxy<
+      YamatoRedeemer,
+      YamatoRedeemer__factory
+    >("YamatoRedeemer", [yamato.address], ["PledgeLib"]);
+
+    yamatoSweeper = await getLinkedProxy<YamatoSweeper, YamatoSweeper__factory>(
+      "YamatoSweeper",
       [yamato.address],
       ["PledgeLib"]
     );
@@ -79,23 +120,30 @@ describe("contract Yamato", function () {
       {
         libraries: { PledgeLib },
       }
-    )).deploy(mockCjpyOS.address); // This has test funcs to size Yamato contract
+    )).deploy(mockCurrencyOS.address); // This has test funcs to size Yamato contract
 
     mockPriorityRegistry = await getFakeProxy<PriorityRegistry>(
       "PriorityRegistry"
     );
 
-    await (await yamatoHelper.setPool(mockPool.address)).wait();
     await (
-      await yamatoHelper.setPriorityRegistry(mockPriorityRegistry.address)
+      await yamato.setDeps(
+        yamatoDepositor.address,
+        yamatoBorrower.address,
+        yamatoRepayer.address,
+        yamatoWithdrawer.address,
+        yamatoRedeemer.address,
+        yamatoSweeper.address,
+        mockPool.address,
+        mockPriorityRegistry.address
+      )
     ).wait();
-    await (await yamato.setYamatoHelper(yamatoHelper.address)).wait();
 
     // Note: Will use later for the redeem() test
     priorityRegistry = await getLinkedProxy<
       PriorityRegistry,
       PriorityRegistry__factory
-    >("PriorityRegistry", [yamatoHelper.address], ["PledgeLib"]);
+    >("PriorityRegistry", [yamato.address], ["PledgeLib"]);
 
     await (
       await yamatoDummy.setPriorityRegistry(priorityRegistry.address)
@@ -142,16 +190,35 @@ describe("contract Yamato", function () {
   });
   describe("setPledge()", function () {
     beforeEach(async () => {
-      let mockYamatoHelper = await getFakeProxy<YamatoHelper>("YamatoHelper");
-      mockYamatoHelper.priorityRegistry.returns(mockPriorityRegistry.address);
-      mockYamatoHelper.pool.returns(mockPool.address);
-      await yamato.setYamatoHelper(mockYamatoHelper.address);
-      mockYamatoHelper.permitDeps.returns(true);
+      await (
+        await yamato.setDeps(
+          yamatoDepositor.address,
+          yamatoBorrower.address,
+          yamatoRepayer.address,
+          yamatoWithdrawer.address,
+          yamatoRedeemer.address,
+          yamatoSweeper.address,
+          mockPool.address,
+          mockPriorityRegistry.address
+        )
+      ).wait();
       const toCollateralize = 1;
       await yamato.deposit({ value: toERC20(toCollateralize + "") });
     });
     it(`should set zero pledge`, async function () {
       let owner = await accounts[0].getAddress();
+      await (
+        await yamato.setDeps(
+          owner, // Note: dirty hack to pass this test
+          yamatoBorrower.address,
+          yamatoRepayer.address,
+          yamatoWithdrawer.address,
+          yamatoRedeemer.address,
+          yamatoRedeemer.address,
+          mockPool.address,
+          mockPriorityRegistry.address
+        )
+      ).wait();
       let _pledgeBefore = await yamato.getPledge(owner);
       expect(_pledgeBefore.isCreated).to.be.true;
       await yamato.setPledge(owner, {
@@ -254,7 +321,7 @@ describe("contract Yamato", function () {
     beforeEach(async function () {
       MCR = BigNumber.from(110);
       mockPool.depositRedemptionReserve.returns(0);
-      mockCjpyOS.mintCJPY.returns(0);
+      mockCurrencyOS.mintCurrency.returns(0);
     });
     it(`succeeds to make a pledge with ICR=110%, and the TCR will be 110%`, async function () {
       const toCollateralize = 1;
@@ -274,8 +341,8 @@ describe("contract Yamato", function () {
 
       const pledge = await yamato.getPledge(await yamato.signer.getAddress());
 
-      expect(pledge.coll.toString()).to.eq("1000000000000000000");
-      expect(pledge.debt.toString()).to.eq("236363000000000000000000");
+      expect(pledge.coll).to.eq("1000000000000000000");
+      expect(pledge.debt).to.eq("236363000000000000000000");
     });
     it(`should have zero ETH balance after issuance`, async function () {
       const toCollateralize = 1;
@@ -287,7 +354,7 @@ describe("contract Yamato", function () {
       await yamato.borrow(toERC20(toBorrow + ""));
 
       const balance = await yamato.provider.getBalance(yamato.address);
-      expect(balance.toString()).to.eq("0");
+      expect(balance).to.eq("0");
     });
 
     it(`should run fetchPrice() of Pool.sol`, async function () {
@@ -312,7 +379,7 @@ describe("contract Yamato", function () {
       expect(mockPriorityRegistry.upsert).to.have.been.called;
     });
 
-    it(`should run CjpyOS.mintCJPY() of Pool.sol`, async function () {
+    it(`should run CurrencyOS.mintCurrency() of Pool.sol`, async function () {
       const toCollateralize = 1;
       const toBorrow = PRICE.mul(toCollateralize)
         .mul(100)
@@ -321,7 +388,7 @@ describe("contract Yamato", function () {
       await yamato.deposit({ value: toERC20(toCollateralize + "") });
       await yamato.borrow(toERC20(toBorrow + ""));
       expect(mockCJPY.mint).to.have.callCount(0);
-      expect(mockCjpyOS.mintCJPY).to.have.callCount(2);
+      expect(mockCurrencyOS.mintCurrency).to.have.callCount(2);
     });
     it(`should run depositRedemptionReserve when RR is inferior to SR`, async function () {
       mockPool.redemptionReserve.returns(1);
@@ -351,11 +418,38 @@ describe("contract Yamato", function () {
       expect(mockPool.depositRedemptionReserve).to.have.callCount(0);
       expect(mockPool.depositSweepReserve).to.have.calledOnce;
     });
+    describe("Context - priorityRegistry", async function () {
+      it("should have priority 11000", async function () {
+        await (
+          await yamato.setDeps(
+            yamatoDepositor.address,
+            yamatoBorrower.address,
+            yamatoRepayer.address,
+            yamatoWithdrawer.address,
+            yamatoRedeemer.address,
+            yamatoRedeemer.address,
+            mockPool.address,
+            priorityRegistry.address
+          )
+        ).wait();
+
+        const toCollateralize = 1;
+        const toBorrow = PRICE.mul(toCollateralize)
+          .mul(100)
+          .div(MCR)
+          .div(1e18 + "");
+        await yamato.deposit({ value: toERC20(toCollateralize + "") });
+        await yamato.borrow(toERC20(toBorrow + ""));
+
+        const pledge = await yamato.getPledge(await yamato.signer.getAddress());
+        expect(pledge.priority).to.eq("11000");
+      });
+    });
   });
   describe("repay()", function () {
     PRICE = BigNumber.from(260000).mul(1e18 + "");
     beforeEach(async function () {
-      mockCjpyOS.burnCJPY.returns(0);
+      mockCurrencyOS.burnCurrency.returns(0);
       mockFeed.fetchPrice.returns(PRICE);
       mockFeed.lastGoodPrice.returns(PRICE);
     });
@@ -412,7 +506,7 @@ describe("contract Yamato", function () {
         "115792089237316195423570985008687907853269984665640564039457584007913129639935"
       );
     });
-    it(`should run burnCJPY`, async function () {
+    it(`should run burnCurrency`, async function () {
       const MCR = BigNumber.from(110);
       const toCollateralize = 1;
       const toBorrow = PRICE.mul(toCollateralize)
@@ -422,7 +516,7 @@ describe("contract Yamato", function () {
       await yamato.deposit({ value: toERC20(toCollateralize + "") });
       await yamato.borrow(toERC20(toBorrow + ""));
       await yamato.repay(toERC20(toBorrow + ""));
-      expect(mockCjpyOS.burnCJPY).to.have.been.calledOnce;
+      expect(mockCurrencyOS.burnCurrency).to.have.been.calledOnce;
     });
 
     it(`should run upsert`, async function () {
@@ -481,7 +575,7 @@ describe("contract Yamato", function () {
       await yamato.deposit({ value: toERC20(toCollateralize + "") });
       await yamato.borrow(toERC20(toBorrow + ""));
       await expect(yamato.repay(toERC20(0 + ""))).to.revertedWith(
-        "You are repaying no CJPY"
+        "You are repaying no Currency"
       );
     });
     it(`fails for no-debt pledge`, async function () {
@@ -496,9 +590,6 @@ describe("contract Yamato", function () {
         "You are repaying more than you are owing."
       );
     });
-
-    // TODO: Have a attack contract to recursively calls the deposit and borrow function
-    it.skip(`TODO: should validate locked state`);
   });
 
   describe("withdraw()", function () {
@@ -655,7 +746,7 @@ describe("contract Yamato", function () {
       mockPool.depositRedemptionReserve.returns(0);
       mockPool.depositSweepReserve.returns(0);
       mockPool.lockETH.returns(0);
-      mockCjpyOS.burnCJPY.returns(0);
+      mockCurrencyOS.burnCurrency.returns(0);
       mockPool.useRedemptionReserve.returns(0);
       mockPool.sendETH.returns(0);
       mockFeed.fetchPrice.returns(PRICE);
@@ -663,9 +754,17 @@ describe("contract Yamato", function () {
       mockPool.redemptionReserve.returns(1000000000000);
 
       await (
-        await yamatoHelper.setPriorityRegistryInTest(priorityRegistry.address)
+        await yamato.setDeps(
+          yamatoDepositor.address,
+          yamatoBorrower.address,
+          yamatoRepayer.address,
+          yamatoWithdrawer.address,
+          yamatoRedeemer.address,
+          yamatoSweeper.address,
+          mockPool.address,
+          priorityRegistry.address
+        )
       ).wait();
-      await yamato.setYamatoHelper(yamatoHelper.address);
 
       toCollateralize = 1;
       toBorrow = PRICE.mul(toCollateralize)
@@ -789,9 +888,9 @@ describe("contract Yamato", function () {
       await yamato.connect(accounts[0]).redeem(toERC20(toBorrow + ""), false);
       expect(mockPool.sendETH).to.have.calledTwice;
     });
-    it(`should run burnCJPY\(\) of Yamato.sol for successful redeemer`, async function () {
+    it(`should run burnCurrency\(\) of Yamato.sol for successful redeemer`, async function () {
       await yamato.connect(accounts[0]).redeem(toERC20(toBorrow + ""), false);
-      expect(mockCjpyOS.burnCJPY).to.have.calledOnce;
+      expect(mockCurrencyOS.burnCurrency).to.have.calledOnce;
     });
     it.skip(`TODO: should NOT revert if excessive redemption amount comes in.`);
   });
@@ -807,19 +906,26 @@ describe("contract Yamato", function () {
       mockPool.depositSweepReserve.returns(0);
       mockPool.lockETH.returns(0);
       mockPool.sendETH.returns(0);
-      mockPool.sendCJPY.returns(0);
       mockPool.useSweepReserve.returns(0);
       mockPool.sweepReserve.returns(
         BigNumber.from("99999999000000000000000000")
       );
       mockFeed.fetchPrice.returns(PRICE);
       mockFeed.lastGoodPrice.returns(PRICE);
-      mockCjpyOS.burnCJPY.returns(0);
+      mockCurrencyOS.burnCurrency.returns(0);
 
       await (
-        await yamatoHelper.setPriorityRegistryInTest(priorityRegistry.address)
+        await yamato.setDeps(
+          yamatoDepositor.address,
+          yamatoBorrower.address,
+          yamatoRepayer.address,
+          yamatoWithdrawer.address,
+          yamatoRedeemer.address,
+          yamatoSweeper.address,
+          mockPool.address,
+          priorityRegistry.address
+        )
       ).wait();
-      await yamato.setYamatoHelper(yamatoHelper.address);
 
       /*
           Set redemption targets
@@ -875,11 +981,11 @@ describe("contract Yamato", function () {
       expect(_TCRAfter).to.gt(_TCRBefore);
     });
 
-    it(`should run fetchPrice() of PriceFeed.sol and sendCJPY() of Pool.sol`, async function () {
+    it(`should run fetchPrice() of PriceFeed.sol and sendCurrency() of Pool.sol`, async function () {
       await (await yamato.connect(accounts[1]).sweep()).wait();
 
       expect(mockFeed.fetchPrice).to.have.called;
-      expect(mockPool.sendCJPY).to.have.calledOnce;
+      expect(mockPool.sendCurrency).to.have.calledOnce;
       expect(mockPool.useSweepReserve).to.have.calledTwice;
     });
   });
@@ -951,5 +1057,38 @@ describe("contract Yamato", function () {
       expect(afterValues[1]).to.eq("236363000000000000000000");
       expect(afterValues[2]).to.eq(true);
     });
+  });
+
+  describe("toggle()", () => {
+    let accounts;
+
+    beforeEach(async () => {
+      accounts = await ethers.getSigners();
+    });
+
+    it("should pause Yamato.sol", async () => {
+      const beforePaused = await yamato.paused();
+      expect(beforePaused).to.be.false;
+
+      await yamato.connect(accounts[0]).toggle();
+
+      const afterPaused = await yamato.paused();
+      expect(afterPaused).to.be.true;
+    });
+  });
+
+  it("should work after pause", async () => {
+    const beforePaused = await yamato.paused();
+    expect(beforePaused).to.be.false;
+
+    await yamato.connect(accounts[0]).toggle();
+
+    const afterPaused = await yamato.paused();
+    expect(afterPaused).to.be.true;
+
+    await yamato.connect(accounts[0]).toggle();
+
+    const lastPaused = await yamato.paused();
+    expect(lastPaused).to.be.false;
   });
 });

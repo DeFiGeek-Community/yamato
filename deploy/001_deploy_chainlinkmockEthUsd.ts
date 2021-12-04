@@ -14,10 +14,15 @@ import {
   isInitMode,
   isEmbeddedMode,
   backToInitMode,
+  getDeploymentAddressPathWithTag,
 } from "../src/deployUtil";
+import { existsSync } from "fs";
 import { Wallet } from "ethers";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+  if (existsSync(getDeploymentAddressPathWithTag("ChainLinkMock", "EthUsd")))
+    return;
+
   await setProvider();
   const { ethers, deployments } = hre;
   const { getContractFactory, Contract, BigNumber, Signer, getSigners } =

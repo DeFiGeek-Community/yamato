@@ -7,33 +7,24 @@ import {
   getDeploymentAddressPathWithTag,
 } from "../src/deployUtil";
 import { getLinkedProxy } from "../src/testUtil";
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync, writeFileSync, existsSync } from "fs";
 import { Yamato, Yamato__factory } from "../typechain";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+  if (existsSync(getDeploymentAddressPathWithTag("Yamato", "ERC1967Proxy")))
+    return;
+
   const p = await setProvider();
   const { ethers, deployments } = hre;
   const { getContractFactory } = ethers;
 
-  const _cjpyosAddr = readFileSync(
-    getDeploymentAddressPath("CjpyOS")
+  const _currencyOSAddr = readFileSync(
+    getDeploymentAddressPathWithTag("CurrencyOS", "ERC1967Proxy")
   ).toString();
-
-  await deploy("PledgeLib", {
-    args: [],
-    getContractFactory,
-    deployments,
-    isDependency: true,
-  }).catch((e) => console.trace(e.message));
-
-  const PledgeLib = readFileSync(
-    getDeploymentAddressPath("PledgeLib")
-  ).toString();
-  console.log(`PledgeLib: ${PledgeLib}`);
 
   const inst = await getLinkedProxy<Yamato, Yamato__factory>(
     "Yamato",
-    [_cjpyosAddr],
+    [_currencyOSAddr],
     ["PledgeLib"]
   );
   const implAddr = await inst.getImplementation();

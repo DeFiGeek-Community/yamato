@@ -12,54 +12,36 @@ pragma solidity 0.8.4;
 import "./veYMT.sol";
 import "./Interfaces/IYMT.sol";
 import "./Interfaces/IYamato.sol";
-import "./Dependencies/SafeMath.sol";
+import "./Interfaces/IYmtOS.sol";
+import "./Dependencies/UUPSBase.sol";
 import "hardhat/console.sol";
 
-interface IYmtOSV1 {
-    function initialize(
-        address _governance,
-        address _YMT,
-        address _veYMT
-    ) external;
+contract YmtOS is IYmtOS, UUPSBase {
+    string constant YMT_SLOT_ID = "deps.YMT";
+    string constant VEYMT_SLOT_ID = "deps.veYMT";
+    uint256 constant CYCLE_SIZE = 1;
 
-    function addYamatoOfCurrencyOS(address _yamatoAddr) external;
-
-    function vote(address _currencyOS, address _yamato) external;
-}
-
-contract YmtOSV1 is IYmtOSV1 {
-    using SafeMath for uint256;
-
-    bool initialized = false;
-    address governance;
     address[] currencyOSs;
     mapping(address => address[]) yamatoesOfCurrencyOS;
     address[] voters;
     mapping(address => bool) voted;
     mapping(address => address) decisions;
     mapping(address => uint256) memScore;
-    IveYMT veYMT;
-    IYMT YMT;
-    uint256 constant CYCLE_SIZE = 100000;
 
-    /*
-        !!! Admin Caution !!!
-        Make sure you've explicitly initialized this contract after deployment; otherwise, someone will do it for her to set am evil governer.
-    */
-    function initialize(
-        address _governance,
-        address _YMT,
-        address _veYMT
-    ) public override onlyOnce {
-        governance = _governance;
-        YMT = IYMT(_YMT);
-        veYMT = IveYMT(_veYMT);
-    }
+    function initialize(address _YMT, address _veYMT)
+        public
+        override
+        initializer
+    {
+        __UUPSBase_init();
 
-    modifier onlyOnce() {
-        require(!initialized, "This contract is already initialized.");
-        initialized = true;
-        _;
+        bytes32 YMT_KEY = bytes32(keccak256(abi.encode(YMT_SLOT_ID)));
+        bytes32 VEYMT_KEY = bytes32(keccak256(abi.encode(VEYMT_SLOT_ID)));
+
+        assembly {
+            sstore(YMT_KEY, _YMT)
+            sstore(VEYMT_KEY, _veYMT)
+        }
     }
 
     function addYamatoOfCurrencyOS(address _yamatoAddr)
@@ -79,20 +61,19 @@ contract YmtOSV1 is IYmtOSV1 {
     }
 
     modifier onlyCurrencyOSs() {
+        require(_exists(), "You are not the registered CurrencyOS.");
+        _;
+    }
+
+    function _exists() internal returns (bool) {
         for (uint256 i = 0; i < currencyOSs.length; ++i) {
-            if (msg.sender == currencyOSs[i]) {
-                _;
-            }
+            if (msg.sender == currencyOSs[i]) return true;
         }
+        return false;
     }
 
     function addCurrencyOS(address _currencyOS) external onlyGovernance {
         currencyOSs.push(_currencyOS);
-    }
-
-    modifier onlyGovernance() {
-        require(msg.sender == governance, "You are not the governer.");
-        _;
     }
 
     function vote(address _currencyOS, address _yamato)
@@ -125,7 +106,7 @@ contract YmtOSV1 is IYmtOSV1 {
         uint256 _cycle = getLastCycle();
         uint256 _at = _cycle * CYCLE_SIZE;
         uint256[2] memory _range = getLastCycleBlockRange();
-        uint256 _mintableInTimeframe = veYMT.mintableInTimeframe(
+        uint256 _mintableInTimeframe = IveYMT(veYMT()).mintableInTimeframe(
             _range[0],
             _range[1]
         );
@@ -156,10 +137,9 @@ contract YmtOSV1 is IYmtOSV1 {
             // This document shows CJPY-denominated score result, but you still should normalize the score with "TotalScore"
             // And then multiply that scoreShare with the
 
-            uint256 _mintThisPerson = _mintableInTimeframe
-                .mul(getScore(_pledge, _at))
-                .div(_totalScore);
-            YMT.mint(_voter, _mintThisPerson);
+            uint256 _mintThisPerson = (_mintableInTimeframe *
+                getScore(_pledge, _at)) / _totalScore;
+            IYMT(YMT()).mint(_voter, _mintThisPerson);
             delete memScore[_voter];
         }
 
@@ -176,7 +156,7 @@ contract YmtOSV1 is IYmtOSV1 {
     }
 
     function getLastCycle() public view returns (uint256) {
-        return getCurrentCycle().sub(1);
+        return getCurrentCycle() - 1;
     }
 
     function getCurrentCycleBlockRange()
@@ -185,15 +165,15 @@ contract YmtOSV1 is IYmtOSV1 {
         returns (uint256[2] memory)
     {
         return [
-            getCurrentCycle().mul(CYCLE_SIZE),
-            (getCurrentCycle().add(1)).mul(CYCLE_SIZE).sub(1)
+            getCurrentCycle() * CYCLE_SIZE,
+            (getCurrentCycle() + 1) * CYCLE_SIZE - 1
         ];
     }
 
     function getLastCycleBlockRange() public view returns (uint256[2] memory) {
         return [
-            getLastCycle().mul(CYCLE_SIZE),
-            (getLastCycle().add(1)).mul(CYCLE_SIZE).sub(1)
+            getLastCycle() * CYCLE_SIZE,
+            (getLastCycle() + 1) * CYCLE_SIZE - 1
         ];
     }
 
@@ -202,10 +182,24 @@ contract YmtOSV1 is IYmtOSV1 {
         view
         returns (uint256)
     {
-        uint256 veScore = veYMT.balanceOfAt(_pledge.owner, _at);
+        uint256 veScore = IveYMT(veYMT()).balanceOfAt(_pledge.owner, _at);
 
         // TODO: Do some magic :)
 
         return 1;
+    }
+
+    function YMT() public view override returns (address _YMT) {
+        bytes32 YMT_KEY = bytes32(keccak256(abi.encode(YMT_SLOT_ID)));
+        assembly {
+            _YMT := sload(YMT_KEY)
+        }
+    }
+
+    function veYMT() public view override returns (address _veYMT) {
+        bytes32 VEYMT_KEY = bytes32(keccak256(abi.encode(VEYMT_SLOT_ID)));
+        assembly {
+            _veYMT := sload(VEYMT_KEY)
+        }
     }
 }

@@ -9,19 +9,29 @@ import {
   TellorCallerMock,
   PriceFeed,
   FeePool,
-  CjpyOS,
+  CurrencyOS,
   CJPY,
   Yamato,
-  YamatoHelper,
+  YamatoDepositor,
+  YamatoBorrower,
+  YamatoRepayer,
+  YamatoWithdrawer,
+  YamatoRedeemer,
+  YamatoSweeper,
   PriorityRegistry,
   Pool,
   ChainLinkMock__factory,
   TellorCallerMock__factory,
   PriceFeed__factory,
-  CjpyOS__factory,
+  CurrencyOS__factory,
   CJPY__factory,
   Yamato__factory,
-  YamatoHelper__factory,
+  YamatoDepositor__factory,
+  YamatoBorrower__factory,
+  YamatoRepayer__factory,
+  YamatoWithdrawer__factory,
+  YamatoRedeemer__factory,
+  YamatoSweeper__factory,
   Pool__factory,
   FeePool__factory,
   PriorityRegistry__factory,
@@ -38,9 +48,14 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
   let PriceFeed: PriceFeed;
   let CJPY: CJPY;
   let FeePool: FeePool;
-  let CjpyOS: CjpyOS;
+  let CurrencyOS: CurrencyOS;
   let Yamato: Yamato;
-  let YamatoHelper: YamatoHelper;
+  let YamatoDepositor: YamatoDepositor;
+  let YamatoBorrower: YamatoBorrower;
+  let YamatoRepayer: YamatoRepayer;
+  let YamatoWithdrawer: YamatoWithdrawer;
+  let YamatoRedeemer: YamatoRedeemer;
+  let YamatoSweeper: YamatoSweeper;
   let Pool: Pool;
   let PriorityRegistry: PriorityRegistry;
   let accounts: Signer[];
@@ -95,18 +110,13 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       await ethers.getContractFactory("CJPY")
     )).deploy();
 
-    FeePool = await (<FeePool__factory>(
-      await ethers.getContractFactory("FeePool")
-    )).deploy();
+    FeePool = await getProxy<FeePool, FeePool__factory>("FeePool", []);
 
-    CjpyOS = await (<CjpyOS__factory>(
-      await ethers.getContractFactory("CjpyOS")
-    )).deploy(
+    CurrencyOS = await getProxy<CurrencyOS, CurrencyOS__factory>("CurrencyOS", [
       CJPY.address,
       PriceFeed.address,
-      FeePool.address
-      // governance=deployer
-    );
+      FeePool.address,
+    ]);
 
     const PledgeLib = (
       await (await ethers.getContractFactory("PledgeLib")).deploy()
@@ -114,32 +124,64 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
     Yamato = await getLinkedProxy<Yamato, Yamato__factory>(
       "Yamato",
-      [CjpyOS.address],
+      [CurrencyOS.address],
       ["PledgeLib"]
     );
 
-    YamatoHelper = await getLinkedProxy<YamatoHelper, YamatoHelper__factory>(
-      "YamatoHelper",
+    YamatoDepositor = await getLinkedProxy<
+      YamatoDepositor,
+      YamatoDepositor__factory
+    >("YamatoDepositor", [Yamato.address], ["PledgeLib"]);
+
+    YamatoBorrower = await getLinkedProxy<
+      YamatoBorrower,
+      YamatoBorrower__factory
+    >("YamatoBorrower", [Yamato.address], ["PledgeLib"]);
+
+    YamatoRepayer = await getLinkedProxy<YamatoRepayer, YamatoRepayer__factory>(
+      "YamatoRepayer",
       [Yamato.address],
       ["PledgeLib"]
     );
 
-    Pool = await (<Pool__factory>(
-      await ethers.getContractFactory("Pool")
-    )).deploy(YamatoHelper.address);
+    YamatoWithdrawer = await getLinkedProxy<
+      YamatoWithdrawer,
+      YamatoWithdrawer__factory
+    >("YamatoWithdrawer", [Yamato.address], ["PledgeLib"]);
+
+    YamatoRedeemer = await getLinkedProxy<
+      YamatoRedeemer,
+      YamatoRedeemer__factory
+    >("YamatoRedeemer", [Yamato.address], ["PledgeLib"]);
+
+    YamatoSweeper = await getLinkedProxy<YamatoSweeper, YamatoSweeper__factory>(
+      "YamatoSweeper",
+      [Yamato.address],
+      ["PledgeLib"]
+    );
+
+    Pool = await getProxy<Pool, Pool__factory>("Pool", [Yamato.address]);
 
     PriorityRegistry = await getLinkedProxy<
       PriorityRegistry,
       PriorityRegistry__factory
-    >("PriorityRegistry", [YamatoHelper.address], ["PledgeLib"]);
+    >("PriorityRegistry", [Yamato.address], ["PledgeLib"]);
 
-    await (await YamatoHelper.setPool(Pool.address)).wait();
     await (
-      await YamatoHelper.setPriorityRegistry(PriorityRegistry.address)
+      await Yamato.setDeps(
+        YamatoDepositor.address,
+        YamatoBorrower.address,
+        YamatoRepayer.address,
+        YamatoWithdrawer.address,
+        YamatoRedeemer.address,
+        YamatoSweeper.address,
+        Pool.address,
+        PriorityRegistry.address
+      )
     ).wait();
-    await (await Yamato.setYamatoHelper(YamatoHelper.address)).wait();
-    await (await CjpyOS.addYamato(Yamato.address)).wait();
-    await (await CJPY.setCurrencyOS(CjpyOS.address)).wait();
+
+    await (await CurrencyOS.addYamato(Yamato.address)).wait();
+    await (await CJPY.setCurrencyOS(CurrencyOS.address)).wait();
   });
 
   describe("redeem()", function () {
@@ -454,7 +496,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
     });
 
     describe("Context - A very large redemption", function () {
-      const COUNT = 100;
+      const COUNT = 70;
       let _ACCOUNTS;
       beforeEach(async () => {
         _ACCOUNTS = accounts;

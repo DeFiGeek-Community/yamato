@@ -12,21 +12,25 @@ import { Contract } from "ethers";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const p = await setProvider();
-  const { ethers, deployments } = hre;
-  const { getContractFactory } = ethers;
+
+  const _currencyOSAddr = readFileSync(
+    getDeploymentAddressPathWithTag("CurrencyOS", "ERC1967Proxy")
+  ).toString();
+  const CurrencyOS = new Contract(_currencyOSAddr, genABI("CurrencyOS"), p);
 
   const _yamatoAddr = readFileSync(
     getDeploymentAddressPathWithTag("Yamato", "ERC1967Proxy")
   ).toString();
-  const _yamatoHelperAddr = readFileSync(
-    getDeploymentAddressPathWithTag("YamatoHelper", "ERC1967Proxy")
-  ).toString();
-  const Yamato = new Contract(_yamatoAddr, genABI("Yamato"), p);
 
+  if (await CurrencyOS.exists(_yamatoAddr)) {
+    console.log(`log: CurrencyOS.addYamato() skipped.`);
+    return;
+  }
   await (
-    await Yamato.connect(getFoundation()).setYamatoHelper(_yamatoHelperAddr)
+    await CurrencyOS.connect(getFoundation()).addYamato(_yamatoAddr)
   ).wait();
-  console.log(`log: Yamato.setYamatoHelper() executed.`);
+
+  console.log(`log: CurrencyOS.addYamato() executed.`);
 };
 export default func;
 func.tags = [""];
