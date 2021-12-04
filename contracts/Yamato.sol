@@ -55,7 +55,7 @@ contract Yamato is
         - Read more => https://docs.openzeppelin.com/upgrades-plugins/1.x/writing-upgradeable#avoid-initial-values-in-field-declarations
     */
 
-    uint8 public constant override MCR = 110; // MinimumCollateralizationRatio in pertenk
+    uint8 public constant override MCR = 130; // MinimumCollateralizationRatio in pertenk
     uint8 public constant RRR = 80; // RedemptionReserveRate in pertenk
     uint8 public constant SRR = 20; // SweepReserveRate in pertenk
     uint8 public constant override GRR = 1; // GasReserveRate in pertenk

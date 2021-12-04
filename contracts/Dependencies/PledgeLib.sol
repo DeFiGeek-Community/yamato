@@ -111,10 +111,11 @@ library PledgeLib {
     /// @dev Three linear fumula there are
     /// @return _FRpertenk Corresponding fee rate in uint256 per-ten-kilo unit
     function FR(uint256 _ICRpertenk) public view returns (uint256 _FRpertenk) {
-        require(_ICRpertenk >= 11000, "ICR too low to get fee data.");
-        if (11000 <= _ICRpertenk && _ICRpertenk < 13000) {
-            _FRpertenk = 2000 - ((_ICRpertenk - 11000) * 80) / 100;
-        } else if (13000 <= _ICRpertenk && _ICRpertenk < 15000) {
+        require(_ICRpertenk >= 13000, "ICR too low to get fee data.");
+        // if (11000 <= _ICRpertenk && _ICRpertenk < 13000) {
+        //     _FRpertenk = 2000 - ((_ICRpertenk - 11000) * 80) / 100;
+        // } else 
+        if (13000 <= _ICRpertenk && _ICRpertenk < 15000) {
             _FRpertenk = 400 - ((_ICRpertenk - 13000) * 10) / 100;
         } else if (15000 <= _ICRpertenk && _ICRpertenk < 20000) {
             _FRpertenk = 200 - ((_ICRpertenk - 15000) * 2) / 100;

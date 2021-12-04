@@ -186,7 +186,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
   describe("redeem()", function () {
     let PRICE;
-    const MCR = BigNumber.from(110);
+    const MCR = BigNumber.from(130);
     let toCollateralize;
     let toBorrow;
     let redeemer;
@@ -596,7 +596,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
   });
   describe("sweep()", function () {
     let PRICE;
-    const MCR = BigNumber.from(110);
+    const MCR = BigNumber.from(130);
     let toCollateralize;
     let toBorrow;
     let redeemer;

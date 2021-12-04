@@ -150,7 +150,7 @@ describe("contract Yamato", function () {
     ).wait();
 
     PRICE = BigNumber.from(260000).mul(1e18 + "");
-    MCR = BigNumber.from(110);
+    MCR = BigNumber.from(130);
 
     mockPool.depositRedemptionReserve.returns(0);
     mockPool.depositSweepReserve.returns(0);
@@ -258,23 +258,23 @@ describe("contract Yamato", function () {
   });
   describe("FR()", function () {
     /* Given ICR, get borrowing fee. */
-    it(`returns 2000 pertenk for ICR 11000 pertenk`, async function () {
-      expect(await yamatoDummy.FR(11000)).to.eq(2000);
+    it(`should be reverted for ICR 11000 pertenk`, async function () {
+      await expect(yamatoDummy.FR(11000)).to.be.reverted;
     });
-    it(`returns 2000 pertenk for ICR 11001 pertenk`, async function () {
-      expect(await yamatoDummy.FR(11001)).to.eq(2000);
+    it(`should be reverted for ICR 11001 pertenk`, async function () {
+      await expect(yamatoDummy.FR(11001)).to.be.reverted;
     });
-    it(`returns 1999 pertenk for ICR 11002 pertenk`, async function () {
-      expect(await yamatoDummy.FR(11002)).to.eq(1999);
+    it(`should be reverted for ICR 11002 pertenk`, async function () {
+      await expect(yamatoDummy.FR(11002)).to.be.reverted;
     });
-    it(`returns 1992 pertenk for ICR 11010 pertenk`, async function () {
-      expect(await yamatoDummy.FR(11010)).to.eq(1992);
+    it(`should be reverted for ICR 11010 pertenk`, async function () {
+      await expect(yamatoDummy.FR(11010)).to.be.reverted;
     });
-    it(`returns 800 pertenk for ICR 12500 pertenk`, async function () {
-      expect(await yamatoDummy.FR(12500)).to.eq(800);
+    it(`should be reverted for ICR 12500 pertenk`, async function () {
+      await expect(yamatoDummy.FR(12500)).to.be.reverted;
     });
-    it(`returns 480 pertenk for ICR 12900 pertenk`, async function () {
-      expect(await yamatoDummy.FR(12900)).to.eq(480);
+    it(`should be reverted for ICR 12900 pertenk`, async function () {
+      await expect(yamatoDummy.FR(12900)).to.be.reverted;
     });
     it(`returns 400 pertenk for ICR 13000 pertenk`, async function () {
       expect(await yamatoDummy.FR(13000)).to.eq(400);
@@ -319,11 +319,11 @@ describe("contract Yamato", function () {
   describe("borrow()", function () {
     let MCR;
     beforeEach(async function () {
-      MCR = BigNumber.from(110);
+      MCR = BigNumber.from(130);
       mockPool.depositRedemptionReserve.returns(0);
       mockCurrencyOS.mintCurrency.returns(0);
     });
-    it(`succeeds to make a pledge with ICR=110%, and the TCR will be 110%`, async function () {
+    it(`succeeds to make a pledge with ICR=130%, and the TCR will be 130%`, async function () {
       const toCollateralize = 1;
       const toBorrow = PRICE.mul(toCollateralize)
         .mul(100)
@@ -337,12 +337,12 @@ describe("contract Yamato", function () {
         PRICE
       );
 
-      expect(_TCR).to.eq("11000");
+      expect(_TCR).to.eq("13000");
 
       const pledge = await yamato.getPledge(await yamato.signer.getAddress());
 
       expect(pledge.coll).to.eq("1000000000000000000");
-      expect(pledge.debt).to.eq("236363000000000000000000");
+      expect(pledge.debt).to.eq("200000000000000000000000");
     });
     it(`should have zero ETH balance after issuance`, async function () {
       const toCollateralize = 1;
@@ -419,7 +419,7 @@ describe("contract Yamato", function () {
       expect(mockPool.depositSweepReserve).to.have.calledOnce;
     });
     describe("Context - priorityRegistry", async function () {
-      it("should have priority 11000", async function () {
+      it("should have priority 13000", async function () {
         await (
           await yamato.setDeps(
             yamatoDepositor.address,
@@ -442,7 +442,7 @@ describe("contract Yamato", function () {
         await yamato.borrow(toERC20(toBorrow + ""));
 
         const pledge = await yamato.getPledge(await yamato.signer.getAddress());
-        expect(pledge.priority).to.eq("11000");
+        expect(pledge.priority).to.eq("13000");
       });
     });
   });
@@ -455,7 +455,7 @@ describe("contract Yamato", function () {
     });
 
     it(`should reduce debt`, async function () {
-      const MCR = BigNumber.from(110);
+      const MCR = BigNumber.from(130);
       const toCollateralize = 1;
       const toBorrow = PRICE.mul(toCollateralize)
         .mul(100)
@@ -480,7 +480,7 @@ describe("contract Yamato", function () {
       expect(pledgeAfter.debt.toString()).to.eq("0");
     });
     it(`should improve TCR`, async function () {
-      const MCR = BigNumber.from(110);
+      const MCR = BigNumber.from(130);
       const toCollateralize = 1;
       const toBorrow = PRICE.mul(toCollateralize)
         .mul(100)
@@ -507,7 +507,7 @@ describe("contract Yamato", function () {
       );
     });
     it(`should run burnCurrency`, async function () {
-      const MCR = BigNumber.from(110);
+      const MCR = BigNumber.from(130);
       const toCollateralize = 1;
       const toBorrow = PRICE.mul(toCollateralize)
         .mul(100)
@@ -520,7 +520,7 @@ describe("contract Yamato", function () {
     });
 
     it(`should run upsert`, async function () {
-      const MCR = BigNumber.from(110);
+      const MCR = BigNumber.from(130);
       const toCollateralize = 1;
       const toBorrow = PRICE.mul(toCollateralize)
         .mul(100)
@@ -533,7 +533,7 @@ describe("contract Yamato", function () {
     });
 
     it(`can repay even under TCR < MCR`, async function () {
-      const MCR = BigNumber.from(110);
+      const MCR = BigNumber.from(130);
       const toCollateralize = 1;
       const toBorrow = PRICE.mul(toCollateralize)
         .mul(100)
@@ -566,7 +566,7 @@ describe("contract Yamato", function () {
       expect(TCRafter).to.gt(TCRbefore);
     });
     it(`fails for empty cjpy amount`, async function () {
-      const MCR = BigNumber.from(110);
+      const MCR = BigNumber.from(130);
       const toCollateralize = 1;
       const toBorrow = PRICE.mul(toCollateralize)
         .mul(100)
@@ -579,7 +579,7 @@ describe("contract Yamato", function () {
       );
     });
     it(`fails for no-debt pledge`, async function () {
-      const MCR = BigNumber.from(110);
+      const MCR = BigNumber.from(130);
       const toCollateralize = 1;
       const toBorrow = PRICE.mul(toCollateralize)
         .mul(100)
@@ -601,7 +601,7 @@ describe("contract Yamato", function () {
     });
 
     it(`should validate locked state`, async function () {
-      const MCR = BigNumber.from(110);
+      const MCR = BigNumber.from(130);
       const toCollateralize = 1;
       const toBorrow = PRICE.mul(toCollateralize)
         .mul(100)
@@ -614,7 +614,7 @@ describe("contract Yamato", function () {
       ).to.revertedWith("Withdrawal is being locked for this sender.");
     });
     it(`should reduce coll`, async function () {
-      const MCR = BigNumber.from(110);
+      const MCR = BigNumber.from(130);
       const toCollateralize = 1;
       const toBorrow = PRICE.mul(toCollateralize)
         .mul(100)
@@ -628,7 +628,7 @@ describe("contract Yamato", function () {
       );
 
       expect(pledgeBefore.coll.toString()).to.eq("1000000000000000000");
-      expect(pledgeBefore.debt.toString()).to.eq("118181000000000000000000");
+      expect(pledgeBefore.debt.toString()).to.eq("100000000000000000000000");
 
       (<any>yamato.provider).send("evm_increaseTime", [60 * 60 * 24 * 3 + 1]);
       (<any>yamato.provider).send("evm_mine");
@@ -642,10 +642,10 @@ describe("contract Yamato", function () {
       expect(pledgeAfter.coll.toString()).to.eq(
         toERC20((toCollateralize * 99) / 100 + "").toString()
       );
-      expect(pledgeAfter.debt.toString()).to.eq("118181000000000000000000");
+      expect(pledgeAfter.debt.toString()).to.eq("100000000000000000000000");
     });
     it(`can't be executed in the ICR < MCR`, async function () {
-      const MCR = BigNumber.from(110);
+      const MCR = BigNumber.from(130);
       mockFeed.fetchPrice.returns(PRICE);
       mockFeed.lastGoodPrice.returns(PRICE);
       mockPool.sendETH.returns(0);
@@ -662,7 +662,7 @@ describe("contract Yamato", function () {
       );
 
       expect(pledgeBefore.coll.toString()).to.eq("1000000000000000000");
-      expect(pledgeBefore.debt.toString()).to.eq("236363000000000000000000");
+      expect(pledgeBefore.debt.toString()).to.eq("200000000000000000000000");
 
       (<any>yamato.provider).send("evm_increaseTime", [60 * 60 * 24 * 3 + 1]);
       (<any>yamato.provider).send("evm_mine");
@@ -675,7 +675,7 @@ describe("contract Yamato", function () {
       ).to.revertedWith("Withdrawal failure: ICR is not more than MCR.");
     });
     it(`can't make ICR < MCR by this withdrawal`, async function () {
-      const MCR = BigNumber.from(110);
+      const MCR = BigNumber.from(130);
       mockFeed.fetchPrice.returns(PRICE);
       mockFeed.lastGoodPrice.returns(PRICE);
       mockPool.sendETH.returns(0);
@@ -692,7 +692,7 @@ describe("contract Yamato", function () {
       );
 
       expect(pledgeBefore.coll.toString()).to.eq("1000000000000000000");
-      expect(pledgeBefore.debt.toString()).to.eq("236363000000000000000000");
+      expect(pledgeBefore.debt.toString()).to.eq("200000000000000000000000");
 
       (<any>yamato.provider).send("evm_increaseTime", [60 * 60 * 24 * 3 + 1]);
       (<any>yamato.provider).send("evm_mine");
@@ -704,7 +704,7 @@ describe("contract Yamato", function () {
       );
     });
     it(`should neutralize a pledge if clean full withdrawal happens`, async function () {
-      const MCR = BigNumber.from(110);
+      const MCR = BigNumber.from(130);
       const toCollateralize = 1;
       await yamato.deposit({ value: toERC20(toCollateralize + "") });
 
@@ -742,7 +742,7 @@ describe("contract Yamato", function () {
       accounts = await ethers.getSigners();
       PRICE = BigNumber.from(260000).mul(1e18 + "");
       PRICE_AFTER = PRICE.div(2);
-      MCR = BigNumber.from(110);
+      MCR = BigNumber.from(130);
       mockPool.depositRedemptionReserve.returns(0);
       mockPool.depositSweepReserve.returns(0);
       mockPool.lockETH.returns(0);
@@ -901,7 +901,7 @@ describe("contract Yamato", function () {
       accounts = await ethers.getSigners();
       PRICE = BigNumber.from(260000).mul(1e18 + "");
       PRICE_AFTER = PRICE.div(2);
-      MCR = BigNumber.from(110);
+      MCR = BigNumber.from(130);
       mockPool.depositRedemptionReserve.returns(0);
       mockPool.depositSweepReserve.returns(0);
       mockPool.lockETH.returns(0);
@@ -1019,7 +1019,7 @@ describe("contract Yamato", function () {
       const afterValues = await yamato.getStates();
 
       expect(afterValues[0]).to.eq("1000000000000000000");
-      expect(afterValues[1]).to.eq("236363000000000000000000");
+      expect(afterValues[1]).to.eq("200000000000000000000000");
       expect(afterValues[2]).to.eq(MCR);
       expect(afterValues[3]).to.eq(RRR);
       expect(afterValues[4]).to.eq(SRR);
@@ -1054,7 +1054,7 @@ describe("contract Yamato", function () {
       const afterValues = await yamato.getIndivisualStates(owner);
 
       expect(afterValues[0]).to.eq("1000000000000000000");
-      expect(afterValues[1]).to.eq("236363000000000000000000");
+      expect(afterValues[1]).to.eq("200000000000000000000000");
       expect(afterValues[2]).to.eq(true);
     });
   });
