@@ -147,7 +147,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
     YamatoWithdrawer = await getLinkedProxy<
       YamatoWithdrawer,
       YamatoWithdrawer__factory
-    >("YamatoDepositor", [Yamato.address], ["PledgeLib"]);
+    >("YamatoWithdrawer", [Yamato.address], ["PledgeLib"]);
 
     YamatoRedeemer = await getLinkedProxy<
       YamatoRedeemer,
@@ -496,7 +496,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
     });
 
     describe("Context - A very large redemption", function () {
-      const COUNT = 100;
+      const COUNT = 70;
       let _ACCOUNTS;
       beforeEach(async () => {
         _ACCOUNTS = accounts;

@@ -62,7 +62,7 @@ contract PriorityRegistry is IPriorityRegistry, YamatoStore {
     */
 
     /*
-        @notice The upsert process is  1. update coll/debt  2. upsert and return "upsert-time ICR"  3. update priority with the "upsert-time ICR"
+        @notice The upsert process is  1. update coll/debt in Yamato-side 2. floor the last ICR to make "level" 3. upsert and return the new "upsert-time ICR"  4. update padded-priority to the Yamato
         @dev It upserts "deposited", "borrowed", "repayed", "partially withdrawn", "redeemed", or "partially swept" pledges.
         @return _newICRpercent is for overwriting Yamato.sol's pledge info
     */
@@ -70,7 +70,7 @@ contract PriorityRegistry is IPriorityRegistry, YamatoStore {
         public
         override
         onlyYamato
-        returns (uint256 _newICRpercent)
+        returns (uint256)
     {
         // uint256 gasStart = gasleft();
         require(
@@ -81,7 +81,7 @@ contract PriorityRegistry is IPriorityRegistry, YamatoStore {
             !(_pledge.coll > 0 && _pledge.debt > 0 && _pledge.priority == 0),
             "Upsert Error: Such a pledge can't exist!"
         );
-        uint256 _oldICRpercent = _pledge.priority;
+        uint256 _oldICRpercent = floor(_pledge.priority);
 
         /*
             1. delete current pledge from sorted pledge and update LICR
@@ -98,13 +98,13 @@ contract PriorityRegistry is IPriorityRegistry, YamatoStore {
         /* 
             2. insert new pledge
         */
-        _newICRpercent = floor(_pledge.getICR(feed()));
+        uint256 _newICRpercent = floor(_pledge.getICR(feed()));
         require(
             _newICRpercent <= floor(2**256 - 1),
             "priority can't be that big."
         );
 
-        _pledge.priority = _newICRpercent;
+        _pledge.priority = _newICRpercent * 100;
 
         leveledPledges[_newICRpercent][_pledge.owner] = _pledge;
         levelIndice[_newICRpercent].push(_pledge.owner);
@@ -141,7 +141,7 @@ contract PriorityRegistry is IPriorityRegistry, YamatoStore {
 
         if (_traverseStartICR > 0) _traverseToNextLICR(_traverseStartICR);
 
-        _newICRpercent = _newICRpercent * 100; // Note: priority is percent in PriorityRegistry and pertenk in Yamato
+        return _newICRpercent * 100;
     }
 
     /*
@@ -160,14 +160,10 @@ contract PriorityRegistry is IPriorityRegistry, YamatoStore {
             _pledge.debt == 0,
             "Removal Error: debt has to be zero for removal."
         );
-        require(
-            _pledge.priority <= floor(2**256 - 1),
-            "Such big priority is not supported by PriorityRegistry."
-        );
 
         // Note: In full withdrawal scenario, this value is MAX_UINT
         require(
-            _pledge.priority == 0 || _pledge.priority == floor(2**256 - 1),
+            _pledge.priority == 0 || _pledge.priority == 2**256 - 1,
             "Unintentional priority is given to the remove function."
         );
 
@@ -278,7 +274,7 @@ contract PriorityRegistry is IPriorityRegistry, YamatoStore {
         @param _pledge the delete target
     */
     function _deletePledge(IYamato.Pledge memory _pledge) internal {
-        uint256 icr = _pledge.priority;
+        uint256 icr = floor(_pledge.priority);
         address _owner = _pledge.owner;
 
         if (leveledPledges[icr][_owner].isCreated) {

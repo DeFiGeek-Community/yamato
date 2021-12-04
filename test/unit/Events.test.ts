@@ -108,7 +108,7 @@ describe("story Events", function () {
       yamatoWithdrawer = await getLinkedProxy<
         YamatoWithdrawer,
         YamatoWithdrawer__factory
-      >("YamatoDepositor", [yamato.address], ["PledgeLib"]);
+      >("YamatoWithdrawer", [yamato.address], ["PledgeLib"]);
 
       yamatoRedeemer = await getLinkedProxy<
         YamatoRedeemer,
@@ -428,14 +428,14 @@ describe("story Events", function () {
         ).to.emit(pool, "ETHSent");
       });
     });
-    describe("event CJPYSent", function () {
+    describe("event CurrencySent", function () {
       it(`should be emitted`, async function () {
         await expect(
           yamatoDummy.bypassSendCurrency(
             await accounts[0].getAddress(),
             BigNumber.from(1e18 + "")
           )
-        ).to.emit(pool, "CJPYSent");
+        ).to.emit(pool, "CurrencySent");
       });
     });
   });

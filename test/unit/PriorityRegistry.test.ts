@@ -164,10 +164,10 @@ describe("contract PriorityRegistry", function () {
       const _ICRDefault = BigNumber.from("1");
       const _ICRBefore = _collBefore
         .mul(PRICE)
-        .mul(100)
+        .mul(10000)
         .div(_debtBefore)
         .div(1e18 + "");
-      expect(_ICRBefore).to.eq("99");
+      expect(_ICRBefore).to.eq("9999");
       const _pledgeBefore = [
         _collBefore,
         _debtBefore,
@@ -291,12 +291,13 @@ describe("contract PriorityRegistry", function () {
       const _owner = address0;
 
       // Note: newly deposited
-      const _sludgePledge = [_collBefore, _debtBefore, true, _owner, 0];
-      await (await yamatoDummy.bypassUpsert(toTyped(_sludgePledge))).wait();
+      const _newPledge = [_collBefore, _debtBefore, true, _owner, 0];
+      await (await yamatoDummy.bypassUpsert(toTyped(_newPledge))).wait();
 
       // Note: A deposited pledge has just been withdrawn and priority is maxint.
-      const maxIntStr = BigNumber.from(2).pow(256).sub(1).toString();
-      const maxPriority = maxIntStr.slice(0, maxIntStr.length - 2);
+      const maxPriority = BigNumber.from(2).pow(256).sub(1).toString();
+
+      // Note: This pledge is already compensated his coll to user.
       const _withdrawnPledge = [
         BigNumber.from("0"),
         BigNumber.from("0"),
