@@ -56,11 +56,18 @@ export async function getLinkedProxy<
 
 export async function deployLibrary(libraryName) {
   const filepath = getDeploymentAddressPath(libraryName);
+  let _LibAddr;
+  try {
+    _LibAddr = readFileSync(filepath).toString();
+  } catch (e) {
+    console.log("Non-cacheable environment. Skip cache.");
+  }
+
   if (
     (getCurrentNetwork() == "rinkeby" || getCurrentNetwork() == "localnet") &&
-    existsSync(filepath)
+    existsSync(filepath) &&
+    _LibAddr
   ) {
-    const _LibAddr = readFileSync(filepath).toString();
     console.log(`${libraryName} is already deployed and use ${_LibAddr}`);
     return new ethers.Contract(_LibAddr, genABI("PledgeLib", true));
   }
