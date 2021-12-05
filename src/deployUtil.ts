@@ -100,10 +100,7 @@ export function getCurrentNetwork() {
   } else {
     return "localnet";
   }
-
-  return process.argv.join("").toLowerCase().indexOf("rinkeby") >= 0
-    ? "rinkeby"
-    : ""; // node hardhat deploy --network <network> / npm run verify:rinkeby:all
+  // node hardhat deploy --network <network> / npm run verify:rinkeby:all
 }
 export function setProvider() {
   const provider = getDefaultProvider("rinkeby", {

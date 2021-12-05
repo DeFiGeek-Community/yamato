@@ -2,7 +2,7 @@ import { ethers, upgrades, artifacts } from "hardhat";
 import { BaseContract, ContractFactory, BigNumber } from "ethers";
 import { FakeContract, smock } from "@defi-wonderland/smock";
 import { existsSync, readFileSync, writeFileSync } from "fs";
-import { getDeploymentAddressPath } from "./deployUtil";
+import { getDeploymentAddressPath, getCurrentNetwork } from "./deployUtil";
 import { genABI } from "./genABI";
 
 // @dev UUPS
@@ -57,7 +57,12 @@ export async function getLinkedProxy<
 export async function deployLibrary(libraryName) {
   const filepath = getDeploymentAddressPath(libraryName);
   if (
-    (await ethers.provider.getNetwork()).name == "rinkeby" &&
+    (
+      getCurrentNetwork() == "rinkeby"
+      ||
+      getCurrentNetwork() == "localnet" 
+    )
+    &&
     existsSync(filepath)
   ) {
     const _LibAddr = readFileSync(filepath).toString();

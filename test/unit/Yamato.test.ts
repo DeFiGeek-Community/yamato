@@ -600,18 +600,18 @@ describe("contract Yamato", function () {
       mockPool.sendETH.returns(0);
     });
 
-    it(`should validate locked state`, async function () {
+    it(`should NOT validate borrow and withdraw in the different block`, async function () {
       const MCR = BigNumber.from(130);
       const toCollateralize = 1;
       const toBorrow = PRICE.mul(toCollateralize)
         .mul(100)
         .div(MCR)
         .div(1e18 + "");
-      await yamato.deposit({ value: toERC20(toCollateralize + "") });
+      await yamato.deposit({ value: toERC20(toCollateralize*2 + "") });
       await yamato.borrow(toERC20(toBorrow + ""));
       await expect(
         yamato.withdraw(toERC20(toCollateralize / 10 + ""))
-      ).to.revertedWith("Withdrawal is being locked for this sender.");
+      ).to.not.reverted;
     });
     it(`should reduce coll`, async function () {
       const MCR = BigNumber.from(130);
