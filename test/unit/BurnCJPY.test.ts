@@ -142,7 +142,7 @@ describe("burnCurrency :: contract Yamato", () => {
     YamatoWithdrawer = await getLinkedProxy<
       YamatoWithdrawer,
       YamatoWithdrawer__factory
-    >("YamatoDepositor", [Yamato.address], ["PledgeLib"]);
+    >("YamatoWithdrawer", [Yamato.address], ["PledgeLib"]);
 
     YamatoRedeemer = await getLinkedProxy<
       YamatoRedeemer,
