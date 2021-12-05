@@ -40,6 +40,7 @@ contract YamatoDepositor is IYamatoDepositor, YamatoAction {
     function runDeposit(address _sender) public payable override onlyYamato {
         IPriceFeed(feed()).fetchPrice();
         uint256 _ethAmount = msg.value;
+
         /*
             1. Compose a pledge in memory
         */
@@ -54,26 +55,41 @@ contract YamatoDepositor is IYamatoDepositor, YamatoAction {
         }
 
         /*
-            2. Update PriorityRegistry
+            2. Validate lock
+        */
+        require(
+            !IYamato(yamato()).checkFlashLock(_sender),
+            "Those can't be called in the same block."
+        );
+
+        /*
+            3. Update PriorityRegistry
         */
         pledge.priority = IPriorityRegistry(priorityRegistry()).upsert(pledge);
 
         /*
-            3. Commit pledge modifications
+            4. Commit pledge modifications
         */
         IYamato(yamato()).setPledge(pledge.owner, pledge);
 
         /*
-            4. Set totalColl
+            5. Set totalColl
         */
         IYamato(yamato()).setTotalColl(totalColl + _ethAmount);
 
         /*
-            5. Send ETH to pool
+            6. Set FlashLock
+        */
+        IYamato(yamato()).setFlashLock(
+            _sender,
+            IYamato.FlashLockTypes.DEPOSIT_LOCK
+        );
+
+        /*
+            7. Send ETH to pool
         */
         (bool success, ) = payable(pool()).call{value: _ethAmount}("");
         require(success, "transfer failed");
         IPool(pool()).lockETH(_ethAmount);
-        IYamato(yamato()).setDepositAndBorrowLocks(_sender);
     }
 }

@@ -14,7 +14,9 @@ import "hardhat/console.sol";
 
 interface IYamatoSameBlock {
     function deposit() external payable;
+
     function borrow(uint256 borrowAmountInCurrency) external;
+
     function withdraw(uint256 ethAmount) external;
 }
 
@@ -29,18 +31,30 @@ contract SameBlockClient {
         y.deposit{value: msg.value}();
         y.borrow(borrowAmountInCurrency);
     }
-    function borrowAndWithdraw(uint256 borrowAmountInCurrency, uint256 ethAmount) public {
+
+    function borrowAndWithdraw(
+        uint256 borrowAmountInCurrency,
+        uint256 ethAmount
+    ) public {
         y.borrow(borrowAmountInCurrency);
         y.withdraw(ethAmount);
     }
+
     function depositAndWithdraw(uint256 ethAmount) public payable {
         y.deposit{value: msg.value}();
         y.withdraw(ethAmount);
     }
-    function depositAndBorrowAndWithdraw(uint256 borrowAmountInCurrency, uint256 ethAmount) public payable {
+
+    function depositAndBorrowAndWithdraw(
+        uint256 borrowAmountInCurrency,
+        uint256 ethAmount
+    ) public payable {
         y.deposit{value: msg.value}();
         y.borrow(borrowAmountInCurrency);
         y.withdraw(ethAmount);
     }
 
+    function depositFromClient() public payable {
+        y.deposit{value: msg.value}();
+    }
 }

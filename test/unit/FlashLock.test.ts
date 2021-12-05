@@ -145,7 +145,7 @@ describe("FlashLock :: contract Yamato", () => {
     YamatoWithdrawer = await getLinkedProxy<
       YamatoWithdrawer,
       YamatoWithdrawer__factory
-    >("YamatoDepositor", [Yamato.address], ["PledgeLib"]);
+    >("YamatoWithdrawer", [Yamato.address], ["PledgeLib"]);
 
     YamatoRedeemer = await getLinkedProxy<
       YamatoRedeemer,
@@ -180,17 +180,15 @@ describe("FlashLock :: contract Yamato", () => {
     await (await CurrencyOS.addYamato(Yamato.address)).wait();
     await (await CJPY.setCurrencyOS(CurrencyOS.address)).wait();
 
-    
     SameBlockClient = await (<SameBlockClient__factory>(
-        await ethers.getContractFactory("SameBlockClient")
+      await ethers.getContractFactory("SameBlockClient")
     )).deploy(Yamato.address);
 
     await (await PriceFeed.fetchPrice()).wait();
-  
-});
+  });
 
   describe("depositAndBorrow()", function () {
-    it.only(`should be reverted`, async function () {
+    it(`should be reverted`, async function () {
       const PRICE = await PriceFeed.lastGoodPrice();
       const MCR = BigNumber.from(130);
       const toCollateralize = 1;
@@ -199,12 +197,16 @@ describe("FlashLock :: contract Yamato", () => {
         .div(MCR)
         .div(1e18 + "");
 
-      await expect(SameBlockClient.depositAndBorrow(toERC20(toBorrow + ""),{ value: toERC20(toCollateralize + "") })).to.be.revertedWith("Those can't be called in the same block.");
+      await expect(
+        SameBlockClient.depositAndBorrow(toERC20(toBorrow + ""), {
+          value: toERC20(toCollateralize + ""),
+        })
+      ).to.be.revertedWith("Those can't be called in the same block.");
     });
   });
 
   describe("borrowAndWithdraw()", function () {
-    it.only(`should be reverted`, async function () {
+    it(`should be reverted`, async function () {
       const PRICE = await PriceFeed.lastGoodPrice();
       const MCR = BigNumber.from(130);
       const toCollateralize = 1;
@@ -213,14 +215,24 @@ describe("FlashLock :: contract Yamato", () => {
         .div(MCR)
         .div(1e18 + "");
 
-      await (await Yamato.deposit({ value: toERC20(toCollateralize + "") })).wait()
+      // Note: Align signer with following execution
+      await (
+        await SameBlockClient.depositFromClient({
+          value: toERC20(toCollateralize * 3 + ""),
+        })
+      ).wait();
 
-      await expect(SameBlockClient.borrowAndWithdraw(toERC20(toBorrow + ""),toERC20(toCollateralize + ""))).to.be.revertedWith("Those can't be called in the same block.");
+      await expect(
+        SameBlockClient.borrowAndWithdraw(
+          toERC20(toBorrow + ""),
+          toERC20(toCollateralize + "")
+        )
+      ).to.be.revertedWith("Those can't be called in the same block.");
     });
   });
 
   describe("depositAndWithdraw()", function () {
-    it.only(`should be reverted`, async function () {
+    it(`should be reverted`, async function () {
       const PRICE = await PriceFeed.lastGoodPrice();
       const MCR = BigNumber.from(130);
       const toCollateralize = 1;
@@ -229,12 +241,16 @@ describe("FlashLock :: contract Yamato", () => {
         .div(MCR)
         .div(1e18 + "");
 
-      await expect(SameBlockClient.depositAndWithdraw(toERC20(toCollateralize + ""),{ value: toERC20(toCollateralize + "") })).to.be.revertedWith("Those can't be called in the same block.");
+      await expect(
+        SameBlockClient.depositAndWithdraw(toERC20(toCollateralize + ""), {
+          value: toERC20(toCollateralize + ""),
+        })
+      ).to.be.revertedWith("Those can't be called in the same block.");
     });
   });
 
   describe("depositAndBorrowAndWithdraw()", function () {
-    it.only(`should be reverted`, async function () {
+    it(`should be reverted`, async function () {
       const PRICE = await PriceFeed.lastGoodPrice();
       const MCR = BigNumber.from(130);
       const toCollateralize = 1;
@@ -243,8 +259,13 @@ describe("FlashLock :: contract Yamato", () => {
         .div(MCR)
         .div(1e18 + "");
 
-      await expect(SameBlockClient.depositAndBorrowAndWithdraw(toERC20(toBorrow + ""), toERC20(toCollateralize + ""), { value: toERC20(toCollateralize + "") })).to.be.revertedWith("Those can't be called in the same block.");
+      await expect(
+        SameBlockClient.depositAndBorrowAndWithdraw(
+          toERC20(toBorrow + ""),
+          toERC20(toCollateralize + ""),
+          { value: toERC20(toCollateralize + "") }
+        )
+      ).to.be.revertedWith("Those can't be called in the same block.");
     });
   });
-
 });

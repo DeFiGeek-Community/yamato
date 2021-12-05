@@ -61,8 +61,8 @@ contract YamatoWithdrawer is IYamatoWithdrawer, YamatoAction {
             "Withdrawal amount must be less than equal to the total coll amount."
         );
         require(
-            IYamato(yamato()).withdrawLocks(_sender) <= block.timestamp,
-            "Withdrawal is being locked for this sender."
+            !IYamato(yamato()).checkFlashLock(_sender),
+            "Those can't be called in the same block."
         );
         require(
             pledge.getICR(feed()) >= uint256(IYamato(yamato()).MCR()) * 100,
@@ -70,9 +70,16 @@ contract YamatoWithdrawer is IYamatoWithdrawer, YamatoAction {
         );
 
         /*
-            3. Update pledge
+            3. Set flashlock
         */
+        IYamato(yamato()).setFlashLock(
+            _sender,
+            IYamato.FlashLockTypes.WITHDRAW_LOCK
+        );
 
+        /*
+            4. Update pledge
+        */
         // Note: SafeMath unintentionally checks full withdrawal
         pledge.coll = pledge.coll - _ethAmount;
         IYamato(yamato()).setPledge(pledge.owner, pledge);
@@ -80,17 +87,17 @@ contract YamatoWithdrawer is IYamatoWithdrawer, YamatoAction {
         IYamato(yamato()).setTotalDebt(totalColl - _ethAmount);
 
         /*
-            4. Validate and update PriorityRegistry
+            5. Validate and update PriorityRegistry
         */
         if (pledge.coll == 0 && pledge.debt == 0) {
             /*
-                4-a. Clean full withdrawal
+                5-a. Clean full withdrawal
             */
             IPriorityRegistry(priorityRegistry()).remove(pledge);
             IYamato(yamato()).setPledge(pledge.owner, pledge.nil());
         } else {
             /*
-                4-b. Reasonable partial withdrawal
+                5-b. Reasonable partial withdrawal
             */
             require(
                 pledge.getICR(feed()) >= uint256(IYamato(yamato()).MCR()) * 100,
@@ -103,8 +110,8 @@ contract YamatoWithdrawer is IYamatoWithdrawer, YamatoAction {
         }
 
         /*
-            5-1. Charge CJPY
-            5-2. Return coll to the withdrawer
+            6-1. Charge CJPY
+            6-2. Return coll to the withdrawer
         */
         IPool(pool()).sendETH(_sender, _ethAmount);
     }

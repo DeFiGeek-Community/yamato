@@ -60,8 +60,8 @@ contract YamatoBorrower is IYamatoBorrower, YamatoAction {
             2. Validate
         */
         require(
-            IYamato(yamato()).depositAndBorrowLocks(_sender) < block.number,
-            "Borrowing should not be executed within the same block with your deposit."
+            !IYamato(yamato()).checkFlashLock(_sender),
+            "Those can't be called in the same block."
         );
         require(pledge.isCreated, "This pledge is not created yet.");
         require(
@@ -75,32 +75,35 @@ contract YamatoBorrower is IYamatoBorrower, YamatoAction {
         );
 
         /*
-            3. Add debt to a pledge in memory
+            3. Set FlashLock
+        */
+        IYamato(yamato()).setFlashLock(
+            _sender,
+            IYamato.FlashLockTypes.BORROW_LOCK
+        );
+
+        /*
+            4. Add debt to a pledge in memory
         */
         pledge.debt += _borrowAmountInCurrency;
 
         /*
-            4. Add PriorityRegistry change
+            5. Add PriorityRegistry change
         */
         pledge.priority = IPriorityRegistry(priorityRegistry()).upsert(pledge);
 
         /*
-            5. Commit to pledge
+            6. Commit to pledge
         */
         IYamato(yamato()).setPledge(pledge.owner, pledge);
 
         /*
-            5. Update totalDebt
+            7. Update totalDebt
         */
         IYamato(yamato()).setTotalDebt(totalDebt + _borrowAmountInCurrency);
 
         /*
-            5. Cheat guard
-        */
-        IYamato(yamato()).setWithdrawLocks(_sender);
-
-        /*
-            6. Borrowed fund & fee transfer
+            8. Borrowed fund & fee transfer
         */
         ICurrencyOS(currencyOS()).mintCurrency(_sender, returnableCurrency); // onlyYamato
         ICurrencyOS(currencyOS()).mintCurrency(address(IPool(pool())), fee); // onlyYamato
