@@ -16,6 +16,7 @@ typechain
 cache/**/*
 !deployments/rinkeby/.chainId
 !deployments/localnet/.chainId
+deployments/localnet/PledgeLib
 abis
 test/**/*.js
 /slither-output.json
