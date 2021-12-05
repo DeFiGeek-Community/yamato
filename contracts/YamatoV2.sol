@@ -38,30 +38,65 @@ contract YamatoV2 is
     ReentrancyGuardUpgradeable,
     PausableUpgradeable
 {
+    /*
+        ===========================
+        Lib for struct Pledge
+        ===========================
+    */
     using PledgeLib for IYamato.Pledge;
     using PledgeLib for uint256;
 
+    /*
+        ===========================
+        ~~~ SAFE HAVEN ~~~
+        ===========================
+        - Constants don't take slots
+        - You can add or remove them in upgrade timing
+        - Read more => https://docs.openzeppelin.com/upgrades-plugins/1.x/writing-upgradeable#avoid-initial-values-in-field-declarations
+    */
+
+    uint8 public constant override MCR = 130; // MinimumCollateralizationRatio in pertenk
+    uint8 public constant RRR = 80; // RedemptionReserveRate in pertenk
+    uint8 public constant SRR = 20; // SweepReserveRate in pertenk
+    uint8 public constant override GRR = 1; // GasReserveRate in pertenk
+
+    // Use hash-slot pointer. You will be less anxious to modularise contracts later.
+    string constant CURRENCY_OS_SLOT_ID = "deps.CurrencyOS";
+    string constant YAMATO_DEPOSITOR_SLOT_ID = "deps.YamatoDepositor";
+    string constant YAMATO_BORROWER_SLOT_ID = "deps.YamatoBorrower";
+    string constant YAMATO_REPAYER_SLOT_ID = "deps.YamatoRepayer";
+    string constant YAMATO_WITHDRAWER_SLOT_ID = "deps.YamatoWithdrawer";
+    string constant YAMATO_REDEEMER_SLOT_ID = "deps.YamatoRedeemer";
+    string constant YAMATO_SWEEPER_SLOT_ID = "deps.YamatoSweeper";
+    string constant POOL_SLOT_ID = "deps.Pool";
+    string constant PRIORITY_REGISTRY_SLOT_ID = "deps.PriorityRegistry";
+
+    /*
+        ===========================
+        ~~~ SAFE HAVEN ENDED ~~~
+        ===========================
+    */
+
+    /*
+        ===========================
+        !!! DANGER ZONE BEGINS !!!
+        ===========================
+        - Proxy patterns (UUPS) stores state onto ERC1967Proxy via `delegatecall` opcode.
+        - So modifying storage slot order in the next version of implementation would cause storage layout confliction.
+        - You can check whether your change will conflict or not by using `@openzeppelin/upgrades`
+        - Read more => https://docs.openzeppelin.com/upgrades-plugins/1.x/writing-upgradeable#modifying-your-contracts
+    */
     uint256 totalColl;
     uint256 totalDebt;
 
     mapping(address => Pledge) pledges;
-    mapping(address => uint256) public override withdrawLocks;
-    mapping(address => uint256) public override depositAndBorrowLocks;
+    mapping(address => FlashLockData) flashlocks; // sender => <uint6 000000> + <uint250 blockHeight> ... dep,bor,rep,wit,red,swe
 
-    uint8 public override MCR; // MinimumCollateralizationRatio in pertenk
-    uint8 public RRR; // RedemptionReserveRate in pertenk
-    uint8 public SRR; // SweepReserveRate in pertenk
-    uint8 public override GRR; // GasReserveRate in pertenk
-
-    string CURRENCY_OS_SLOT_ID;
-    string YAMATO_DEPOSITOR_SLOT_ID;
-    string YAMATO_BORROWER_SLOT_ID;
-    string YAMATO_REPAYER_SLOT_ID;
-    string YAMATO_WITHDRAWER_SLOT_ID;
-    string YAMATO_REDEEMER_SLOT_ID;
-    string YAMATO_SWEEPER_SLOT_ID;
-    string POOL_SLOT_ID;
-    string PRIORITY_REGISTRY_SLOT_ID;
+    /*
+        ===========================
+        !!! DANGER ZONE ENDED !!!
+        ===========================
+    */
 
     /*
         ==============================
@@ -71,22 +106,6 @@ contract YamatoV2 is
         - setDeps
     */
     function initialize(address _currencyOS) public initializer {
-        // Note: UUPS can't have constants above
-        CURRENCY_OS_SLOT_ID = "deps.CurrencyOS";
-        YAMATO_DEPOSITOR_SLOT_ID = "deps.YamatoDepositor";
-        YAMATO_BORROWER_SLOT_ID = "deps.YamatoBorrower";
-        YAMATO_REPAYER_SLOT_ID = "deps.YamatoRepayer";
-        YAMATO_WITHDRAWER_SLOT_ID = "deps.YamatoWithdrawer";
-        YAMATO_REDEEMER_SLOT_ID = "deps.YamatoRedeemer";
-        YAMATO_SWEEPER_SLOT_ID = "deps.YamatoSweeper";
-        POOL_SLOT_ID = "deps.Pool";
-        PRIORITY_REGISTRY_SLOT_ID = "deps.PriorityRegistry";
-
-        MCR = 110;
-        RRR = 80;
-        SRR = 20;
-        GRR = 1;
-
         bytes32 CURRENCY_OS_KEY = bytes32(
             keccak256(abi.encode(CURRENCY_OS_SLOT_ID))
         );
@@ -180,7 +199,7 @@ contract YamatoV2 is
         p.debt = _p.debt;
         p.owner = _p.owner;
         p.isCreated = _p.isCreated;
-        p.priority = _p.coll;
+        p.priority = _p.priority;
     }
 
     function setTotalColl(uint256 _totalColl) public override onlyYamato {
@@ -191,16 +210,63 @@ contract YamatoV2 is
         totalDebt = _totalDebt;
     }
 
-    function setDepositAndBorrowLocks(address _owner)
+    function checkFlashLock(address _owner)
+        public
+        view
+        override
+        onlyYamato
+        returns (bool _isLocked)
+    {
+        FlashLockData storage lock = flashlocks[_owner];
+        if (lock.blockHeight == block.number) {
+            _isLocked =
+                lock.depositLock ||
+                lock.borrowLock ||
+                lock.withdrawLock;
+        }
+    }
+
+    function setFlashLock(address _owner, FlashLockTypes _types)
         public
         override
         onlyYamato
     {
-        depositAndBorrowLocks[_owner] = block.number;
-    }
+        FlashLockData storage lock = flashlocks[_owner];
+        require(
+            lock.blockHeight <= block.number,
+            "FlashLock.blockHeight can't be more than currenct blockheight."
+        );
 
-    function setWithdrawLocks(address _owner) public override onlyYamato {
-        withdrawLocks[_owner] = block.timestamp + 3 days;
+        if (_types == FlashLockTypes.DEPOSIT_LOCK) {
+            if (lock.blockHeight < block.number) {
+                // Initialize if first lock attempt.
+                lock.blockHeight = block.number;
+                lock.borrowLock = false;
+                lock.withdrawLock = false;
+            }
+            // Just add a flag if consequential lock attempt.
+            lock.depositLock = true;
+        } else if (_types == FlashLockTypes.BORROW_LOCK) {
+            if (lock.blockHeight < block.number) {
+                // Initialize if first lock attempt.
+                lock.blockHeight = block.number;
+                lock.depositLock = false;
+                lock.withdrawLock = false;
+            }
+            // Just add a flag if consequential lock attempt.
+            lock.borrowLock = true;
+        } else if (_types == FlashLockTypes.WITHDRAW_LOCK) {
+            if (lock.blockHeight < block.number) {
+                // Initialize if first lock attempt.
+                lock.blockHeight = block.number;
+                lock.depositLock = false;
+                lock.borrowLock = false;
+            }
+            // Just add a flag if consequential lock attempt.
+            lock.withdrawLock = true;
+        } else {
+            revert("Invalid FlashLockTypes given.");
+        }
     }
 
     modifier onlyYamato() override {
@@ -221,10 +287,7 @@ contract YamatoV2 is
     /// @notice Make a Pledge with ETH. "Top-up" supported.
     /// @dev We haven't supported ERC-20 pledges and pool
     function deposit() public payable nonReentrant whenNotPaused {
-        (bool success, ) = payable(depositor()).call{value: msg.value}(
-            abi.encodeWithSignature("runDeposit(address)", msg.sender)
-        );
-        require(success, "runDeposit failed");
+        IYamatoDepositor(depositor()).runDeposit{value: msg.value}(msg.sender);
         emit Deposited(msg.sender, msg.value);
     }
 
@@ -321,9 +384,9 @@ contract YamatoV2 is
 
     function toggle() public onlyGovernance {
         if (paused()) {
-            _pause();
-        } else {
             _unpause();
+        } else {
+            _pause();
         }
     }
 
@@ -372,20 +435,11 @@ contract YamatoV2 is
             uint256 coll,
             uint256 debt,
             bool isCreated,
-            uint256 withdrawLock,
-            uint256 depositAndBorrowLock
+            FlashLockData memory lock
         )
     {
         Pledge memory pledge = pledges[owner];
-        withdrawLock = withdrawLocks[owner];
-        depositAndBorrowLock = depositAndBorrowLocks[owner];
-        return (
-            pledge.coll,
-            pledge.debt,
-            pledge.isCreated,
-            withdrawLock,
-            depositAndBorrowLock
-        );
+        return (pledge.coll, pledge.debt, pledge.isCreated, flashlocks[owner]);
     }
 
     // @dev Yamato.sol must override it with correct logic.
@@ -432,12 +486,12 @@ contract YamatoV2 is
         }
     }
 
-    function repayer() public view override returns (address _depositor) {
+    function repayer() public view override returns (address _repayer) {
         bytes32 YAMATO_REPAYER_KEY = bytes32(
             keccak256(abi.encode(YAMATO_REPAYER_SLOT_ID))
         );
         assembly {
-            _depositor := sload(YAMATO_REPAYER_KEY)
+            _repayer := sload(YAMATO_REPAYER_KEY)
         }
     }
 

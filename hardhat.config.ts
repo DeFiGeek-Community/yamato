@@ -91,7 +91,7 @@ module.exports = {
     spacing: 2,
   },
   mocha: {
-    timeout: 720000,
+    timeout: 1200000,
     forbidOnly: process.env.NODE_ENV === "ci",
   },
   contractSizer: {

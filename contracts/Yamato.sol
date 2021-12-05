@@ -90,8 +90,7 @@ contract Yamato is
     uint256 totalDebt;
 
     mapping(address => Pledge) pledges;
-    mapping(address => uint256) public override withdrawLocks;
-    mapping(address => uint256) public override depositAndBorrowLocks;
+    mapping(address => FlashLockData) flashlocks; // sender => <uint6 000000> + <uint250 blockHeight> ... dep,bor,rep,wit,red,swe
 
     /*
         ===========================
@@ -211,16 +210,63 @@ contract Yamato is
         totalDebt = _totalDebt;
     }
 
-    function setDepositAndBorrowLocks(address _owner)
+    function checkFlashLock(address _owner)
+        public
+        view
+        override
+        onlyYamato
+        returns (bool _isLocked)
+    {
+        FlashLockData storage lock = flashlocks[_owner];
+        if (lock.blockHeight == block.number) {
+            _isLocked =
+                lock.depositLock ||
+                lock.borrowLock ||
+                lock.withdrawLock;
+        }
+    }
+
+    function setFlashLock(address _owner, FlashLockTypes _types)
         public
         override
         onlyYamato
     {
-        depositAndBorrowLocks[_owner] = block.number;
-    }
+        FlashLockData storage lock = flashlocks[_owner];
+        require(
+            lock.blockHeight <= block.number,
+            "FlashLock.blockHeight can't be more than currenct blockheight."
+        );
 
-    function setWithdrawLocks(address _owner) public override onlyYamato {
-        withdrawLocks[_owner] = block.timestamp + 3 days;
+        if (_types == FlashLockTypes.DEPOSIT_LOCK) {
+            if (lock.blockHeight < block.number) {
+                // Initialize if first lock attempt.
+                lock.blockHeight = block.number;
+                lock.borrowLock = false;
+                lock.withdrawLock = false;
+            }
+            // Just add a flag if consequential lock attempt.
+            lock.depositLock = true;
+        } else if (_types == FlashLockTypes.BORROW_LOCK) {
+            if (lock.blockHeight < block.number) {
+                // Initialize if first lock attempt.
+                lock.blockHeight = block.number;
+                lock.depositLock = false;
+                lock.withdrawLock = false;
+            }
+            // Just add a flag if consequential lock attempt.
+            lock.borrowLock = true;
+        } else if (_types == FlashLockTypes.WITHDRAW_LOCK) {
+            if (lock.blockHeight < block.number) {
+                // Initialize if first lock attempt.
+                lock.blockHeight = block.number;
+                lock.depositLock = false;
+                lock.borrowLock = false;
+            }
+            // Just add a flag if consequential lock attempt.
+            lock.withdrawLock = true;
+        } else {
+            revert("Invalid FlashLockTypes given.");
+        }
     }
 
     modifier onlyYamato() override {
@@ -389,20 +435,11 @@ contract Yamato is
             uint256 coll,
             uint256 debt,
             bool isCreated,
-            uint256 withdrawLock,
-            uint256 depositAndBorrowLock
+            FlashLockData memory lock
         )
     {
         Pledge memory pledge = pledges[owner];
-        withdrawLock = withdrawLocks[owner];
-        depositAndBorrowLock = depositAndBorrowLocks[owner];
-        return (
-            pledge.coll,
-            pledge.debt,
-            pledge.isCreated,
-            withdrawLock,
-            depositAndBorrowLock
-        );
+        return (pledge.coll, pledge.debt, pledge.isCreated, flashlocks[owner]);
     }
 
     // @dev Yamato.sol must override it with correct logic.

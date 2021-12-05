@@ -1,8 +1,8 @@
 import { ethers, upgrades, artifacts } from "hardhat";
 import { BaseContract, ContractFactory, BigNumber } from "ethers";
 import { FakeContract, smock } from "@defi-wonderland/smock";
-import { existsSync, readFileSync, writeFileSync } from "fs";
-import { getDeploymentAddressPath } from "./deployUtil";
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from "fs";
+import { getDeploymentAddressPath, getCurrentNetwork } from "./deployUtil";
 import { genABI } from "./genABI";
 
 // @dev UUPS
@@ -56,18 +56,32 @@ export async function getLinkedProxy<
 
 export async function deployLibrary(libraryName) {
   const filepath = getDeploymentAddressPath(libraryName);
+  let _LibAddr;
+  try {
+    _LibAddr = readFileSync(filepath).toString();
+  } catch (e) {
+    console.log("Non-cacheable environment. Skip cache.");
+  }
+
   if (
-    (await ethers.provider.getNetwork()).name == "rinkeby" &&
-    existsSync(filepath)
+    (getCurrentNetwork() == "rinkeby" || getCurrentNetwork() == "localnet") &&
+    existsSync(filepath) &&
+    _LibAddr
   ) {
-    const _LibAddr = readFileSync(filepath).toString();
     console.log(`${libraryName} is already deployed and use ${_LibAddr}`);
     return new ethers.Contract(_LibAddr, genABI("PledgeLib", true));
   }
   const Library = await ethers.getContractFactory(libraryName);
   const library = await Library.deploy();
 
-  writeFileSync(filepath, library.address);
+  try {
+    writeFileSync(filepath, library.address);
+  } catch (e) {
+    let tmp = filepath.split("/");
+    tmp.pop();
+    mkdirSync(tmp.join("/"));
+    writeFileSync(filepath, library.address);
+  }
 
   await library.deployed();
   return library;

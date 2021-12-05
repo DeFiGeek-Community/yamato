@@ -20,6 +20,7 @@ import {
   YamatoSweeper,
   PriorityRegistry,
   Pool,
+  SameBlockClient,
   ChainLinkMock__factory,
   TellorCallerMock__factory,
   PriceFeed__factory,
@@ -35,13 +36,14 @@ import {
   YamatoSweeper__factory,
   Pool__factory,
   PriorityRegistry__factory,
+  SameBlockClient__factory,
 } from "../../typechain";
 import { getProxy, getLinkedProxy } from "../../src/testUtil";
 
 chai.use(smock.matchers);
 chai.use(solidity);
 
-describe("burnCurrency :: contract Yamato", () => {
+describe("FlashLock :: contract Yamato", () => {
   let ChainLinkEthUsd: ChainLinkMock;
   let ChainLinkUsdJpy: ChainLinkMock;
   let Tellor: TellorCallerMock;
@@ -61,6 +63,7 @@ describe("burnCurrency :: contract Yamato", () => {
   let accounts: Signer[];
   let ownerAddress: string;
   let userAddress: string;
+  let SameBlockClient: SameBlockClient;
 
   beforeEach(async () => {
     accounts = await ethers.getSigners();
@@ -176,81 +179,93 @@ describe("burnCurrency :: contract Yamato", () => {
     ).wait();
     await (await CurrencyOS.addYamato(Yamato.address)).wait();
     await (await CJPY.setCurrencyOS(CurrencyOS.address)).wait();
+
+    SameBlockClient = await (<SameBlockClient__factory>(
+      await ethers.getContractFactory("SameBlockClient")
+    )).deploy(Yamato.address);
+
+    await (await PriceFeed.fetchPrice()).wait();
   });
 
-  describe("redeem()", function () {
-    let PRICE;
-    const MCR = BigNumber.from(130);
-    let toCollateralize;
-    let toBorrow;
-
-    beforeEach(async () => {
-      await (await PriceFeed.fetchPrice()).wait();
-      PRICE = await PriceFeed.lastGoodPrice();
-      toCollateralize = 1;
-      toBorrow = PRICE.mul(toCollateralize)
+  describe("depositAndBorrow()", function () {
+    it(`should be reverted`, async function () {
+      const PRICE = await PriceFeed.lastGoodPrice();
+      const MCR = BigNumber.from(130);
+      const toCollateralize = 1;
+      const toBorrow = PRICE.mul(toCollateralize)
         .mul(100)
         .div(MCR)
         .div(1e18 + "");
 
-      /* Set lower ICR */
-      await Yamato.connect(accounts[0]).deposit({
-        value: toERC20(toCollateralize * 10 + ""),
-      }); // Larger deposit
-      await Yamato.connect(accounts[0]).borrow(toERC20(toBorrow.mul(10) + ""));
-      await Yamato.connect(accounts[1]).deposit({
-        value: toERC20(toCollateralize + ""),
-      });
-      await Yamato.connect(accounts[1]).borrow(toERC20(toBorrow + ""));
-      await Yamato.connect(accounts[2]).deposit({
-        value: toERC20(toCollateralize + ""),
-      });
-      await Yamato.connect(accounts[2]).borrow(toERC20(toBorrow + ""));
-
-      /* Market Dump */
-      await (await ChainLinkEthUsd.setLastPrice("204000000000")).wait(); //dec8
-      await (await Tellor.setLastPrice("203000000000")).wait(); //dec8
-
-      /* Set higher ICR */
-      await Yamato.connect(accounts[3]).deposit({
-        value: toERC20(toCollateralize * 3 + ""),
-      });
-      await Yamato.connect(accounts[3]).borrow(toERC20(toBorrow + ""));
-      await Yamato.connect(accounts[4]).deposit({
-        value: toERC20(toCollateralize * 3 + ""),
-      });
-      await Yamato.connect(accounts[4]).borrow(toERC20(toBorrow + ""));
-      await Yamato.connect(accounts[5]).deposit({
-        value: toERC20(toCollateralize * 3 + ""),
-      });
-      await Yamato.connect(accounts[5]).borrow(toERC20(toBorrow + ""));
+      await expect(
+        SameBlockClient.depositAndBorrow(toERC20(toBorrow + ""), {
+          value: toERC20(toCollateralize + ""),
+        })
+      ).to.be.revertedWith("Those can't be called in the same block.");
     });
+  });
 
-    it(`should burn CJPY`, async function () {
-      let redeemerSigner = accounts[0];
-      let redeemerAddr = await redeemerSigner.getAddress();
-      const totalSupplyBefore = await CJPY.totalSupply();
-      const eoaCJPYBalanceBefore = await CJPY.balanceOf(redeemerAddr);
-      const eoaETHBalanceBefore = await Yamato.provider.getBalance(
-        redeemerAddr
-      );
+  describe("borrowAndWithdraw()", function () {
+    it(`should be reverted`, async function () {
+      const PRICE = await PriceFeed.lastGoodPrice();
+      const MCR = BigNumber.from(130);
+      const toCollateralize = 1;
+      const toBorrow = PRICE.mul(toCollateralize)
+        .mul(100)
+        .div(MCR)
+        .div(1e18 + "");
 
-      const txReceipt = await (
-        await Yamato.connect(accounts[0]).redeem(
-          toERC20(toBorrow.mul(3) + ""),
-          false
-        )
+      // Note: Align signer with following execution
+      await (
+        await SameBlockClient.depositFromClient({
+          value: toERC20(toCollateralize * 3 + ""),
+        })
       ).wait();
 
-      const totalSupplyAfter = await CJPY.totalSupply();
-      const eoaCJPYBalanceAfter = await CJPY.balanceOf(redeemerAddr);
-      const eoaETHBalanceAfter = await Yamato.provider.getBalance(redeemerAddr);
+      await expect(
+        SameBlockClient.borrowAndWithdraw(
+          toERC20(toBorrow + ""),
+          toERC20(toCollateralize + "")
+        )
+      ).to.be.revertedWith("Those can't be called in the same block.");
+    });
+  });
 
-      expect(totalSupplyAfter).to.be.lt(totalSupplyBefore);
-      expect(eoaCJPYBalanceAfter).to.be.lt(eoaCJPYBalanceBefore);
-      expect(eoaETHBalanceAfter.add(txReceipt.gasUsed)).to.be.gt(
-        eoaETHBalanceBefore
-      ); //gas?
+  describe("depositAndWithdraw()", function () {
+    it(`should be reverted`, async function () {
+      const PRICE = await PriceFeed.lastGoodPrice();
+      const MCR = BigNumber.from(130);
+      const toCollateralize = 1;
+      const toBorrow = PRICE.mul(toCollateralize)
+        .mul(100)
+        .div(MCR)
+        .div(1e18 + "");
+
+      await expect(
+        SameBlockClient.depositAndWithdraw(toERC20(toCollateralize + ""), {
+          value: toERC20(toCollateralize + ""),
+        })
+      ).to.be.revertedWith("Those can't be called in the same block.");
+    });
+  });
+
+  describe("depositAndBorrowAndWithdraw()", function () {
+    it(`should be reverted`, async function () {
+      const PRICE = await PriceFeed.lastGoodPrice();
+      const MCR = BigNumber.from(130);
+      const toCollateralize = 1;
+      const toBorrow = PRICE.mul(toCollateralize)
+        .mul(100)
+        .div(MCR)
+        .div(1e18 + "");
+
+      await expect(
+        SameBlockClient.depositAndBorrowAndWithdraw(
+          toERC20(toBorrow + ""),
+          toERC20(toCollateralize + ""),
+          { value: toERC20(toCollateralize + "") }
+        )
+      ).to.be.revertedWith("Those can't be called in the same block.");
     });
   });
 });
