@@ -607,11 +607,10 @@ describe("contract Yamato", function () {
         .mul(100)
         .div(MCR)
         .div(1e18 + "");
-      await yamato.deposit({ value: toERC20(toCollateralize*2 + "") });
+      await yamato.deposit({ value: toERC20(toCollateralize * 2 + "") });
       await yamato.borrow(toERC20(toBorrow + ""));
-      await expect(
-        yamato.withdraw(toERC20(toCollateralize / 10 + ""))
-      ).to.not.reverted;
+      await expect(yamato.withdraw(toERC20(toCollateralize / 10 + ""))).to.not
+        .reverted;
     });
     it(`should reduce coll`, async function () {
       const MCR = BigNumber.from(130);

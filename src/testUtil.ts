@@ -57,12 +57,7 @@ export async function getLinkedProxy<
 export async function deployLibrary(libraryName) {
   const filepath = getDeploymentAddressPath(libraryName);
   if (
-    (
-      getCurrentNetwork() == "rinkeby"
-      ||
-      getCurrentNetwork() == "localnet" 
-    )
-    &&
+    (getCurrentNetwork() == "rinkeby" || getCurrentNetwork() == "localnet") &&
     existsSync(filepath)
   ) {
     const _LibAddr = readFileSync(filepath).toString();
