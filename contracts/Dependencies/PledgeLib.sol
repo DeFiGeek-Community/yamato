@@ -34,11 +34,10 @@ library PledgeLib {
         uint256 _debt = _pledge.debt; // dec18
         uint256 _collInCurrency = (_coll * _ethPriceInCurrency) / 1e18; // dec18 * dec18 / dec18 = dec18
 
+
         if (_coll == 0 && _debt == 0) {
-            revert(
-                "Arithmetic Error: Yamato doesn't define the ICR of coll=0 debt=0 pledge."
-            );
-        } else if (_debt == 0) {
+            _ICR = 0;
+        } else if (_coll > 0 && _debt == 0) {
             _ICR = 2**256 - 1;
         } else {
             // Note: ICR is per-ten-k in Yamato

@@ -53,14 +53,20 @@ contract YamatoRepayer is IYamatoRepayer, YamatoAction {
         */
         require(_currencyAmount > 0, "You are repaying no Currency");
         require(
-            pledge.debt >= _currencyAmount,
-            "You are repaying more than you are owing."
+            pledge.debt > 0,
+            "You can't repay for a zero-debt pledge."
         );
 
         /*
             2. Compose a pledge in memory
         */
-        pledge.debt -= _currencyAmount;
+        uint _repayAmount;
+        if(_currencyAmount < pledge.debt) {
+            _repayAmount = _currencyAmount;
+        } else {
+            _repayAmount = pledge.debt;
+        }
+        pledge.debt -= _repayAmount;
 
         /*
             3. Add PriorityRegistry update result to a pledge in memory
@@ -75,12 +81,12 @@ contract YamatoRepayer is IYamatoRepayer, YamatoAction {
         /*
             5. Commit totalDebt
         */
-        IYamato(yamato()).setTotalDebt(totalDebt - _currencyAmount);
+        IYamato(yamato()).setTotalDebt(totalDebt - _repayAmount);
 
         /*
             4-1. Charge Currency
             4-2. Return coll to the redeemer
         */
-        ICurrencyOS(currencyOS()).burnCurrency(_sender, _currencyAmount);
+        ICurrencyOS(currencyOS()).burnCurrency(_sender, _repayAmount);
     }
 }

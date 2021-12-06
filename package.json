@@ -22,7 +22,8 @@
     "deploy:rinkeby:reset": "rm -f ./deployments/rinkeby/*",
     "format": "sort-package-json && prettier --write .",
     "lint:check": "solhint 'contracts/**/*.sol' && prettier --check .",
-    "test": "hardhat test",
+    "test": "npm run test:reset && hardhat test",
+    "test:reset": "rm -f ./deployments/localnet/*",
     "verify:rinkeby": "hardhat verify --network rinkeby",
     "verify:rinkeby:all": "hardhat run src/verifyRinkebyContracts.ts",
     "verify:rinkeby:showURL": "ts-node src/showRinkebyProxyVerificationURLs.ts"
