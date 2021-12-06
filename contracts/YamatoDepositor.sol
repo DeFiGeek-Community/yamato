@@ -90,6 +90,5 @@ contract YamatoDepositor is IYamatoDepositor, YamatoAction {
         */
         (bool success, ) = payable(pool()).call{value: _ethAmount}("");
         require(success, "transfer failed");
-        IPool(pool()).lockETH(_ethAmount);
     }
 }

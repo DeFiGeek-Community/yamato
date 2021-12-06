@@ -106,7 +106,6 @@ contract YamatoBorrower is IYamatoBorrower, YamatoAction {
             8. Borrowed fund & fee transfer
         */
         ICurrencyOS(currencyOS()).mintCurrency(_sender, returnableCurrency); // onlyYamato
-        ICurrencyOS(currencyOS()).mintCurrency(address(IPool(pool())), fee); // onlyYamato
 
         if (
             IPool(pool()).redemptionReserve() / 5 <=

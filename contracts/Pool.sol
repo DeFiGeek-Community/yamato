@@ -33,8 +33,6 @@ interface IPool {
 
     function useSweepReserve(uint256 amount) external;
 
-    function lockETH(uint256 amount) external;
-
     function sendETH(address recipient, uint256 amount) external;
 
     function sendCurrency(address recipient, uint256 amount) external;
@@ -42,24 +40,19 @@ interface IPool {
     function redemptionReserve() external view returns (uint256);
 
     function sweepReserve() external view returns (uint256);
-
-    function lockedCollateral() external view returns (uint256);
 }
 
 contract Pool is IPool, YamatoStore, ReentrancyGuardUpgradeable {
     uint256 public override redemptionReserve; // Auto redemption pool a.k.a. (kinda) Stability Pool in Liquity
     uint256 public override sweepReserve; // Protocol Controlling Value (PCV) to remove Pledges(coll=0, debt>0)
-    uint256 public override lockedCollateral; // All collateralized ETH
-
-    event Received(address, uint256);
 
     function initialize(address _yamato) public initializer {
         __ReentrancyGuard_init();
         __YamatoStore_init(_yamato);
     }
 
-    receive() external payable {
-        emit Received(msg.sender, msg.value);
+    receive() external payable onlyYamato {
+        emit ETHLocked(msg.sender, msg.value, address(this).balance);
     }
 
     function depositRedemptionReserve(uint256 amount)
@@ -67,6 +60,10 @@ contract Pool is IPool, YamatoStore, ReentrancyGuardUpgradeable {
         override
         onlyYamato
     {
+        ICurrencyOS(IYamato(yamato()).currencyOS()).mintCurrency(
+            address(this),
+            amount
+        ); // onlyYamato
         redemptionReserve += amount;
         emit RedemptionReserveDeposited(msg.sender, amount, redemptionReserve);
     }
@@ -77,6 +74,10 @@ contract Pool is IPool, YamatoStore, ReentrancyGuardUpgradeable {
     }
 
     function depositSweepReserve(uint256 amount) public override onlyYamato {
+        ICurrencyOS(IYamato(yamato()).currencyOS()).mintCurrency(
+            address(this),
+            amount
+        ); // onlyYamato
         sweepReserve += amount;
         emit SweepReserveDeposited(msg.sender, amount, sweepReserve);
     }
@@ -86,11 +87,6 @@ contract Pool is IPool, YamatoStore, ReentrancyGuardUpgradeable {
         emit SweepReserveUsed(msg.sender, amount, sweepReserve);
     }
 
-    function lockETH(uint256 amount) public override onlyYamato {
-        lockedCollateral += amount;
-        emit ETHLocked(msg.sender, amount, lockedCollateral);
-    }
-
     function sendETH(address recipient, uint256 amount)
         public
         override
@@ -98,13 +94,12 @@ contract Pool is IPool, YamatoStore, ReentrancyGuardUpgradeable {
         onlyYamato
     {
         require(
-            lockedCollateral >= amount,
+            address(this).balance >= amount,
             "locked collateral must be more than sending amount."
         );
         (bool success, ) = payable(recipient).call{value: amount}("");
         require(success, "transfer failed");
-        lockedCollateral -= amount;
-        emit ETHSent(msg.sender, recipient, amount, lockedCollateral);
+        emit ETHSent(msg.sender, recipient, amount, address(this).balance);
     }
 
     function sendCurrency(address recipient, uint256 amount)
@@ -132,7 +127,7 @@ contract Pool is IPool, YamatoStore, ReentrancyGuardUpgradeable {
             redemptionReserve,
             sweepReserve,
             address(feePool()).balance,
-            lockedCollateral
+            address(this).balance
         );
     }
 }

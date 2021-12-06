@@ -369,11 +369,6 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         const redeemerETHBalanceBefore = await Yamato.provider.getBalance(
           redeemerAddr
         );
-        const poolETHBalanceBefore = await Yamato.provider.getBalance(
-          Pool.address
-        );
-        const poolCollateralBefore = await Pool.lockedCollateral();
-        const redeemedPledgeBefore = await Yamato.getPledge(targetRedeemee);
         const feePoolBalanceBefore = await Yamato.provider.getBalance(
           FeePool.address
         );
@@ -392,10 +387,6 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         const redeemerETHBalanceAfter = await Yamato.provider.getBalance(
           redeemerAddr
         );
-        const poolETHBalanceAfter = await Yamato.provider.getBalance(
-          Pool.address
-        );
-        const poolCollateralAfter = await Pool.lockedCollateral();
         const feePoolBalanceAfter = await Yamato.provider.getBalance(
           FeePool.address
         );
