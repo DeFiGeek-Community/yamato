@@ -282,9 +282,9 @@ describe("contract Yamato", function () {
       });
 
       // Deposit on it and check not error
-      await expect(yamato.deposit({ value: toERC20(toCollateralize + "") })).to.be.not.reverted;
-    })
-
+      await expect(yamato.deposit({ value: toERC20(toCollateralize + "") })).to
+        .be.not.reverted;
+    });
   });
   describe("FR()", function () {
     /* Given ICR, get borrowing fee. */
@@ -595,7 +595,7 @@ describe("contract Yamato", function () {
 
       expect(TCRafter).to.gt(TCRbefore);
     });
- 
+
     it(`can full repay for excessive input`, async function () {
       const MCR = BigNumber.from(130);
       const toCollateralize = 1;
@@ -604,7 +604,7 @@ describe("contract Yamato", function () {
         .div(MCR)
         .div(1e18 + "");
 
-        let owner = await accounts[0].getAddress();
+      let owner = await accounts[0].getAddress();
       await (
         await yamato.setDeps(
           yamatoDepositor.address, // Note: dirty hack to pass this test
@@ -617,7 +617,7 @@ describe("contract Yamato", function () {
           mockPriorityRegistry.address
         )
       ).wait();
-      await yamato.setTotalDebt(toERC20(toBorrow.mul(2)+""));
+      await yamato.setTotalDebt(toERC20(toBorrow.mul(2) + ""));
 
       await yamato.setPledge(owner, {
         coll: 0,
@@ -629,8 +629,8 @@ describe("contract Yamato", function () {
 
       await yamato.repay(toERC20(toBorrow.add(1) + ""));
 
-      expect((await yamato.getPledge(owner)).debt).to.eq(0)
-    })
+      expect((await yamato.getPledge(owner)).debt).to.eq(0);
+    });
 
     it(`can repay with a deficit pledge`, async function () {
       const MCR = BigNumber.from(130);
@@ -640,7 +640,7 @@ describe("contract Yamato", function () {
         .div(MCR)
         .div(1e18 + "");
 
-        let owner = await accounts[0].getAddress();
+      let owner = await accounts[0].getAddress();
       await (
         await yamato.setDeps(
           yamatoDepositor.address, // Note: dirty hack to pass this test
@@ -653,7 +653,7 @@ describe("contract Yamato", function () {
           priorityRegistry.address
         )
       ).wait();
-      await yamato.setTotalDebt(toERC20(toBorrow.mul(2)+""));
+      await yamato.setTotalDebt(toERC20(toBorrow.mul(2) + ""));
 
       // Make a deficit pledge with yamato.setPledge(deficitPledge)
       await yamato.setPledge(owner, {
@@ -666,8 +666,7 @@ describe("contract Yamato", function () {
 
       // Repay it and check not error
       await expect(yamato.repay(toERC20(toBorrow + ""))).to.be.not.reverted;
-    })
-
+    });
 
     it(`fails for empty cjpy amount`, async function () {
       const MCR = BigNumber.from(130);

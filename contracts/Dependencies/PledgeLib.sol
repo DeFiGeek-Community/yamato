@@ -34,7 +34,6 @@ library PledgeLib {
         uint256 _debt = _pledge.debt; // dec18
         uint256 _collInCurrency = (_coll * _ethPriceInCurrency) / 1e18; // dec18 * dec18 / dec18 = dec18
 
-
         if (_coll == 0 && _debt == 0) {
             _ICR = 0;
         } else if (_coll > 0 && _debt == 0) {

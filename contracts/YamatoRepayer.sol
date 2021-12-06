@@ -52,16 +52,13 @@ contract YamatoRepayer is IYamatoRepayer, YamatoAction {
             2. Check repayability
         */
         require(_currencyAmount > 0, "You are repaying no Currency");
-        require(
-            pledge.debt > 0,
-            "You can't repay for a zero-debt pledge."
-        );
+        require(pledge.debt > 0, "You can't repay for a zero-debt pledge.");
 
         /*
             2. Compose a pledge in memory
         */
-        uint _repayAmount;
-        if(_currencyAmount < pledge.debt) {
+        uint256 _repayAmount;
+        if (_currencyAmount < pledge.debt) {
             _repayAmount = _currencyAmount;
         } else {
             _repayAmount = pledge.debt;
