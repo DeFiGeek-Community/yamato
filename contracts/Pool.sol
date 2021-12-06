@@ -13,6 +13,7 @@ import "./Interfaces/IFeePool.sol";
 import "./Interfaces/ICurrencyOS.sol";
 import "./Dependencies/YamatoStore.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "hardhat/console.sol";
 
 interface IPool {
@@ -45,7 +46,7 @@ interface IPool {
     function lockedCollateral() external view returns (uint256);
 }
 
-contract Pool is IPool, YamatoStore {
+contract Pool is IPool, YamatoStore, ReentrancyGuardUpgradeable {
     uint256 public override redemptionReserve; // Auto redemption pool a.k.a. (kinda) Stability Pool in Liquity
     uint256 public override sweepReserve; // Protocol Controlling Value (PCV) to remove Pledges(coll=0, debt>0)
     uint256 public override lockedCollateral; // All collateralized ETH
@@ -53,6 +54,7 @@ contract Pool is IPool, YamatoStore {
     event Received(address, uint256);
 
     function initialize(address _yamato) public initializer {
+        __ReentrancyGuard_init();
         __YamatoStore_init(_yamato);
     }
 
@@ -92,6 +94,7 @@ contract Pool is IPool, YamatoStore {
     function sendETH(address recipient, uint256 amount)
         public
         override
+        nonReentrant
         onlyYamato
     {
         require(
