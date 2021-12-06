@@ -28,10 +28,16 @@ import {
   YamatoSweeper__factory,
   YamatoDummy__factory,
   FeePool__factory,
+  Pool__factory,
   YMT,
 } from "../../typechain";
 import { encode, toERC20 } from "../param/helper";
-import { getFakeProxy, getLinkedProxy, getTCR } from "../../src/testUtil";
+import {
+  getFakeProxy,
+  getProxy,
+  getLinkedProxy,
+  getTCR,
+} from "../../src/testUtil";
 
 chai.use(smock.matchers);
 chai.use(solidity);
@@ -52,6 +58,7 @@ describe("contract Yamato", function () {
   let yamatoRedeemer: YamatoRedeemer;
   let yamatoSweeper: YamatoSweeper;
   let yamatoDummy: YamatoDummy;
+  let pool: Pool;
   let priorityRegistry: PriorityRegistry;
   let PRICE: BigNumber;
   let MCR: BigNumber;
@@ -139,6 +146,9 @@ describe("contract Yamato", function () {
       )
     ).wait();
 
+    // Note: Will use later for mintCurrency mockery test in borrow spec
+    pool = await getProxy<Pool, Pool__factory>("Pool", [yamato.address]);
+
     // Note: Will use later for the redeem() test
     priorityRegistry = await getLinkedProxy<
       PriorityRegistry,
@@ -154,7 +164,6 @@ describe("contract Yamato", function () {
 
     mockPool.depositRedemptionReserve.returns(0);
     mockPool.depositSweepReserve.returns(0);
-    mockPool.lockETH.returns(0);
     mockPool.sendETH.returns(0);
     mockFeed.fetchPrice.returns(PRICE);
     mockFeed.lastGoodPrice.returns(PRICE);
@@ -436,7 +445,7 @@ describe("contract Yamato", function () {
       expect(mockPriorityRegistry.upsert).to.have.been.called;
     });
 
-    it(`should run CurrencyOS.mintCurrency() of Pool.sol`, async function () {
+    it(`should run CurrencyOS.mintCurrency() of YamatoBorrower.sol`, async function () {
       const toCollateralize = 1;
       const toBorrow = PRICE.mul(toCollateralize)
         .mul(100)
@@ -445,7 +454,7 @@ describe("contract Yamato", function () {
       await yamato.deposit({ value: toERC20(toCollateralize + "") });
       await yamato.borrow(toERC20(toBorrow + ""));
       expect(mockCJPY.mint).to.have.callCount(0);
-      expect(mockCurrencyOS.mintCurrency).to.have.callCount(2);
+      expect(mockCurrencyOS.mintCurrency).to.have.calledOnce; // because pool is a mock
     });
     it(`should run depositRedemptionReserve when RR is inferior to SR`, async function () {
       mockPool.redemptionReserve.returns(1);
@@ -475,7 +484,33 @@ describe("contract Yamato", function () {
       expect(mockPool.depositRedemptionReserve).to.have.callCount(0);
       expect(mockPool.depositSweepReserve).to.have.calledOnce;
     });
-    describe("Context - priorityRegistry", async function () {
+    describe("Context - Pool", async function () {
+      it("should run CurrencyOS.mintCurrency() of Pool.sol", async function () {
+        await (
+          await yamato.setDeps(
+            yamatoDepositor.address,
+            yamatoBorrower.address,
+            yamatoRepayer.address,
+            yamatoWithdrawer.address,
+            yamatoRedeemer.address,
+            yamatoRedeemer.address,
+            pool.address,
+            mockPriorityRegistry.address
+          )
+        ).wait();
+
+        const toCollateralize = 1;
+        const toBorrow = PRICE.mul(toCollateralize)
+          .mul(100)
+          .div(MCR)
+          .div(1e18 + "");
+        await yamato.deposit({ value: toERC20(toCollateralize + "") });
+        await yamato.borrow(toERC20(toBorrow + ""));
+
+        expect(mockCurrencyOS.mintCurrency).to.have.callCount(2); // because pool is real
+      });
+    });
+    describe("Context - PriorityRegistry", async function () {
       it("should have priority 13000", async function () {
         await (
           await yamato.setDeps(
@@ -877,7 +912,6 @@ describe("contract Yamato", function () {
       MCR = BigNumber.from(130);
       mockPool.depositRedemptionReserve.returns(0);
       mockPool.depositSweepReserve.returns(0);
-      mockPool.lockETH.returns(0);
       mockCurrencyOS.burnCurrency.returns(0);
       mockPool.useRedemptionReserve.returns(0);
       mockPool.sendETH.returns(0);
@@ -1036,7 +1070,6 @@ describe("contract Yamato", function () {
       MCR = BigNumber.from(130);
       mockPool.depositRedemptionReserve.returns(0);
       mockPool.depositSweepReserve.returns(0);
-      mockPool.lockETH.returns(0);
       mockPool.sendETH.returns(0);
       mockPool.useSweepReserve.returns(0);
       mockPool.sweepReserve.returns(

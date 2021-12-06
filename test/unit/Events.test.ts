@@ -142,7 +142,6 @@ describe("story Events", function () {
 
       mockPool.depositRedemptionReserve.returns(0);
       mockPool.depositSweepReserve.returns(0);
-      mockPool.lockETH.returns(0);
       mockPool.sendETH.returns(0);
       mockFeed.fetchPrice.returns(PRICE);
       mockFeed.lastGoodPrice.returns(PRICE);

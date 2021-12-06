@@ -111,10 +111,6 @@ contract YamatoDummy {
         pool.useSweepReserve(_amount);
     }
 
-    function bypassLockETH(uint256 _amount) external onlyTester {
-        pool.lockETH(_amount);
-    }
-
     function bypassSendETH(address _recipient, uint256 _amount)
         external
         onlyTester
