@@ -231,6 +231,33 @@ describe("contract Yamato", function () {
       let _pledgeAfter = await yamato.getPledge(owner);
       expect(_pledgeAfter.isCreated).to.be.false;
     });
+    it(`should set zero but isCreated=true pledge and neutralize it`, async function () {
+      // Note: For full repay and full withdrawal scenario
+      let owner = await accounts[0].getAddress();
+      await (
+        await yamato.setDeps(
+          owner, // Note: dirty hack to pass this test
+          yamatoBorrower.address,
+          yamatoRepayer.address,
+          yamatoWithdrawer.address,
+          yamatoRedeemer.address,
+          yamatoSweeper.address,
+          mockPool.address,
+          mockPriorityRegistry.address
+        )
+      ).wait();
+      let _pledgeBefore = await yamato.getPledge(owner);
+      expect(_pledgeBefore.isCreated).to.be.true;
+      await yamato.setPledge(owner, {
+        coll: 0,
+        debt: 0,
+        isCreated: true,
+        owner: owner,
+        priority: 0,
+      });
+      let _pledgeAfter = await yamato.getPledge(owner);
+      expect(_pledgeAfter.isCreated).to.be.false;
+    });
   });
 
   describe("deposit()", function () {
@@ -596,7 +623,7 @@ describe("contract Yamato", function () {
       expect(TCRafter).to.gt(TCRbefore);
     });
 
-    it(`can full repay for excessive input`, async function () {
+    it(`can full repay with excessive input and neutralize the pledge`, async function () {
       const MCR = BigNumber.from(130);
       const toCollateralize = 1;
       const toBorrow = PRICE.mul(toCollateralize)
@@ -622,14 +649,17 @@ describe("contract Yamato", function () {
       await yamato.setPledge(owner, {
         coll: 0,
         debt: toBorrow,
-        isCreated: false,
+        isCreated: true,
         owner: owner,
         priority: 0,
       });
 
       await yamato.repay(toERC20(toBorrow.add(1) + ""));
 
-      expect((await yamato.getPledge(owner)).debt).to.eq(0);
+      const pledgeAfter = await yamato.getPledge(owner);
+
+      expect(pledgeAfter.isCreated).to.be.false;
+      expect(pledgeAfter.debt).to.eq(0);
     });
 
     it(`can repay with a deficit pledge`, async function () {

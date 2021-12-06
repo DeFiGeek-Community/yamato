@@ -94,7 +94,6 @@ contract YamatoWithdrawer is IYamatoWithdrawer, YamatoAction {
                 5-a. Clean full withdrawal
             */
             IPriorityRegistry(priorityRegistry()).remove(pledge);
-            IYamato(yamato()).setPledge(pledge.owner, pledge.nil());
         } else {
             /*
                 5-b. Reasonable partial withdrawal
@@ -106,8 +105,8 @@ contract YamatoWithdrawer is IYamatoWithdrawer, YamatoAction {
             pledge.priority = IPriorityRegistry(priorityRegistry()).upsert(
                 pledge
             );
-            IYamato(yamato()).setPledge(pledge.owner, pledge);
         }
+        IYamato(yamato()).setPledge(pledge.owner, pledge);
 
         /*
             6-1. Charge CJPY
