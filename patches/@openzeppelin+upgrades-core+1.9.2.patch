@@ -20,8 +20,8 @@ index d1d3582..2fe227a 100644
    // TODO: Make these parameters configurable.
 -  const pollTimeout = 60e3;
 -  const pollInterval = 5e3;
-+  const pollTimeout = 160e3;
-+  const pollInterval = 1e3;
++  const pollTimeout = 360e3;
++  const pollInterval = 10e3;
  
    if (txHash !== undefined) {
      const startTime = Date.now();
@@ -33,7 +33,6 @@ index 1995421..7786e7a 100644
  import { ValidationData, normalizeValidationData } from './data';
  
  export function assertUpgradeSafe(data: ValidationData, version: Version, opts: ValidationOptions): void {
-+  console.log(`opts:${JSON.stringify(opts)}`);
 +
    const dataV3 = normalizeValidationData(data);
    const [contractName] = getContractNameAndRunValidation(dataV3, version);

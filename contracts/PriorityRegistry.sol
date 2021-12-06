@@ -77,10 +77,6 @@ contract PriorityRegistry is IPriorityRegistry, YamatoStore {
             !(_pledge.coll == 0 && _pledge.debt == 0 && _pledge.priority != 0),
             "Upsert Error: The logless zero pledge cannot be upserted. It should be removed."
         );
-        require(
-            !(_pledge.coll > 0 && _pledge.debt > 0 && _pledge.priority == 0),
-            "Upsert Error: Such a pledge can't exist!"
-        );
         uint256 _oldICRpercent = floor(_pledge.priority);
 
         /*
