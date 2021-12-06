@@ -364,11 +364,6 @@ describe("story Events", function () {
 
       pool = await getProxy<Pool, Pool__factory>("Pool", [yamatoDummy.address]);
 
-      await accounts[0].sendTransaction({
-        to: pool.address,
-        value: BigNumber.from(1e18 + ""),
-      });
-
       await (await yamatoDummy.setPool(pool.address)).wait();
     });
     describe("event RedemptionReserveDeposited", function () {
@@ -410,14 +405,14 @@ describe("story Events", function () {
     describe("event ETHLocked", function () {
       it(`should be emitted`, async function () {
         await expect(
-          yamatoDummy.bypassLockETH(BigNumber.from(1e18 + ""))
+          yamatoDummy.bypassReceive({ value: BigNumber.from(1e18 + "") })
         ).to.emit(pool, "ETHLocked");
       });
     });
     describe("event ETHSent", function () {
       it(`should be emitted`, async function () {
         await (
-          await yamatoDummy.bypassLockETH(BigNumber.from(1e18 + ""))
+          await yamatoDummy.bypassReceive({ value: BigNumber.from(1e18 + "") })
         ).wait();
         await expect(
           yamatoDummy.bypassSendETH(

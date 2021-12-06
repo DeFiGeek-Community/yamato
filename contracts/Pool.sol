@@ -46,15 +46,13 @@ contract Pool is IPool, YamatoStore, ReentrancyGuardUpgradeable {
     uint256 public override redemptionReserve; // Auto redemption pool a.k.a. (kinda) Stability Pool in Liquity
     uint256 public override sweepReserve; // Protocol Controlling Value (PCV) to remove Pledges(coll=0, debt>0)
 
-    event Received(address, uint256);
-
     function initialize(address _yamato) public initializer {
         __ReentrancyGuard_init();
         __YamatoStore_init(_yamato);
     }
 
-    receive() external payable {
-        emit Received(msg.sender, msg.value);
+    receive() external payable onlyYamato {
+        emit ETHLocked(msg.sender, msg.value, address(this).balance);
     }
 
     function depositRedemptionReserve(uint256 amount)

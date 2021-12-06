@@ -111,6 +111,11 @@ contract YamatoDummy {
         pool.useSweepReserve(_amount);
     }
 
+    function bypassReceive() external payable onlyTester {
+        (bool success, ) = payable(address(pool)).call{value: msg.value}("");
+        require(success, "Transfer failed.");
+    }
+
     function bypassSendETH(address _recipient, uint256 _amount)
         external
         onlyTester
