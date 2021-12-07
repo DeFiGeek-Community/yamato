@@ -109,21 +109,25 @@ export async function smokeTest() {
   /*
         redeem()
     */
-  await (await Yamato.connect(redeemer).redeem(
-    toERC20(toBorrow.div(2) + ""),
-    false
-  ),
-  { gasLimit: 20000000 }).wait();
-  await (await Yamato.connect(redeemer).redeem(
-    toERC20(toBorrow.div(2) + ""),
-    true
-  ),
-  { gasLimit: 20000000 }).wait();
-  await (await Yamato.connect(redeemer).redeem(
-    toERC20(toBorrow.div(2) + ""),
-    false
-  ),
-  { gasLimit: 20000000 }).wait();
+  await (
+    await Yamato.connect(redeemer).redeem(
+      toERC20(toBorrow.div(2) + ""),
+      false,
+      { gasLimit: 20000000 }
+    )
+  ).wait();
+  await (
+    await Yamato.connect(redeemer).redeem(toERC20(toBorrow.div(20) + ""), true, {
+      gasLimit: 20000000,
+    })
+  ).wait();
+  await (
+    await Yamato.connect(redeemer).redeem(
+      toERC20(toBorrow.div(2) + ""),
+      false,
+      { gasLimit: 20000000 }
+    )
+  ).wait();
 
   /*
         Market pump
@@ -137,7 +141,9 @@ export async function smokeTest() {
         full repay()
     */
   await (
-    await Yamato.connect(redeemee).repay(toERC20(toBorrow.mul(10) + ""))
+    await Yamato.connect(redeemee).repay(toERC20(toBorrow.mul(10) + ""), {
+      gasLimit: 1000000,
+    })
   ).wait();
 
   /*
@@ -167,7 +173,8 @@ export async function smokeTest() {
     await Yamato.connect(redeemer).withdraw(
       BigNumber.from(toCollateralize * 10000 + "")
         .mul(1e18 + "")
-        .div(1e4 + "")
+        .div(1e4 + ""),
+      { gasLimit: 1000000 }
     )
   ).wait();
 
