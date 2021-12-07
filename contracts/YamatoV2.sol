@@ -197,9 +197,19 @@ contract YamatoV2 is
         Pledge storage p = pledges[_owner];
         p.coll = _p.coll;
         p.debt = _p.debt;
-        p.owner = _p.owner;
-        p.isCreated = _p.isCreated;
-        p.priority = _p.priority;
+        if (_neutralityCheck(_p)) {
+            p.owner = address(0);
+            p.isCreated = false;
+            p.priority = 0;
+        } else {
+            p.owner = _p.owner;
+            p.isCreated = _p.isCreated;
+            p.priority = _p.priority;
+        }
+    }
+
+    function _neutralityCheck(Pledge memory _p) internal pure returns (bool) {
+        return _p.coll == 0 && _p.debt == 0;
     }
 
     function setTotalColl(uint256 _totalColl) public override onlyYamato {

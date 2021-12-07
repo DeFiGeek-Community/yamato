@@ -53,6 +53,8 @@ If not, please check that the npm dependencies are installed as expected referri
 - `npm run deploy:rinkeby:reset`
 - `npm run deploy:rinkeby` (with cached contracts / continue from resumed deployment)
 - `npm run verify:rinkeby:all`
+- `npm run upgrade:repayer`
+- `npm run test:integration`
 
 #### For only etherscan verification
 

@@ -24,9 +24,11 @@
     "lint:check": "solhint 'contracts/**/*.sol' && prettier --check .",
     "test": "npm run test:reset && hardhat test",
     "test:reset": "rm -f ./deployments/localnet/*",
+    "test:integration": "hardhat run src/integrity.ts",
     "verify:rinkeby": "hardhat verify --network rinkeby",
     "verify:rinkeby:all": "hardhat run src/verifyRinkebyContracts.ts",
-    "verify:rinkeby:showURL": "ts-node src/showRinkebyProxyVerificationURLs.ts"
+    "verify:rinkeby:showURL": "ts-node src/showRinkebyProxyVerificationURLs.ts",
+    "upgrade:repayer": "hardhat run upgrade/001_upgrade_YamatoRepayer_to_YamatoRepayerV2.ts --network rinkeby"
   },
   "dependencies": {
     "@openzeppelin/contracts": "v4.3.0-rc.0",

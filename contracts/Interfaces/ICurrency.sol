@@ -19,4 +19,5 @@ interface ICurrency {
      * @dev burn token for recipient. Assuming onlyGovernance
      */
     function burn(address account, uint256 amount) external;
+
 }

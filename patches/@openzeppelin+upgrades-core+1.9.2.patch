@@ -1,3 +1,18 @@
+diff --git a/node_modules/@openzeppelin/upgrades-core/dist/deployment.js b/node_modules/@openzeppelin/upgrades-core/dist/deployment.js
+index bbd3f2d..b5430b9 100644
+--- a/node_modules/@openzeppelin/upgrades-core/dist/deployment.js
++++ b/node_modules/@openzeppelin/upgrades-core/dist/deployment.js
+@@ -43,8 +43,8 @@ async function waitAndValidateDeployment(provider, deployment) {
+     const { txHash, address } = deployment;
+     // Poll for 60 seconds with a 5 second poll interval.
+     // TODO: Make these parameters configurable.
+-    const pollTimeout = 60e3;
+-    const pollInterval = 5e3;
++    const pollTimeout = 360e3;
++    const pollInterval = 10e3;
+     if (txHash !== undefined) {
+         const startTime = Date.now();
+         // eslint-disable-next-line no-constant-condition
 diff --git a/node_modules/@openzeppelin/upgrades-core/dist/validate/overrides.js b/node_modules/@openzeppelin/upgrades-core/dist/validate/overrides.js
 index 70d04ff..8f2cbd8 100644
 --- a/node_modules/@openzeppelin/upgrades-core/dist/validate/overrides.js
@@ -11,7 +26,7 @@ index 70d04ff..8f2cbd8 100644
          errors = errors.filter(error => error.kind !== 'missing-public-upgradeto');
      }
 diff --git a/node_modules/@openzeppelin/upgrades-core/src/deployment.ts b/node_modules/@openzeppelin/upgrades-core/src/deployment.ts
-index d1d3582..2fe227a 100644
+index d1d3582..50267c8 100644
 --- a/node_modules/@openzeppelin/upgrades-core/src/deployment.ts
 +++ b/node_modules/@openzeppelin/upgrades-core/src/deployment.ts
 @@ -56,8 +56,8 @@ export async function waitAndValidateDeployment(provider: EthereumProvider, depl
@@ -33,6 +48,7 @@ index 1995421..7786e7a 100644
  import { ValidationData, normalizeValidationData } from './data';
  
  export function assertUpgradeSafe(data: ValidationData, version: Version, opts: ValidationOptions): void {
++  console.log(`opts:${JSON.stringify(opts)}`);
 +
    const dataV3 = normalizeValidationData(data);
    const [contractName] = getContractNameAndRunValidation(dataV3, version);
