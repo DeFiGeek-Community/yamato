@@ -59,10 +59,10 @@ contract YamatoRepayerV2 is IYamatoRepayer, YamatoAction {
             2. Compose a pledge in memory
         */
 
-        // repayAmount must be less than equal balance
+        // V2 (Dec 7, 2021) => repayAmount must be less than equal balance
         uint256 _repayAmount = (_wantToRepayAmount <= senderBalance) ? _wantToRepayAmount : senderBalance;
 
-        // repayAmount must be less than equal pledge debt amount
+        // V2 (Dec 7, 2021) => repayAmount must be less than equal pledge debt amount
         _repayAmount = (_repayAmount < pledge.debt) ? _repayAmount : pledge.debt;
 
         // Note: "_repayAmount is less than debt but more than balance" causes bad UX

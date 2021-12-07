@@ -34,6 +34,18 @@ export async function smokeTest() {
     genABI("PriceFeed"),
     p
   );
+  const ChainLinkEthUsd = new ethers.Contract(
+    await PriceFeed.ethPriceAggregatorInUSD(),
+    genABI("ChainLinkMock"),
+    p
+  );
+  const Tellor = new ethers.Contract(
+    await PriceFeed.tellorCaller(),
+    genABI("TellorCallerMock"),
+    p
+  );
+
+
   const toBorrow = (await PriceFeed.lastGoodPrice())
     .mul(toCollateralize*10000)
     .mul(100)
@@ -42,6 +54,16 @@ export async function smokeTest() {
     .div(10000)
 
   
+ /*
+        Market Init
+    */
+  await (
+    await ChainLinkEthUsd.connect(redeemer).setLastPrice("404000000000")
+  ).wait(); //dec8
+  await (await Tellor.connect(redeemer).setLastPrice("403000000000")).wait(); //dec8
+      
+
+
   /*
         Get redemption budget by her own
     */
@@ -66,24 +88,14 @@ export async function smokeTest() {
     */
   await (
     await Yamato.connect(redeemee).deposit({
-      value: BigNumber.from((toCollateralize*10000)+"").mul(1e18+"").div(1e4+""),
-    })
+      value: BigNumber.from((toCollateralize*4*10000)+"").mul(1e18+"").div(1e4+""),
+      gasLimit: 1000000 })
   ).wait();
-  await (await Yamato.connect(redeemee).borrow(toERC20(toBorrow + ""), {gasLimit:1000000})).wait();
+  await (await Yamato.connect(redeemee).borrow(toERC20(toBorrow.mul(4) + ""), {gasLimit:1000000})).wait();
 
   /*
         Market Dump
     */
-  const ChainLinkEthUsd = new ethers.Contract(
-    await PriceFeed.ethPriceAggregatorInUSD(),
-    genABI("ChainLinkMock"),
-    p
-  );
-  const Tellor = new ethers.Contract(
-    await PriceFeed.tellorCaller(),
-    genABI("TellorCallerMock"),
-    p
-  );
   await (
     await ChainLinkEthUsd.connect(redeemer).setLastPrice("204000000000")
   ).wait(); //dec8
@@ -113,13 +125,25 @@ export async function smokeTest() {
   /*
         full repay()
     */
-  await (await Yamato.connect(redeemee).repay(toERC20(toBorrow + ""))).wait();
+  await (await Yamato.connect(redeemee).repay(toERC20(toBorrow.mul(10) + ""))).wait();
 
   /*
         check full repay
     */
   let redeemeePledge1 = await Yamato.getPledge(_redeemeeAddr);
   console.log(`redeemeePledge1:fullRepay? ${redeemeePledge1}`);
+
+  /*
+        deposit() from zero pledge
+    */
+  await (
+    await Yamato.connect(redeemee).deposit({
+      value: BigNumber.from((toCollateralize*1*10000)+"").mul(1e18+"").div(1e4+""),
+      gasLimit: 1000000 })
+  ).wait();
+  let redeemeePledge2 = await Yamato.getPledge(_redeemeeAddr);
+  console.log(`redeemeePledge2:re-deposit? ${redeemeePledge2}`);
+
 
   /*
         withdraw()
@@ -134,6 +158,7 @@ export async function smokeTest() {
   await (
     await Yamato.connect(redeemee).deposit({
       value: BigNumber.from((toCollateralize*10000)+"").mul(1e18+"").div(1e4+""),
+      gasLimit: 1000000
     })
   ).wait();
   await (await Yamato.connect(redeemee).borrow(toERC20(toBorrow + ""), {gasLimit:1000000})).wait();
@@ -160,9 +185,11 @@ export async function smokeTest() {
   const poolSweepReserve = await Pool.sweepReserve();
 
   console.log(`
-      / alice borrow \\        / bob borrow \\       / alice&bob fee part1 \\   / alice&bob fee part2 \\        / alice&bob debt \\
-    redeemerCJPYBalance  +  redeemeeCJPYBalance  +  poolRedemptionReserve  +    poolSweepReserve        =  redeemerDebt + redeemeeDebt
-    ${redeemerCJPYBalance}  +  ${redeemeeCJPYBalance}  +  ${poolRedemptionReserve}  +    ${poolSweepReserve}        =  ${redeemerDebt} + ${redeemeeDebt}
+     \\ alice borrow /        \\ bob borrow /       \\ alice&bob fee part1 /   \\ alice&bob fee part2 /             \\ alice&bob debt /
+    redeemerCJPYBalance  +  redeemeeCJPYBalance  +  poolRedemptionReserve     +    poolSweepReserve           =  redeemerDebt + redeemeeDebt
+
+ s${redeemerCJPYBalance} + ${redeemeeCJPYBalance} + ${poolRedemptionReserve} + ${poolSweepReserve}       =  ${redeemerDebt} + ${redeemeeDebt}
+
     ${redeemerCJPYBalance
       .add(redeemeeCJPYBalance)
       .add(poolRedemptionReserve)
