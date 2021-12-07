@@ -28,7 +28,7 @@ export async function smokeTest() {
   const _redeemeeAddr = await redeemee.getAddress();
 
   const toCollateralize = 0.001;
-  const MCR = BigNumber.from(130)
+  const MCR = BigNumber.from(130);
   const PriceFeed = new ethers.Contract(
     await Yamato.feed(),
     genABI("PriceFeed"),
@@ -45,31 +45,29 @@ export async function smokeTest() {
     p
   );
 
-
   const toBorrow = (await PriceFeed.lastGoodPrice())
-    .mul(toCollateralize*10000)
+    .mul(toCollateralize * 10000)
     .mul(100)
     .div(MCR)
     .div(1e18 + "")
-    .div(10000)
+    .div(10000);
 
-  
- /*
+  /*
         Market Init
     */
   await (
     await ChainLinkEthUsd.connect(redeemer).setLastPrice("404000000000")
   ).wait(); //dec8
   await (await Tellor.connect(redeemer).setLastPrice("403000000000")).wait(); //dec8
-      
-
 
   /*
         Get redemption budget by her own
     */
   await (
     await Yamato.connect(redeemer).deposit({
-      value: BigNumber.from((toCollateralize*7.1*10000)+"").mul(1e18+"").div(1e4+"")
+      value: BigNumber.from(toCollateralize * 7.1 * 10000 + "")
+        .mul(1e18 + "")
+        .div(1e4 + ""),
     })
   ).wait();
   await (
@@ -88,10 +86,17 @@ export async function smokeTest() {
     */
   await (
     await Yamato.connect(redeemee).deposit({
-      value: BigNumber.from((toCollateralize*4*10000)+"").mul(1e18+"").div(1e4+""),
-      gasLimit: 1000000 })
+      value: BigNumber.from(toCollateralize * 4 * 10000 + "")
+        .mul(1e18 + "")
+        .div(1e4 + ""),
+      gasLimit: 1000000,
+    })
   ).wait();
-  await (await Yamato.connect(redeemee).borrow(toERC20(toBorrow.mul(4) + ""), {gasLimit:1000000})).wait();
+  await (
+    await Yamato.connect(redeemee).borrow(toERC20(toBorrow.mul(4) + ""), {
+      gasLimit: 1000000,
+    })
+  ).wait();
 
   /*
         Market Dump
@@ -104,15 +109,21 @@ export async function smokeTest() {
   /*
         redeem()
     */
-  await (
-    await Yamato.connect(redeemer).redeem(toERC20(toBorrow.div(2) + ""), false)
-  ).wait();
-  await (
-    await Yamato.connect(redeemer).redeem(toERC20(toBorrow.div(2) + ""), true)
-  ).wait();
-  await (
-    await Yamato.connect(redeemer).redeem(toERC20(toBorrow.div(2) + ""), false)
-  ).wait();
+  await (await Yamato.connect(redeemer).redeem(
+    toERC20(toBorrow.div(2) + ""),
+    false
+  ),
+  { gasLimit: 20000000 }).wait();
+  await (await Yamato.connect(redeemer).redeem(
+    toERC20(toBorrow.div(2) + ""),
+    true
+  ),
+  { gasLimit: 20000000 }).wait();
+  await (await Yamato.connect(redeemer).redeem(
+    toERC20(toBorrow.div(2) + ""),
+    false
+  ),
+  { gasLimit: 20000000 }).wait();
 
   /*
         Market pump
@@ -125,7 +136,9 @@ export async function smokeTest() {
   /*
         full repay()
     */
-  await (await Yamato.connect(redeemee).repay(toERC20(toBorrow.mul(10) + ""))).wait();
+  await (
+    await Yamato.connect(redeemee).repay(toERC20(toBorrow.mul(10) + ""))
+  ).wait();
 
   /*
         check full repay
@@ -138,18 +151,24 @@ export async function smokeTest() {
     */
   await (
     await Yamato.connect(redeemee).deposit({
-      value: BigNumber.from((toCollateralize*1*10000)+"").mul(1e18+"").div(1e4+""),
-      gasLimit: 1000000 })
+      value: BigNumber.from(toCollateralize * 1 * 10000 + "")
+        .mul(1e18 + "")
+        .div(1e4 + ""),
+      gasLimit: 1000000,
+    })
   ).wait();
   let redeemeePledge2 = await Yamato.getPledge(_redeemeeAddr);
   console.log(`redeemeePledge2:re-deposit? ${redeemeePledge2}`);
-
 
   /*
         withdraw()
     */
   await (
-    await Yamato.connect(redeemer).withdraw(BigNumber.from((toCollateralize*10000)+"").mul(1e18+"").div(1e4+""))
+    await Yamato.connect(redeemer).withdraw(
+      BigNumber.from(toCollateralize * 10000 + "")
+        .mul(1e18 + "")
+        .div(1e4 + "")
+    )
   ).wait();
 
   /*
@@ -157,11 +176,17 @@ export async function smokeTest() {
     */
   await (
     await Yamato.connect(redeemee).deposit({
-      value: BigNumber.from((toCollateralize*10000)+"").mul(1e18+"").div(1e4+""),
-      gasLimit: 1000000
+      value: BigNumber.from(toCollateralize * 10000 + "")
+        .mul(1e18 + "")
+        .div(1e4 + ""),
+      gasLimit: 1000000,
     })
   ).wait();
-  await (await Yamato.connect(redeemee).borrow(toERC20(toBorrow + ""), {gasLimit:1000000})).wait();
+  await (
+    await Yamato.connect(redeemee).borrow(toERC20(toBorrow + ""), {
+      gasLimit: 1000000,
+    })
+  ).wait();
 
   const CurrencyOS = new ethers.Contract(
     await Yamato.currencyOS(),
@@ -197,4 +222,4 @@ export async function smokeTest() {
     `);
 }
 
-smokeTest().catch(e=> console.log(e.message) );
+smokeTest().catch((e) => console.log(e.message));

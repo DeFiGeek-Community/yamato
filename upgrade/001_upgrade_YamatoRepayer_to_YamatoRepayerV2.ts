@@ -18,7 +18,10 @@ async function main() {
     `npm run verify:rinkeby -- --contract contracts/${IMPL_NAME}.sol:${IMPL_NAME} ${implAddr}`
   );
   console.log(`Verified ${implAddr}`);
-  writeFileSync(getDeploymentAddressPathWithTag(IMPL_NAME, "UUPSImpl"), implAddr);
+  writeFileSync(
+    getDeploymentAddressPathWithTag(IMPL_NAME, "UUPSImpl"),
+    implAddr
+  );
 }
 
-main().catch(e=> console.log(e) );
+main().catch((e) => console.log(e));
