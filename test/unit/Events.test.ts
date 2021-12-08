@@ -81,9 +81,11 @@ describe("story Events", function () {
         })
       );
 
+    
       // Note: Yamato's constructor needs this mock and so the line below has to be called here.
       mockCurrencyOS.feed.returns(mockFeed.address);
       mockCurrencyOS.feePool.returns(mockFeePool.address);
+      mockCurrencyOS.currency.returns(mockCJPY.address);
 
       yamato = await getLinkedProxy<Yamato, Yamato__factory>(
         "Yamato",
@@ -183,6 +185,9 @@ describe("story Events", function () {
         .mul(100)
         .div(MCR)
         .div(1e18 + "");
+
+        mockCJPY.balanceOf.returns(PRICE.mul(toCollateralize).mul(100).div(MCR));
+
     });
 
     describe("event Deposited", function () {
@@ -258,17 +263,18 @@ describe("story Events", function () {
         await (
           await yamato.connect(accounts[1]).borrow(toERC20(toBorrow + ""))
         ).wait();
+        mockCJPY.balanceOf.returns(PRICE.mul(10));
         mockFeed.fetchPrice.returns(PRICE.div(2));
         mockFeed.lastGoodPrice.returns(PRICE.div(2));
       });
-      it(`should be emitted with proper args.`, async function () {
+      it(`should be emitted with proper args for Redeemed.`, async function () {
         // address indexed sender, uint256 cjpyAmount, uint256 ethAmount, uint256 price, boolean isCoreRedemption, uint256 gasCompensationAmount, address[] pledgesOwner
         await expect(yamato.redeem(toERC20(toBorrow + ""), false)).to.emit(
           yamato,
           "Redeemed"
         );
       });
-      it(`should be emitted with proper args.`, async function () {
+      it(`should be emitted with proper args for RedeemedMeta.`, async function () {
         // address indexed sender, uint256 cjpyAmount, uint256 ethAmount, uint256 price, boolean isCoreRedemption, uint256 gasCompensationAmount, address[] pledgesOwner
         await expect(yamato.redeem(toERC20(toBorrow + ""), false)).to.emit(
           yamato,
@@ -295,6 +301,7 @@ describe("story Events", function () {
         await (
           await yamato.connect(accounts[1]).borrow(toERC20(toBorrow + ""))
         ).wait();
+        mockCJPY.balanceOf.returns(PRICE.mul(10));
         mockFeed.fetchPrice.returns(PRICE.div(2));
         mockFeed.lastGoodPrice.returns(PRICE.div(2));
         await (await yamato.redeem(toERC20(toBorrow + ""), false)).wait();

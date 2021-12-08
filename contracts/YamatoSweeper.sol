@@ -19,28 +19,11 @@ import "./Dependencies/SafeMath.sol";
 import "./Interfaces/IYamato.sol";
 import "./Interfaces/IFeePool.sol";
 import "./Interfaces/ICurrencyOS.sol";
+import "./Interfaces/IYamatoSweeper.sol";
 import "hardhat/console.sol";
 
 /// @title Yamato Sweeper Contract
 /// @author 0xMotoko
-
-interface IYamatoSweeper {
-    function runSweep(address _sender)
-        external
-        returns (
-            uint256 _sweptAmount,
-            uint256 gasCompensationInCurrency,
-            address[] memory
-        );
-
-    function sweepDebt(IYamato.Pledge memory sPledge, uint256 maxSweeplable)
-        external
-        returns (
-            IYamato.Pledge memory,
-            uint256,
-            uint256
-        );
-}
 
 contract YamatoSweeper is IYamatoSweeper, YamatoAction {
     using PledgeLib for IYamato.Pledge;

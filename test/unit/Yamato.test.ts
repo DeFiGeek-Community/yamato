@@ -83,6 +83,7 @@ describe("contract Yamato", function () {
     // Note: Yamato's constructor needs this mock and so the line below has to be called here.
     mockCurrencyOS.feed.returns(mockFeed.address);
     mockCurrencyOS.feePool.returns(mockFeePool.address);
+    mockCurrencyOS.currency.returns(mockCJPY.address);
 
     yamato = await getLinkedProxy<Yamato, Yamato__factory>(
       "Yamato",
@@ -162,6 +163,7 @@ describe("contract Yamato", function () {
     PRICE = BigNumber.from(260000).mul(1e18 + "");
     MCR = BigNumber.from(130);
 
+    mockCJPY.balanceOf.returns(PRICE.mul(1).mul(100).div(MCR));
     mockPool.depositRedemptionReserve.returns(0);
     mockPool.depositSweepReserve.returns(0);
     mockPool.sendETH.returns(0);
@@ -541,6 +543,7 @@ describe("contract Yamato", function () {
   describe("repay()", function () {
     PRICE = BigNumber.from(260000).mul(1e18 + "");
     beforeEach(async function () {
+      mockCJPY.balanceOf.returns(PRICE.mul(10));
       mockCurrencyOS.burnCurrency.returns(0);
       mockFeed.fetchPrice.returns(PRICE);
       mockFeed.lastGoodPrice.returns(PRICE);
@@ -658,7 +661,7 @@ describe("contract Yamato", function () {
       expect(TCRafter).to.gt(TCRbefore);
     });
 
-    it(`can full repay with excessive input and neutralize the pledge`, async function () {
+    it(`can full repay with and neutralize the pledge`, async function () {
       const MCR = BigNumber.from(130);
       const toCollateralize = 1;
       const toBorrow = PRICE.mul(toCollateralize)
@@ -683,13 +686,13 @@ describe("contract Yamato", function () {
 
       await yamato.setPledge(owner, {
         coll: 0,
-        debt: toBorrow,
+        debt: toERC20(toBorrow+""),
         isCreated: true,
         owner: owner,
         priority: 0,
       });
 
-      await yamato.repay(toERC20(toBorrow.add(1) + ""));
+      await yamato.repay(toERC20(toBorrow + ""));
 
       const pledgeAfter = await yamato.getPledge(owner);
 
@@ -723,7 +726,7 @@ describe("contract Yamato", function () {
       // Make a deficit pledge with yamato.setPledge(deficitPledge)
       await yamato.setPledge(owner, {
         coll: 0,
-        debt: BigNumber.from("300001000000000000000"),
+        debt: toERC20(toBorrow + ""),
         isCreated: false,
         owner: owner,
         priority: 0,
@@ -910,6 +913,8 @@ describe("contract Yamato", function () {
       PRICE = BigNumber.from(260000).mul(1e18 + "");
       PRICE_AFTER = PRICE.div(2);
       MCR = BigNumber.from(130);
+
+      mockCJPY.balanceOf.returns(PRICE.mul(10));
       mockPool.depositRedemptionReserve.returns(0);
       mockPool.depositSweepReserve.returns(0);
       mockCurrencyOS.burnCurrency.returns(0);
@@ -1037,15 +1042,7 @@ describe("contract Yamato", function () {
       expect(mockPool.useRedemptionReserve).to.have.callCount(0);
     });
     it(`should run useRedemptionReserve\(\) of Pool.sol when isCoreRedemption=true`, async function () {
-      await yamato.connect(accounts[0]).redeem(toERC20(toBorrow + ""), true);
-      expect(mockPool.useRedemptionReserve).to.have.calledOnce;
-    });
-
-    it(`should NOT run useRedemptionReserve\(\) of Pool.sol when isCoreRedemption=false`, async function () {
-      await yamato.connect(accounts[0]).redeem(toERC20(toBorrow + ""), false);
-      expect(mockPool.useRedemptionReserve).to.have.callCount(0);
-    });
-    it(`should run useRedemptionReserve\(\) of Pool.sol when isCoreRedemption=true`, async function () {
+      mockPool.redemptionReserve.returns(PRICE.mul(1))
       await yamato.connect(accounts[0]).redeem(toERC20(toBorrow + ""), true);
       expect(mockPool.useRedemptionReserve).to.have.calledOnce;
     });
@@ -1068,6 +1065,7 @@ describe("contract Yamato", function () {
       PRICE = BigNumber.from(260000).mul(1e18 + "");
       PRICE_AFTER = PRICE.div(2);
       MCR = BigNumber.from(130);
+      mockCJPY.balanceOf.returns(PRICE.mul(10));
       mockPool.depositRedemptionReserve.returns(0);
       mockPool.depositSweepReserve.returns(0);
       mockPool.sendETH.returns(0);

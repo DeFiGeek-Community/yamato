@@ -19,15 +19,11 @@ import "./Dependencies/SafeMath.sol";
 import "./Interfaces/IYamato.sol";
 import "./Interfaces/IFeePool.sol";
 import "./Interfaces/ICurrencyOS.sol";
+import "./Interfaces/IYamatoWithdrawer.sol";
 import "hardhat/console.sol";
 
 /// @title Yamato Withdrawer Contract
 /// @author 0xMotoko
-
-interface IYamatoWithdrawer {
-    function runWithdraw(address _sender, uint256 _ethAmount) external;
-}
-
 contract YamatoWithdrawer is IYamatoWithdrawer, YamatoAction {
     using PledgeLib for IYamato.Pledge;
     using PledgeLib for uint256;

@@ -236,7 +236,7 @@ describe("burnCurrency :: contract Yamato", () => {
       );
 
       const txReceipt = await (
-        await Yamato.connect(accounts[0]).redeem(
+        await Yamato.connect(redeemerSigner).redeem(
           toERC20(toBorrow.mul(3) + ""),
           false
         )

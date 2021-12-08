@@ -20,21 +20,20 @@ import "./Interfaces/IYamato.sol";
 import "./Interfaces/IFeePool.sol";
 import "./Interfaces/ICurrencyOS.sol";
 import "./Interfaces/ICurrency.sol";
+import "./Interfaces/IYamatoRepayer.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "hardhat/console.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /// @title Yamato Repayer Contract
 /// @author 0xMotoko
-
-import "./YamatoRepayer.sol";
 
 contract YamatoRepayerV2 is IYamatoRepayer, YamatoAction {
     function initialize(address _yamato) public initializer {
         __YamatoAction_init(_yamato);
     }
 
-    function runRepay(address _sender, uint256 _wantToRepayAmount)
+    function runRepay(address _sender, uint256 _wantToRepayCurrencyAmount)
         public
         override
         onlyYamato
@@ -51,27 +50,15 @@ contract YamatoRepayerV2 is IYamatoRepayer, YamatoAction {
         /*
             2. Check repayability
         */
-        require(_wantToRepayAmount > 0, "You are repaying no Currency");
+        require(_wantToRepayCurrencyAmount > 0, "You are repaying no Currency");
         require(pledge.debt > 0, "You can't repay for a zero-debt pledge.");
+        require(_wantToRepayCurrencyAmount <= senderBalance, "You are trying to repay more than you have."); // V2 (Dec 7, 2021)
+        require(_wantToRepayCurrencyAmount <= pledge.debt, "You are trying to repay more than your debt."); // V2 (Dec 7, 2021)
 
         /*
             2. Compose a pledge in memory
         */
-
-        // V2 (Dec 7, 2021) => repayAmount must be less than equal balance
-        uint256 _repayAmount = (_wantToRepayAmount <= senderBalance)
-            ? _wantToRepayAmount
-            : senderBalance;
-
-        // V2 (Dec 7, 2021) => repayAmount must be less than equal pledge debt amount
-        _repayAmount = (_repayAmount < pledge.debt)
-            ? _repayAmount
-            : pledge.debt;
-
-        // Note: "_repayAmount is less than debt but more than balance" causes bad UX
-        // when a borrower directly try repaying all debt
-        // but if she doesn't have enough currenct due to the fee reduction.
-        pledge.debt -= _repayAmount;
+        pledge.debt -= _wantToRepayCurrencyAmount;
 
         /*
             3. Add PriorityRegistry update result to a pledge in memory
@@ -86,12 +73,12 @@ contract YamatoRepayerV2 is IYamatoRepayer, YamatoAction {
         /*
             5. Commit totalDebt
         */
-        IYamato(yamato()).setTotalDebt(totalDebt - _repayAmount);
+        IYamato(yamato()).setTotalDebt(totalDebt - _wantToRepayCurrencyAmount);
 
         /*
             4-1. Charge Currency
             4-2. Return coll to the redeemer
         */
-        ICurrencyOS(currencyOS()).burnCurrency(_sender, _repayAmount);
+        ICurrencyOS(currencyOS()).burnCurrency(_sender, _wantToRepayCurrencyAmount);
     }
 }

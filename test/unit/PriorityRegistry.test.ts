@@ -13,6 +13,7 @@ import {
   YamatoDummy__factory,
   PriorityRegistry,
   PriorityRegistry__factory,
+  CJPY,
 } from "../../typechain";
 import { getFakeProxy, getLinkedProxy } from "../../src/testUtil";
 
@@ -24,6 +25,7 @@ describe("contract PriorityRegistry", function () {
   let mockCurrencyOS: FakeContract<CurrencyOS>;
   let mockFeePool: FakeContract<FeePool>;
   let mockFeed: FakeContract<PriceFeed>;
+  let mockCJPY: FakeContract<CJPY>;
   let yamatoDummy: YamatoDummy;
   let priorityRegistryWithYamatoMock;
   let priorityRegistry;
@@ -51,10 +53,15 @@ describe("contract PriorityRegistry", function () {
     mockYamato = await getFakeProxy<Yamato>("Yamato");
     mockYamato.currencyOS.returns(mockCurrencyOS.address);
 
+    mockCJPY = await smock.fake<CJPY>("CJPY");
+
+
+    mockCJPY.balanceOf.returns(PRICE.mul(1).mul(100).div(130));
     mockFeed.fetchPrice.returns(PRICE);
     mockFeed.lastGoodPrice.returns(PRICE);
     mockCurrencyOS.feed.returns(mockFeed.address);
     mockCurrencyOS.feePool.returns(mockFeePool.address);
+    mockCurrencyOS.currency.returns(mockCJPY.address);
     mockYamato.feed.returns(mockFeed.address);
 
     /*

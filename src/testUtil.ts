@@ -4,6 +4,7 @@ import { FakeContract, smock } from "@defi-wonderland/smock";
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "fs";
 import { getDeploymentAddressPath, getCurrentNetwork } from "./deployUtil";
 import { genABI } from "./genABI";
+import { getLatestContractName, upgradeLinkedProxy, upgradeProxy } from "./upgradeUtil";
 
 // @dev UUPS
 export async function getFakeProxy<T extends BaseContract>(
@@ -26,10 +27,21 @@ export async function getProxy<
   S extends ContractFactory
 >(contractName: string, args: any): Promise<T> {
   let contractFactory: S = <S>await ethers.getContractFactory(contractName);
-  const instance: T = <T>(
+  const defaultInst: T = <T>(
     await upgrades.deployProxy(contractFactory, args, { kind: "uups" })
   );
-  return instance;
+
+  const implName = getLatestContractName(contractName);
+  if(implName.length == 0) {
+    return defaultInst;
+  } else {
+    console.log(`${implName} is going to be deployed to ERC1967Proxy...`)
+
+    const inst:T = <T>(await upgradeProxy(defaultInst.address, implName));
+    console.log(`${inst.address} is upgraded to ${implName}`);
+    return inst;
+  }
+
 }
 
 export async function getLinkedProxy<
@@ -42,16 +54,25 @@ export async function getLinkedProxy<
     let libraryName = libralies[i];
     Libraries[libraryName] = (await deployLibrary(libraryName)).address;
   }
-  console.log(`getLinkedProxy: libs deployed.`);
 
   let contractFactory: S = <S>(
     await getLinkedContractFactory(contractName, Libraries)
   );
-  const instance: T = <T>await upgrades.deployProxy(contractFactory, args, {
+  const defaultInst: T = <T>await upgrades.deployProxy(contractFactory, args, {
     kind: "uups",
     unsafeAllow: ["external-library-linking"],
   });
-  return instance;
+
+  const implName = getLatestContractName(contractName);
+  if(implName.length == 0) {
+    return defaultInst;
+  } else {
+    console.log(`${implName} is going to be deployed to ERC1967Proxy...`)
+
+    const inst:T = <T>(await upgradeLinkedProxy(defaultInst.address, implName, libralies));
+    console.log(`${inst.address} is upgraded to ${implName}`);
+    return inst;
+  }
 }
 
 export async function deployLibrary(libraryName) {
@@ -84,6 +105,7 @@ export async function deployLibrary(libraryName) {
   }
 
   await library.deployed();
+  console.log(`libs deployed.`);
   return library;
 }
 
