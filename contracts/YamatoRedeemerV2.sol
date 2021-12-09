@@ -20,12 +20,13 @@ import "./Interfaces/IYamato.sol";
 import "./Interfaces/IFeePool.sol";
 import "./Interfaces/ICurrencyOS.sol";
 import "./Interfaces/IYamatoRedeemer.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "hardhat/console.sol";
 
 /// @title Yamato Redeemer Contract
 /// @author 0xMotoko
 
-contract YamatoRedeemer is IYamatoRedeemer, YamatoAction {
+contract YamatoRedeemerV2 is IYamatoRedeemer, YamatoAction {
     using PledgeLib for IYamato.Pledge;
     using PledgeLib for uint256;
 
@@ -40,6 +41,9 @@ contract YamatoRedeemer is IYamatoRedeemer, YamatoAction {
         onlyYamato
         returns (RedeemedArgs memory)
     {
+        /*
+            1. Set up
+        */
         RunRedeemVars memory vars;
         vars.ethPriceInCurrency = IPriceFeed(feed()).fetchPrice();
         vars.currencyAmountStart = _args.wantToRedeemCurrencyAmount;
@@ -49,6 +53,24 @@ contract YamatoRedeemer is IYamatoRedeemer, YamatoAction {
         );
         vars._GRR = IYamato(yamato()).GRR();
 
+        /*
+            1. Balance check
+            V2 (Dev 8, 2021)
+        */
+        if (_args.isCoreRedemption) {
+            vars.bearerBalance = IPool(pool()).redemptionReserve();
+        } else {
+            vars.bearerBalance = IERC20(ICurrencyOS(currencyOS()).currency())
+                .balanceOf(_args.sender);
+        }
+        require(
+            _args.wantToRedeemCurrencyAmount < vars.bearerBalance,
+            "You are redeeming more than the bearer has."
+        );
+
+        /*
+            3. Scan pledges until fill the redeeming amount
+        */
         while (vars._reminder > 0) {
             try IPriorityRegistry(priorityRegistry()).popRedeemable() returns (
                 IYamato.Pledge memory _redeemablePledge

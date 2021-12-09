@@ -24,7 +24,7 @@ import "hardhat/console.sol";
 
 /// @title Yamato Withdrawer Contract
 /// @author 0xMotoko
-contract YamatoWithdrawer is IYamatoWithdrawer, YamatoAction {
+contract YamatoWithdrawerV2 is IYamatoWithdrawer, YamatoAction {
     using PledgeLib for IYamato.Pledge;
     using PledgeLib for uint256;
 
@@ -80,7 +80,7 @@ contract YamatoWithdrawer is IYamatoWithdrawer, YamatoAction {
         pledge.coll = pledge.coll - _ethAmount;
         IYamato(yamato()).setPledge(pledge.owner, pledge);
 
-        IYamato(yamato()).setTotalDebt(totalColl - _ethAmount);
+        IYamato(yamato()).setTotalColl(totalColl - _ethAmount);
 
         /*
             5. Validate and update PriorityRegistry

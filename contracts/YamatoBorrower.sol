@@ -19,16 +19,11 @@ import "./Dependencies/SafeMath.sol";
 import "./Interfaces/IYamato.sol";
 import "./Interfaces/IFeePool.sol";
 import "./Interfaces/ICurrencyOS.sol";
+import "./Interfaces/IYamatoBorrower.sol";
 import "hardhat/console.sol";
 
 /// @title Yamato Borrower Contract
 /// @author 0xMotoko
-
-interface IYamatoBorrower {
-    function runBorrow(address _sender, uint256 _borrowAmountInCurrency)
-        external
-        returns (uint256 fee);
-}
 
 contract YamatoBorrower is IYamatoBorrower, YamatoAction {
     using PledgeLib for IYamato.Pledge;

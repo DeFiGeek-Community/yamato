@@ -19,14 +19,11 @@ import "./Dependencies/SafeMath.sol";
 import "./Interfaces/IYamato.sol";
 import "./Interfaces/IFeePool.sol";
 import "./Interfaces/ICurrencyOS.sol";
+import "./Interfaces/IYamatoDepositor.sol";
 import "hardhat/console.sol";
 
 /// @title Yamato Depositor Contract
 /// @author 0xMotoko
-
-interface IYamatoDepositor {
-    function runDeposit(address _sender) external payable;
-}
 
 contract YamatoDepositor is IYamatoDepositor, YamatoAction {
     using PledgeLib for IYamato.Pledge;

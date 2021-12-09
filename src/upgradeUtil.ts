@@ -1,6 +1,9 @@
 import { ethers, upgrades, artifacts } from "hardhat";
 import { BaseContract, ContractFactory, BigNumber } from "ethers";
 import { getLinkedContractFactory, deployLibrary } from "./testUtil";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "fs";
+import { getDeploymentAddressPathWithTag, setNetwork } from "./deployUtil";
+import { execSync } from "child_process";
 
 export async function upgradeProxy<
   T extends BaseContract,
@@ -44,4 +47,63 @@ export async function upgradeLinkedProxy<
     }
   );
   return newerInstance;
+}
+
+export async function runUpgrade(implNameBase, linkings = []) {
+  setNetwork("rinkeby");
+
+  const filepath = getDeploymentAddressPathWithTag(
+    implNameBase,
+    "ERC1967Proxy"
+  );
+  if (!existsSync(filepath)) throw new Error(`${filepath} is not exist`);
+  const ERC1967Proxy: string = readFileSync(filepath).toString();
+
+  const implName = getLatestContractName(implNameBase);
+  if (implName.length == 0) {
+    console.log(
+      `./contracts/${implNameBase} only found. Set ./contracts/${implNameBase}V2 to start upgrading.`
+    );
+  } else {
+    console.log(`${implName} is going to be deployed to ERC1967Proxy...`);
+
+    const inst =
+      linkings.length > 0
+        ? await upgradeLinkedProxy(ERC1967Proxy, implName, linkings)
+        : await upgradeProxy(ERC1967Proxy, implName);
+    console.log(`${inst.address} is upgraded to ${implName}`);
+
+    const implAddr = await (<any>inst).getImplementation();
+    execSync(
+      `npm run verify:rinkeby -- --contract contracts/${implName}.sol:${implName} ${implAddr}`
+    );
+    console.log(`Verified ${implAddr}`);
+    writeFileSync(
+      getDeploymentAddressPathWithTag(implName, "UUPSImpl"),
+      implAddr
+    );
+  }
+}
+
+export function getLatestContractName(implNameBase) {
+  function regexpV(name) {
+    if (name.indexOf(implNameBase) >= 0) {
+      let target = name.slice(implNameBase.length, name.length);
+      return target.match(/^V([0-9]+)\.sol/);
+    } else {
+      return null;
+    }
+  }
+
+  const filenames = readdirSync("./contracts");
+  const versions = filenames
+    .filter((name) => regexpV(name))
+    .map((matched) => parseInt(regexpV(matched)[1]));
+  let highestVersion = Math.max(...versions);
+  const implName = `${implNameBase}V${highestVersion}`;
+  if (versions.length == 0) {
+    return "";
+  } else {
+    return implName;
+  }
 }

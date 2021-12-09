@@ -92,7 +92,12 @@ type Options = {
   isDependency?: boolean | undefined;
 };
 
+let network;
+export function setNetwork(_network) {
+  network = _network;
+}
 export function getCurrentNetwork() {
+  if (network) return network;
   if (process.argv.join("").toLowerCase().indexOf("rinkeby") >= 0) {
     return "rinkeby";
   } else if (process.argv.join("").toLowerCase().indexOf("mainnet") >= 0) {

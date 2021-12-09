@@ -19,21 +19,21 @@ import "./Dependencies/SafeMath.sol";
 import "./Interfaces/IYamato.sol";
 import "./Interfaces/IFeePool.sol";
 import "./Interfaces/ICurrencyOS.sol";
+import "./Interfaces/ICurrency.sol";
 import "./Interfaces/IYamatoRepayer.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 import "hardhat/console.sol";
 
 /// @title Yamato Repayer Contract
 /// @author 0xMotoko
 
-contract YamatoRepayer is IYamatoRepayer, YamatoAction {
-    using PledgeLib for IYamato.Pledge;
-    using PledgeLib for uint256;
-
+contract YamatoRepayerV2 is IYamatoRepayer, YamatoAction {
     function initialize(address _yamato) public initializer {
         __YamatoAction_init(_yamato);
     }
 
-    function runRepay(address _sender, uint256 _currencyAmount)
+    function runRepay(address _sender, uint256 _wantToRepayCurrencyAmount)
         public
         override
         onlyYamato
@@ -44,23 +44,27 @@ contract YamatoRepayer is IYamatoRepayer, YamatoAction {
         IPriceFeed(feed()).fetchPrice();
         IYamato.Pledge memory pledge = IYamato(yamato()).getPledge(_sender);
         (, uint256 totalDebt, , , , ) = IYamato(yamato()).getStates();
+        uint256 senderBalance = IERC20(ICurrencyOS(currencyOS()).currency())
+            .balanceOf(_sender);
 
         /*
             2. Check repayability
         */
-        require(_currencyAmount > 0, "You are repaying no Currency");
+        require(_wantToRepayCurrencyAmount > 0, "You are repaying no Currency");
         require(pledge.debt > 0, "You can't repay for a zero-debt pledge.");
+        require(
+            _wantToRepayCurrencyAmount <= senderBalance,
+            "You are trying to repay more than you have."
+        ); // V2 (Dec 7, 2021)
+        require(
+            _wantToRepayCurrencyAmount <= pledge.debt,
+            "You are trying to repay more than your debt."
+        ); // V2 (Dec 7, 2021)
 
         /*
             2. Compose a pledge in memory
         */
-        uint256 _repayAmount;
-        if (_currencyAmount < pledge.debt) {
-            _repayAmount = _currencyAmount;
-        } else {
-            _repayAmount = pledge.debt;
-        }
-        pledge.debt -= _repayAmount;
+        pledge.debt -= _wantToRepayCurrencyAmount;
 
         /*
             3. Add PriorityRegistry update result to a pledge in memory
@@ -75,12 +79,15 @@ contract YamatoRepayer is IYamatoRepayer, YamatoAction {
         /*
             5. Commit totalDebt
         */
-        IYamato(yamato()).setTotalDebt(totalDebt - _repayAmount);
+        IYamato(yamato()).setTotalDebt(totalDebt - _wantToRepayCurrencyAmount);
 
         /*
             4-1. Charge Currency
             4-2. Return coll to the redeemer
         */
-        ICurrencyOS(currencyOS()).burnCurrency(_sender, _repayAmount);
+        ICurrencyOS(currencyOS()).burnCurrency(
+            _sender,
+            _wantToRepayCurrencyAmount
+        );
     }
 }
