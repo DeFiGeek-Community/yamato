@@ -49,20 +49,28 @@ export async function upgradeLinkedProxy<
   return newerInstance;
 }
 
-export async function runUpgrade(implNameBase) {
+export async function runUpgrade(implNameBase, linkings = []) {
   setNetwork("rinkeby");
 
-  const filepath = getDeploymentAddressPathWithTag(implNameBase, "ERC1967Proxy");
+  const filepath = getDeploymentAddressPathWithTag(
+    implNameBase,
+    "ERC1967Proxy"
+  );
   if (!existsSync(filepath)) throw new Error(`${filepath} is not exist`);
   const ERC1967Proxy: string = readFileSync(filepath).toString();
 
   const implName = getLatestContractName(implNameBase);
-  if(implName.length == 0) {
-    console.log(`./contracts/${implNameBase} only found. Set ./contracts/${implNameBase}V2 to start upgrading.`);
+  if (implName.length == 0) {
+    console.log(
+      `./contracts/${implNameBase} only found. Set ./contracts/${implNameBase}V2 to start upgrading.`
+    );
   } else {
-    console.log(`${implName} is going to be deployed to ERC1967Proxy...`)
+    console.log(`${implName} is going to be deployed to ERC1967Proxy...`);
 
-    const inst = await upgradeProxy(ERC1967Proxy, implName);
+    const inst =
+      linkings.length > 0
+        ? await upgradeLinkedProxy(ERC1967Proxy, implName, linkings)
+        : await upgradeProxy(ERC1967Proxy, implName);
     console.log(`${inst.address} is upgraded to ${implName}`);
 
     const implAddr = await (<any>inst).getImplementation();
@@ -73,14 +81,13 @@ export async function runUpgrade(implNameBase) {
     writeFileSync(
       getDeploymentAddressPathWithTag(implName, "UUPSImpl"),
       implAddr
-    );  
-
+    );
   }
 }
 
 export function getLatestContractName(implNameBase) {
-  function regexpV(name){
-    if(name.indexOf(implNameBase) >= 0) {
+  function regexpV(name) {
+    if (name.indexOf(implNameBase) >= 0) {
       let target = name.slice(implNameBase.length, name.length);
       return target.match(/^V([0-9]+)\.sol/);
     } else {
@@ -88,11 +95,13 @@ export function getLatestContractName(implNameBase) {
     }
   }
 
-  const filenames = readdirSync("./contracts")
-  const versions = filenames.filter(name=> regexpV(name) ).map(matched=> parseInt(regexpV(matched)[1]) )
-  let highestVersion = Math.max(...versions)
-  const implName = `${implNameBase}V${highestVersion}`
-  if(versions.length == 0) {
+  const filenames = readdirSync("./contracts");
+  const versions = filenames
+    .filter((name) => regexpV(name))
+    .map((matched) => parseInt(regexpV(matched)[1]));
+  let highestVersion = Math.max(...versions);
+  const implName = `${implNameBase}V${highestVersion}`;
+  if (versions.length == 0) {
     return "";
   } else {
     return implName;

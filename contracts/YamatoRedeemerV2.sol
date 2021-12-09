@@ -57,14 +57,16 @@ contract YamatoRedeemerV2 is IYamatoRedeemer, YamatoAction {
             1. Balance check
             V2 (Dev 8, 2021)
         */
-        if(_args.isCoreRedemption){
+        if (_args.isCoreRedemption) {
             vars.bearerBalance = IPool(pool()).redemptionReserve();
         } else {
             vars.bearerBalance = IERC20(ICurrencyOS(currencyOS()).currency())
                 .balanceOf(_args.sender);
         }
-        require(_args.wantToRedeemCurrencyAmount < vars.bearerBalance, "You are redeeming more than the bearer has.");
-
+        require(
+            _args.wantToRedeemCurrencyAmount < vars.bearerBalance,
+            "You are redeeming more than the bearer has."
+        );
 
         /*
             3. Scan pledges until fill the redeeming amount

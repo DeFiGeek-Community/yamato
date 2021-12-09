@@ -55,7 +55,6 @@ describe("contract PriorityRegistry", function () {
 
     mockCJPY = await smock.fake<CJPY>("CJPY");
 
-
     mockCJPY.balanceOf.returns(PRICE.mul(1).mul(100).div(130));
     mockFeed.fetchPrice.returns(PRICE);
     mockFeed.lastGoodPrice.returns(PRICE);

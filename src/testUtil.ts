@@ -4,7 +4,11 @@ import { FakeContract, smock } from "@defi-wonderland/smock";
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "fs";
 import { getDeploymentAddressPath, getCurrentNetwork } from "./deployUtil";
 import { genABI } from "./genABI";
-import { getLatestContractName, upgradeLinkedProxy, upgradeProxy } from "./upgradeUtil";
+import {
+  getLatestContractName,
+  upgradeLinkedProxy,
+  upgradeProxy,
+} from "./upgradeUtil";
 
 // @dev UUPS
 export async function getFakeProxy<T extends BaseContract>(
@@ -32,16 +36,15 @@ export async function getProxy<
   );
 
   const implName = getLatestContractName(contractName);
-  if(implName.length == 0) {
+  if (implName.length == 0) {
     return defaultInst;
   } else {
-    console.log(`${implName} is going to be deployed to ERC1967Proxy...`)
+    console.log(`${implName} is going to be deployed to ERC1967Proxy...`);
 
-    const inst:T = <T>(await upgradeProxy(defaultInst.address, implName));
+    const inst: T = <T>await upgradeProxy(defaultInst.address, implName);
     console.log(`${inst.address} is upgraded to ${implName}`);
     return inst;
   }
-
 }
 
 export async function getLinkedProxy<
@@ -64,12 +67,14 @@ export async function getLinkedProxy<
   });
 
   const implName = getLatestContractName(contractName);
-  if(implName.length == 0) {
+  if (implName.length == 0) {
     return defaultInst;
   } else {
-    console.log(`${implName} is going to be deployed to ERC1967Proxy...`)
+    console.log(`${implName} is going to be deployed to ERC1967Proxy...`);
 
-    const inst:T = <T>(await upgradeLinkedProxy(defaultInst.address, implName, libralies));
+    const inst: T = <T>(
+      await upgradeLinkedProxy(defaultInst.address, implName, libralies)
+    );
     console.log(`${inst.address} is upgraded to ${implName}`);
     return inst;
   }

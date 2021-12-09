@@ -52,8 +52,14 @@ contract YamatoRepayerV2 is IYamatoRepayer, YamatoAction {
         */
         require(_wantToRepayCurrencyAmount > 0, "You are repaying no Currency");
         require(pledge.debt > 0, "You can't repay for a zero-debt pledge.");
-        require(_wantToRepayCurrencyAmount <= senderBalance, "You are trying to repay more than you have."); // V2 (Dec 7, 2021)
-        require(_wantToRepayCurrencyAmount <= pledge.debt, "You are trying to repay more than your debt."); // V2 (Dec 7, 2021)
+        require(
+            _wantToRepayCurrencyAmount <= senderBalance,
+            "You are trying to repay more than you have."
+        ); // V2 (Dec 7, 2021)
+        require(
+            _wantToRepayCurrencyAmount <= pledge.debt,
+            "You are trying to repay more than your debt."
+        ); // V2 (Dec 7, 2021)
 
         /*
             2. Compose a pledge in memory
@@ -79,6 +85,9 @@ contract YamatoRepayerV2 is IYamatoRepayer, YamatoAction {
             4-1. Charge Currency
             4-2. Return coll to the redeemer
         */
-        ICurrencyOS(currencyOS()).burnCurrency(_sender, _wantToRepayCurrencyAmount);
+        ICurrencyOS(currencyOS()).burnCurrency(
+            _sender,
+            _wantToRepayCurrencyAmount
+        );
     }
 }

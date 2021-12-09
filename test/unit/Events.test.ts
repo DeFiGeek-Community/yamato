@@ -81,7 +81,6 @@ describe("story Events", function () {
         })
       );
 
-    
       // Note: Yamato's constructor needs this mock and so the line below has to be called here.
       mockCurrencyOS.feed.returns(mockFeed.address);
       mockCurrencyOS.feePool.returns(mockFeePool.address);
@@ -186,8 +185,7 @@ describe("story Events", function () {
         .div(MCR)
         .div(1e18 + "");
 
-        mockCJPY.balanceOf.returns(PRICE.mul(toCollateralize).mul(100).div(MCR));
-
+      mockCJPY.balanceOf.returns(PRICE.mul(toCollateralize).mul(100).div(MCR));
     });
 
     describe("event Deposited", function () {

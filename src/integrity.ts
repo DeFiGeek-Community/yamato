@@ -44,13 +44,17 @@ export async function smokeTest() {
     genABI("TellorCallerMock"),
     p
   );
-
-  const toBorrow = (await PriceFeed.lastGoodPrice())
-    .mul(toCollateralize * 10000)
-    .mul(100)
-    .div(MCR)
-    .div(1e18 + "")
-    .div(10000);
+  const CurrencyOS = new ethers.Contract(
+    await Yamato.currencyOS(),
+    genABI("CurrencyOS"),
+    p
+  );
+  const CJPY = new ethers.Contract(
+    await CurrencyOS.currency(),
+    genABI("CJPY"),
+    p
+  );
+  const Pool = new ethers.Contract(await Yamato.pool(), genABI("Pool"), p);
 
   /*
         Market Init
@@ -59,6 +63,13 @@ export async function smokeTest() {
     await ChainLinkEthUsd.connect(redeemer).setLastPrice("404000000000")
   ).wait(); //dec8
   await (await Tellor.connect(redeemer).setLastPrice("403000000000")).wait(); //dec8
+
+  const toBorrow = (await PriceFeed.lastGoodPrice())
+    .mul(toCollateralize * 10000)
+    .mul(100)
+    .div(MCR)
+    .div(1e18 + "")
+    .div(10000);
 
   /*
         Get redemption budget by her own
@@ -117,9 +128,13 @@ export async function smokeTest() {
     )
   ).wait();
   await (
-    await Yamato.connect(redeemer).redeem(toERC20(toBorrow.div(20) + ""), true, {
-      gasLimit: 20000000,
-    })
+    await Yamato.connect(redeemer).redeem(
+      toERC20(toBorrow.div(20) + ""),
+      true,
+      {
+        gasLimit: 20000000,
+      }
+    )
   ).wait();
   await (
     await Yamato.connect(redeemer).redeem(
@@ -138,19 +153,32 @@ export async function smokeTest() {
   await (await Tellor.connect(redeemer).setLastPrice("403000000000")).wait(); //dec8
 
   /*
+        Send money for repayment
+    */
+  let redeemeePledgeBeforeRepay = await Yamato.getPledge(_redeemeeAddr);
+  let d = redeemeePledgeBeforeRepay.debt
+  let b = await CJPY.balanceOf(_redeemeeAddr)
+  let lack:BigNumber = d.sub(b);
+  if( lack.gt(0) ) {
+    await CJPY.connect(redeemer).transfer(_redeemeeAddr, lack )
+  }
+
+  /*
         full repay()
     */
   await (
-    await Yamato.connect(redeemee).repay(toERC20(toBorrow.mul(10) + ""), {
-      gasLimit: 1000000,
-    })
+    await Yamato.connect(redeemee).repay(d,
+      {
+        gasLimit: 1000000,
+      }
+    )
   ).wait();
 
   /*
         check full repay
     */
-  let redeemeePledge1 = await Yamato.getPledge(_redeemeeAddr);
-  console.log(`redeemeePledge1:fullRepay? ${redeemeePledge1}`);
+  let redeemeeFullyRepaidPledge1 = await Yamato.getPledge(_redeemeeAddr);
+  console.log(`redeemeeFullyRepaidPledge1:fullRepay? ${redeemeeFullyRepaidPledge1}`);
 
   /*
         deposit() from zero pledge
@@ -173,7 +201,7 @@ export async function smokeTest() {
     await Yamato.connect(redeemer).withdraw(
       BigNumber.from(toCollateralize * 10000 + "")
         .mul(1e18 + "")
-        .div(1e4 + ""),
+        .div(1e6 + ""),
       { gasLimit: 1000000 }
     )
   ).wait();
@@ -195,17 +223,6 @@ export async function smokeTest() {
     })
   ).wait();
 
-  const CurrencyOS = new ethers.Contract(
-    await Yamato.currencyOS(),
-    genABI("CurrencyOS"),
-    p
-  );
-  const CJPY = new ethers.Contract(
-    await CurrencyOS.currency(),
-    genABI("CJPY"),
-    p
-  );
-  const Pool = new ethers.Contract(await Yamato.pool(), genABI("Pool"), p);
 
   const redeemerCJPYBalance = await CJPY.balanceOf(_redeemerAddr);
   const redeemeeCJPYBalance = await CJPY.balanceOf(_redeemeeAddr);
@@ -213,19 +230,23 @@ export async function smokeTest() {
   const redeemerDebt = (await Yamato.getPledge(_redeemerAddr)).debt;
   const redeemeeDebt = (await Yamato.getPledge(_redeemeeAddr)).debt;
 
+  const [totalColl, totalDebt] = await Yamato.getStates();
+
   const poolRedemptionReserve = await Pool.redemptionReserve();
   const poolSweepReserve = await Pool.sweepReserve();
 
   console.log(`
      \\ alice borrow /        \\ bob borrow /       \\ alice&bob fee part1 /   \\ alice&bob fee part2 /             \\ alice&bob debt /
-    redeemerCJPYBalance  +  redeemeeCJPYBalance  +  poolRedemptionReserve     +    poolSweepReserve           =  redeemerDebt + redeemeeDebt
+    redeemerCJPYBalance  +  redeemeeCJPYBalance  +  poolRedemptionReserve     +    poolSweepReserve           =  redeemerDebt + redeemeeDebt = totalDebt
 
- s${redeemerCJPYBalance} + ${redeemeeCJPYBalance} + ${poolRedemptionReserve} + ${poolSweepReserve}       =  ${redeemerDebt} + ${redeemeeDebt}
+ s${redeemerCJPYBalance} + ${redeemeeCJPYBalance} + ${poolRedemptionReserve} + ${poolSweepReserve}       =  ${redeemerDebt} + ${redeemeeDebt} = ${totalDebt}
 
     ${redeemerCJPYBalance
       .add(redeemeeCJPYBalance)
       .add(poolRedemptionReserve)
-      .add(poolSweepReserve)} = ${redeemerDebt.add(redeemeeDebt)}
+      .add(poolSweepReserve)} = ${redeemerDebt.add(
+    redeemeeDebt
+  )}  = ${totalDebt}
     `);
 }
 

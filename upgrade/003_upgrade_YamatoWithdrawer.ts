@@ -1,6 +1,6 @@
 import { runUpgrade } from "../src/upgradeUtil";
 
-const IMPL_NAME_BASE = "YamatoRedeemer";
+const IMPL_NAME_BASE = "YamatoWithdrawer";
 
 async function main() {
   await runUpgrade(IMPL_NAME_BASE, ["PledgeLib"]);

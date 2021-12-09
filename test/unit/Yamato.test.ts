@@ -275,15 +275,11 @@ describe("contract Yamato", function () {
     it(`succeeds to make a pledge and totalCollDiff>0 totalDebtDiff=0`, async function () {
       const toCollateralize = 1;
 
-      const statesBefore = await yamato.getStates();
-      const totalCollBefore = statesBefore[0];
-      const totalDebtBefore = statesBefore[1];
+      const [totalCollBefore, totalDebtBefore] = await yamato.getStates();
 
       await yamato.deposit({ value: toERC20(toCollateralize + "") });
 
-      const statesAfter = await yamato.getStates();
-      const totalCollAfter = statesAfter[0];
-      const totalDebtAfter = statesAfter[1];
+      const [totalCollAfter, totalDebtAfter] = await yamato.getStates();
 
       expect(totalCollAfter).to.gt(totalCollBefore);
       expect(totalDebtAfter).to.eq(totalDebtBefore);
@@ -397,13 +393,14 @@ describe("contract Yamato", function () {
         .mul(100)
         .div(MCR)
         .div(1e18 + "");
+
       await yamato.deposit({ value: toERC20(toCollateralize + "") });
+
+      const [totalCollBefore, totalDebtBefore] = await yamato.getStates();
+
       await yamato.borrow(toERC20(toBorrow + ""));
-      const _TCR = getTCR(
-        (await yamato.getStates())[0],
-        (await yamato.getStates())[1],
-        PRICE
-      );
+      const [totalCollAfter, totalDebtAfter] = await yamato.getStates();
+      const _TCR = getTCR(totalCollAfter, totalDebtAfter, PRICE);
 
       expect(_TCR).to.eq("13000");
 
@@ -411,6 +408,8 @@ describe("contract Yamato", function () {
 
       expect(pledge.coll).to.eq("1000000000000000000");
       expect(pledge.debt).to.eq("200000000000000000000000");
+      expect(totalCollAfter).to.eq(totalCollBefore);
+      expect(totalDebtAfter).to.be.gt(totalDebtBefore);
     });
     it(`should have zero ETH balance after issuance`, async function () {
       const toCollateralize = 1;
@@ -561,18 +560,22 @@ describe("contract Yamato", function () {
       const pledgeBefore = await yamato.getPledge(
         await yamato.signer.getAddress()
       );
+      const [totalCollBefore, totalDebtBefore] = await yamato.getStates();
 
-      expect(pledgeBefore.coll.toString()).to.eq("1000000000000000000");
-      expect(pledgeBefore.debt.toString()).to.eq(toERC20(toBorrow + ""));
+      expect(pledgeBefore.coll).to.eq("1000000000000000000");
+      expect(pledgeBefore.debt).to.eq(toERC20(toBorrow + ""));
 
       await yamato.repay(toERC20(toBorrow + ""));
 
       const pledgeAfter = await yamato.getPledge(
         await yamato.signer.getAddress()
       );
+      const [totalCollAfter, totalDebtAfter] = await yamato.getStates();
 
-      expect(pledgeAfter.coll.toString()).to.eq("1000000000000000000");
-      expect(pledgeAfter.debt.toString()).to.eq("0");
+      expect(pledgeAfter.coll).to.eq("1000000000000000000");
+      expect(pledgeAfter.debt).to.eq("0");
+      expect(totalCollAfter).to.be.eq(totalCollBefore);
+      expect(totalDebtAfter).to.be.lt(totalDebtBefore);
     });
     it(`should improve TCR`, async function () {
       const MCR = BigNumber.from(130);
@@ -686,7 +689,7 @@ describe("contract Yamato", function () {
 
       await yamato.setPledge(owner, {
         coll: 0,
-        debt: toERC20(toBorrow+""),
+        debt: toERC20(toBorrow + ""),
         isCreated: true,
         owner: owner,
         priority: 0,
@@ -783,7 +786,7 @@ describe("contract Yamato", function () {
       await expect(yamato.withdraw(toERC20(toCollateralize / 10 + ""))).to.not
         .reverted;
     });
-    it(`should reduce coll`, async function () {
+    it(`should reduce coll and totalColl`, async function () {
       const MCR = BigNumber.from(130);
       const toCollateralize = 1;
       const toBorrow = PRICE.mul(toCollateralize)
@@ -796,9 +799,10 @@ describe("contract Yamato", function () {
       const pledgeBefore = await yamato.getPledge(
         await yamato.signer.getAddress()
       );
+      const [totalCollBefore, totalDebtBefore] = await yamato.getStates();
 
-      expect(pledgeBefore.coll.toString()).to.eq("1000000000000000000");
-      expect(pledgeBefore.debt.toString()).to.eq("100000000000000000000000");
+      expect(pledgeBefore.coll).to.eq("1000000000000000000");
+      expect(pledgeBefore.debt).to.eq("100000000000000000000000");
 
       (<any>yamato.provider).send("evm_increaseTime", [60 * 60 * 24 * 3 + 1]);
       (<any>yamato.provider).send("evm_mine");
@@ -808,11 +812,14 @@ describe("contract Yamato", function () {
       const pledgeAfter = await yamato.getPledge(
         await yamato.signer.getAddress()
       );
+      const [totalCollAfter, totalDebtAfter] = await yamato.getStates();
 
       expect(pledgeAfter.coll.toString()).to.eq(
         toERC20((toCollateralize * 99) / 100 + "").toString()
       );
-      expect(pledgeAfter.debt.toString()).to.eq("100000000000000000000000");
+      expect(pledgeAfter.debt).to.eq("100000000000000000000000");
+      expect(totalCollAfter).to.be.lt(totalCollBefore);
+      expect(totalDebtAfter).to.eq(totalDebtBefore);
     });
     it(`can't be executed in the ICR < MCR`, async function () {
       const MCR = BigNumber.from(130);
@@ -994,6 +1001,18 @@ describe("contract Yamato", function () {
       expect(_pledge1.coll).to.eq("0");
       expect(_pledge2.coll).to.eq("0");
     });
+    it(`should reduce totalColl and totalDebt`, async function () {
+      const PRICE_A_BIT_DUMPED = PRICE.mul(65).div(100);
+      mockFeed.fetchPrice.returns(PRICE_A_BIT_DUMPED);
+      mockFeed.lastGoodPrice.returns(PRICE_A_BIT_DUMPED);
+
+      const [totalCollBefore, totalDebtBefore] = await yamato.getStates();
+      await yamato.connect(accounts[0]).redeem(toERC20(toBorrow + ""), false);
+      const [totalCollAfter, totalDebtAfter] = await yamato.getStates();
+
+      expect(totalCollAfter).to.lt(totalCollBefore);
+      expect(totalDebtAfter).to.lt(totalDebtBefore);
+    });
     it(`should improve TCR when TCR \> 1`, async function () {
       const PRICE_A_BIT_DUMPED = PRICE.mul(65).div(100);
       mockFeed.fetchPrice.returns(PRICE_A_BIT_DUMPED);
@@ -1042,7 +1061,7 @@ describe("contract Yamato", function () {
       expect(mockPool.useRedemptionReserve).to.have.callCount(0);
     });
     it(`should run useRedemptionReserve\(\) of Pool.sol when isCoreRedemption=true`, async function () {
-      mockPool.redemptionReserve.returns(PRICE.mul(1))
+      mockPool.redemptionReserve.returns(PRICE.mul(1));
       await yamato.connect(accounts[0]).redeem(toERC20(toBorrow + ""), true);
       expect(mockPool.useRedemptionReserve).to.have.calledOnce;
     });
@@ -1129,19 +1148,16 @@ describe("contract Yamato", function () {
     });
 
     it(`should improve TCR after sweeping`, async function () {
-      const _TCRBefore = getTCR(
-        (await yamato.getStates())[0],
-        (await yamato.getStates())[1],
-        PRICE_AFTER
-      );
+      const [totalCollBefore, totalDebtBefore] = await yamato.getStates();
+
+      const _TCRBefore = getTCR(totalCollBefore, totalDebtBefore, PRICE_AFTER);
       await (await yamato.connect(accounts[1]).sweep()).wait();
-      const _TCRAfter = getTCR(
-        (await yamato.getStates())[0],
-        (await yamato.getStates())[1],
-        PRICE_AFTER
-      );
+      const [totalCollAfter, totalDebtAfter] = await yamato.getStates();
+      const _TCRAfter = getTCR(totalCollAfter, totalDebtAfter, PRICE_AFTER);
 
       expect(_TCRAfter).to.gt(_TCRBefore);
+      expect(totalCollAfter).to.eq(totalCollBefore);
+      expect(totalDebtAfter).to.lt(totalDebtBefore);
     });
 
     it(`should run fetchPrice() of PriceFeed.sol and sendCurrency() of Pool.sol`, async function () {
