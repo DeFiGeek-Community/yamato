@@ -52,9 +52,18 @@ If not, please check that the npm dependencies are installed as expected referri
 
 - `npm run deploy:rinkeby:reset`
 - `npm run deploy:rinkeby` (with cached contracts / continue from resumed deployment)
-- `npm run verify:rinkeby:all`
-- `npm run upgrade:repayer`
+   - If etherscan verification is failed, restart that by `npm run verify:rinkeby:all`
+   - The deploy script is automatically handling the upgrade of latest implementation of UUPS
 - `npm run test:integration`
+   - Run this after deployment succeeded
+
+### Running upgrade
+- `npm run upgrade:repayer`
+- `npm run upgrade:redeemer`
+- `npm run upgrade:withdrawer`
+   - For other upgradeable contracts, add scripts to `./upgrades`
+- `npm run test:integration`
+   - Run this after upgrade succeeded
 
 #### For only etherscan verification
 
