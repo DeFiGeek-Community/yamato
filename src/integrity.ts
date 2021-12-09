@@ -156,29 +156,29 @@ export async function smokeTest() {
         Send money for repayment
     */
   let redeemeePledgeBeforeRepay = await Yamato.getPledge(_redeemeeAddr);
-  let d = redeemeePledgeBeforeRepay.debt
-  let b = await CJPY.balanceOf(_redeemeeAddr)
-  let lack:BigNumber = d.sub(b);
-  if( lack.gt(0) ) {
-    await CJPY.connect(redeemer).transfer(_redeemeeAddr, lack )
+  let d = redeemeePledgeBeforeRepay.debt;
+  let b = await CJPY.balanceOf(_redeemeeAddr);
+  let lack: BigNumber = d.sub(b);
+  if (lack.gt(0)) {
+    await CJPY.connect(redeemer).transfer(_redeemeeAddr, lack);
   }
 
   /*
         full repay()
     */
   await (
-    await Yamato.connect(redeemee).repay(d,
-      {
-        gasLimit: 1000000,
-      }
-    )
+    await Yamato.connect(redeemee).repay(d, {
+      gasLimit: 1000000,
+    })
   ).wait();
 
   /*
         check full repay
     */
   let redeemeeFullyRepaidPledge1 = await Yamato.getPledge(_redeemeeAddr);
-  console.log(`redeemeeFullyRepaidPledge1:fullRepay? ${redeemeeFullyRepaidPledge1}`);
+  console.log(
+    `redeemeeFullyRepaidPledge1:fullRepay? ${redeemeeFullyRepaidPledge1}`
+  );
 
   /*
         deposit() from zero pledge
@@ -222,7 +222,6 @@ export async function smokeTest() {
       gasLimit: 1000000,
     })
   ).wait();
-
 
   const redeemerCJPYBalance = await CJPY.balanceOf(_redeemerAddr);
   const redeemeeCJPYBalance = await CJPY.balanceOf(_redeemeeAddr);
