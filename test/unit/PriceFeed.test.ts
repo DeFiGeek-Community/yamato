@@ -122,7 +122,7 @@ describe("PriceFeed", function () {
 
   describe("constructor()", function () {
     it(`should NOT revoke ownership`, async function () {
-      expect(await feed.governance()).to.eq(await feed.signer.getAddress())
+      expect(await feed.governance()).to.eq(await feed.signer.getAddress());
     });
   });
   describe("fetchPrice()", function () {

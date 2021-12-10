@@ -56,6 +56,7 @@ contract CurrencyOSV2 is ICurrencyOS, UUPSBase {
             sstore(FEEPOOL_KEY, feePoolAddr)
         }
     }
+
     function setPriceFeed(address feedAddr) public onlyGovernance {
         bytes32 PRICEFEED_KEY = bytes32(
             keccak256(abi.encode(PRICEFEED_SLOT_ID))
