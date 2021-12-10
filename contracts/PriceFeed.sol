@@ -153,8 +153,6 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
         );
 
         _storeChainlinkPrice(chainlinkResponse);
-
-        revokeGovernance();
     }
 
     // --- Functions ---

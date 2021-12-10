@@ -120,6 +120,11 @@ describe("PriceFeed", function () {
     ]);
   });
 
+  describe("constructor()", function () {
+    it(`should NOT revoke ownership`, async function () {
+      expect(await feed.governance()).to.eq(await feed.signer.getAddress());
+    });
+  });
   describe("fetchPrice()", function () {
     it(`succeeds to get dec18 price from ChainLink`, async function () {
       let cPriceAtExecInEthUsd = 3201;

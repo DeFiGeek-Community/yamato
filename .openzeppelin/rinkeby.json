@@ -722,6 +722,11 @@
       "address": "0x778d08deE6dC17Bc135e9A34953062E16C5a1062",
       "txHash": "0x9d7c07a72e355c428674479370011459b2a4afde03e19e3b52120a8a7c6b2bb2",
       "kind": "uups"
+    },
+    {
+      "address": "0x5fE5e57384b485f9817f04E2373968c87956a226",
+      "txHash": "0x4c09b7d4e5953bec93597a3cdd7570a9c2ef941048c1417cdecc56bb30e14d52",
+      "kind": "uups"
     }
   ],
   "impls": {
@@ -8036,6 +8041,171 @@
           },
           "t_array(t_uint256)50_storage": {
             "label": "uint256[50]"
+          }
+        }
+      }
+    },
+    "f8fd5438d22ce7cfd9c123991ea2d10e4787baea3fe8fa3d5ee80a06aad28706": {
+      "address": "0x925C57e6dAABe94509cF14093406723Aa6776190",
+      "txHash": "0xf470a7409b1bde36751891a425611bb62039f34c061be482fea73d386d456ecf",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:21"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:26"
+          },
+          {
+            "contract": "ERC1967UpgradeUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:214"
+          },
+          {
+            "contract": "UUPSUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:80"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "governance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:20"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "pendingGovernance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:21"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "tester",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:22"
+          },
+          {
+            "contract": "CurrencyOSV2",
+            "label": "yamatoes",
+            "type": "t_array(t_address)dyn_storage",
+            "src": "contracts/CurrencyOSV2.sol:33"
+          }
+        ],
+        "types": {
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_bool": {
+            "label": "bool"
+          }
+        }
+      }
+    },
+    "9cdc80517ef9dc77a8ed1336d0395ee728c963cacdba84ed1b5ca14f3cc7507e": {
+      "address": "0xdA0C4D8a68A508440098339c64C555196B8321a1",
+      "txHash": "0x8f427c5bf2fe7d1b0a782762ad539cfc7700b9f6ad1edeef8ca05833c4f40498",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:21"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:26"
+          },
+          {
+            "contract": "ERC1967UpgradeUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:214"
+          },
+          {
+            "contract": "UUPSUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:80"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "governance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:20"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "pendingGovernance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:21"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "tester",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:22"
+          },
+          {
+            "contract": "PriceFeed",
+            "label": "lastGoodPrice",
+            "type": "t_uint256",
+            "src": "contracts/PriceFeed.sol:74"
+          },
+          {
+            "contract": "PriceFeed",
+            "label": "lastSeen",
+            "type": "t_uint256",
+            "src": "contracts/PriceFeed.sol:75"
+          },
+          {
+            "contract": "PriceFeed",
+            "label": "status",
+            "type": "t_enum(Status)3896",
+            "src": "contracts/PriceFeed.sol:108"
+          }
+        ],
+        "types": {
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_enum(Status)3896": {
+            "label": "enum PriceFeed.Status",
+            "members": [
+              "chainlinkWorking",
+              "usingTellorChainlinkUntrusted",
+              "bothOraclesUntrusted",
+              "usingTellorChainlinkFrozen",
+              "usingChainlinkTellorUntrusted"
+            ]
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_bool": {
+            "label": "bool"
           }
         }
       }

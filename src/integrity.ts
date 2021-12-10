@@ -230,22 +230,25 @@ export async function smokeTest() {
   const redeemeeDebt = (await Yamato.getPledge(_redeemeeAddr)).debt;
 
   const [totalColl, totalDebt] = await Yamato.getStates();
+  const totalSupply = await CJPY.totalSupply();
 
   const poolRedemptionReserve = await Pool.redemptionReserve();
   const poolSweepReserve = await Pool.sweepReserve();
 
   console.log(`
-     \\ alice borrow /        \\ bob borrow /       \\ alice&bob fee part1 /   \\ alice&bob fee part2 /             \\ alice&bob debt /
-    redeemerCJPYBalance  +  redeemeeCJPYBalance  +  poolRedemptionReserve     +    poolSweepReserve           =  redeemerDebt + redeemeeDebt = totalDebt
+    This integrity test only works when there's only alice and bob
 
- s${redeemerCJPYBalance} + ${redeemeeCJPYBalance} + ${poolRedemptionReserve} + ${poolSweepReserve}       =  ${redeemerDebt} + ${redeemeeDebt} = ${totalDebt}
+     \\ alice borrow /        \\ bob borrow /       \\ alice&bob fee part1 /   \\ alice&bob fee part2 /             \\ alice&bob debt /
+    redeemerCJPYBalance  +  redeemeeCJPYBalance  +  poolRedemptionReserve     +    poolSweepReserve           =  redeemerDebt + redeemeeDebt = totalDebt = totalSupply
+
+    ${redeemerCJPYBalance} + ${redeemeeCJPYBalance} + ${poolRedemptionReserve} + ${poolSweepReserve}       =  ${redeemerDebt} + ${redeemeeDebt} = ${totalDebt} = ${totalSupply}
 
     ${redeemerCJPYBalance
       .add(redeemeeCJPYBalance)
       .add(poolRedemptionReserve)
       .add(poolSweepReserve)} = ${redeemerDebt.add(
     redeemeeDebt
-  )}  = ${totalDebt}
+  )}  = ${totalDebt} = ${totalSupply}
     `);
 }
 
