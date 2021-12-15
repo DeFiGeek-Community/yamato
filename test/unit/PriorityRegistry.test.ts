@@ -319,7 +319,7 @@ describe("contract PriorityRegistry", function () {
         BigNumber.from("0"),
         true,
         _owner,
-        BigNumber.from(2).pow(256).sub(1).sub(35),
+        BigNumber.from(2).pow(256).sub(1).sub(36),
       ];
 
       await expect(
