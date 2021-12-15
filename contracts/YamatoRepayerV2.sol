@@ -10,7 +10,6 @@ pragma solidity 0.8.4;
 //solhint-disable no-inline-assembly
 
 import "./Pool.sol";
-import "./PriorityRegistry.sol";
 import "./YMT.sol";
 import "./PriceFeed.sol";
 import "./Dependencies/YamatoAction.sol";
@@ -21,6 +20,7 @@ import "./Interfaces/IFeePool.sol";
 import "./Interfaces/ICurrencyOS.sol";
 import "./Interfaces/ICurrency.sol";
 import "./Interfaces/IYamatoRepayer.sol";
+import "./Interfaces/IPriorityRegistry.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "hardhat/console.sol";

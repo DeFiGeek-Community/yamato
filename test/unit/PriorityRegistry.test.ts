@@ -229,16 +229,10 @@ describe("contract PriorityRegistry", function () {
 
       expect(pledgeLengthAfter).to.eq(pledgeLengthBefore.add(1));
     });
-    it(`succeeds to update current LICR`, async function () {
-      // TODO
-    });
-    it(`succeeds to back-scan the very next current LICR`, async function () {
-      // TODO
-    });
   });
 
   describe("remove()", function () {
-    it(`fails to remove non-zero pledge`, async function () {
+    it(`succeeds to remove non-zero pledge with less than 99 priority`, async function () {
       const _collBefore = BigNumber.from("0");
       const _debtBefore = BigNumber.from("410001000000000000000000");
       const _owner = address0;
@@ -253,11 +247,83 @@ describe("contract PriorityRegistry", function () {
         BigNumber.from("0"),
         true,
         _owner,
-        1,
+        99,
+      ];
+
+      await expect(yamatoDummy.bypassRemove(toTyped(_nonSweptPledge))).to.be.not
+        .reverted;
+    });
+    it(`fails to remove non-zero pledge with more than 100`, async function () {
+      const _collBefore = BigNumber.from("0");
+      const _debtBefore = BigNumber.from("410001000000000000000000");
+      const _owner = address0;
+
+      // Note: Virtually it was a pledge with ICR=30% and now it had been redeemed. So it should be upserted to ICR=0 area.
+      const _sludgePledge = [_collBefore, _debtBefore, true, _owner, 3000];
+      await (await yamatoDummy.bypassUpsert(toTyped(_sludgePledge))).wait();
+
+      // Note: Sludge pledge is not swept in the Yamato.sol and now it is "logless zero pledge" in the Yamato.sol-side. So it should be removed.
+      const _nonSweptPledge = [
+        _collBefore,
+        BigNumber.from("0"),
+        true,
+        _owner,
+        100,
       ];
 
       await expect(
         yamatoDummy.bypassRemove(toTyped(_nonSweptPledge))
+      ).to.be.revertedWith(
+        "Unintentional priority is given to the remove function."
+      );
+    });
+    it(`succeeds to remove non-zero pledge with more than maxint-35`, async function () {
+      const _collBefore = BigNumber.from("1000000000000000000");
+      const _debtBefore = BigNumber.from("0");
+      const _owner = address0;
+
+      // Note: Virtually it was a pledge with ICR=30% and now it had been redeemed. So it should be upserted to ICR=0 area.
+      const _depositedPledge = [
+        _collBefore,
+        _debtBefore,
+        true,
+        _owner,
+        BigNumber.from(2).pow(256).sub(1),
+      ];
+      await (await yamatoDummy.bypassUpsert(toTyped(_depositedPledge))).wait();
+
+      // Note: Sludge pledge is not swept in the Yamato.sol and now it is "logless zero pledge" in the Yamato.sol-side. So it should be removed.
+      const _fullWithdrawPledge = [
+        BigNumber.from("0"),
+        BigNumber.from("0"),
+        true,
+        _owner,
+        BigNumber.from(2).pow(256).sub(1).sub(35),
+      ];
+
+      await expect(yamatoDummy.bypassRemove(toTyped(_fullWithdrawPledge))).to.be
+        .not.reverted;
+    });
+    it(`fails to remove non-zero pledge with more than maxint-36`, async function () {
+      const _collBefore = BigNumber.from("1000000000000000000");
+      const _debtBefore = BigNumber.from("0");
+      const _owner = address0;
+
+      // Note: Virtually it was a pledge with ICR=30% and now it had been redeemed. So it should be upserted to ICR=0 area.
+      const _depositedPledge = [_collBefore, _debtBefore, true, _owner, 3000];
+      await (await yamatoDummy.bypassUpsert(toTyped(_depositedPledge))).wait();
+
+      // Note: Sludge pledge is not swept in the Yamato.sol and now it is "logless zero pledge" in the Yamato.sol-side. So it should be removed.
+      const _fullWithdrawPledge = [
+        BigNumber.from("0"),
+        BigNumber.from("0"),
+        true,
+        _owner,
+        BigNumber.from(2).pow(256).sub(1).sub(35),
+      ];
+
+      await expect(
+        yamatoDummy.bypassRemove(toTyped(_fullWithdrawPledge))
       ).to.be.revertedWith(
         "Unintentional priority is given to the remove function."
       );
@@ -288,7 +354,7 @@ describe("contract PriorityRegistry", function () {
       expect(pledgeLengthAfter).to.eq(pledgeLengthBefore.sub(1));
     });
 
-    it(`succeeds to remove maxint a.k.a. full-withdrawal pledge`, async function () {
+    it(`succeeds to remove maxint a.k.a. an likely-impossible full-withdrawal pledge`, async function () {
       const _collBefore = BigNumber.from("1000000000000000000");
       const _debtBefore = BigNumber.from("0");
       const _owner = address0;
@@ -299,6 +365,35 @@ describe("contract PriorityRegistry", function () {
 
       // Note: A deposited pledge has just been withdrawn and priority is maxint.
       const maxPriority = BigNumber.from(2).pow(256).sub(1).toString();
+
+      // Note: This pledge is already compensated his coll to user.
+      const _withdrawnPledge = [
+        BigNumber.from("0"),
+        BigNumber.from("0"),
+        true,
+        _owner,
+        maxPriority,
+      ];
+
+      const pledgeLengthBefore = await priorityRegistry.pledgeLength();
+      await (await yamatoDummy.bypassRemove(toTyped(_withdrawnPledge))).wait();
+      const pledgeLengthAfter = await priorityRegistry.pledgeLength();
+
+      expect(pledgeLengthAfter).to.eq(pledgeLengthBefore.sub(1));
+    });
+
+    it(`succeeds to remove floor(maxint) a.k.a. a good full-withdrawal pledge`, async function () {
+      const _collBefore = BigNumber.from("1000000000000000000");
+      const _debtBefore = BigNumber.from("0");
+      const _owner = address0;
+
+      // Note: newly deposited
+      const _newPledge = [_collBefore, _debtBefore, true, _owner, 0];
+      await (await yamatoDummy.bypassUpsert(toTyped(_newPledge))).wait();
+
+      // Note: A deposited pledge has just been withdrawn and priority is maxint.
+      let maxPriority = BigNumber.from(2).pow(256).sub(1).toString();
+      maxPriority = maxPriority.slice(0, maxPriority.length - 2) + "00";
 
       // Note: This pledge is already compensated his coll to user.
       const _withdrawnPledge = [

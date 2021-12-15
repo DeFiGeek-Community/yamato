@@ -898,12 +898,62 @@ describe("contract Yamato", function () {
 
       expect(mockPriorityRegistry.remove).to.have.calledOnce;
     });
+    it(`should neutralize a pledge even after full repay`, async function () {
+      const MCR = BigNumber.from(130);
+      const toCollateralize = 1;
+      await yamato.deposit({ value: toERC20(toCollateralize + "") });
+
+      const _pledgeBefore = await yamato.getPledge(
+        await yamato.signer.getAddress()
+      );
+      expect(_pledgeBefore.isCreated).to.be.true;
+
+      await (await yamato.withdraw(toERC20(toCollateralize + ""))).wait();
+      const _pledgeAfter = await yamato.getPledge(
+        await yamato.signer.getAddress()
+      );
+      expect(_pledgeAfter.isCreated).to.be.false;
+
+      expect(mockPriorityRegistry.remove).to.have.calledOnce;
+    });
     it(`should run sendETH() of Pool.sol`, async function () {
       const toCollateralize = 1;
       await yamato.deposit({ value: toERC20(toCollateralize + "") });
       await yamato.withdraw(toERC20(toCollateralize + ""));
 
       expect(mockPool.sendETH).to.have.calledOnce;
+    });
+
+    describe("Context - PriorityRegistry", async function () {
+      it("should neutralize a pledge even after full repay", async function () {
+        await (
+          await yamato.setDeps(
+            yamatoDepositor.address,
+            yamatoBorrower.address,
+            yamatoRepayer.address,
+            yamatoWithdrawer.address,
+            yamatoRedeemer.address,
+            yamatoRedeemer.address,
+            mockPool.address,
+            priorityRegistry.address
+          )
+        ).wait();
+
+        const MCR = BigNumber.from(130);
+        const toCollateralize = 1;
+        await yamato.deposit({ value: toERC20(toCollateralize + "") });
+
+        const _pledgeBefore = await yamato.getPledge(
+          await yamato.signer.getAddress()
+        );
+        expect(_pledgeBefore.isCreated).to.be.true;
+
+        await (await yamato.withdraw(toERC20(toCollateralize + ""))).wait();
+        const _pledgeAfter = await yamato.getPledge(
+          await yamato.signer.getAddress()
+        );
+        expect(_pledgeAfter.isCreated).to.be.false;
+      });
     });
   });
 

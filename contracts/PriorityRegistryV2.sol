@@ -18,7 +18,7 @@ import "./Dependencies/LiquityMath.sol";
 import "hardhat/console.sol";
 
 // @dev For gas saving reason, we use percent denominated ICR only in this contract.
-contract PriorityRegistry is IPriorityRegistry, YamatoStore {
+contract PriorityRegistryV2 is IPriorityRegistry, YamatoStore {
     using SafeMath for uint256;
     using PledgeLib for IYamato.Pledge;
 
@@ -50,12 +50,11 @@ contract PriorityRegistry is IPriorityRegistry, YamatoStore {
         onlyYamato
         returns (uint256)
     {
-        // uint256 gasStart = gasleft();
+        uint256 _oldICRpercent = floor(_pledge.priority);
         require(
-            !(_pledge.coll == 0 && _pledge.debt == 0 && _pledge.priority != 0),
+            !(_pledge.coll == 0 && _pledge.debt == 0 && _oldICRpercent != 0),
             "Upsert Error: The logless zero pledge cannot be upserted. It should be removed."
         );
-        uint256 _oldICRpercent = floor(_pledge.priority);
 
         /*
             1. delete current pledge from sorted pledge and update LICR
@@ -122,6 +121,7 @@ contract PriorityRegistry is IPriorityRegistry, YamatoStore {
         @dev It removes "just full swept" or "just full withdrawn" pledges.
     */
     function remove(IYamato.Pledge memory _pledge) public override onlyYamato {
+        uint256 _oldICRpercent = floor(_pledge.priority);
         /*
             1. Delete a valid pledge
         */
@@ -137,7 +137,7 @@ contract PriorityRegistry is IPriorityRegistry, YamatoStore {
 
         // Note: In full withdrawal scenario, this value is MAX_UINT
         require(
-            _pledge.priority == 0 || _pledge.priority == 2**256 - 1,
+            _oldICRpercent == 0 || _oldICRpercent == floor(2**256 - 1),
             "Unintentional priority is given to the remove function."
         );
 
