@@ -14,6 +14,8 @@ import "hardhat/console.sol";
 //solhint-disable no-inline-assembly
 
 contract TellorCallerMock is OracleMockBase, ITellorCaller {
+    uint public lastSeen;
+
     constructor() {
         setPriceToDefault();
     }
@@ -30,7 +32,7 @@ contract TellorCallerMock is OracleMockBase, ITellorCaller {
         )
     {
         require(_requestId == 59, "Only ETH/JPY is supported.");
-        return (true, uint256(lastPrice), block.timestamp);
+        return (true, uint256(lastPrice), lastSeen);
     }
 
     function simulatePriceMove(uint256 deviation, bool sign)
@@ -51,11 +53,23 @@ contract TellorCallerMock is OracleMockBase, ITellorCaller {
                 setPriceToDefault();
                 value = _lastPrice;
             }
-            lastPrice = int256(value);
+            _update(int256(value));
         }
     }
 
     function setPriceToDefault() public override onlyOwner {
-        lastPrice = 410000000000; // 410000 JPY per ETH
+        _update(410000000000);
     }
+
+
+    function _update(int256 price) internal {
+        lastPrice = price; // 410000 JPY per ETH
+        lastSeen = block.timestamp;
+    }
+
+    function setLastPrice(int256 _price) public override onlyOwner {
+        super.setLastPrice(_price);
+        _update(_price);
+    }
+
 }
