@@ -14,7 +14,7 @@ import "hardhat/console.sol";
 //solhint-disable no-inline-assembly
 
 contract TellorCallerMock is OracleMockBase, ITellorCaller {
-    uint public lastSeen;
+    uint256 public lastSeen;
 
     constructor() {
         setPriceToDefault();
@@ -61,7 +61,6 @@ contract TellorCallerMock is OracleMockBase, ITellorCaller {
         _update(410000000000);
     }
 
-
     function _update(int256 price) internal {
         lastPrice = price; // 410000 JPY per ETH
         lastSeen = block.timestamp;
@@ -71,5 +70,4 @@ contract TellorCallerMock is OracleMockBase, ITellorCaller {
         super.setLastPrice(_price);
         _update(_price);
     }
-
 }

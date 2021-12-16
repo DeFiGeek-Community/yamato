@@ -107,9 +107,7 @@ describe("ChainlinkMock", function () {
     it(`succeeds to update a price for Chainlink`, async function () {
       // the price deviation shall be within 1% range.
       // the roundId shall be incremented.
-      let nextRoundId = chainlinkInitialRoundId
-        .add(1)
-        .toString();
+      let nextRoundId = chainlinkInitialRoundId.add(1).toString();
 
       await chainlinkMockEthUsd.simulatePriceMove();
       let [roundId, answerEthUsd, startedAt, updatedAt, answeredInRound] =

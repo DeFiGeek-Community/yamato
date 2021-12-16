@@ -52,7 +52,7 @@ contract ChainLinkMock is OracleMockBase, AggregatorV3Interface {
         if (symbol == JPYUSD) {
             lastPrice = 877000;
         } // 0.00877 JPYUSD = 114 USDJPY
-        _update(lastRoundId+1, lastPrice, lastRoundId);
+        _update(lastRoundId + 1, lastPrice, lastRoundId);
     }
 
     function latestRoundData()
@@ -150,11 +150,15 @@ contract ChainLinkMock is OracleMockBase, AggregatorV3Interface {
         return 1;
     }
 
-    function _update(uint80 round, int256 answer, uint80 answeredInRound) internal {
+    function _update(
+        uint80 round,
+        int256 answer,
+        uint80 answeredInRound
+    ) internal {
         lastRoundId = round;
         prevAnswers[round] = answer;
         prevTimestamps[round] = block.timestamp;
-        prevAnsweredInRounds[round] = answeredInRound;        
+        prevAnsweredInRounds[round] = answeredInRound;
     }
 
     function setLastPrice(int256 _price) public override onlyOwner {
@@ -164,5 +168,4 @@ contract ChainLinkMock is OracleMockBase, AggregatorV3Interface {
         _update(currentRoundId, lastPrice, lastPriceUpdateRoundId);
         lastPriceUpdateRoundId = currentRoundId;
     }
-
 }
