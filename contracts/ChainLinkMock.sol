@@ -52,6 +52,7 @@ contract ChainLinkMock is OracleMockBase, AggregatorV3Interface {
         if (symbol == JPYUSD) {
             lastPrice = 877000;
         } // 0.00877 JPYUSD = 114 USDJPY
+        _update(lastRoundId + 1, lastPrice, lastRoundId);
     }
 
     function latestRoundData()
@@ -99,10 +100,7 @@ contract ChainLinkMock is OracleMockBase, AggregatorV3Interface {
             lastPriceUpdateRoundId = currentRoundId;
         }
 
-        lastRoundId = currentRoundId;
-        prevAnswers[currentRoundId] = answer;
-        prevTimestamps[currentRoundId] = block.timestamp;
-        prevAnsweredInRounds[currentRoundId] = answeredInRound;
+        _update(currentRoundId, answer, answeredInRound);
     }
 
     function decimals() external view virtual override returns (uint8) {
@@ -150,5 +148,24 @@ contract ChainLinkMock is OracleMockBase, AggregatorV3Interface {
 
     function version() external view virtual override returns (uint256) {
         return 1;
+    }
+
+    function _update(
+        uint80 round,
+        int256 answer,
+        uint80 answeredInRound
+    ) internal {
+        lastRoundId = round;
+        prevAnswers[round] = answer;
+        prevTimestamps[round] = block.timestamp;
+        prevAnsweredInRounds[round] = answeredInRound;
+    }
+
+    function setLastPrice(int256 _price) public override onlyOwner {
+        super.setLastPrice(_price);
+
+        uint80 currentRoundId = lastRoundId + 1;
+        _update(currentRoundId, lastPrice, lastPriceUpdateRoundId);
+        lastPriceUpdateRoundId = currentRoundId;
     }
 }

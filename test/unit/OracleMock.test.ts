@@ -19,7 +19,7 @@ let tellorCallerMockEthJpy: TellorCallerMock;
 let ethUsdDefaultPrice = 410000000000;
 let jpyUsdDefaultPrice = 877000;
 let ethJpyDefaultPrice = 410000000000;
-let chainlinkInitialRoundId = "30000000000000000001";
+let chainlinkInitialRoundId = BigNumber.from("30000000000000000001").add(1);
 let priceDeviationRange = 0.01;
 let accounts;
 
@@ -75,7 +75,7 @@ describe("ChainlinkMock", function () {
       let [roundId, answerEthUsd, startedAt, updatedAt, answeredInRound] =
         await chainlinkMockEthUsd.latestRoundData();
       expect(answerEthUsd.toNumber()).to.eq(ethUsdDefaultPrice);
-      expect(roundId.toString()).to.eq(chainlinkInitialRoundId);
+      expect(roundId.toString()).to.eq(chainlinkInitialRoundId.add(2));
 
       const jpyUsdLastPrice = 1100000;
       await chainlinkMockJpyUsd.setLastPrice(jpyUsdLastPrice);
@@ -84,7 +84,7 @@ describe("ChainlinkMock", function () {
       let [roundId2, answerJpyUsd, startedAt2, updatedAt2, answeredInRound2] =
         await chainlinkMockJpyUsd.latestRoundData();
       expect(answerJpyUsd.toNumber()).to.eq(jpyUsdDefaultPrice);
-      expect(roundId2.toString()).to.eq(chainlinkInitialRoundId);
+      expect(roundId2.toString()).to.eq(chainlinkInitialRoundId.add(2));
     });
   });
 
@@ -107,9 +107,7 @@ describe("ChainlinkMock", function () {
     it(`succeeds to update a price for Chainlink`, async function () {
       // the price deviation shall be within 1% range.
       // the roundId shall be incremented.
-      let nextRoundId = BigNumber.from(chainlinkInitialRoundId)
-        .add(1)
-        .toString();
+      let nextRoundId = chainlinkInitialRoundId.add(1).toString();
 
       await chainlinkMockEthUsd.simulatePriceMove();
       let [roundId, answerEthUsd, startedAt, updatedAt, answeredInRound] =

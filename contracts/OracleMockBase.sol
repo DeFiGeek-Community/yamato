@@ -19,7 +19,7 @@ abstract contract OracleMockBase {
         owner = msg.sender;
     }
 
-    function setLastPrice(int256 _price) public onlyOwner {
+    function setLastPrice(int256 _price) public virtual onlyOwner {
         lastPrice = _price;
         lastBlockNumber = block.number;
         owner = msg.sender;
