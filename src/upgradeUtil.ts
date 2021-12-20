@@ -74,14 +74,19 @@ export async function runUpgrade(implNameBase, linkings = []) {
     console.log(`${inst.address} is upgraded to ${implName}`);
 
     const implAddr = await (<any>inst).getImplementation();
-    execSync(
-      `npm run verify:rinkeby -- --contract contracts/${implName}.sol:${implName} ${implAddr}`
-    );
-    console.log(`Verified ${implAddr}`);
-    writeFileSync(
-      getDeploymentAddressPathWithTag(implName, "UUPSImpl"),
-      implAddr
-    );
+    const implPath = getDeploymentAddressPathWithTag(implNameBase, "UUPSImpl");
+
+    writeFileSync(implPath, implAddr);
+    console.log(`Saved ${implAddr} to ${implPath}`);
+
+    try {
+      execSync(
+        `npm run verify:rinkeby -- --contract contracts/${implName}.sol:${implName} ${implAddr}`
+      );
+      console.log(`Verified ${implAddr}`);
+    } catch (e) {
+      console.error(e.message);
+    }
   }
 }
 

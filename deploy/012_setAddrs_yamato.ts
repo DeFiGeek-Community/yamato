@@ -39,11 +39,20 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const _poolAddr = readFileSync(
     getDeploymentAddressPathWithTag("Pool", "ERC1967Proxy")
   ).toString();
-  let _priorityRegistryAddr = readFileSync(
+  const _priorityRegistryAddr = readFileSync(
     getDeploymentAddressPathWithTag("PriorityRegistry", "ERC1967Proxy")
   ).toString();
 
   const Yamato = new Contract(_yamatoAddr, genABI("Yamato"), p);
+
+  if (await Yamato.permitDeps(_yamatoAddr)) return;
+  if (await Yamato.permitDeps(_yamatoDepositorAddr)) return;
+  if (await Yamato.permitDeps(_yamatoBorrowerAddr)) return;
+  if (await Yamato.permitDeps(_yamatoRepayerAddr)) return;
+  if (await Yamato.permitDeps(_yamatoRedeemerAddr)) return;
+  if (await Yamato.permitDeps(_yamatoSweeperAddr)) return;
+  if (await Yamato.permitDeps(_poolAddr)) return;
+  if (await Yamato.permitDeps(_priorityRegistryAddr)) return;
 
   await (
     await Yamato.connect(getFoundation()).setDeps(
