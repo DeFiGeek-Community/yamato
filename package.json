@@ -26,6 +26,7 @@
     "test:integration": "hardhat run src/integrity.ts",
     "test:reset": "rm -f ./deployments/localnet/*",
     "upgrade:currencyOS": "hardhat run upgrade/004_upgrade_CurrencyOS.ts --network rinkeby",
+    "upgrade:pool": "hardhat run upgrade/006_upgrade_Pool.ts --network rinkeby",
     "upgrade:priorityRegistry": "hardhat run upgrade/005_upgrade_PriorityRegistry.ts --network rinkeby",
     "upgrade:redeemer": "hardhat run upgrade/002_upgrade_YamatoRedeemer.ts --network rinkeby",
     "upgrade:repayer": "hardhat run upgrade/001_upgrade_YamatoRepayer.ts --network rinkeby",
