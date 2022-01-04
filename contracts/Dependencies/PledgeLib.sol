@@ -59,6 +59,21 @@ library PledgeLib {
             );
     }
 
+    function clone(IYamato.Pledge memory _pledge)
+        public
+        view
+        returns (IYamato.Pledge memory)
+    {
+        return
+            IYamato.Pledge(
+                _pledge.coll,
+                _pledge.debt,
+                _pledge.isCreated,
+                _pledge.owner,
+                _pledge.priority
+            );
+    }
+
     function addDebt(IYamato.Pledge memory _pledge, uint256 _adder)
         public
         view

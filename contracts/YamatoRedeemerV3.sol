@@ -206,17 +206,24 @@ contract YamatoRedeemerV3 is IYamatoRedeemer, YamatoAction {
         uint256 icr = sPledge.getICR(feed());
         uint256 mcr = uint256(IYamato(yamato()).MCR()) * 100;
 
-        if(10000 < icr && icr < mcr) {
-
-            // Note: Risky pledges. 10000<ICR<13000 redemption recovers ICR and calculations are tricky. 
-            uint256 cappedDebtAmount = sPledge.debt * (mcr - icr) / icr;
-            if (cappedDebtAmount < currencyAmount) {
-                redemptionAmount = cappedDebtAmount;
-                ethToBeExpensed = cappedDebtAmount / ethPriceInCurrency;
-                reminder = currencyAmount - cappedDebtAmount;
+        if (10000 < icr && icr < mcr) {
+            // Note: Risky pledges. 10000<ICR<13000 redemption recovers ICR and calculations are tricky.
+            uint256 cappedRedemptionAmount = _calcCappedRedemptionAmount(
+                sPledge,
+                mcr,
+                ethPriceInCurrency
+            );
+            if (cappedRedemptionAmount < currencyAmount) {
+                redemptionAmount = cappedRedemptionAmount;
+                ethToBeExpensed =
+                    (cappedRedemptionAmount * 1e18) /
+                    ethPriceInCurrency;
+                reminder = currencyAmount - cappedRedemptionAmount;
             } else {
                 redemptionAmount = currencyAmount;
-                ethToBeExpensed = (redemptionAmount * 1e18) / ethPriceInCurrency;
+                ethToBeExpensed =
+                    (redemptionAmount * 1e18) /
+                    ethPriceInCurrency;
                 reminder = 0;
             }
         } else if (icr <= 10000) {
@@ -227,12 +234,15 @@ contract YamatoRedeemerV3 is IYamatoRedeemer, YamatoAction {
                 reminder = currencyAmount - collValuation;
             } else {
                 redemptionAmount = currencyAmount;
-                ethToBeExpensed = (redemptionAmount * 1e18) / ethPriceInCurrency;
+                ethToBeExpensed =
+                    (redemptionAmount * 1e18) /
+                    ethPriceInCurrency;
                 reminder = 0;
             }
         } else {
-            // Note: Safe pledges
-            revert("Redemption target can't be ICR>MCR.");
+            // Note: Skip safe pledges
+            revert("Can't come here");
+            // return (sPledge, currencyAmount);
         }
 
         /*
@@ -241,5 +251,34 @@ contract YamatoRedeemerV3 is IYamatoRedeemer, YamatoAction {
         sPledge.coll -= ethToBeExpensed; // Note: storage variable in the internal func doesn't change state!
         sPledge.debt -= redemptionAmount;
         return (sPledge, reminder);
+    }
+
+    function _calcCappedRedemptionAmount(
+        IYamato.Pledge memory pledge,
+        uint256 mcr,
+        uint256 ethPriceInCurrency
+    ) internal view returns (uint256) {
+        IYamato.Pledge memory initialPledge = pledge.clone();
+        uint256 icr = initialPledge.getICR(feed());
+
+        uint256 acmCappedRedemptionAmount;
+        for (uint256 i = 0; i < 30; i++) {
+            /*
+                mcrDebt = debt + diff
+                diff = mcrDebt - debt
+                mcrDebt = debt / icr * mcr = (mcr/icr) * debt
+                diff = (mcr/icr) * debt - debt
+                diff = (mcr/icr - 1) * debt
+                diff = debt  * (mcr - icr) / icr
+            */
+            acmCappedRedemptionAmount = (pledge.debt * (mcr - icr)) / icr;
+            pledge.debt -= acmCappedRedemptionAmount;
+            icr = pledge.getICR(feed());
+            if (icr >= mcr) {
+                return initialPledge.debt - pledge.debt;
+            } else {
+                // continue loop (normally only single loop would be executed)
+            }
+        }
     }
 }
