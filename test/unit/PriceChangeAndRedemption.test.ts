@@ -37,6 +37,7 @@ import {
   PriorityRegistry__factory,
 } from "../../typechain";
 import { getProxy, getLinkedProxy } from "../../src/testUtil";
+import { isToken } from "typescript";
 
 chai.use(smock.matchers);
 chai.use(solidity);
@@ -191,9 +192,12 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
     let toBorrow;
     let redeemer;
     let redeemee;
+    let redeemee2;
+    let redeemee3;
+    let redeemee4;
     let anotherRedeemee;
 
-    describe("Context - with dump", function () {
+    describe("Context - with 50% dump", function () {
       beforeEach(async () => {
         redeemer = accounts[0];
         redeemee = accounts[1];
@@ -270,8 +274,182 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         expect(redeemedPledgeAfter.priority).to.be.eq(0);
       });
     });
+    describe("Context - with 1% dump", function () {
+      beforeEach(async () => {
+        redeemer = accounts[0];
+        redeemee = accounts[1];
+        redeemee2 = accounts[2];
+        redeemee3 = accounts[3];
+        redeemee4 = accounts[4];
 
-    describe("Context - without dump", function () {
+        toCollateralize = 1;
+        toBorrow = (await PriceFeed.lastGoodPrice())
+          .mul(toCollateralize)
+          .mul(100)
+          .div(MCR)
+          .div(1e18 + "");
+
+        /* Get redemption budget by her own */
+        await Yamato.connect(redeemer).deposit({
+          value: toERC20(toCollateralize * 10.1 + ""),
+        });
+        await Yamato.connect(redeemer).borrow(toERC20(toBorrow.mul(10) + ""));
+
+        /* Set the only and to-be-lowest ICR */
+        await Yamato.connect(redeemee4).deposit({
+          value: toERC20(toCollateralize + ""),
+        });
+        await Yamato.connect(redeemee4).borrow(toERC20(toBorrow + ""));
+
+        await Yamato.connect(redeemee3).deposit({
+          value: toERC20(toCollateralize + ""),
+        });
+        await Yamato.connect(redeemee3).borrow(toERC20(toBorrow + ""));
+
+        await Yamato.connect(redeemee2).deposit({
+          value: toERC20(toCollateralize + ""),
+        });
+        await Yamato.connect(redeemee2).borrow(toERC20(toBorrow + ""));
+
+        await Yamato.connect(redeemee).deposit({
+          value: toERC20(toCollateralize * 7 + ""),
+        });
+        await Yamato.connect(redeemee).borrow(toERC20(toBorrow.mul(7) + ""));
+
+        /* Market Dump */
+        await (await ChainLinkEthUsd.setLastPrice("390000000000")).wait(); //dec8
+        await (await Tellor.setLastPrice("390000000000")).wait(); //dec8
+      });
+
+      it.only(`should redeem all pledges with small CJPY amount even if there's a huge pledge`, async function () {
+        // Note: If 10000<ICR<MCR then redemption amount shall be limited to "pledge.debt * (MCR - ICR) / ICR"; otherwise, full redemption.
+        let redeemerAddr = await redeemer.getAddress();
+        let redeemeeAddr = await redeemee.getAddress();
+        let redeemeeAddr4 = await redeemee4.getAddress();
+        const dumpledPrice = await PriceFeed.lastGoodPrice();
+
+        const redeemedPledgeBefore = await Yamato.getPledge(redeemeeAddr);
+        const redeemedPledge4Before = await Yamato.getPledge(redeemeeAddr4);
+        const totalSupplyBefore = await CJPY.totalSupply();
+        const redeemerCJPYBalanceBefore = await CJPY.balanceOf(redeemerAddr);
+        const redeemerETHBalanceBefore = await Yamato.provider.getBalance(
+          redeemerAddr
+        );
+
+        toBorrow = dumpledPrice
+          .mul(toCollateralize)
+          .mul(100)
+          .div(MCR)
+          .div(1e18 + "");
+
+        // pledge loop and traversing redemption must be cheap
+        expect(
+          await Yamato.estimateGas.redeem(toERC20(toBorrow.mul(9) + ""), false)
+        ).to.be.lt(1500000);
+
+        const txReceipt = await (
+          await Yamato.connect(redeemer).redeem(
+            toERC20(toBorrow.mul(9) + ""),
+            false
+          )
+        ).wait();
+
+        const redeemedPledgeAfter = await Yamato.getPledge(redeemeeAddr);
+        const redeemedPledge4After = await Yamato.getPledge(redeemeeAddr4);
+
+        const totalSupplyAfter = await CJPY.totalSupply();
+        const redeemerCJPYBalanceAfter = await CJPY.balanceOf(redeemerAddr);
+        const redeemerETHBalanceAfter = await Yamato.provider.getBalance(
+          redeemerAddr
+        );
+        const nextRedeemable = await PriorityRegistry.nextRedeemable();
+        expect(nextRedeemable.isCreated).to.be.true;
+
+        expect(totalSupplyAfter).to.be.lt(totalSupplyBefore);
+        expect(redeemerCJPYBalanceAfter).to.be.lt(redeemerCJPYBalanceBefore);
+        expect(
+          redeemerETHBalanceAfter.add(
+            txReceipt.gasUsed.mul(txReceipt.effectiveGasPrice)
+          )
+        ).to.be.gt(redeemerETHBalanceBefore);
+
+        expect(redeemedPledgeAfter.coll).to.be.lt(redeemedPledgeBefore.coll); // the first huge pledge must lose coll
+
+        expect(redeemedPledgeAfter.debt).to.be.gt(0); // large pledge must not be full redeemed.
+        expect(redeemedPledge4After.debt).to.be.gt(0); // small last pledge also must not be full redeemed.
+
+        console.log(
+          `redeemedPledgeBefore: ${redeemedPledgeBefore.coll}, ${
+            redeemedPledgeBefore.debt
+          }, ${redeemedPledgeBefore.priority} ${redeemedPledgeBefore.coll
+            .mul(dumpledPrice)
+            .div(redeemedPledgeBefore.debt)
+            .div(1e14 + "")}`
+        );
+        console.log(
+          `redeemedPledgeAfter: ${redeemedPledgeAfter.coll}, ${
+            redeemedPledgeAfter.debt
+          }, ${redeemedPledgeAfter.priority} ${redeemedPledgeAfter.coll
+            .mul(dumpledPrice)
+            .div(redeemedPledgeAfter.debt)
+            .div(1e14 + "")}`
+        );
+        console.log(
+          `redeemedPledge4Before: ${redeemedPledge4Before.coll}, ${
+            redeemedPledge4Before.debt
+          }, ${redeemedPledge4Before.priority} ${redeemedPledge4Before.coll
+            .mul(dumpledPrice)
+            .div(redeemedPledge4Before.debt)
+            .div(1e14 + "")}`
+        );
+        console.log(
+          `redeemedPledge4After: ${redeemedPledge4After.coll}, ${
+            redeemedPledge4After.debt
+          }, ${redeemedPledge4After.priority} ${redeemedPledge4After.coll
+            .mul(dumpledPrice)
+            .div(redeemedPledge4After.debt)
+            .div(1e14 + "")}`
+        );
+
+        expect(
+          redeemedPledgeAfter.coll
+            .mul(dumpledPrice)
+            .div(redeemedPledgeAfter.debt)
+            .div(1e14 + "")
+        ).to.be.gt(
+          redeemedPledgeBefore.coll
+            .mul(dumpledPrice)
+            .div(redeemedPledgeBefore.debt)
+            .div(1e14 + "")
+        ); // 100<ICR<130 then ICR cured
+        expect(
+          redeemedPledgeAfter.coll
+            .mul(dumpledPrice)
+            .div(redeemedPledgeAfter.debt)
+            .div(1e14 + "")
+        ).to.eq(13000); // check real ICR cirtainly limited at MCR
+        expect(redeemedPledgeAfter.priority).to.eq(13000); // 7 times large pledge must be full redeemed
+        //TODO: Priority is buggy. 12700
+
+        // TODO: Large pledge is absorbing all redemptions and the last pledge is not reaching
+        // the large pledge is eating 0.28units
+        // TODO: Try 9 units redemption to check penetration
+        expect(
+          redeemedPledge4After.coll
+            .mul(dumpledPrice)
+            .div(redeemedPledge4After.debt)
+            .div(1e14 + "")
+        ).to.be.gt(
+          redeemedPledge4Before.coll
+            .mul(dumpledPrice)
+            .div(redeemedPledge4Before.debt)
+            .div(1e14 + "")
+        ); // 100<ICR<130 then ICR cured
+        expect(redeemedPledge4After.priority).to.eq(13000); // WallBeforeLastPledge = 7 units * (130-129)/129 + 1 unit * (130-129)/129 * 4 pledges
+      });
+    });
+
+    describe("Context - without no dump", function () {
       beforeEach(async () => {
         redeemer = accounts[0];
         redeemee = accounts[1];
