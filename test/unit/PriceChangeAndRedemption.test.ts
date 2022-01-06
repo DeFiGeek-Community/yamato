@@ -274,7 +274,9 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         expect(redeemedPledgeAfter.priority).to.be.eq(0);
       });
     });
-    describe.only("Context - with 1% dump", function () {
+    describe("Context - with 1% dump", function () {
+      let dumpedPriceBase = "397000000000"
+      let dumpedPrice = BigNumber.from(dumpedPriceBase).mul(1e12+"")
       beforeEach(async () => {
         redeemer = accounts[0];
         redeemee = accounts[1];
@@ -317,8 +319,8 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         await Yamato.connect(redeemee).borrow(toERC20(toBorrow.mul(7) + ""));
 
         /* Market Dump */
-        await (await ChainLinkEthUsd.setLastPrice("397000000000")).wait(); //dec8
-        await (await Tellor.setLastPrice("397000000000")).wait(); //dec8
+        await (await ChainLinkEthUsd.setLastPrice(dumpedPriceBase)).wait(); //dec8
+        await (await Tellor.setLastPrice(dumpedPriceBase)).wait(); //dec8
       });
 
       it(`should redeem all pledges with small CJPY amount even if there's a huge pledge`, async function () {
@@ -326,7 +328,6 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         let redeemerAddr = await redeemer.getAddress();
         let redeemeeAddr = await redeemee.getAddress();
         let redeemeeAddr4 = await redeemee4.getAddress();
-        const dumpedPrice = await PriceFeed.lastGoodPrice();
 
         const redeemedPledgeBefore = await Yamato.getPledge(redeemeeAddr);
         const redeemedPledge4Before = await Yamato.getPledge(redeemeeAddr4);

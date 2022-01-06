@@ -72,16 +72,12 @@ contract YamatoRedeemerV3 is IYamatoRedeemer, YamatoAction {
             3. Scan pledges until fill the redeeming amount
         */
         while (vars._reminder > 0) {
-            IYamato.Pledge memory nextPledge = IPriorityRegistry(priorityRegistry()).nextRedeemable();
-            console.log("vars._loopCount(%s), vars._reminder(%s)",vars._loopCount, vars._reminder/1e18);
-            console.log("ownerN(%s), icrN(%s), priorityN(%s)",nextPledge.owner,nextPledge.getICR(feed()),nextPledge.priority);
             try IPriorityRegistry(priorityRegistry()).popRedeemable() returns (
                 IYamato.Pledge memory _redeemablePledge
             ) {
                 IYamato.Pledge memory sPledge = IYamato(yamato()).getPledge(
                     _redeemablePledge.owner
                 );
-                console.log("owner0(%s), icr0(%s), priority0(%s)",sPledge.owner,sPledge.getICR(feed()),sPledge.priority);
                 if (
                     !sPledge.isCreated ||
                     sPledge.coll == 0 ||
@@ -106,6 +102,7 @@ contract YamatoRedeemerV3 is IYamatoRedeemer, YamatoAction {
                 sPledge = _redeemedPledge;
                 IYamato(yamato()).setPledge(sPledge.owner, sPledge);
 
+
                 /*
                     2. Put the sludge pledge to the queue
                 */
@@ -114,10 +111,11 @@ contract YamatoRedeemerV3 is IYamatoRedeemer, YamatoAction {
                 returns (uint256 _newICRpercent) {
                     sPledge.priority = _newICRpercent;
                     IYamato(yamato()).setPledge(sPledge.owner, sPledge);
+                    console.log("owner2:%s, icr:%s", sPledge.owner, sPledge.getICR(feed()));
+
                 } catch {
                     break;
                 }
-                console.log("owner3(%s), icr3(%s), priority3(%s)",sPledge.owner,sPledge.getICR(feed()),sPledge.priority);
                 vars._pledgesOwner[vars._loopCount] = _redeemablePledge.owner;
                 vars._loopCount++;
             } catch {
@@ -211,9 +209,6 @@ contract YamatoRedeemerV3 is IYamatoRedeemer, YamatoAction {
         uint256 icr = sPledge.getICR(feed());
         uint256 mcr = uint256(IYamato(yamato()).MCR()) * 100;
 
-        console.log("owner(%s), collValu(%s), debt(%s)", sPledge.owner, sPledge.coll * ethPriceInCurrency / 1e36, sPledge.debt/1e18);
-        console.log("icr(%s)", icr);
-
         if (10000 < icr && icr < mcr) {
             // Note: Risky pledges. 10000<ICR<13000 redemption recovers ICR and calculations are tricky.
             uint256 cappedRedemptionAmount = _calcCappedRedemptionAmount(
@@ -221,7 +216,6 @@ contract YamatoRedeemerV3 is IYamatoRedeemer, YamatoAction {
                 mcr,
                 ethPriceInCurrency
             );
-            console.log("cappedRedemptionAmount(%s) < currencyAmount(%s)", cappedRedemptionAmount/1e18, currencyAmount/1e18);
             if (cappedRedemptionAmount < currencyAmount) {
                 redemptionAmount = cappedRedemptionAmount;
                 ethToBeExpensed =
@@ -235,7 +229,6 @@ contract YamatoRedeemerV3 is IYamatoRedeemer, YamatoAction {
                     ethPriceInCurrency;
                 reminder = 0;
             }
-            console.log("redemptionAmount:%s, ethToBeExpensed:%s reminder:%s", redemptionAmount/1e18, ethToBeExpensed/1e16, reminder/1e18);
         } else if (icr <= 10000) {
             // Note: Deficit pledges
             if (collValuation < currencyAmount) {
@@ -260,8 +253,6 @@ contract YamatoRedeemerV3 is IYamatoRedeemer, YamatoAction {
         */
         sPledge.coll -= ethToBeExpensed; // Note: storage variable in the internal func doesn't change state!
         sPledge.debt -= redemptionAmount;
-        console.log("owner2(%s), collValu(%s), debt(%s)", sPledge.owner, sPledge.coll * ethPriceInCurrency / 1e36, sPledge.debt/1e18);
-        console.log("icr2(%s)", sPledge.getICR(feed()));
 
         return (sPledge, reminder);
     }

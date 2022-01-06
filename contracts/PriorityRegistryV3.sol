@@ -62,10 +62,6 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
         /*
             1. delete current pledge from sorted pledge and update LICR
         */
-        console.log("ownerPR(%s), pledgeLength(%s), levelIndice(%s)", _pledge.owner, pledgeLength, levelIndice[LICR].length);
-        if(_levelIndiceFifoLen(LICR) > 0){
-            console.log("LICR(%s), levelIndice[LICR][0](%s)", LICR, levelIndice[LICR][0]);
-        }
         if (
             !(_pledge.debt == 0 && _oldICRpercent == 0) && /* Exclude "new pledge" */
             pledgeLength > 0 && /* Avoid overflow */
@@ -197,13 +193,12 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
         }
         IYamato.Pledge memory poppedPledge = leveledPledges[LICR][_addr];
 
-        // Note: Don't check LICR, real ICR is the matter.
+        // Note: Don't check priority, real ICR is the matter. ICR13000 pledge breaks here.
         require(
             poppedPledge.getICR(feed()) <
                 uint256(IYamato(yamato()).MCR())*100,
             "You can't redeem if redeemable candidate is more than MCR."
         );
-        console.log("poppedPledge.getICR(feed()):%s, uint256(IYamato(yamato()).MCR())*100:%s", poppedPledge.getICR(feed()), uint256(IYamato(yamato()).MCR())*100);
 
         // Note: pop is deletion. So traverse could be needed.
         // Note: Traversing to the ICR=MAX_UINT256 pledges are validated, don't worry about gas.
@@ -368,7 +363,8 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
         }
 
         address _poppedAddr = levelIndice[LICR][levelIndiceFifoCounter[LICR].nextout];
-        return leveledPledges[LICR][_poppedAddr];
+        IYamato.Pledge memory pledge = leveledPledges[LICR][_poppedAddr];
+        return pledge;
     }
 
     function nextSweepable()
