@@ -72,12 +72,16 @@ contract YamatoRedeemerV3 is IYamatoRedeemer, YamatoAction {
             3. Scan pledges until fill the redeeming amount
         */
         while (vars._reminder > 0) {
+            IYamato.Pledge memory nextPledge = IPriorityRegistry(priorityRegistry()).nextRedeemable();
+            console.log("vars._loopCount(%s), vars._reminder(%s)",vars._loopCount, vars._reminder/1e18);
+            console.log("ownerN(%s), icrN(%s), priorityN(%s)",nextPledge.owner,nextPledge.getICR(feed()),nextPledge.priority);
             try IPriorityRegistry(priorityRegistry()).popRedeemable() returns (
                 IYamato.Pledge memory _redeemablePledge
             ) {
                 IYamato.Pledge memory sPledge = IYamato(yamato()).getPledge(
                     _redeemablePledge.owner
                 );
+                console.log("owner0(%s), icr0(%s), priority0(%s)",sPledge.owner,sPledge.getICR(feed()),sPledge.priority);
                 if (
                     !sPledge.isCreated ||
                     sPledge.coll == 0 ||
@@ -113,6 +117,7 @@ contract YamatoRedeemerV3 is IYamatoRedeemer, YamatoAction {
                 } catch {
                     break;
                 }
+                console.log("owner3(%s), icr3(%s), priority3(%s)",sPledge.owner,sPledge.getICR(feed()),sPledge.priority);
                 vars._pledgesOwner[vars._loopCount] = _redeemablePledge.owner;
                 vars._loopCount++;
             } catch {
@@ -206,6 +211,9 @@ contract YamatoRedeemerV3 is IYamatoRedeemer, YamatoAction {
         uint256 icr = sPledge.getICR(feed());
         uint256 mcr = uint256(IYamato(yamato()).MCR()) * 100;
 
+        console.log("owner(%s), collValu(%s), debt(%s)", sPledge.owner, sPledge.coll * ethPriceInCurrency / 1e36, sPledge.debt/1e18);
+        console.log("icr(%s)", icr);
+
         if (10000 < icr && icr < mcr) {
             // Note: Risky pledges. 10000<ICR<13000 redemption recovers ICR and calculations are tricky.
             uint256 cappedRedemptionAmount = _calcCappedRedemptionAmount(
@@ -213,6 +221,7 @@ contract YamatoRedeemerV3 is IYamatoRedeemer, YamatoAction {
                 mcr,
                 ethPriceInCurrency
             );
+            console.log("cappedRedemptionAmount(%s) < currencyAmount(%s)", cappedRedemptionAmount/1e18, currencyAmount/1e18);
             if (cappedRedemptionAmount < currencyAmount) {
                 redemptionAmount = cappedRedemptionAmount;
                 ethToBeExpensed =
@@ -226,6 +235,7 @@ contract YamatoRedeemerV3 is IYamatoRedeemer, YamatoAction {
                     ethPriceInCurrency;
                 reminder = 0;
             }
+            console.log("redemptionAmount:%s, ethToBeExpensed:%s reminder:%s", redemptionAmount/1e18, ethToBeExpensed/1e16, reminder/1e18);
         } else if (icr <= 10000) {
             // Note: Deficit pledges
             if (collValuation < currencyAmount) {
@@ -250,6 +260,9 @@ contract YamatoRedeemerV3 is IYamatoRedeemer, YamatoAction {
         */
         sPledge.coll -= ethToBeExpensed; // Note: storage variable in the internal func doesn't change state!
         sPledge.debt -= redemptionAmount;
+        console.log("owner2(%s), collValu(%s), debt(%s)", sPledge.owner, sPledge.coll * ethPriceInCurrency / 1e36, sPledge.debt/1e18);
+        console.log("icr2(%s)", sPledge.getICR(feed()));
+
         return (sPledge, reminder);
     }
 
@@ -257,28 +270,17 @@ contract YamatoRedeemerV3 is IYamatoRedeemer, YamatoAction {
         IYamato.Pledge memory pledge,
         uint256 mcr,
         uint256 ethPriceInCurrency
-    ) internal view returns (uint256) {
-        IYamato.Pledge memory initialPledge = pledge.clone();
-        uint256 icr = initialPledge.getICR(feed());
-
-        uint256 acmCappedRedemptionAmount;
-        for (uint256 i = 0; i < 30; i++) {
-            /*
-                mcrDebt = debt + diff
-                diff = mcrDebt - debt
-                mcrDebt = debt / icr * mcr = (mcr/icr) * debt
-                diff = (mcr/icr) * debt - debt
-                diff = (mcr/icr - 1) * debt
-                diff = debt  * (mcr - icr) / icr
-            */
-            acmCappedRedemptionAmount = (pledge.debt * (mcr - icr)) / icr;
-            pledge.debt -= acmCappedRedemptionAmount;
-            icr = pledge.getICR(feed());
-            if (icr >= mcr) {
-                return initialPledge.debt - pledge.debt;
-            } else {
-                // continue loop (normally only single loop would be executed)
-            }
-        }
+    ) internal view returns (uint256 diff) {
+        /*
+            collValuAfter/debtAfter = mcr/10000
+            debtAfter = debtBefore - diff
+            collValuAfter = collValuBefore - diff
+            10000 * (diff - collValuBefore) = mcr * (diff - debtBefore)
+            (mcr - 10000) * diff = mcr * debtBefore - 10000 * collValuBefore
+            diff = (mcr * debtBefore - 10000 * collValuBefore) / (mcr - 10000) 
+        */
+        uint256 debtBefore = pledge.debt;
+        uint256 collValuBefore = pledge.coll * ethPriceInCurrency / 1e18;
+        diff = (mcr * debtBefore - 10000 * collValuBefore) / (mcr - 10000);
     }
 }

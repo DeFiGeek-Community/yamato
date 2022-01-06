@@ -274,7 +274,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         expect(redeemedPledgeAfter.priority).to.be.eq(0);
       });
     });
-    describe("Context - with 1% dump", function () {
+    describe.only("Context - with 1% dump", function () {
       beforeEach(async () => {
         redeemer = accounts[0];
         redeemee = accounts[1];
@@ -326,7 +326,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         let redeemerAddr = await redeemer.getAddress();
         let redeemeeAddr = await redeemee.getAddress();
         let redeemeeAddr4 = await redeemee4.getAddress();
-        const dumpledPrice = await PriceFeed.lastGoodPrice();
+        const dumpedPrice = await PriceFeed.lastGoodPrice();
 
         const redeemedPledgeBefore = await Yamato.getPledge(redeemeeAddr);
         const redeemedPledge4Before = await Yamato.getPledge(redeemeeAddr4);
@@ -336,7 +336,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
           redeemerAddr
         );
 
-        toBorrow = dumpledPrice
+        toBorrow = dumpedPrice
           .mul(toCollateralize)
           .mul(100)
           .div(MCR)
@@ -345,7 +345,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         // pledge loop and traversing redemption must be cheap
         expect(
           await Yamato.estimateGas.redeem(toERC20(toBorrow.mul(9) + ""), false)
-        ).to.be.lt(2000000);
+        ).to.be.lt(2300000);
 
         const txReceipt = await (
           await Yamato.connect(redeemer).redeem(
@@ -380,34 +380,34 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
         expect(
           redeemedPledgeAfter.coll
-            .mul(dumpledPrice)
+            .mul(dumpedPrice)
             .div(redeemedPledgeAfter.debt)
             .div(1e14 + "")
         ).to.be.gt(
           redeemedPledgeBefore.coll
-            .mul(dumpledPrice)
+            .mul(dumpedPrice)
             .div(redeemedPledgeBefore.debt)
             .div(1e14 + "")
         ); // 100<ICR<130 then ICR cured
         expect(
           redeemedPledgeAfter.coll
-            .mul(dumpledPrice)
+            .mul(dumpedPrice)
             .div(redeemedPledgeAfter.debt)
             .div(1e14 + "")
-        ).to.be.gte(13000); // check real ICR cirtainly limited at MCR
-        expect(redeemedPledgeAfter.priority).to.be.gte(13000); // 7 times large pledge must be full redeemed
+        ).to.eq(13000); // check real ICR cirtainly limited at MCR
+        expect(redeemedPledgeAfter.priority).to.eq(13000); // 7 times large pledge must be full redeemed
         expect(
           redeemedPledge4After.coll
-            .mul(dumpledPrice)
+            .mul(dumpedPrice)
             .div(redeemedPledge4After.debt)
             .div(1e14 + "")
         ).to.be.gt(
           redeemedPledge4Before.coll
-            .mul(dumpledPrice)
+            .mul(dumpedPrice)
             .div(redeemedPledge4Before.debt)
             .div(1e14 + "")
         ); // 100<ICR<130 then ICR cured
-        expect(redeemedPledge4After.priority).to.be.gte(13000); // WallBeforeLastPledge = 7 units * (130-129)/129 + 1 unit * (130-129)/129 * 4 pledges
+        expect(redeemedPledge4After.priority).to.eq(13000); // WallBeforeLastPledge = 7 units * (130-129)/129 + 1 unit * (130-129)/129 * 4 pledges
       });
     });
 

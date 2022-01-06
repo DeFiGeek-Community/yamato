@@ -11,6 +11,12 @@ pragma solidity 0.8.4;
 import "./IYamato.sol";
 
 interface IPriorityRegistry {
+    struct FifoCounter {
+        uint256 nextin;
+        uint256 nextout;
+        uint256 len;
+    }
+
     function upsert(IYamato.Pledge memory _pledge) external returns (uint256);
 
     function remove(IYamato.Pledge memory _pledge) external;
