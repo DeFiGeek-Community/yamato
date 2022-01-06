@@ -102,7 +102,6 @@ contract YamatoRedeemerV3 is IYamatoRedeemer, YamatoAction {
                 sPledge = _redeemedPledge;
                 IYamato(yamato()).setPledge(sPledge.owner, sPledge);
 
-
                 /*
                     2. Put the sludge pledge to the queue
                 */
@@ -111,8 +110,11 @@ contract YamatoRedeemerV3 is IYamatoRedeemer, YamatoAction {
                 returns (uint256 _newICRpercent) {
                     sPledge.priority = _newICRpercent;
                     IYamato(yamato()).setPledge(sPledge.owner, sPledge);
-                    console.log("owner2:%s, icr:%s", sPledge.owner, sPledge.getICR(feed()));
-
+                    console.log(
+                        "owner2:%s, icr:%s",
+                        sPledge.owner,
+                        sPledge.getICR(feed())
+                    );
                 } catch {
                     break;
                 }
@@ -271,7 +273,7 @@ contract YamatoRedeemerV3 is IYamatoRedeemer, YamatoAction {
             diff = (mcr * debtBefore - 10000 * collValuBefore) / (mcr - 10000) 
         */
         uint256 debtBefore = pledge.debt;
-        uint256 collValuBefore = pledge.coll * ethPriceInCurrency / 1e18;
+        uint256 collValuBefore = (pledge.coll * ethPriceInCurrency) / 1e18;
         diff = (mcr * debtBefore - 10000 * collValuBefore) / (mcr - 10000);
     }
 }

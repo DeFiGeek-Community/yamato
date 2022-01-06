@@ -480,7 +480,11 @@ describe("contract PriorityRegistry", function () {
       it(`fails to get the lowest but MCR pledge`, async function () {
         const _owner1 = address0;
         const _coll1 = BigNumber.from("1000000000000000000");
-        const _debt1 = _coll1.mul(PRICE).mul(10).div(13).div(1e18+"");
+        const _debt1 = _coll1
+          .mul(PRICE)
+          .mul(10)
+          .div(13)
+          .div(1e18 + "");
         console.log(`_debt1:${_debt1}`);
         const _inputPledge1 = [_coll1, _debt1, true, _owner1, 13000];
 

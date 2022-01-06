@@ -275,8 +275,8 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       });
     });
     describe("Context - with 1% dump", function () {
-      let dumpedPriceBase = "397000000000"
-      let dumpedPrice = BigNumber.from(dumpedPriceBase).mul(1e12+"")
+      let dumpedPriceBase = "397000000000";
+      let dumpedPrice = BigNumber.from(dumpedPriceBase).mul(1e12 + "");
       beforeEach(async () => {
         redeemer = accounts[0];
         redeemee = accounts[1];

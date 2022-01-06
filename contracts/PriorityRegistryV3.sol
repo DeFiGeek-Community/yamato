@@ -26,7 +26,7 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
     mapping(uint256 => address[]) private levelIndice; // ICR => owner[]
     uint256 public override pledgeLength;
     uint256 public override LICR; // Note: Lowest ICR in percent
-    mapping(uint256=>FifoCounter) levelIndiceFifoCounter;
+    mapping(uint256 => FifoCounter) levelIndiceFifoCounter;
 
     function initialize(address _yamato) public initializer {
         __YamatoStore_init(_yamato);
@@ -196,7 +196,7 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
         // Note: Don't check priority, real ICR is the matter. ICR13000 pledge breaks here.
         require(
             poppedPledge.getICR(feed()) <
-                uint256(IYamato(yamato()).MCR())*100,
+                uint256(IYamato(yamato()).MCR()) * 100,
             "You can't redeem if redeemable candidate is more than MCR."
         );
 
@@ -258,26 +258,33 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
         counter.nextin++;
         counter.len++;
     }
-    function _levelIndiceFifoPop(uint256 _icr) internal returns (address _addr) {
+
+    function _levelIndiceFifoPop(uint256 _icr)
+        internal
+        returns (address _addr)
+    {
         _initCounterPerLevel(_icr);
         FifoCounter storage counter = levelIndiceFifoCounter[_icr];
         require(counter.nextout <= counter.nextin, "Can't pop outbound data.");
-        while(_addr == address(0)){
+        while (_addr == address(0)) {
             _addr = levelIndice[_icr][counter.nextout];
         }
         delete levelIndice[_icr][counter.nextout];
         counter.nextout++;
         counter.len--;
     }
+
     function _levelIndiceFifoLen(uint256 _icr) internal view returns (uint256) {
         return levelIndiceFifoCounter[_icr].len;
     }
-    function _levelIndiceFifoSearchAndDestroy(uint256 _icr, uint256 _i) internal {
+
+    function _levelIndiceFifoSearchAndDestroy(uint256 _icr, uint256 _i)
+        internal
+    {
         _initCounterPerLevel(_icr);
         delete levelIndice[_icr][_i];
         levelIndiceFifoCounter[_icr].len--;
     }
-
 
     /*
         @dev delete of "address[] storage" causes gap in the list.
@@ -294,8 +301,8 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
 
             uint256 _nextout = levelIndiceFifoCounter[icr].nextout;
             uint256 _nextin = levelIndiceFifoCounter[icr].nextout;
-            while(_nextout <= _nextin) {
-                if(getLevelIndice(icr, _nextout) == _owner) {
+            while (_nextout <= _nextin) {
+                if (getLevelIndice(icr, _nextout) == _owner) {
                     _levelIndiceFifoSearchAndDestroy(icr, _nextout);
                     break;
                 }
@@ -362,7 +369,9 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
             return IYamato.Pledge(0, 0, false, address(0), 0);
         }
 
-        address _poppedAddr = levelIndice[LICR][levelIndiceFifoCounter[LICR].nextout];
+        address _poppedAddr = levelIndice[LICR][
+            levelIndiceFifoCounter[LICR].nextout
+        ];
         IYamato.Pledge memory pledge = leveledPledges[LICR][_poppedAddr];
         return pledge;
     }
@@ -398,9 +407,9 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
             address _addr;
             uint256 _nextout = levelIndiceFifoCounter[i].nextout;
             uint256 _nextin = levelIndiceFifoCounter[i].nextin;
-            while(_nextout <= _nextin){
+            while (_nextout <= _nextin) {
                 _addr = getLevelIndice(i, _nextout);
-                if(_addr != address(0)) {
+                if (_addr != address(0)) {
                     _cap +=
                         (leveledPledges[i][_addr].coll *
                             IPriceFeed(feed()).lastGoodPrice()) /
@@ -415,10 +424,10 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
         address _addr;
         uint256 _nextout = levelIndiceFifoCounter[0].nextout;
         uint256 _nextin = levelIndiceFifoCounter[0].nextin;
-        while(_nextout <= _nextin){
+        while (_nextout <= _nextin) {
             _addr = getLevelIndice(0, _nextout);
-            if(_addr != address(0)) {
-                _cap += leveledPledges[0][_addr].debt;            
+            if (_addr != address(0)) {
+                _cap += leveledPledges[0][_addr].debt;
             }
             _nextout++;
         }
@@ -430,10 +439,10 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
 
     function _initCounterPerLevel(uint256 _icr) internal {
         FifoCounter storage coutner = levelIndiceFifoCounter[_icr];
-        if(coutner.nextin == 0) {
+        if (coutner.nextin == 0) {
             coutner.nextin = levelIndice[_icr].length;
         }
-        if(coutner.len == 0) {
+        if (coutner.len == 0) {
             coutner.len = levelIndice[_icr].length;
         }
     }
