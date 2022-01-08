@@ -52,8 +52,11 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
         returns (uint256)
     {
         _initCounterPerLevel(LICR);
+
         uint256 _oldICRpercent = floor(_pledge.priority);
+
         _initCounterPerLevel(_oldICRpercent);
+
         require(
             !(_pledge.coll == 0 && _pledge.debt == 0 && _oldICRpercent != 0),
             "Upsert Error: The logless zero pledge cannot be upserted. It should be removed."
@@ -68,14 +71,18 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
             leveledPledges[_oldICRpercent][_pledge.owner].isCreated
             /* whether delete target exists */
         ) {
+            // TODO: 1st spec failing here
             _deletePledge(_pledge);
         }
 
         /* 
             2. insert new pledge
         */
+
         uint256 _newICRpercent = floor(_pledge.getICR(feed()));
+
         _initCounterPerLevel(_newICRpercent);
+
         require(
             _newICRpercent <= floor(2**256 - 1),
             "priority can't be that big."
@@ -304,13 +311,16 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
             while (_nextout <= _nextin) {
                 if (getLevelIndice(icr, _nextout) == _owner) {
                     _levelIndiceFifoSearchAndDestroy(icr, _nextout);
+
                     break;
                 }
                 _nextout++;
             }
 
             // Note: Delete of pledge is damn simple
+
             delete leveledPledges[icr][_owner];
+
             pledgeLength -= 1;
         } else {
             revert("The delete target is not exist.");
@@ -365,7 +375,11 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
         override
         returns (IYamato.Pledge memory)
     {
-        if (_levelIndiceFifoLen(LICR) == 0) {
+        if (
+            _levelIndiceFifoLen(LICR) == 0 ||
+            levelIndice[LICR].length == 0 ||
+            levelIndice[LICR].length > levelIndiceFifoCounter[LICR].nextout
+        ) {
             return IYamato.Pledge(0, 0, false, address(0), 0);
         }
 
@@ -396,10 +410,15 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
         returns (address)
     {
         uint256 _mcr = uint256(IYamato(yamato()).MCR());
+
         if (icr == _mcr && icr == LICR && _levelIndiceFifoLen(icr) == 0) {
             return address(0);
         }
-        return levelIndice[icr][i];
+        if (levelIndice[icr].length < i) {
+            return levelIndice[icr][i];
+        } else {
+            return address(0);
+        }
     }
 
     function getRedeemablesCap() external view returns (uint256 _cap) {
