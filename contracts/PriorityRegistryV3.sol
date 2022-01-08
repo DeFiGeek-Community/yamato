@@ -192,11 +192,6 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
             leveledPledges[LICR][_addr].coll == 0
         ) {
             _addr = _levelIndiceFifoPop(LICR);
-
-            // Note: pop() just deletes the item.
-            // Note: Why pop()? Because it's the only way to decrease length.
-            // Note: Hence the array won't be inflated.
-            // Note: But pop() doesn't have return. Do it on your own.
         }
         IYamato.Pledge memory poppedPledge = leveledPledges[LICR][_addr];
 
@@ -207,7 +202,8 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
             "You can't redeem if redeemable candidate is more than MCR."
         );
 
-        // Note: pop is deletion. So traverse could be needed.
+        // Note: pop is deletion. So traverse could be needed. But traversing is currently done by upsert.
+        // Note: redeem() has popRedeemable() first then upsert next, hence traversing will be done.
         // Note: Traversing to the ICR=MAX_UINT256 pledges are validated, don't worry about gas.
         // Note: LICR is state variable and it will be undated here.
 
@@ -414,7 +410,7 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
         if (icr == _mcr && icr == LICR && _levelIndiceFifoLen(icr) == 0) {
             return address(0);
         }
-        if (levelIndice[icr].length < i) {
+        if (levelIndice[icr].length - 1 <= i) {
             return levelIndice[icr][i];
         } else {
             return address(0);
@@ -426,6 +422,15 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
             address _addr;
             uint256 _nextout = levelIndiceFifoCounter[i].nextout;
             uint256 _nextin = levelIndiceFifoCounter[i].nextin;
+            console.log(
+                "_nextin:%s, levelIndice[i].length:%s, _nextout:%s",
+                _nextin,
+                levelIndice[i].length,
+                _nextout
+            );
+            if (_nextin == 0) {
+                _nextin = levelIndice[i].length;
+            }
             while (_nextout <= _nextin) {
                 _addr = getLevelIndice(i, _nextout);
                 if (_addr != address(0)) {
@@ -443,6 +448,15 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
         address _addr;
         uint256 _nextout = levelIndiceFifoCounter[0].nextout;
         uint256 _nextin = levelIndiceFifoCounter[0].nextin;
+        console.log(
+            "_nextin:%s, levelIndice[0].length:%s, _nextout:%s",
+            _nextin,
+            levelIndice[0].length,
+            _nextout
+        );
+        if (_nextin == 0) {
+            _nextin = levelIndice[0].length;
+        }
         while (_nextout <= _nextin) {
             _addr = getLevelIndice(0, _nextout);
             if (_addr != address(0)) {

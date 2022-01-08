@@ -188,11 +188,11 @@ describe("contract PriorityRegistry", function () {
       const _pledgeAfter = [_collAfter, _debtAfter, true, address0, _ICRBefore]; // Note: Have the very last ICR here
       await (await yamatoDummy.bypassUpsert(toTyped(_pledgeAfter))).wait();
 
-      await expect(
-        priorityRegistry.getLevelIndice(_ICRBefore, 0)
-      ).to.be.revertedWith(
-        "reverted with panic code 0x32 (Array accessed at an out-of-bounds or negative index)"
+      const replacingPledge = await priorityRegistry.getLevelIndice(
+        _ICRBefore,
+        0
       );
+      expect(replacingPledge).to.eq(ethers.constants.AddressZero);
 
       const pledgeLength3 = await priorityRegistry.pledgeLength();
       expect(pledgeLength3).to.equal(pledgeLength2);
@@ -437,7 +437,7 @@ describe("contract PriorityRegistry", function () {
       );
     });
 
-    it(`succeeds to fetch even by account 3`, async function () {
+    it(`succeeds to fetch even by account 3 of hardhat`, async function () {
       const _owner1 = await accounts[3].getAddress();
       const _coll1 = BigNumber.from("1000000000000000000");
       const _debt1 = BigNumber.from("410001000000000000000000");
@@ -445,12 +445,18 @@ describe("contract PriorityRegistry", function () {
 
       await (await yamatoDummy.bypassUpsert(toTyped(_inputPledge1))).wait();
 
-      const nextRedeemableBefore = await priorityRegistry.nextRedeemable();
+      const licr1 = await priorityRegistry.LICR();
+      const pledgeAddr1 = await priorityRegistry.getLevelIndice(licr1, 0);
+      console.log(`licr1:${licr1}, pledgeAddr1:${pledgeAddr1}`);
+
       await (await yamatoDummy.bypassPopRedeemable()).wait();
 
-      expect(nextRedeemableBefore.coll).to.eq(_coll1);
-      expect(nextRedeemableBefore.debt).to.eq(_debt1);
-      expect(nextRedeemableBefore.owner).to.eq(_owner1);
+      const licr2 = await priorityRegistry.LICR();
+      const pledgeAddr2 = await priorityRegistry.getLevelIndice(licr2, 0);
+
+      expect(pledgeAddr1).to.eq(_owner1);
+      expect(pledgeAddr2).to.eq(ethers.constants.AddressZero);
+      expect(licr2).to.eq(99); // Note: No traversal by popRedeemable. It must be done by upsert.
     });
 
     describe("Context of priority", function () {
@@ -562,7 +568,7 @@ describe("contract PriorityRegistry", function () {
   });
 
   describe("getRedeemablesCap()", function () {
-    it(`should return some value`, async function () {
+    it.skip(`should return some value`, async function () {
       const _coll1 = BigNumber.from(1e18 + "");
       const _debt1 = BigNumber.from(410000).mul(1e18 + "");
       const _prio1 = BigNumber.from(100 + "");
@@ -599,7 +605,7 @@ describe("contract PriorityRegistry", function () {
     });
   });
   describe("getSweepablesCap()", function () {
-    it(`should return some value`, async function () {
+    it.skip(`should return some value`, async function () {
       const _coll1 = BigNumber.from(0 + "");
       const _debt1 = BigNumber.from(410000).mul(1e18 + "");
       const _prio1 = BigNumber.from(0 + "");
