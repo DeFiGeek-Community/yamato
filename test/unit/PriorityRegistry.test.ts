@@ -20,7 +20,7 @@ import { getFakeProxy, getLinkedProxy } from "../../src/testUtil";
 chai.use(smock.matchers);
 chai.use(solidity);
 
-describe.only("contract PriorityRegistry", function () {
+describe("contract PriorityRegistry", function () {
   let mockYamato: FakeContract<Yamato>;
   let mockCurrencyOS: FakeContract<CurrencyOS>;
   let mockFeePool: FakeContract<FeePool>;

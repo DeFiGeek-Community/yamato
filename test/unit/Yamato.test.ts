@@ -42,7 +42,7 @@ import {
 chai.use(smock.matchers);
 chai.use(solidity);
 
-describe.only("contract Yamato", function () {
+describe("contract Yamato", function () {
   let mockPool: FakeContract<Pool>;
   let mockFeePool: FakeContract<FeePool>;
   let mockFeed: FakeContract<PriceFeed>;
