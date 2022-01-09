@@ -42,7 +42,7 @@ import { isToken } from "typescript";
 chai.use(smock.matchers);
 chai.use(solidity);
 
-describe("PriceChangeAndRedemption :: contract Yamato", () => {
+describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
   let ChainLinkEthUsd: ChainLinkMock;
   let ChainLinkUsdJpy: ChainLinkMock;
   let Tellor: TellorCallerMock;

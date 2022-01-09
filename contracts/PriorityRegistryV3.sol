@@ -188,9 +188,12 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
         address _addr;
         // Note: Not (Exist AND coll>0) then skip.
         while (
-            !leveledPledges[LICR][_addr].isCreated ||
-            leveledPledges[LICR][_addr].coll == 0
+            (_levelIndiceFifoLen(LICR) > 0 && _addr == address(0)) &&
+            (!leveledPledges[LICR][_addr].isCreated ||
+                leveledPledges[LICR][_addr].coll == 0)
         ) {
+            // Bug: This stops when pop a deleted item
+            // Note: null ignorance until _levelIndiceFifoLen() would be good.
             _addr = _levelIndiceFifoPop(LICR);
         }
         IYamato.Pledge memory poppedPledge = leveledPledges[LICR][_addr];
@@ -226,14 +229,13 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
 
             // Note: Not (Exist AND debt>0) then skip
             while (
-                !leveledPledges[0][_addr].isCreated ||
-                leveledPledges[0][_addr].debt == 0
+                (_levelIndiceFifoLen(0) > 0 && _addr == address(0)) &&
+                (!leveledPledges[0][_addr].isCreated ||
+                    leveledPledges[0][_addr].debt == 0)
             ) {
+                // Bug: This stops when pop a deleted item
+                // Note: null ignorance until _levelIndiceFifoLen() would be good.
                 _addr = _levelIndiceFifoPop(0);
-                // Note: pop() just deletes the item.
-                // Note: Why pop()? Because it's the only way to decrease length.
-                // Note: Hence the array won't be inflated.
-                // Note: But pop() doesn't have return. Do it on your own.
             }
             return leveledPledges[0][_addr];
         } else {
@@ -269,11 +271,13 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
         _initCounterPerLevel(_icr);
         FifoCounter storage counter = levelIndiceFifoCounter[_icr];
         require(counter.nextout <= counter.nextin, "Can't pop outbound data.");
-        while (_addr == address(0)) {
-            _addr = levelIndice[_icr][counter.nextout];
+        uint256 _nextout = counter.nextout;
+        while (_addr == address(0) && _nextout < levelIndice[_icr].length) {
+            _addr = levelIndice[_icr][_nextout];
+            _nextout++;
         }
-        delete levelIndice[_icr][counter.nextout];
-        counter.nextout++;
+        delete levelIndice[_icr][_nextout - 1];
+        counter.nextout = _nextout;
         counter.len--;
     }
 
@@ -305,6 +309,7 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
             uint256 _nextout = levelIndiceFifoCounter[icr].nextout;
             uint256 _nextin = levelIndiceFifoCounter[icr].nextout;
             while (_nextout <= _nextin) {
+                // Bug: getLevelIndice is reverting
                 if (getLevelIndice(icr, _nextout) == _owner) {
                     _levelIndiceFifoSearchAndDestroy(icr, _nextout);
 
@@ -410,7 +415,12 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
         if (icr == _mcr && icr == LICR && _levelIndiceFifoLen(icr) == 0) {
             return address(0);
         }
-        if (levelIndice[icr].length - 1 <= i) {
+
+        if (levelIndice[icr].length == 0) {
+            return address(0);
+        }
+
+        if (levelIndice[icr].length - 1 >= i) {
             return levelIndice[icr][i];
         } else {
             return address(0);
@@ -422,12 +432,6 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
             address _addr;
             uint256 _nextout = levelIndiceFifoCounter[i].nextout;
             uint256 _nextin = levelIndiceFifoCounter[i].nextin;
-            console.log(
-                "_nextin:%s, levelIndice[i].length:%s, _nextout:%s",
-                _nextin,
-                levelIndice[i].length,
-                _nextout
-            );
             if (_nextin == 0) {
                 _nextin = levelIndice[i].length;
             }
@@ -448,12 +452,6 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
         address _addr;
         uint256 _nextout = levelIndiceFifoCounter[0].nextout;
         uint256 _nextin = levelIndiceFifoCounter[0].nextin;
-        console.log(
-            "_nextin:%s, levelIndice[0].length:%s, _nextout:%s",
-            _nextin,
-            levelIndice[0].length,
-            _nextout
-        );
         if (_nextin == 0) {
             _nextin = levelIndice[0].length;
         }

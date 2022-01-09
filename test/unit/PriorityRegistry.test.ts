@@ -20,7 +20,7 @@ import { getFakeProxy, getLinkedProxy } from "../../src/testUtil";
 chai.use(smock.matchers);
 chai.use(solidity);
 
-describe("contract PriorityRegistry", function () {
+describe.only("contract PriorityRegistry", function () {
   let mockYamato: FakeContract<Yamato>;
   let mockCurrencyOS: FakeContract<CurrencyOS>;
   let mockFeePool: FakeContract<FeePool>;
@@ -447,7 +447,6 @@ describe("contract PriorityRegistry", function () {
 
       const licr1 = await priorityRegistry.LICR();
       const pledgeAddr1 = await priorityRegistry.getLevelIndice(licr1, 0);
-      console.log(`licr1:${licr1}, pledgeAddr1:${pledgeAddr1}`);
 
       await (await yamatoDummy.bypassPopRedeemable()).wait();
 
@@ -508,28 +507,31 @@ describe("contract PriorityRegistry", function () {
         const _owner2 = await accounts[1].getAddress();
         const _coll2 = BigNumber.from("2000000000000000000");
         const _debt2 = BigNumber.from("410001000000000000000000");
+        const _owner3 = await accounts[2].getAddress();
         const _debt3 = _debt1.add("41001000000000000000000");
+        const _owner4 = await accounts[3].getAddress();
         const _debt4 = _debt2.add("41002000000000000000000");
         const _inputPledge1 = [_coll1, _debt1, true, _owner1, 1];
         const _inputPledge2 = [_coll2, _debt2, true, _owner2, 1];
-        const _inputPledge3 = [_coll1, _debt3, true, _owner1, 99];
-        const _inputPledge4 = [_coll2, _debt4, true, _owner2, 199];
+        const _inputPledge3 = [_coll1, _debt3, true, _owner3, 99];
+        const _inputPledge4 = [_coll2, _debt4, true, _owner4, 199];
 
         await (await yamatoDummy.bypassUpsert(toTyped(_inputPledge1))).wait();
         await (await yamatoDummy.bypassUpsert(toTyped(_inputPledge2))).wait();
         await (await yamatoDummy.bypassUpsert(toTyped(_inputPledge3))).wait();
         await (await yamatoDummy.bypassUpsert(toTyped(_inputPledge4))).wait();
 
-        const nextRedeemableBefore = await priorityRegistry.nextRedeemable();
-        await (await yamatoDummy.bypassPopRedeemable()).wait();
-        const nextRedeemableAfter = await priorityRegistry.nextRedeemable();
+        console.log(_owner1, _owner2, _owner3, _owner4);
+        const licr1 = await priorityRegistry.LICR();
+        const pledgeAddr1 = await priorityRegistry.getLevelIndice(licr1, 0);
 
-        expect(nextRedeemableBefore.coll).to.eq(_coll1);
-        expect(nextRedeemableBefore.debt).to.eq(_debt3);
-        expect(nextRedeemableBefore.owner).to.eq(_owner1);
-        expect(nextRedeemableAfter.isCreated).to.be.false;
-        expect(nextRedeemableAfter.coll).to.eq(0);
-        expect(nextRedeemableAfter.debt).to.eq(0);
+        await (await yamatoDummy.bypassPopRedeemable()).wait();
+
+        const licr2 = await priorityRegistry.LICR();
+        const pledgeAddr2 = await priorityRegistry.getLevelIndice(licr2, 0);
+
+        expect(pledgeAddr1).to.eq(_owner3);
+        expect(pledgeAddr2).to.eq(ethers.constants.AddressZero);
       });
     });
   });

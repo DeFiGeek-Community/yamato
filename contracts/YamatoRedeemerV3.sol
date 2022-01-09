@@ -89,6 +89,7 @@ contract YamatoRedeemerV3 is IYamatoRedeemer, YamatoAction {
                 /*
                     1. Expense collateral
                 */
+
                 (
                     IYamato.Pledge memory _redeemedPledge,
                     uint256 _reminderInThisTime
@@ -114,6 +115,7 @@ contract YamatoRedeemerV3 is IYamatoRedeemer, YamatoAction {
                 } catch {
                     break;
                 }
+
                 vars._pledgesOwner[vars._loopCount] = _redeemablePledge.owner;
                 vars._loopCount++;
             } catch {
