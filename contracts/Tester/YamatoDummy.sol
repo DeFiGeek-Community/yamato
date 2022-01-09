@@ -28,7 +28,7 @@ contract YamatoDummy {
     address public feed;
     address governance;
     address tester;
-    uint8 public MCR = 110; // MinimumCollateralizationRatio in pertenk
+    uint8 public MCR = 130; // MinimumCollateralizationRatio in pertenk
 
     constructor(address _currencyOS) {
         currencyOS = _currencyOS;

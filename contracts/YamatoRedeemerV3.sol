@@ -89,6 +89,7 @@ contract YamatoRedeemerV3 is IYamatoRedeemer, YamatoAction {
                 /*
                     1. Expense collateral
                 */
+
                 (
                     IYamato.Pledge memory _redeemedPledge,
                     uint256 _reminderInThisTime
@@ -105,6 +106,7 @@ contract YamatoRedeemerV3 is IYamatoRedeemer, YamatoAction {
                 /*
                     2. Put the sludge pledge to the queue
                 */
+
                 try
                     IPriorityRegistry(priorityRegistry()).upsert(sPledge)
                 returns (uint256 _newICRpercent) {
@@ -113,6 +115,7 @@ contract YamatoRedeemerV3 is IYamatoRedeemer, YamatoAction {
                 } catch {
                     break;
                 }
+
                 vars._pledgesOwner[vars._loopCount] = _redeemablePledge.owner;
                 vars._loopCount++;
             } catch {
@@ -213,11 +216,13 @@ contract YamatoRedeemerV3 is IYamatoRedeemer, YamatoAction {
                 mcr,
                 ethPriceInCurrency
             );
+
             if (cappedRedemptionAmount < currencyAmount) {
                 redemptionAmount = cappedRedemptionAmount;
                 ethToBeExpensed =
                     (cappedRedemptionAmount * 1e18) /
                     ethPriceInCurrency;
+
                 reminder = currencyAmount - cappedRedemptionAmount;
             } else {
                 redemptionAmount = currencyAmount;
@@ -231,6 +236,7 @@ contract YamatoRedeemerV3 is IYamatoRedeemer, YamatoAction {
             if (collValuation < currencyAmount) {
                 redemptionAmount = collValuation;
                 ethToBeExpensed = sPledge.coll;
+
                 reminder = currencyAmount - collValuation;
             } else {
                 redemptionAmount = currencyAmount;
@@ -250,6 +256,7 @@ contract YamatoRedeemerV3 is IYamatoRedeemer, YamatoAction {
         */
         sPledge.coll -= ethToBeExpensed; // Note: storage variable in the internal func doesn't change state!
         sPledge.debt -= redemptionAmount;
+
         return (sPledge, reminder);
     }
 
@@ -257,28 +264,17 @@ contract YamatoRedeemerV3 is IYamatoRedeemer, YamatoAction {
         IYamato.Pledge memory pledge,
         uint256 mcr,
         uint256 ethPriceInCurrency
-    ) internal view returns (uint256) {
-        IYamato.Pledge memory initialPledge = pledge.clone();
-        uint256 icr = initialPledge.getICR(feed());
-
-        uint256 acmCappedRedemptionAmount;
-        for (uint256 i = 0; i < 30; i++) {
-            /*
-                mcrDebt = debt + diff
-                diff = mcrDebt - debt
-                mcrDebt = debt / icr * mcr = (mcr/icr) * debt
-                diff = (mcr/icr) * debt - debt
-                diff = (mcr/icr - 1) * debt
-                diff = debt  * (mcr - icr) / icr
-            */
-            acmCappedRedemptionAmount = (pledge.debt * (mcr - icr)) / icr;
-            pledge.debt -= acmCappedRedemptionAmount;
-            icr = pledge.getICR(feed());
-            if (icr >= mcr) {
-                return initialPledge.debt - pledge.debt;
-            } else {
-                // continue loop (normally only single loop would be executed)
-            }
-        }
+    ) internal view returns (uint256 diff) {
+        /*
+            collValuAfter/debtAfter = mcr/10000
+            debtAfter = debtBefore - diff
+            collValuAfter = collValuBefore - diff
+            10000 * (diff - collValuBefore) = mcr * (diff - debtBefore)
+            (mcr - 10000) * diff = mcr * debtBefore - 10000 * collValuBefore
+            diff = (mcr * debtBefore - 10000 * collValuBefore) / (mcr - 10000) 
+        */
+        uint256 debtBefore = pledge.debt;
+        uint256 collValuBefore = (pledge.coll * ethPriceInCurrency) / 1e18;
+        diff = (mcr * debtBefore - 10000 * collValuBefore) / (mcr - 10000);
     }
 }
