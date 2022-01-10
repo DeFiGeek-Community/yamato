@@ -10,7 +10,6 @@ pragma solidity 0.8.4;
 //solhint-disable no-inline-assembly
 import "./Yamato.sol";
 import "./Interfaces/IPriceFeed.sol";
-import "./Interfaces/IPriorityRegistry.sol";
 import "./Interfaces/IPriorityRegistryV3.sol";
 import "./Dependencies/PledgeLib.sol";
 import "./Dependencies/YamatoStore.sol";
@@ -19,14 +18,14 @@ import "./Dependencies/LiquityMath.sol";
 import "hardhat/console.sol";
 
 // @dev For gas saving reason, we use percent denominated ICR only in this contract.
-contract PriorityRegistryV3 is IPriorityRegistry, IPriorityRegistryV3, YamatoStore {
+contract PriorityRegistryV3 is IPriorityRegistryV3, YamatoStore {
     using SafeMath for uint256;
     using PledgeLib for IYamato.Pledge;
 
     mapping(uint256 => mapping(address => IYamato.Pledge)) leveledPledges; // ICR => owner => Pledge
     mapping(uint256 => address[]) private levelIndice; // ICR => owner[]
-    uint256 public override(IPriorityRegistry, IPriorityRegistryV3) pledgeLength;
-    uint256 public override(IPriorityRegistry, IPriorityRegistryV3) LICR; // Note: Lowest ICR in percent
+    uint256 public override pledgeLength;
+    uint256 public override LICR; // Note: Lowest ICR in percent
     mapping(uint256 => FifoQueue) rankedQueue;
 
     function initialize(address _yamato) public initializer {
@@ -48,7 +47,7 @@ contract PriorityRegistryV3 is IPriorityRegistry, IPriorityRegistryV3, YamatoSto
     */
     function upsert(IYamato.Pledge memory _pledge)
         public
-        override(IPriorityRegistry, IPriorityRegistryV3)
+        override
         onlyYamato
         returns (uint256)
     {
@@ -126,7 +125,7 @@ contract PriorityRegistryV3 is IPriorityRegistry, IPriorityRegistryV3, YamatoSto
     /*
         @dev It removes "just full swept" or "just full withdrawn" pledges.
     */
-    function remove(IYamato.Pledge memory _pledge) public override(IPriorityRegistry, IPriorityRegistryV3) onlyYamato {
+    function remove(IYamato.Pledge memory _pledge) public override onlyYamato {
         uint256 _oldICRpercent = floor(_pledge.priority);
         /*
             1. Delete a valid pledge
@@ -165,7 +164,7 @@ contract PriorityRegistryV3 is IPriorityRegistry, IPriorityRegistryV3, YamatoSto
     */
     function popRedeemable()
         public
-        override(IPriorityRegistry, IPriorityRegistryV3)
+        override
         onlyYamato
         returns (IYamato.Pledge memory)
     {
@@ -202,7 +201,7 @@ contract PriorityRegistryV3 is IPriorityRegistry, IPriorityRegistryV3, YamatoSto
     */
     function popSweepable()
         public
-        override(IPriorityRegistry, IPriorityRegistryV3)
+        override
         onlyYamato
         returns (IYamato.Pledge memory)
     {
@@ -221,7 +220,9 @@ contract PriorityRegistryV3 is IPriorityRegistry, IPriorityRegistryV3, YamatoSto
         - _traverseToNextLICR
     */
 
-    function _rankedQueuePush(uint256 _icr, IYamato.Pledge memory _pledge) internal {
+    function _rankedQueuePush(uint256 _icr, IYamato.Pledge memory _pledge)
+        internal
+    {
         rankedQueue[_icr].pledges.push(_pledge);
     }
 
@@ -229,18 +230,18 @@ contract PriorityRegistryV3 is IPriorityRegistry, IPriorityRegistryV3, YamatoSto
         internal
         returns (IYamato.Pledge memory _pledge)
     {
-        console.log('--------1', _icr);
+        console.log("--------1", _icr);
         FifoQueue storage fifoQueue = rankedQueue[_icr];
-        console.log('--------2', _icr);
+        console.log("--------2", _icr);
         uint256 _nextout = fifoQueue.nextout;
-        console.log('--------3', _icr, _nextout);
+        console.log("--------3", _icr, _nextout);
         uint256 _nextin = _rankedQueueTotalLen(_icr);
-        console.log('--------4', _icr, _nextin);
+        console.log("--------4", _icr, _nextin);
         require(_nextout < _nextin, "Can't pop outbound data.");
         while (!_pledge.isCreated && _nextout < _nextin) {
-            console.log('--------4-1', _icr, _nextout);
+            console.log("--------4-1", _icr, _nextout);
             _pledge = fifoQueue.pledges[_nextout];
-            console.log('--------4-1', _icr, _pledge.isCreated);
+            console.log("--------4-1", _icr, _pledge.isCreated);
             _nextout++;
         }
         delete fifoQueue.pledges[_nextout - 1];
@@ -341,7 +342,7 @@ contract PriorityRegistryV3 is IPriorityRegistry, IPriorityRegistryV3, YamatoSto
     function nextRedeemable()
         public
         view
-        override(IPriorityRegistry, IPriorityRegistryV3)
+        override
         returns (IYamato.Pledge memory _poppingPledge)
     {
         if (
@@ -358,7 +359,7 @@ contract PriorityRegistryV3 is IPriorityRegistry, IPriorityRegistryV3, YamatoSto
     function nextSweepable()
         public
         view
-        override(IPriorityRegistry, IPriorityRegistryV3)
+        override
         returns (IYamato.Pledge memory _poppingPledge)
     {
         if (_rankedQueueLen(0) == 0) {
@@ -367,23 +368,20 @@ contract PriorityRegistryV3 is IPriorityRegistry, IPriorityRegistryV3, YamatoSto
         _poppingPledge = rankedQueue[0].pledges[rankedQueue[0].nextout];
     }
 
-    function getLevelIndice(uint256 icr, uint256 i)
-        public
-        view
-        override(IPriorityRegistry)
-        returns (address)
-    {
-        return address(0);
-    }
-
     function getRankedQueue(uint256 icr, uint256 i)
         public
         view
-        override(IPriorityRegistryV3)
+        override
         returns (IYamato.Pledge memory)
     {
         uint256 _mcr = uint256(IYamato(yamato()).MCR());
-        IYamato.Pledge memory zeroPledge = IYamato.Pledge(0, 0, false, address(0), 0);
+        IYamato.Pledge memory zeroPledge = IYamato.Pledge(
+            0,
+            0,
+            false,
+            address(0),
+            0
+        );
 
         if (icr == _mcr && icr == LICR && _rankedQueueLen(icr) == 0) {
             return zeroPledge;
