@@ -229,12 +229,18 @@ contract PriorityRegistryV3 is IPriorityRegistry, IPriorityRegistryV3, YamatoSto
         internal
         returns (IYamato.Pledge memory _pledge)
     {
+        console.log('--------1', _icr);
         FifoQueue storage fifoQueue = rankedQueue[_icr];
+        console.log('--------2', _icr);
         uint256 _nextout = fifoQueue.nextout;
+        console.log('--------3', _icr, _nextout);
         uint256 _nextin = _rankedQueueTotalLen(_icr);
-        require(_nextout <= _nextin, "Can't pop outbound data.");
-        while (!_pledge.isCreated && _nextout < _rankedQueueTotalLen(_icr)) {
+        console.log('--------4', _icr, _nextin);
+        require(_nextout < _nextin, "Can't pop outbound data.");
+        while (!_pledge.isCreated && _nextout < _nextin) {
+            console.log('--------4-1', _icr, _nextout);
             _pledge = fifoQueue.pledges[_nextout];
+            console.log('--------4-1', _icr, _pledge.isCreated);
             _nextout++;
         }
         delete fifoQueue.pledges[_nextout - 1];

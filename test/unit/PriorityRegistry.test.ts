@@ -545,7 +545,7 @@ describe("contract PriorityRegistry", function () {
 
     it(`fails to run if there're no sludge pledge`, async function () {
       await expect(yamatoDummy.bypassPopSweepable()).to.be.revertedWith(
-        "There're no sweepable pledges."
+        "Can't pop outbound data."
       );
     });
 
