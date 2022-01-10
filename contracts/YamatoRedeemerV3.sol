@@ -211,8 +211,7 @@ contract YamatoRedeemerV3 is IYamatoRedeemer, YamatoAction {
 
         if (10000 < icr && icr < mcr) {
             // Note: Risky pledges. 10000<ICR<13000 redemption recovers ICR and calculations are tricky.
-            uint256 cappedRedemptionAmount = _calcCappedRedemptionAmount(
-                sPledge,
+            uint256 cappedRedemptionAmount = sPledge.cappedRedemptionAmount(
                 mcr,
                 ethPriceInCurrency
             );
@@ -258,23 +257,5 @@ contract YamatoRedeemerV3 is IYamatoRedeemer, YamatoAction {
         sPledge.debt -= redemptionAmount;
 
         return (sPledge, reminder);
-    }
-
-    function _calcCappedRedemptionAmount(
-        IYamato.Pledge memory pledge,
-        uint256 mcr,
-        uint256 ethPriceInCurrency
-    ) internal view returns (uint256 diff) {
-        /*
-            collValuAfter/debtAfter = mcr/10000
-            debtAfter = debtBefore - diff
-            collValuAfter = collValuBefore - diff
-            10000 * (diff - collValuBefore) = mcr * (diff - debtBefore)
-            (mcr - 10000) * diff = mcr * debtBefore - 10000 * collValuBefore
-            diff = (mcr * debtBefore - 10000 * collValuBefore) / (mcr - 10000) 
-        */
-        uint256 debtBefore = pledge.debt;
-        uint256 collValuBefore = (pledge.coll * ethPriceInCurrency) / 1e18;
-        diff = (mcr * debtBefore - 10000 * collValuBefore) / (mcr - 10000);
     }
 }

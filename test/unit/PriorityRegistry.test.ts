@@ -188,11 +188,11 @@ describe("contract PriorityRegistry", function () {
       const _pledgeAfter = [_collAfter, _debtAfter, true, address0, _ICRBefore]; // Note: Have the very last ICR here
       await (await yamatoDummy.bypassUpsert(toTyped(_pledgeAfter))).wait();
 
-      const replacingPledge = await priorityRegistry.getLevelIndice(
+      const replacingPledge = await priorityRegistry.getRankedQueue(
         _ICRBefore,
         0
       );
-      expect(replacingPledge).to.eq(ethers.constants.AddressZero);
+      expect(replacingPledge.owner).to.eq(ethers.constants.AddressZero);
 
       const pledgeLength3 = await priorityRegistry.pledgeLength();
       expect(pledgeLength3).to.equal(pledgeLength2);
@@ -446,15 +446,15 @@ describe("contract PriorityRegistry", function () {
       await (await yamatoDummy.bypassUpsert(toTyped(_inputPledge1))).wait();
 
       const licr1 = await priorityRegistry.LICR();
-      const pledgeAddr1 = await priorityRegistry.getLevelIndice(licr1, 0);
+      const pledge1 = await priorityRegistry.getRankedQueue(licr1, 0);
 
       await (await yamatoDummy.bypassPopRedeemable()).wait();
 
       const licr2 = await priorityRegistry.LICR();
-      const pledgeAddr2 = await priorityRegistry.getLevelIndice(licr2, 0);
+      const pledge2 = await priorityRegistry.getRankedQueue(licr2, 0);
 
-      expect(pledgeAddr1).to.eq(_owner1);
-      expect(pledgeAddr2).to.eq(ethers.constants.AddressZero);
+      expect(pledge1.owner).to.eq(_owner1);
+      expect(pledge2.owner).to.eq(ethers.constants.AddressZero);
       expect(licr2).to.eq(99); // Note: No traversal by popRedeemable. It must be done by upsert.
     });
 
@@ -523,15 +523,15 @@ describe("contract PriorityRegistry", function () {
 
         console.log(_owner1, _owner2, _owner3, _owner4);
         const licr1 = await priorityRegistry.LICR();
-        const pledgeAddr1 = await priorityRegistry.getLevelIndice(licr1, 0);
+        const pledge1 = await priorityRegistry.getRankedQueue(licr1, 0);
 
         await (await yamatoDummy.bypassPopRedeemable()).wait();
 
         const licr2 = await priorityRegistry.LICR();
-        const pledgeAddr2 = await priorityRegistry.getLevelIndice(licr2, 0);
+        const pledge2 = await priorityRegistry.getRankedQueue(licr2, 0);
 
-        expect(pledgeAddr1).to.eq(_owner3);
-        expect(pledgeAddr2).to.eq(ethers.constants.AddressZero);
+        expect(pledge1.owner).to.eq(_owner3);
+        expect(pledge2.owner).to.eq(ethers.constants.AddressZero);
       });
     });
   });
