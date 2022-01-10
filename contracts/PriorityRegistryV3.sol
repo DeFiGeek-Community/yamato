@@ -10,7 +10,7 @@ pragma solidity 0.8.4;
 //solhint-disable no-inline-assembly
 import "./Yamato.sol";
 import "./Interfaces/IPriceFeed.sol";
-import "./Interfaces/IPriorityRegistry.sol";
+import "./Interfaces/IPriorityRegistryV3.sol";
 import "./Dependencies/PledgeLib.sol";
 import "./Dependencies/YamatoStore.sol";
 import "./Dependencies/SafeMath.sol";
@@ -18,7 +18,7 @@ import "./Dependencies/LiquityMath.sol";
 import "hardhat/console.sol";
 
 // @dev For gas saving reason, we use percent denominated ICR only in this contract.
-contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
+contract PriorityRegistryV3 is IPriorityRegistryV3, YamatoStore {
     using SafeMath for uint256;
     using PledgeLib for IYamato.Pledge;
 
@@ -26,7 +26,7 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
     mapping(uint256 => address[]) private levelIndice; // ICR => owner[]
     uint256 public override pledgeLength;
     uint256 public override LICR; // Note: Lowest ICR in percent
-    mapping(uint256 => FifoCounter) levelIndiceFifoCounter;
+    mapping(uint256 => FifoQueue) rankedQueue;
 
     function initialize(address _yamato) public initializer {
         __YamatoStore_init(_yamato);
@@ -51,11 +51,7 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
         onlyYamato
         returns (uint256)
     {
-        _initCounterPerLevel(LICR);
-
         uint256 _oldICRpercent = floor(_pledge.priority);
-
-        _initCounterPerLevel(_oldICRpercent);
 
         require(
             !(_pledge.coll == 0 && _pledge.debt == 0 && _oldICRpercent != 0),
@@ -81,8 +77,6 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
 
         uint256 _newICRpercent = floor(_pledge.getICR(feed()));
 
-        _initCounterPerLevel(_newICRpercent);
-
         require(
             _newICRpercent <= floor(2**256 - 1),
             "priority can't be that big."
@@ -91,7 +85,7 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
         _pledge.priority = _newICRpercent * 100;
 
         leveledPledges[_newICRpercent][_pledge.owner] = _pledge;
-        _levelIndiceFifoPush(_newICRpercent, _pledge.owner);
+        _rankedQueuePush(_newICRpercent, _pledge);
         pledgeLength++;
 
         /*
@@ -174,29 +168,17 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
         onlyYamato
         returns (IYamato.Pledge memory)
     {
-        _initCounterPerLevel(LICR);
         require(
             pledgeLength > 0,
             "pledgeLength=0 :: Need to upsert at least once."
         );
         require(LICR > 0, "licr=0 :: Need to upsert at least once.");
         require(
-            _levelIndiceFifoLen(LICR) > 0,
+            _rankedQueueLen(LICR) > 0,
             "The current lowest ICR data is inconsistent with actual sorted pledges."
         );
 
-        address _addr;
-        // Note: Not (Exist AND coll>0) then skip.
-        while (
-            (_levelIndiceFifoLen(LICR) > 0 && _addr == address(0)) &&
-            (!leveledPledges[LICR][_addr].isCreated ||
-                leveledPledges[LICR][_addr].coll == 0)
-        ) {
-            // Bug: This stops when pop a deleted item
-            // Note: null ignorance until _levelIndiceFifoLen() would be good.
-            _addr = _levelIndiceFifoPop(LICR);
-        }
-        IYamato.Pledge memory poppedPledge = leveledPledges[LICR][_addr];
+        IYamato.Pledge memory poppedPledge = _rankedQueuePop(LICR);
 
         // Note: Don't check priority, real ICR is the matter. ICR13000 pledge breaks here.
         require(
@@ -223,74 +205,76 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
         onlyYamato
         returns (IYamato.Pledge memory)
     {
-        _initCounterPerLevel(0);
-        if (_levelIndiceFifoLen(0) > 0) {
-            address _addr;
-
-            // Note: Not (Exist AND debt>0) then skip
-            while (
-                (_levelIndiceFifoLen(0) > 0 && _addr == address(0)) &&
-                (!leveledPledges[0][_addr].isCreated ||
-                    leveledPledges[0][_addr].debt == 0)
-            ) {
-                // Bug: This stops when pop a deleted item
-                // Note: null ignorance until _levelIndiceFifoLen() would be good.
-                _addr = _levelIndiceFifoPop(0);
-            }
-            return leveledPledges[0][_addr];
-        } else {
-            revert("There're no sweepable pledges.");
-        }
+        return _rankedQueuePop(0);
     }
 
     /*
     ==============================
         Internal Function
     ==============================
-        - _levelIndiceFifoPush
-        - _levelIndiceFifoPop
-        - _levelIndiceFifoLen
-        - _levelIndiceFifoSearchAndDestroy
+        - _rankedQueuePush
+        - _rankedQueuePop
+        - _rankedQueueLen
+        - _rankedQueueSearchAndDestroy
         - _deletePledge
         - _traverseToNextLICR
     */
 
-    function _levelIndiceFifoPush(uint256 _icr, address _addr) internal {
-        _initCounterPerLevel(_icr);
-        FifoCounter storage counter = levelIndiceFifoCounter[_icr];
-        // levelIndice[_icr][counter.nextin] = _addr;
-        levelIndice[_icr].push(_addr);
-        counter.nextin++;
-        counter.len++;
+    function _rankedQueuePush(uint256 _icr, IYamato.Pledge memory _pledge)
+        internal
+    {
+        rankedQueue[_icr].pledges.push(_pledge);
     }
 
-    function _levelIndiceFifoPop(uint256 _icr)
+    function _rankedQueuePop(uint256 _icr)
         internal
-        returns (address _addr)
+        returns (IYamato.Pledge memory _pledge)
     {
-        _initCounterPerLevel(_icr);
-        FifoCounter storage counter = levelIndiceFifoCounter[_icr];
-        require(counter.nextout <= counter.nextin, "Can't pop outbound data.");
-        uint256 _nextout = counter.nextout;
-        while (_addr == address(0) && _nextout < levelIndice[_icr].length) {
-            _addr = levelIndice[_icr][_nextout];
+        console.log("--------1", _icr);
+        FifoQueue storage fifoQueue = rankedQueue[_icr];
+        console.log("--------2", _icr);
+        uint256 _nextout = fifoQueue.nextout;
+        console.log("--------3", _icr, _nextout);
+        uint256 _nextin = _rankedQueueTotalLen(_icr);
+        console.log("--------4", _icr, _nextin);
+        require(_nextout < _nextin, "Can't pop outbound data.");
+        while (!_pledge.isCreated && _nextout < _nextin) {
+            console.log("--------4-1", _icr, _nextout);
+            _pledge = fifoQueue.pledges[_nextout];
+            console.log("--------4-1", _icr, _pledge.isCreated);
             _nextout++;
         }
-        delete levelIndice[_icr][_nextout - 1];
-        counter.nextout = _nextout;
-        counter.len--;
+        delete fifoQueue.pledges[_nextout - 1];
+        fifoQueue.nextout = _nextout;
     }
 
-    function _levelIndiceFifoLen(uint256 _icr) internal view returns (uint256) {
-        return levelIndiceFifoCounter[_icr].len;
-    }
-
-    function _levelIndiceFifoSearchAndDestroy(uint256 _icr, uint256 _i)
+    function _rankedQueueLen(uint256 _icr)
         internal
+        view
+        returns (uint256 count)
     {
-        _initCounterPerLevel(_icr);
-        delete levelIndice[_icr][_i];
-        levelIndiceFifoCounter[_icr].len--;
+        FifoQueue memory fifoQueue = rankedQueue[_icr];
+        for (
+            uint256 i = fifoQueue.nextout;
+            i < _rankedQueueTotalLen(_icr);
+            i++
+        ) {
+            if (fifoQueue.pledges[i].isCreated) {
+                count++;
+            }
+        }
+    }
+
+    function _rankedQueueTotalLen(uint256 _icr)
+        internal
+        view
+        returns (uint256)
+    {
+        return rankedQueue[_icr].pledges.length;
+    }
+
+    function _rankedQueueSearchAndDestroy(uint256 _icr, uint256 _i) internal {
+        delete rankedQueue[_icr].pledges[_i];
     }
 
     /*
@@ -300,45 +284,31 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
     */
     function _deletePledge(IYamato.Pledge memory _pledge) internal {
         uint256 icr = floor(_pledge.priority);
-        _initCounterPerLevel(icr);
         address _owner = _pledge.owner;
+        uint256 _nextout = rankedQueue[icr].nextout;
+        uint256 _nextin = _rankedQueueTotalLen(icr);
+        while (_nextout <= _nextin) {
+            IYamato.Pledge memory targetPledge = getRankedQueue(icr, _nextout);
 
-        if (leveledPledges[icr][_owner].isCreated) {
-            // Note: upsert() requires to maintain the consistency of index
-
-            uint256 _nextout = levelIndiceFifoCounter[icr].nextout;
-            uint256 _nextin = levelIndiceFifoCounter[icr].nextout;
-            while (_nextout <= _nextin) {
-                // Bug: getLevelIndice is reverting
-                if (getLevelIndice(icr, _nextout) == _owner) {
-                    _levelIndiceFifoSearchAndDestroy(icr, _nextout);
-
-                    break;
-                }
-                _nextout++;
+            // Bug: getRankedQueue is reverting
+            if (targetPledge.owner == _owner) {
+                _rankedQueueSearchAndDestroy(icr, _nextout);
+                break;
             }
-
-            // Note: Delete of pledge is damn simple
-
-            delete leveledPledges[icr][_owner];
-
-            pledgeLength -= 1;
-        } else {
-            revert("The delete target is not exist.");
+            _nextout++;
         }
+        pledgeLength -= 1;
     }
 
     function _traverseToNextLICR(uint256 _icr) internal {
         uint256 _mcr = uint256(IYamato(yamato()).MCR());
-        _initCounterPerLevel(0);
-        _initCounterPerLevel(_icr);
-        _initCounterPerLevel(floor(2**256 - 1));
+
         bool infLoopish = pledgeLength ==
-            _levelIndiceFifoLen(0) + _levelIndiceFifoLen(floor(2**256 - 1));
+            _rankedQueueLen(0) + _rankedQueueLen(floor(2**256 - 1));
         // Note: The _oldICRpercent == LICR now, and that former LICR-level has just been nullified. New licr is needed.
 
         if (
-            _levelIndiceFifoLen(_icr) == 0 && /* Confirm the level is nullified */
+            _rankedQueueLen(_icr) == 0 && /* Confirm the level is nullified */
             _icr == LICR && /* Confirm the deleted ICR is lowest  */
             pledgeLength > 1 && /* Not to scan infinitely */
             LICR != 0 /* If 1st take, leave it to the logic in the bottom */
@@ -350,10 +320,9 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
                 // TODO: Out-of-gas fail safe
                 uint256 _next = _icr;
                 while (
-                    _levelIndiceFifoLen(_next) == 0 /* this level is empty! */
+                    _rankedQueueLen(_next) == 0 /* this level is empty! */
                 ) {
                     _next++;
-                    _initCounterPerLevel(_next);
                 } // Note: if exist or out-of-range, stop it and set that level as the LICR
                 LICR = _next;
             }
@@ -366,7 +335,7 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
     ==============================
         - nextRedeemable
         - nextSweepable
-        - getLevelIndice
+        - getRankedQueue
         - getRedeemablesCap
         - getSweepablesCap
     */
@@ -374,74 +343,80 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
         public
         view
         override
-        returns (IYamato.Pledge memory)
+        returns (IYamato.Pledge memory _poppingPledge)
     {
         if (
-            _levelIndiceFifoLen(LICR) == 0 ||
-            levelIndice[LICR].length == 0 ||
-            levelIndice[LICR].length > levelIndiceFifoCounter[LICR].nextout
+            _rankedQueueLen(LICR) == 0 ||
+            _rankedQueueTotalLen(LICR) == 0 ||
+            _rankedQueueTotalLen(LICR) > rankedQueue[LICR].nextout
         ) {
             return IYamato.Pledge(0, 0, false, address(0), 0);
         }
 
-        address _poppedAddr = levelIndice[LICR][
-            levelIndiceFifoCounter[LICR].nextout
-        ];
-        IYamato.Pledge memory pledge = leveledPledges[LICR][_poppedAddr];
-        return pledge;
+        _poppingPledge = rankedQueue[LICR].pledges[rankedQueue[LICR].nextout];
     }
 
     function nextSweepable()
         public
         view
         override
-        returns (IYamato.Pledge memory)
+        returns (IYamato.Pledge memory _poppingPledge)
     {
-        if (_levelIndiceFifoLen(0) == 0) {
+        if (_rankedQueueLen(0) == 0) {
             return IYamato.Pledge(0, 0, false, address(0), 0);
         }
-        address _poppedAddr = levelIndice[0][levelIndiceFifoCounter[0].nextout];
-        return leveledPledges[0][_poppedAddr];
+        _poppingPledge = rankedQueue[0].pledges[rankedQueue[0].nextout];
     }
 
-    function getLevelIndice(uint256 icr, uint256 i)
+    function getRankedQueue(uint256 icr, uint256 i)
         public
         view
         override
-        returns (address)
+        returns (IYamato.Pledge memory)
     {
         uint256 _mcr = uint256(IYamato(yamato()).MCR());
+        IYamato.Pledge memory zeroPledge = IYamato.Pledge(
+            0,
+            0,
+            false,
+            address(0),
+            0
+        );
 
-        if (icr == _mcr && icr == LICR && _levelIndiceFifoLen(icr) == 0) {
-            return address(0);
+        if (icr == _mcr && icr == LICR && _rankedQueueLen(icr) == 0) {
+            return zeroPledge;
         }
 
-        if (levelIndice[icr].length == 0) {
-            return address(0);
+        if (_rankedQueueTotalLen(icr) == 0) {
+            return zeroPledge;
         }
 
-        if (levelIndice[icr].length - 1 >= i) {
-            return levelIndice[icr][i];
+        if (_rankedQueueTotalLen(icr) - 1 >= i) {
+            return rankedQueue[icr].pledges[i];
         } else {
-            return address(0);
+            return zeroPledge;
         }
     }
 
     function getRedeemablesCap() external view returns (uint256 _cap) {
-        for (uint256 i = 1; i < uint256(IYamato(yamato()).MCR()); i++) {
-            address _addr;
-            uint256 _nextout = levelIndiceFifoCounter[i].nextout;
-            uint256 _nextin = levelIndiceFifoCounter[i].nextin;
-            if (_nextin == 0) {
-                _nextin = levelIndice[i].length;
-            }
+        // Bug: redeemable can exist above MCR. Have to check the real ICR.
+        uint256 mcrPercent = uint256(IYamato(yamato()).MCR());
+        uint256 ethPriceInCurrency = IPriceFeed(feed()).lastGoodPrice();
+        for (uint256 i = 1; i < mcrPercent; i++) {
+            IYamato.Pledge memory _pledge;
+            uint256 _nextout = rankedQueue[i].nextout;
+            uint256 _nextin = _rankedQueueTotalLen(i);
             while (_nextout <= _nextin) {
-                _addr = getLevelIndice(i, _nextout);
-                if (_addr != address(0)) {
-                    _cap +=
-                        (leveledPledges[i][_addr].coll *
-                            IPriceFeed(feed()).lastGoodPrice()) /
-                        1e18;
+                _pledge = getRankedQueue(i, _nextout);
+                if (_pledge.isCreated) {
+                    if (_pledge.getICR(feed()) < 10000) {
+                        _cap += (_pledge.coll * ethPriceInCurrency) / 1e18;
+                    } else {
+                        _cap += _pledge.cappedRedemptionAmount(
+                            mcrPercent * 100,
+                            ethPriceInCurrency
+                        );
+                    }
                 }
                 _nextout++;
             }
@@ -449,16 +424,13 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
     }
 
     function getSweepablesCap() external view returns (uint256 _cap) {
-        address _addr;
-        uint256 _nextout = levelIndiceFifoCounter[0].nextout;
-        uint256 _nextin = levelIndiceFifoCounter[0].nextin;
-        if (_nextin == 0) {
-            _nextin = levelIndice[0].length;
-        }
+        IYamato.Pledge memory _pledge;
+        uint256 _nextout = rankedQueue[0].nextout;
+        uint256 _nextin = _rankedQueueTotalLen(0);
         while (_nextout <= _nextin) {
-            _addr = getLevelIndice(0, _nextout);
-            if (_addr != address(0)) {
-                _cap += leveledPledges[0][_addr].debt;
+            _pledge = getRankedQueue(0, _nextout);
+            if (_pledge.isCreated) {
+                _cap += _pledge.debt;
             }
             _nextout++;
         }
@@ -466,15 +438,5 @@ contract PriorityRegistryV3 is IPriorityRegistry, YamatoStore {
 
     function floor(uint256 _ICRpertenk) internal returns (uint256) {
         return _ICRpertenk / 100;
-    }
-
-    function _initCounterPerLevel(uint256 _icr) internal {
-        FifoCounter storage coutner = levelIndiceFifoCounter[_icr];
-        if (coutner.nextin == 0) {
-            coutner.nextin = levelIndice[_icr].length;
-        }
-        if (coutner.len == 0) {
-            coutner.len = levelIndice[_icr].length;
-        }
     }
 }

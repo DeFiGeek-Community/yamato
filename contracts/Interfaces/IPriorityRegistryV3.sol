@@ -10,7 +10,12 @@ pragma solidity 0.8.4;
 //solhint-disable no-inline-assembly
 import "./IYamato.sol";
 
-interface IPriorityRegistry {
+interface IPriorityRegistryV3 {
+    struct FifoQueue {
+        uint256 nextout;
+        IYamato.Pledge[] pledges;
+    }
+
     function upsert(IYamato.Pledge memory _pledge) external returns (uint256);
 
     function remove(IYamato.Pledge memory _pledge) external;
@@ -23,10 +28,10 @@ interface IPriorityRegistry {
 
     function pledgeLength() external view returns (uint256);
 
-    function getLevelIndice(uint256 _icr, uint256 _i)
+    function getRankedQueue(uint256 _icr, uint256 _i)
         external
         view
-        returns (address);
+        returns (IYamato.Pledge memory);
 
     function nextRedeemable() external view returns (IYamato.Pledge memory);
 

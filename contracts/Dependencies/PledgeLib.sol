@@ -138,4 +138,22 @@ library PledgeLib {
             _FRpertenk = 10;
         }
     }
+
+    function cappedRedemptionAmount(
+        IYamato.Pledge memory pledge,
+        uint256 mcr,
+        uint256 ethPriceInCurrency
+    ) public view returns (uint256 diff) {
+        /*
+            collValuAfter/debtAfter = mcr/10000
+            debtAfter = debtBefore - diff
+            collValuAfter = collValuBefore - diff
+            10000 * (diff - collValuBefore) = mcr * (diff - debtBefore)
+            (mcr - 10000) * diff = mcr * debtBefore - 10000 * collValuBefore
+            diff = (mcr * debtBefore - 10000 * collValuBefore) / (mcr - 10000) 
+        */
+        uint256 debtBefore = pledge.debt;
+        uint256 collValuBefore = (pledge.coll * ethPriceInCurrency) / 1e18;
+        diff = (mcr * debtBefore - 10000 * collValuBefore) / (mcr - 10000);
+    }
 }
