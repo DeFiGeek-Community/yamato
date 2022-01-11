@@ -546,7 +546,7 @@ describe("contract PriorityRegistry", function () {
 
     it(`fails to run if there're no sludge pledge`, async function () {
       await expect(yamatoDummy.bypassPopSweepable()).to.be.revertedWith(
-        "Can't pop outbound data."
+        "Pop must not be done for empty queue"
       );
     });
 
@@ -646,6 +646,7 @@ describe("contract PriorityRegistry", function () {
   describe("rankedQueueSearchAndDestroy()", function () {
     let _owner1;
     let _index;
+    let _inputPledge1;
     let len1;
     let lenT1;
     let len2;
@@ -663,15 +664,15 @@ describe("contract PriorityRegistry", function () {
         .div(1e18 + "");
       _index = _icr1.div(100);
 
-      const _inputPledge1 = [_coll1, _debt1, true, _owner1, 0];
-
+      _inputPledge1 = [_coll1, _debt1, true, _owner1, 0];
+    });
+    it(`reduces length of queue`, async function () {
       len1 = await priorityRegistry.rankedQueueLen(_index);
       lenT1 = await priorityRegistry.rankedQueueTotalLen(_index);
       await yamatoDummy.bypassRankedQueuePush(_index, toTyped(_inputPledge1));
       len2 = await priorityRegistry.rankedQueueLen(_index);
       lenT2 = await priorityRegistry.rankedQueueTotalLen(_index);
-    });
-    it(`reduces length of queue`, async function () {
+
       await yamatoDummy.bypassRankedQueueSearchAndDestroy(_index, 0);
 
       len3 = await priorityRegistry.rankedQueueLen(_index);
@@ -686,10 +687,7 @@ describe("contract PriorityRegistry", function () {
       expect(len3).to.eq(lenT3.sub(1)); // Total Length after pop will be bigger than real length
     });
 
-    describe.only("Context - scenario test", function () {
-      let _owner1;
-      let _index;
-      let _inputPledge1;
+    describe("Context - scenario test", function () {
       beforeEach(async () => {
         _owner1 = address0;
         const _coll1 = BigNumber.from(1e18 + "");
@@ -717,7 +715,7 @@ describe("contract PriorityRegistry", function () {
             _index,
             await priorityRegistry.rankedQueueNextout(_index)
           )
-        ).to.be.revertedWith("Delete target was null");
+        ).to.be.revertedWith("Searched queue must have at least an item");
       });
       it("push1 push2 push3 pop1 push4 push5 destroy2 pop3 destroy4 pop5 push1 push2 destroy1 pop2 = success", async function () {
         await yamatoDummy.bypassRankedQueuePush(_index, toTyped(_inputPledge1));

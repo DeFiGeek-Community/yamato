@@ -248,6 +248,7 @@ contract PriorityRegistryV3 is IPriorityRegistryV3, YamatoStore {
 
             _nextout++;
         }
+
         require(_pledge.isCreated, "All queue were empty");
         delete fifoQueue.pledges[_nextout - 1];
         fifoQueue.nextout = _nextout;
@@ -272,6 +273,7 @@ contract PriorityRegistryV3 is IPriorityRegistryV3, YamatoStore {
             "Search index must be less than the last index"
         );
         require(rankedQueue.pledges[_i].isCreated, "Delete target was null");
+
         delete rankedQueue.pledges[_i];
     }
 
