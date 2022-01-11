@@ -92,7 +92,10 @@ contract YamatoDummy {
         priorityRegistry.popSweepable();
     }
 
-    function bypassRankedQueuePush(uint256 _icr, IYamato.Pledge calldata _pledge) external onlyTester {
+    function bypassRankedQueuePush(
+        uint256 _icr,
+        IYamato.Pledge calldata _pledge
+    ) external onlyTester {
         priorityRegistry.rankedQueuePush(_icr, _pledge);
     }
 
@@ -100,10 +103,12 @@ contract YamatoDummy {
         priorityRegistry.rankedQueuePop(_icr);
     }
 
-    function bypassRankedQueueSearchAndDestroy(uint256 _icr, uint256 _i) external onlyTester {
+    function bypassRankedQueueSearchAndDestroy(uint256 _icr, uint256 _i)
+        external
+        onlyTester
+    {
         priorityRegistry.rankedQueueSearchAndDestroy(_icr, _i);
     }
-
 
     function bypassDepositRedemptionReserve(uint256 _amount)
         external

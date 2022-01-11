@@ -238,12 +238,17 @@ contract PriorityRegistryV3 is IPriorityRegistryV3, YamatoStore {
 
         uint256 _nextin = rankedQueueTotalLen(_icr);
 
+        require(
+            rankedQueueLen(_icr) > 0,
+            "Pop must not be done for empty queue"
+        );
         require(_nextout < _nextin, "Can't pop outbound data.");
         while (!_pledge.isCreated && _nextout < _nextin) {
             _pledge = fifoQueue.pledges[_nextout];
 
             _nextout++;
         }
+        require(_pledge.isCreated, "All queue were empty");
         delete fifoQueue.pledges[_nextout - 1];
         fifoQueue.nextout = _nextout;
     }
@@ -253,7 +258,21 @@ contract PriorityRegistryV3 is IPriorityRegistryV3, YamatoStore {
         override
         onlyYamato
     {
-        delete rankedQueue[_icr].pledges[_i];
+        FifoQueue storage rankedQueue = rankedQueue[_icr];
+        require(
+            rankedQueueLen(_icr) > 0,
+            "Searched queue must have at least an item"
+        );
+        require(
+            rankedQueue.nextout <= _i,
+            "Search index must be more than next-out"
+        );
+        require(
+            _i < rankedQueueTotalLen(_icr),
+            "Search index must be less than the last index"
+        );
+        require(rankedQueue.pledges[_i].isCreated, "Delete target was null");
+        delete rankedQueue.pledges[_i];
     }
 
     function rankedQueueLen(uint256 _icr) public view returns (uint256 count) {
@@ -273,6 +292,9 @@ contract PriorityRegistryV3 is IPriorityRegistryV3, YamatoStore {
         return rankedQueue[_icr].pledges.length;
     }
 
+    function rankedQueueNextout(uint256 _icr) public view returns (uint256) {
+        return rankedQueue[_icr].nextout;
+    }
 
     /*
     ==============================

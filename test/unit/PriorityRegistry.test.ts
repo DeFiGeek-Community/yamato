@@ -580,8 +580,8 @@ describe("contract PriorityRegistry", function () {
   describe("rankedQueuePush()", function () {
     it(`increases length of queue`, async function () {
       const _owner1 = address0;
-      const _coll1 = BigNumber.from(1e18+"");
-      const _debt1 = BigNumber.from(PRICE).mul(1e18+"");
+      const _coll1 = BigNumber.from(1e18 + "");
+      const _debt1 = BigNumber.from(PRICE).mul(1e18 + "");
       const _icr1 = _coll1
         .mul(PRICE)
         .mul(10000)
@@ -611,8 +611,8 @@ describe("contract PriorityRegistry", function () {
     let lenT3;
     beforeEach(async () => {
       const _owner1 = address0;
-      const _coll1 = BigNumber.from(1e18+"");
-      const _debt1 = BigNumber.from(PRICE).mul(1e18+"");
+      const _coll1 = BigNumber.from(1e18 + "");
+      const _debt1 = BigNumber.from(PRICE).mul(1e18 + "");
       const _icr1 = _coll1
         .mul(PRICE)
         .mul(10000)
@@ -627,7 +627,7 @@ describe("contract PriorityRegistry", function () {
       await yamatoDummy.bypassRankedQueuePush(_index, toTyped(_inputPledge1));
       len2 = await priorityRegistry.rankedQueueLen(_index);
       lenT2 = await priorityRegistry.rankedQueueTotalLen(_index);
-    })
+    });
     it(`reduces length of queue`, async function () {
       await yamatoDummy.bypassRankedQueuePop(_index);
 
@@ -643,7 +643,7 @@ describe("contract PriorityRegistry", function () {
       expect(len3).to.eq(lenT3.sub(1)); // Total Length after pop will be bigger than real length
     });
   });
-  describe.only("rankedQueueSearchAndDestroy()", function () {
+  describe("rankedQueueSearchAndDestroy()", function () {
     let _owner1;
     let _index;
     let len1;
@@ -654,8 +654,8 @@ describe("contract PriorityRegistry", function () {
     let lenT3;
     beforeEach(async () => {
       _owner1 = address0;
-      const _coll1 = BigNumber.from(1e18+"");
-      const _debt1 = BigNumber.from(PRICE).mul(1e18+"");
+      const _coll1 = BigNumber.from(1e18 + "");
+      const _debt1 = BigNumber.from(PRICE).mul(1e18 + "");
       const _icr1 = _coll1
         .mul(PRICE)
         .mul(10000)
@@ -670,9 +670,9 @@ describe("contract PriorityRegistry", function () {
       await yamatoDummy.bypassRankedQueuePush(_index, toTyped(_inputPledge1));
       len2 = await priorityRegistry.rankedQueueLen(_index);
       lenT2 = await priorityRegistry.rankedQueueTotalLen(_index);
-    })
+    });
     it(`reduces length of queue`, async function () {
-      await yamatoDummy.bypassRankedQueueSearchAndDestroy(_index, _owner1);
+      await yamatoDummy.bypassRankedQueueSearchAndDestroy(_index, 0);
 
       len3 = await priorityRegistry.rankedQueueLen(_index);
       lenT3 = await priorityRegistry.rankedQueueTotalLen(_index);
@@ -686,18 +686,76 @@ describe("contract PriorityRegistry", function () {
       expect(len3).to.eq(lenT3.sub(1)); // Total Length after pop will be bigger than real length
     });
 
-    describe.only("Context - scenario", function () {
-      it("push1 pop1 pop? = fail", function () {
-
+    describe.only("Context - scenario test", function () {
+      let _owner1;
+      let _index;
+      let _inputPledge1;
+      beforeEach(async () => {
+        _owner1 = address0;
+        const _coll1 = BigNumber.from(1e18 + "");
+        const _debt1 = BigNumber.from(PRICE).mul(1e18 + "");
+        const _icr1 = _coll1
+          .mul(PRICE)
+          .mul(10000)
+          .div(_debt1)
+          .div(1e18 + "");
+        _index = _icr1.div(100);
+        _inputPledge1 = [_coll1, _debt1, true, _owner1, 0];
       });
-      it("push1 pop1 destroy1 = fail", function () {
-
+      it("push1 pop1 pop? = fail", async function () {
+        await yamatoDummy.bypassRankedQueuePush(_index, toTyped(_inputPledge1));
+        await yamatoDummy.bypassRankedQueuePop(_index);
+        await expect(
+          yamatoDummy.bypassRankedQueuePop(_index)
+        ).to.be.revertedWith("Pop must not be done for empty queue");
       });
-      it("push1 push2 push3 pop1 push4 push5 destroy2 pop3 destroy4 pop5 push1 push2 destroy1 pop2 = success", function () {
+      it("push1 pop1 destroy1 = fail", async function () {
+        await yamatoDummy.bypassRankedQueuePush(_index, toTyped(_inputPledge1));
+        await yamatoDummy.bypassRankedQueuePop(_index);
+        await expect(
+          yamatoDummy.bypassRankedQueueSearchAndDestroy(
+            _index,
+            await priorityRegistry.rankedQueueNextout(_index)
+          )
+        ).to.be.revertedWith("Delete target was null");
+      });
+      it("push1 push2 push3 pop1 push4 push5 destroy2 pop3 destroy4 pop5 push1 push2 destroy1 pop2 = success", async function () {
+        await yamatoDummy.bypassRankedQueuePush(_index, toTyped(_inputPledge1));
+        await yamatoDummy.bypassRankedQueuePush(_index, toTyped(_inputPledge1));
+        await yamatoDummy.bypassRankedQueuePush(_index, toTyped(_inputPledge1));
 
+        await yamatoDummy.bypassRankedQueuePop(_index);
+
+        await yamatoDummy.bypassRankedQueuePush(_index, toTyped(_inputPledge1));
+        await yamatoDummy.bypassRankedQueuePush(_index, toTyped(_inputPledge1));
+
+        await yamatoDummy.bypassRankedQueueSearchAndDestroy(
+          _index,
+          await priorityRegistry.rankedQueueNextout(_index)
+        );
+
+        await yamatoDummy.bypassRankedQueuePop(_index);
+
+        await yamatoDummy.bypassRankedQueueSearchAndDestroy(
+          _index,
+          await priorityRegistry.rankedQueueNextout(_index)
+        );
+
+        await yamatoDummy.bypassRankedQueuePop(_index);
+
+        await yamatoDummy.bypassRankedQueuePush(_index, toTyped(_inputPledge1));
+        await yamatoDummy.bypassRankedQueuePush(_index, toTyped(_inputPledge1));
+
+        await yamatoDummy.bypassRankedQueueSearchAndDestroy(
+          _index,
+          await priorityRegistry.rankedQueueNextout(_index)
+        );
+
+        await yamatoDummy.bypassRankedQueuePop(_index);
+
+        expect(await priorityRegistry.rankedQueueLen(_index)).to.eq(0);
       });
     });
-
   });
 
   describe("getRedeemablesCap()", function () {

@@ -28,9 +28,12 @@ interface IPriorityRegistryV3 {
 
     function pledgeLength() external view returns (uint256);
 
-    function rankedQueuePush(uint256 _icr, IYamato.Pledge memory _pledge) external;
+    function rankedQueuePush(uint256 _icr, IYamato.Pledge memory _pledge)
+        external;
 
-    function rankedQueuePop(uint256 _icr) external returns (IYamato.Pledge memory _pledge);
+    function rankedQueuePop(uint256 _icr)
+        external
+        returns (IYamato.Pledge memory _pledge);
 
     function rankedQueueSearchAndDestroy(uint256 _icr, uint256 _i) external;
 
