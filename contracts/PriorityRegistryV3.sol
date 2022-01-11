@@ -85,7 +85,7 @@ contract PriorityRegistryV3 is IPriorityRegistryV3, YamatoStore {
         _pledge.priority = _newICRpercent * 100;
 
         leveledPledges[_newICRpercent][_pledge.owner] = _pledge;
-        _rankedQueuePush(_newICRpercent, _pledge);
+        rankedQueuePush(_newICRpercent, _pledge);
         pledgeLength++;
 
         /*
@@ -174,11 +174,11 @@ contract PriorityRegistryV3 is IPriorityRegistryV3, YamatoStore {
         );
         require(LICR > 0, "licr=0 :: Need to upsert at least once.");
         require(
-            _rankedQueueLen(LICR) > 0,
+            rankedQueueLen(LICR) > 0,
             "The current lowest ICR data is inconsistent with actual sorted pledges."
         );
 
-        IYamato.Pledge memory poppedPledge = _rankedQueuePop(LICR);
+        IYamato.Pledge memory poppedPledge = rankedQueuePop(LICR);
 
         // Note: Don't check priority, real ICR is the matter. ICR13000 pledge breaks here.
         require(
@@ -205,58 +205,62 @@ contract PriorityRegistryV3 is IPriorityRegistryV3, YamatoStore {
         onlyYamato
         returns (IYamato.Pledge memory)
     {
-        return _rankedQueuePop(0);
+        return rankedQueuePop(0);
     }
 
     /*
     ==============================
-        Internal Function
+        Fifo Managers (public, because of testability)
     ==============================
-        - _rankedQueuePush
-        - _rankedQueuePop
-        - _rankedQueueLen
-        - _rankedQueueSearchAndDestroy
-        - _deletePledge
-        - _traverseToNextLICR
+        - rankedQueuePush
+        - rankedQueuePop
+        - rankedQueueSearchAndDestroy
+        - rankedQueueLen
+        - rankedQueueTotalLen
     */
-
-    function _rankedQueuePush(uint256 _icr, IYamato.Pledge memory _pledge)
-        internal
+    function rankedQueuePush(uint256 _icr, IYamato.Pledge memory _pledge)
+        public
+        override
+        onlyYamato
     {
         rankedQueue[_icr].pledges.push(_pledge);
     }
 
-    function _rankedQueuePop(uint256 _icr)
-        internal
+    function rankedQueuePop(uint256 _icr)
+        public
+        override
+        onlyYamato
         returns (IYamato.Pledge memory _pledge)
     {
-        console.log("--------1", _icr);
         FifoQueue storage fifoQueue = rankedQueue[_icr];
-        console.log("--------2", _icr);
+
         uint256 _nextout = fifoQueue.nextout;
-        console.log("--------3", _icr, _nextout);
-        uint256 _nextin = _rankedQueueTotalLen(_icr);
-        console.log("--------4", _icr, _nextin);
+
+        uint256 _nextin = rankedQueueTotalLen(_icr);
+
         require(_nextout < _nextin, "Can't pop outbound data.");
         while (!_pledge.isCreated && _nextout < _nextin) {
-            console.log("--------4-1", _icr, _nextout);
             _pledge = fifoQueue.pledges[_nextout];
-            console.log("--------4-1", _icr, _pledge.isCreated);
+
             _nextout++;
         }
         delete fifoQueue.pledges[_nextout - 1];
         fifoQueue.nextout = _nextout;
     }
 
-    function _rankedQueueLen(uint256 _icr)
-        internal
-        view
-        returns (uint256 count)
+    function rankedQueueSearchAndDestroy(uint256 _icr, uint256 _i)
+        public
+        override
+        onlyYamato
     {
+        delete rankedQueue[_icr].pledges[_i];
+    }
+
+    function rankedQueueLen(uint256 _icr) public view returns (uint256 count) {
         FifoQueue memory fifoQueue = rankedQueue[_icr];
         for (
             uint256 i = fifoQueue.nextout;
-            i < _rankedQueueTotalLen(_icr);
+            i < rankedQueueTotalLen(_icr);
             i++
         ) {
             if (fifoQueue.pledges[i].isCreated) {
@@ -265,18 +269,18 @@ contract PriorityRegistryV3 is IPriorityRegistryV3, YamatoStore {
         }
     }
 
-    function _rankedQueueTotalLen(uint256 _icr)
-        internal
-        view
-        returns (uint256)
-    {
+    function rankedQueueTotalLen(uint256 _icr) public view returns (uint256) {
         return rankedQueue[_icr].pledges.length;
     }
 
-    function _rankedQueueSearchAndDestroy(uint256 _icr, uint256 _i) internal {
-        delete rankedQueue[_icr].pledges[_i];
-    }
 
+    /*
+    ==============================
+        Internal Function
+    ==============================
+        - _deletePledge
+        - _traverseToNextLICR
+    */
     /*
         @dev delete of "address[] storage" causes gap in the list.
              For reasonably gas-saved delete, you must swap target with tail then delete it.
@@ -286,13 +290,13 @@ contract PriorityRegistryV3 is IPriorityRegistryV3, YamatoStore {
         uint256 icr = floor(_pledge.priority);
         address _owner = _pledge.owner;
         uint256 _nextout = rankedQueue[icr].nextout;
-        uint256 _nextin = _rankedQueueTotalLen(icr);
+        uint256 _nextin = rankedQueueTotalLen(icr);
         while (_nextout <= _nextin) {
             IYamato.Pledge memory targetPledge = getRankedQueue(icr, _nextout);
 
             // Bug: getRankedQueue is reverting
             if (targetPledge.owner == _owner) {
-                _rankedQueueSearchAndDestroy(icr, _nextout);
+                rankedQueueSearchAndDestroy(icr, _nextout);
                 break;
             }
             _nextout++;
@@ -304,11 +308,11 @@ contract PriorityRegistryV3 is IPriorityRegistryV3, YamatoStore {
         uint256 _mcr = uint256(IYamato(yamato()).MCR());
 
         bool infLoopish = pledgeLength ==
-            _rankedQueueLen(0) + _rankedQueueLen(floor(2**256 - 1));
+            rankedQueueLen(0) + rankedQueueLen(floor(2**256 - 1));
         // Note: The _oldICRpercent == LICR now, and that former LICR-level has just been nullified. New licr is needed.
 
         if (
-            _rankedQueueLen(_icr) == 0 && /* Confirm the level is nullified */
+            rankedQueueLen(_icr) == 0 && /* Confirm the level is nullified */
             _icr == LICR && /* Confirm the deleted ICR is lowest  */
             pledgeLength > 1 && /* Not to scan infinitely */
             LICR != 0 /* If 1st take, leave it to the logic in the bottom */
@@ -320,7 +324,7 @@ contract PriorityRegistryV3 is IPriorityRegistryV3, YamatoStore {
                 // TODO: Out-of-gas fail safe
                 uint256 _next = _icr;
                 while (
-                    _rankedQueueLen(_next) == 0 /* this level is empty! */
+                    rankedQueueLen(_next) == 0 /* this level is empty! */
                 ) {
                     _next++;
                 } // Note: if exist or out-of-range, stop it and set that level as the LICR
@@ -346,9 +350,9 @@ contract PriorityRegistryV3 is IPriorityRegistryV3, YamatoStore {
         returns (IYamato.Pledge memory _poppingPledge)
     {
         if (
-            _rankedQueueLen(LICR) == 0 ||
-            _rankedQueueTotalLen(LICR) == 0 ||
-            _rankedQueueTotalLen(LICR) > rankedQueue[LICR].nextout
+            rankedQueueLen(LICR) == 0 ||
+            rankedQueueTotalLen(LICR) == 0 ||
+            rankedQueueTotalLen(LICR) > rankedQueue[LICR].nextout
         ) {
             return IYamato.Pledge(0, 0, false, address(0), 0);
         }
@@ -362,7 +366,7 @@ contract PriorityRegistryV3 is IPriorityRegistryV3, YamatoStore {
         override
         returns (IYamato.Pledge memory _poppingPledge)
     {
-        if (_rankedQueueLen(0) == 0) {
+        if (rankedQueueLen(0) == 0) {
             return IYamato.Pledge(0, 0, false, address(0), 0);
         }
         _poppingPledge = rankedQueue[0].pledges[rankedQueue[0].nextout];
@@ -383,15 +387,15 @@ contract PriorityRegistryV3 is IPriorityRegistryV3, YamatoStore {
             0
         );
 
-        if (icr == _mcr && icr == LICR && _rankedQueueLen(icr) == 0) {
+        if (icr == _mcr && icr == LICR && rankedQueueLen(icr) == 0) {
             return zeroPledge;
         }
 
-        if (_rankedQueueTotalLen(icr) == 0) {
+        if (rankedQueueTotalLen(icr) == 0) {
             return zeroPledge;
         }
 
-        if (_rankedQueueTotalLen(icr) - 1 >= i) {
+        if (rankedQueueTotalLen(icr) - 1 >= i) {
             return rankedQueue[icr].pledges[i];
         } else {
             return zeroPledge;
@@ -405,7 +409,7 @@ contract PriorityRegistryV3 is IPriorityRegistryV3, YamatoStore {
         for (uint256 i = 1; i < mcrPercent; i++) {
             IYamato.Pledge memory _pledge;
             uint256 _nextout = rankedQueue[i].nextout;
-            uint256 _nextin = _rankedQueueTotalLen(i);
+            uint256 _nextin = rankedQueueTotalLen(i);
             while (_nextout <= _nextin) {
                 _pledge = getRankedQueue(i, _nextout);
                 if (_pledge.isCreated) {
@@ -426,7 +430,7 @@ contract PriorityRegistryV3 is IPriorityRegistryV3, YamatoStore {
     function getSweepablesCap() external view returns (uint256 _cap) {
         IYamato.Pledge memory _pledge;
         uint256 _nextout = rankedQueue[0].nextout;
-        uint256 _nextin = _rankedQueueTotalLen(0);
+        uint256 _nextin = rankedQueueTotalLen(0);
         while (_nextout <= _nextin) {
             _pledge = getRankedQueue(0, _nextout);
             if (_pledge.isCreated) {
