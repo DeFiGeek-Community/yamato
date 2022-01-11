@@ -16,6 +16,7 @@ import {
   CJPY,
 } from "../../typechain";
 import { getFakeProxy, getLinkedProxy } from "../../src/testUtil";
+import { describe } from "mocha";
 
 chai.use(smock.matchers);
 chai.use(solidity);
@@ -545,7 +546,7 @@ describe("contract PriorityRegistry", function () {
 
     it(`fails to run if there're no sludge pledge`, async function () {
       await expect(yamatoDummy.bypassPopSweepable()).to.be.revertedWith(
-        "Can't pop outbound data."
+        "Pop must not be done for empty queue"
       );
     });
 
@@ -566,6 +567,192 @@ describe("contract PriorityRegistry", function () {
       expect(nextSweepableAfter.coll).to.eq(0);
       expect(nextSweepableAfter.debt).to.eq(0);
       expect(nextSweepableAfter.isCreated).to.eq(false);
+    });
+  });
+
+  /*
+    - rankedQueuePush
+    - rankedQueuePop
+    - rankedQueueSearchAndDestroy
+    (- rankedQueueLen)
+    (- rankedQueueTotalLen)
+  */
+  describe("rankedQueuePush()", function () {
+    it(`increases length of queue`, async function () {
+      const _owner1 = address0;
+      const _coll1 = BigNumber.from(1e18 + "");
+      const _debt1 = BigNumber.from(PRICE).mul(1e18 + "");
+      const _icr1 = _coll1
+        .mul(PRICE)
+        .mul(10000)
+        .div(_debt1)
+        .div(1e18 + "");
+      const _index = _icr1.div(100);
+
+      const _inputPledge1 = [_coll1, _debt1, true, _owner1, 0];
+
+      let len1 = await priorityRegistry.rankedQueueLen(_index);
+      let lenT1 = await priorityRegistry.rankedQueueTotalLen(_index);
+      await yamatoDummy.bypassRankedQueuePush(_index, toTyped(_inputPledge1));
+      let len2 = await priorityRegistry.rankedQueueLen(_index);
+      let lenT2 = await priorityRegistry.rankedQueueTotalLen(_index);
+      expect(len1.add(1)).to.eq(len2);
+      expect(lenT1.add(1)).to.eq(lenT2);
+      expect(len2).to.eq(lenT2);
+    });
+  });
+  describe("rankedQueuePop()", function () {
+    let _index;
+    let len1;
+    let lenT1;
+    let len2;
+    let lenT2;
+    let len3;
+    let lenT3;
+    beforeEach(async () => {
+      const _owner1 = address0;
+      const _coll1 = BigNumber.from(1e18 + "");
+      const _debt1 = BigNumber.from(PRICE).mul(1e18 + "");
+      const _icr1 = _coll1
+        .mul(PRICE)
+        .mul(10000)
+        .div(_debt1)
+        .div(1e18 + "");
+      _index = _icr1.div(100);
+
+      const _inputPledge1 = [_coll1, _debt1, true, _owner1, 0];
+
+      len1 = await priorityRegistry.rankedQueueLen(_index);
+      lenT1 = await priorityRegistry.rankedQueueTotalLen(_index);
+      await yamatoDummy.bypassRankedQueuePush(_index, toTyped(_inputPledge1));
+      len2 = await priorityRegistry.rankedQueueLen(_index);
+      lenT2 = await priorityRegistry.rankedQueueTotalLen(_index);
+    });
+    it(`reduces length of queue`, async function () {
+      await yamatoDummy.bypassRankedQueuePop(_index);
+
+      len3 = await priorityRegistry.rankedQueueLen(_index);
+      lenT3 = await priorityRegistry.rankedQueueTotalLen(_index);
+
+      expect(len1.add(1)).to.eq(len2);
+      expect(lenT1.add(1)).to.eq(lenT2);
+      expect(len2).to.eq(lenT2);
+
+      expect(len2.sub(1)).to.eq(len3);
+      expect(lenT2).to.eq(lenT3); // delete sentence doesn't change array length
+      expect(len3).to.eq(lenT3.sub(1)); // Total Length after pop will be bigger than real length
+    });
+  });
+  describe("rankedQueueSearchAndDestroy()", function () {
+    let _owner1;
+    let _index;
+    let _inputPledge1;
+    let len1;
+    let lenT1;
+    let len2;
+    let lenT2;
+    let len3;
+    let lenT3;
+    beforeEach(async () => {
+      _owner1 = address0;
+      const _coll1 = BigNumber.from(1e18 + "");
+      const _debt1 = BigNumber.from(PRICE).mul(1e18 + "");
+      const _icr1 = _coll1
+        .mul(PRICE)
+        .mul(10000)
+        .div(_debt1)
+        .div(1e18 + "");
+      _index = _icr1.div(100);
+
+      _inputPledge1 = [_coll1, _debt1, true, _owner1, 0];
+    });
+    it(`reduces length of queue`, async function () {
+      len1 = await priorityRegistry.rankedQueueLen(_index);
+      lenT1 = await priorityRegistry.rankedQueueTotalLen(_index);
+      await yamatoDummy.bypassRankedQueuePush(_index, toTyped(_inputPledge1));
+      len2 = await priorityRegistry.rankedQueueLen(_index);
+      lenT2 = await priorityRegistry.rankedQueueTotalLen(_index);
+
+      await yamatoDummy.bypassRankedQueueSearchAndDestroy(_index, 0);
+
+      len3 = await priorityRegistry.rankedQueueLen(_index);
+      lenT3 = await priorityRegistry.rankedQueueTotalLen(_index);
+
+      expect(len1.add(1)).to.eq(len2);
+      expect(lenT1.add(1)).to.eq(lenT2);
+      expect(len2).to.eq(lenT2);
+
+      expect(len2.sub(1)).to.eq(len3);
+      expect(lenT2).to.eq(lenT3); // delete sentence doesn't change array length
+      expect(len3).to.eq(lenT3.sub(1)); // Total Length after pop will be bigger than real length
+    });
+
+    describe("Context - scenario test", function () {
+      beforeEach(async () => {
+        _owner1 = address0;
+        const _coll1 = BigNumber.from(1e18 + "");
+        const _debt1 = BigNumber.from(PRICE).mul(1e18 + "");
+        const _icr1 = _coll1
+          .mul(PRICE)
+          .mul(10000)
+          .div(_debt1)
+          .div(1e18 + "");
+        _index = _icr1.div(100);
+        _inputPledge1 = [_coll1, _debt1, true, _owner1, 0];
+      });
+      it("push1 pop1 pop? = fail", async function () {
+        await yamatoDummy.bypassRankedQueuePush(_index, toTyped(_inputPledge1));
+        await yamatoDummy.bypassRankedQueuePop(_index);
+        await expect(
+          yamatoDummy.bypassRankedQueuePop(_index)
+        ).to.be.revertedWith("Pop must not be done for empty queue");
+      });
+      it("push1 pop1 destroy1 = fail", async function () {
+        await yamatoDummy.bypassRankedQueuePush(_index, toTyped(_inputPledge1));
+        await yamatoDummy.bypassRankedQueuePop(_index);
+        await expect(
+          yamatoDummy.bypassRankedQueueSearchAndDestroy(
+            _index,
+            await priorityRegistry.rankedQueueNextout(_index)
+          )
+        ).to.be.revertedWith("Searched queue must have at least an item");
+      });
+      it("push1 push2 push3 pop1 push4 push5 destroy2 pop3 destroy4 pop5 push1 push2 destroy1 pop2 = success", async function () {
+        await yamatoDummy.bypassRankedQueuePush(_index, toTyped(_inputPledge1));
+        await yamatoDummy.bypassRankedQueuePush(_index, toTyped(_inputPledge1));
+        await yamatoDummy.bypassRankedQueuePush(_index, toTyped(_inputPledge1));
+
+        await yamatoDummy.bypassRankedQueuePop(_index);
+
+        await yamatoDummy.bypassRankedQueuePush(_index, toTyped(_inputPledge1));
+        await yamatoDummy.bypassRankedQueuePush(_index, toTyped(_inputPledge1));
+
+        await yamatoDummy.bypassRankedQueueSearchAndDestroy(
+          _index,
+          await priorityRegistry.rankedQueueNextout(_index)
+        );
+
+        await yamatoDummy.bypassRankedQueuePop(_index);
+
+        await yamatoDummy.bypassRankedQueueSearchAndDestroy(
+          _index,
+          await priorityRegistry.rankedQueueNextout(_index)
+        );
+
+        await yamatoDummy.bypassRankedQueuePop(_index);
+
+        await yamatoDummy.bypassRankedQueuePush(_index, toTyped(_inputPledge1));
+        await yamatoDummy.bypassRankedQueuePush(_index, toTyped(_inputPledge1));
+
+        await yamatoDummy.bypassRankedQueueSearchAndDestroy(
+          _index,
+          await priorityRegistry.rankedQueueNextout(_index)
+        );
+
+        await yamatoDummy.bypassRankedQueuePop(_index);
+
+        expect(await priorityRegistry.rankedQueueLen(_index)).to.eq(0);
+      });
     });
   });
 

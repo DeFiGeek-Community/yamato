@@ -9,11 +9,11 @@ pragma solidity 0.8.4;
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 
-import "../PriorityRegistry.sol";
 import "../Dependencies/PledgeLib.sol";
 import "../Interfaces/IYamato.sol";
 import "../Interfaces/IFeePool.sol";
 import "../Interfaces/ICurrencyOS.sol";
+import "../Interfaces/IPriorityRegistryV3.sol";
 import "../Pool.sol";
 import "../PriceFeed.sol";
 import "hardhat/console.sol";
@@ -21,7 +21,7 @@ import "hardhat/console.sol";
 contract YamatoDummy {
     using PledgeLib for IYamato.Pledge;
     using PledgeLib for uint256;
-    IPriorityRegistry priorityRegistry;
+    IPriorityRegistryV3 priorityRegistry;
     IPool pool;
     address public currencyOS;
     address public feePool;
@@ -42,7 +42,7 @@ contract YamatoDummy {
         public
         onlyGovernance
     {
-        priorityRegistry = IPriorityRegistry(_priorityRegistry);
+        priorityRegistry = IPriorityRegistryV3(_priorityRegistry);
     }
 
     function setPool(address _pool) public onlyGovernance {
@@ -90,6 +90,24 @@ contract YamatoDummy {
 
     function bypassPopSweepable() external onlyTester {
         priorityRegistry.popSweepable();
+    }
+
+    function bypassRankedQueuePush(
+        uint256 _icr,
+        IYamato.Pledge calldata _pledge
+    ) external onlyTester {
+        priorityRegistry.rankedQueuePush(_icr, _pledge);
+    }
+
+    function bypassRankedQueuePop(uint256 _icr) external onlyTester {
+        priorityRegistry.rankedQueuePop(_icr);
+    }
+
+    function bypassRankedQueueSearchAndDestroy(uint256 _icr, uint256 _i)
+        external
+        onlyTester
+    {
+        priorityRegistry.rankedQueueSearchAndDestroy(_icr, _i);
     }
 
     function bypassDepositRedemptionReserve(uint256 _amount)
