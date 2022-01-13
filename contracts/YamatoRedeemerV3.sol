@@ -213,7 +213,7 @@ contract YamatoRedeemerV3 is IYamatoRedeemer, YamatoAction {
             // Note: Risky pledges. 10000<ICR<13000 redemption recovers ICR and calculations are tricky.
             uint256 cappedRedemptionAmount = sPledge.cappedRedemptionAmount(
                 mcr,
-                ethPriceInCurrency
+                feed()
             );
 
             if (cappedRedemptionAmount < currencyAmount) {
