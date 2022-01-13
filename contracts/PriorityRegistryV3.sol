@@ -318,7 +318,6 @@ contract PriorityRegistryV3 is IPriorityRegistryV3, YamatoStore {
         while (_nextout <= _nextin) {
             IYamato.Pledge memory targetPledge = getRankedQueue(icr, _nextout);
 
-            // Bug: getRankedQueue is reverting
             if (targetPledge.owner == _owner) {
                 rankedQueueSearchAndDestroy(icr, _nextout);
                 break;
@@ -427,26 +426,57 @@ contract PriorityRegistryV3 is IPriorityRegistryV3, YamatoStore {
     }
 
     function getRedeemablesCap() external view returns (uint256 _cap) {
-        // Bug: redeemable can exist above MCR. Have to check the real ICR.
         uint256 mcrPercent = uint256(IYamato(yamato()).MCR());
         uint256 ethPriceInCurrency = IPriceFeed(feed()).lastGoodPrice();
-        for (uint256 i = 1; i < mcrPercent; i++) {
-            IYamato.Pledge memory _pledge;
-            uint256 _nextout = rankedQueue[i].nextout;
-            uint256 _nextin = rankedQueueTotalLen(i);
-            while (_nextout <= _nextin) {
-                _pledge = getRankedQueue(i, _nextout);
-                if (_pledge.isCreated) {
-                    if (_pledge.getICR(feed()) < 10000) {
-                        _cap += (_pledge.coll * ethPriceInCurrency) / 1e18;
+
+        uint256 _rank = 1;
+        uint256 _nextout = rankedQueueNextout(_rank);
+        IYamato.Pledge memory _pledge;
+        while (true) {
+            if (rankedQueueLen(_rank) > 0) {
+                _pledge = getRankedQueue(_rank, _nextout);
+                uint256 _icr = _pledge.getICR(feed());
+                if (_icr > 13000) {
+                    return _cap; // end
+                } else {
+                    // to next index
+                    _nextout++;
+                    if (_nextout < rankedQueueTotalLen(_rank)) {
+                        // icr check and cap addition
+                        if (_icr >= 10000) {
+                            console.log(
+                                "[above] _icr:%s, _nextout:%s, add:%s",
+                                _icr,
+                                _nextout,
+                                _pledge.cappedRedemptionAmount(
+                                    mcrPercent * 100,
+                                    feed()
+                                )
+                            );
+                            // icr=130%-based value
+                            _cap += _pledge.cappedRedemptionAmount(
+                                mcrPercent * 100,
+                                feed()
+                            );
+                        } else {
+                            console.log(
+                                "[below] _icr:%s, _nextout:%s, add:%s",
+                                _icr,
+                                _nextout,
+                                (_pledge.coll * ethPriceInCurrency) / 1e18
+                            );
+                            // coll-based value
+                            _cap += (_pledge.coll * ethPriceInCurrency) / 1e18;
+                        }
                     } else {
-                        _cap += _pledge.cappedRedemptionAmount(
-                            mcrPercent * 100,
-                            ethPriceInCurrency
-                        );
+                        // index outbounded
+                        _rank++; // to next rank
+                        _nextout = rankedQueueNextout(_rank); // default index
+                        break;
                     }
                 }
-                _nextout++;
+            } else {
+                _rank++;
             }
         }
     }

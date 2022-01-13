@@ -142,8 +142,8 @@ library PledgeLib {
     function cappedRedemptionAmount(
         IYamato.Pledge memory pledge,
         uint256 mcr,
-        uint256 ethPriceInCurrency
-    ) public view returns (uint256 diff) {
+        address feed
+    ) public view returns (uint256) {
         /*
             collValuAfter/debtAfter = mcr/10000
             debtAfter = debtBefore - diff
@@ -151,9 +151,16 @@ library PledgeLib {
             10000 * (diff - collValuBefore) = mcr * (diff - debtBefore)
             (mcr - 10000) * diff = mcr * debtBefore - 10000 * collValuBefore
             diff = (mcr * debtBefore - 10000 * collValuBefore) / (mcr - 10000) 
+            diff =  (mcr - icrBefore) / (mcr - 10000) * debtBefore
+
+            [ Appendix. ]
+            Let k = (mcr - icrBefore) / (mcr - 10000)
+            diff = k * debtBefore
+
+            Given mcr = 13000, then
+            k = (13000 - icrBefore) / 3000
+              = -0.00033333333icrBefore + 4.33333333333 [10000<icrBefore<13000, 0<k<1]
         */
-        uint256 debtBefore = pledge.debt;
-        uint256 collValuBefore = (pledge.coll * ethPriceInCurrency) / 1e18;
-        diff = (mcr * debtBefore - 10000 * collValuBefore) / (mcr - 10000);
+        return (pledge.debt * (mcr - getICR(pledge, feed))) / (mcr - 10000);
     }
 }

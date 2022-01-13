@@ -757,9 +757,9 @@ describe("contract PriorityRegistry", function () {
   });
 
   describe("getRedeemablesCap()", function () {
-    it.skip(`should return some value`, async function () {
-      const _coll1 = BigNumber.from(1e18 + "");
-      const _debt1 = BigNumber.from(410000).mul(1e18 + "");
+    it(`should return some value with rank 101`, async function () {
+      const _coll1 = BigNumber.from(101).mul(1e16 + "");
+      const _debt1 = BigNumber.from(410000).mul(1e18 + ""); // PRICE=410000, ICR=100%
       const _prio1 = BigNumber.from(100 + "");
       for (var i = 0; i < 10; i++) {
         await (
@@ -790,7 +790,83 @@ describe("contract PriorityRegistry", function () {
 
       const cap = await priorityRegistry.getRedeemablesCap();
 
-      expect(cap).to.equal(PRICE.mul(_coll1.mul(10)).div(1e18 + ""));
+      expect(cap).to.equal("3566999999999999999999997");
+    });
+
+    it(`should return some value with rank 99`, async function () {
+      const _coll1 = BigNumber.from(99).mul(1e16 + "");
+      const _debt1 = BigNumber.from(410000).mul(1e18 + ""); // PRICE=410000, ICR=100%
+      const _prio1 = BigNumber.from(100 + "");
+      for (var i = 0; i < 10; i++) {
+        await (
+          await yamatoDummy.bypassUpsert(
+            toTyped([
+              _coll1,
+              _debt1,
+              true,
+              await accounts[i].getAddress(),
+              _prio1,
+            ])
+          )
+        ).wait();
+      }
+      for (var i = 10; i < 20; i++) {
+        await (
+          await yamatoDummy.bypassUpsert(
+            toTyped([
+              _coll1,
+              _debt1.div(2),
+              true,
+              await accounts[i].getAddress(),
+              _prio1,
+            ])
+          )
+        ).wait();
+      }
+
+      const cap = await priorityRegistry.getRedeemablesCap();
+
+      expect(cap).to.equal("3653100000000000000000000");
+    });
+
+    it(`should return some value with destroyed queue`, async function () {
+      const _coll1 = BigNumber.from(100).mul(1e16 + "");
+      const _debt1 = BigNumber.from(410000).mul(1e18 + ""); // PRICE=410000, ICR=100%
+      const _prio1 = BigNumber.from(100 + "");
+      for (var i = 0; i < 10; i++) {
+        await (
+          await yamatoDummy.bypassUpsert(
+            toTyped([
+              _coll1,
+              _debt1,
+              true,
+              await accounts[i].getAddress(),
+              _prio1,
+            ])
+          )
+        ).wait();
+      }
+      for (var i = 10; i < 20; i++) {
+        await (
+          await yamatoDummy.bypassUpsert(
+            toTyped([
+              _coll1,
+              _debt1.div(2),
+              true,
+              await accounts[i].getAddress(),
+              _prio1,
+            ])
+          )
+        ).wait();
+      }
+
+      await (
+        await yamatoDummy.bypassRankedQueueSearchAndDestroy(100, 5)
+      ).wait();
+
+      const cap = await priorityRegistry.getRedeemablesCap();
+
+      expect(cap).to.equal("3280000000000000000000000");
     });
   });
   describe("getSweepablesCap()", function () {
