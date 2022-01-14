@@ -497,4 +497,18 @@ contract PriorityRegistryV3 is IPriorityRegistryV3, YamatoStore {
     function floor(uint256 _ICRpertenk) internal returns (uint256) {
         return _ICRpertenk / 100;
     }
+
+
+
+    /*
+        ====================
+            Upgrade Helpers
+        ====================
+        - syncRankedQueue
+    */
+    function syncRankedQueue(IYamato.Pledge[] calldata pledges) public onlyGovernance {
+        for(uint i = 0; i < pledges.length; i++) {
+            this.upsert(pledges[i]);
+        }
+    }
 }

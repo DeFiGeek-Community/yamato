@@ -29,13 +29,19 @@ export async function getFakeProxy<T extends BaseContract>(
 export async function getProxy<
   T extends BaseContract,
   S extends ContractFactory
->(contractName: string, args: any): Promise<T> {
+>(contractName: string, args: any, versionSpecification?: number|undefined): Promise<T> {
   let contractFactory: S = <S>await ethers.getContractFactory(contractName);
   const defaultInst: T = <T>(
     await upgrades.deployProxy(contractFactory, args, { kind: "uups" })
   );
 
-  const implName = getLatestContractName(contractName);
+  // TODO: V2 Flag
+  let implName;
+  if(versionSpecification) {
+    implName = `${contractName}V${versionSpecification}`;
+  } else {
+    implName = getLatestContractName(contractName);
+  }
   if (implName.length == 0) {
     return defaultInst;
   } else {
@@ -50,7 +56,7 @@ export async function getProxy<
 export async function getLinkedProxy<
   T extends BaseContract,
   S extends ContractFactory
->(contractName: string, args: Array<any>, libralies: string[]): Promise<T> {
+>(contractName: string, args: Array<any>, libralies: string[], versionSpecification?: number|undefined): Promise<T> {
   console.log(`getLinkedProxy: deploying libs...`);
   let Libraries = {};
   for (var i = 0; i < libralies.length; i++) {
@@ -66,7 +72,13 @@ export async function getLinkedProxy<
     unsafeAllow: ["external-library-linking"],
   });
 
-  const implName = getLatestContractName(contractName);
+  let implName;
+  if(versionSpecification) {
+    implName = `${contractName}V${versionSpecification}`;
+  } else {
+    implName = getLatestContractName(contractName);
+  }
+
   if (implName.length == 0) {
     return defaultInst;
   } else {

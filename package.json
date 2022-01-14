@@ -28,6 +28,7 @@
     "upgrade:currencyOS": "hardhat run upgrade/004_upgrade_CurrencyOS.ts --network rinkeby",
     "upgrade:pool": "hardhat run upgrade/006_upgrade_Pool.ts --network rinkeby",
     "upgrade:priorityRegistry": "hardhat run upgrade/005_upgrade_PriorityRegistry.ts --network rinkeby",
+    "upgradeSync:priorityRegistry": "ts-node upgrade/007_sync_PriorityRegistry.ts --rinkeby",
     "upgrade:redeemer": "hardhat run upgrade/002_upgrade_YamatoRedeemer.ts --network rinkeby",
     "upgrade:repayer": "hardhat run upgrade/001_upgrade_YamatoRepayer.ts --network rinkeby",
     "upgrade:withdrawer": "hardhat run upgrade/003_upgrade_YamatoWithdrawer.ts --network rinkeby",

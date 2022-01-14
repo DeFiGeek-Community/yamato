@@ -1,9 +1,10 @@
 import { ethers, upgrades, artifacts } from "hardhat";
-import { BaseContract, ContractFactory, BigNumber } from "ethers";
+import { BaseContract, ContractFactory, BigNumber, BigNumberish } from "ethers";
 import { getLinkedContractFactory, deployLibrary } from "./testUtil";
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "fs";
 import { getDeploymentAddressPathWithTag, setNetwork } from "./deployUtil";
 import { execSync } from "child_process";
+import { PriorityRegistry, PriorityRegistryV3 } from "../typechain";
 
 export async function upgradeProxy<
   T extends BaseContract,
@@ -111,4 +112,15 @@ export function getLatestContractName(implNameBase) {
   } else {
     return implName;
   }
+}
+
+export async function upgradePriorityRegistryV2ToV3AndSync(PriorityRegistry:PriorityRegistry, pledges:{
+  coll: BigNumberish;
+  debt: BigNumberish;
+  isCreated: boolean;
+  owner: string;
+  priority: BigNumberish;
+}[]){
+  const inst:PriorityRegistryV3 = <PriorityRegistryV3>await upgradeProxy(PriorityRegistry.address, "PriorityRegistryV3");
+  await inst.syncRankedQueue(pledges);
 }
