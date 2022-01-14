@@ -114,13 +114,21 @@ export function getLatestContractName(implNameBase) {
   }
 }
 
-export async function upgradePriorityRegistryV2ToV3AndSync(PriorityRegistry:PriorityRegistry, pledges:{
-  coll: BigNumberish;
-  debt: BigNumberish;
-  isCreated: boolean;
-  owner: string;
-  priority: BigNumberish;
-}[]){
-  const inst:PriorityRegistryV3 = <PriorityRegistryV3>await upgradeProxy(PriorityRegistry.address, "PriorityRegistryV3");
+export async function upgradePriorityRegistryV2ToV3AndSync(
+  PriorityRegistry: PriorityRegistry,
+  pledges: {
+    coll: BigNumberish;
+    debt: BigNumberish;
+    isCreated: boolean;
+    owner: string;
+    priority: BigNumberish;
+  }[]
+): Promise<PriorityRegistryV3> {
+  const inst: PriorityRegistryV3 = <PriorityRegistryV3>(
+    await upgradeLinkedProxy(PriorityRegistry.address, "PriorityRegistryV3", [
+      "PledgeLib",
+    ])
+  );
   await inst.syncRankedQueue(pledges);
+  return inst;
 }

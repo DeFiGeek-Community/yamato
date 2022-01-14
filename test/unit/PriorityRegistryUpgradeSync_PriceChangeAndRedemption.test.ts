@@ -19,6 +19,7 @@ import {
   YamatoRedeemer,
   YamatoSweeper,
   PriorityRegistry,
+  PriorityRegistryV3,
   Pool,
   ChainLinkMock__factory,
   TellorCallerMock__factory,
@@ -42,7 +43,7 @@ import { upgradePriorityRegistryV2ToV3AndSync } from "../../src/upgradeUtil";
 chai.use(smock.matchers);
 chai.use(solidity);
 
-describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
+describe("PriceChangeAndRedemption :: contract Yamato", () => {
   let ChainLinkEthUsd: ChainLinkMock;
   let ChainLinkUsdJpy: ChainLinkMock;
   let Tellor: TellorCallerMock;
@@ -183,7 +184,7 @@ describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
 
     await (await CurrencyOS.addYamato(Yamato.address)).wait();
     await (await CJPY.setCurrencyOS(CurrencyOS.address)).wait();
-});
+  });
 
   describe("redeem()", function () {
     let PRICE;
@@ -243,9 +244,10 @@ describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
           .div(MCR)
           .div(1e18 + "");
 
-
-        await upgradePriorityRegistryV2ToV3AndSync(PriorityRegistry, [await Yamato.getPledge(redeemerAddr), await Yamato.getPledge(redeemeeAddr)]);
-
+        await upgradePriorityRegistryV2ToV3AndSync(PriorityRegistry, [
+          await Yamato.getPledge(redeemerAddr),
+          await Yamato.getPledge(redeemeeAddr),
+        ]);
 
         // pledge loop and traversing redemption must be cheap
         expect(
@@ -347,9 +349,12 @@ describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
           .div(MCR)
           .div(1e18 + "");
 
+        await upgradePriorityRegistryV2ToV3AndSync(PriorityRegistry, [
+          await Yamato.getPledge(redeemerAddr),
+          await Yamato.getPledge(redeemeeAddr),
+          await Yamato.getPledge(redeemeeAddr4),
+        ]);
 
-          await upgradePriorityRegistryV2ToV3AndSync(PriorityRegistry, [await Yamato.getPledge(redeemerAddr), await Yamato.getPledge(redeemeeAddr), await Yamato.getPledge(redeemeeAddr4)]);
-          
         // pledge loop and traversing redemption must be cheap
         expect(
           await Yamato.estimateGas.redeem(toERC20(toBorrow.mul(9) + ""), false)
@@ -444,7 +449,10 @@ describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
       });
 
       it(`should not redeem any pledeges because no pledges are lower than MCR`, async function () {
-        await upgradePriorityRegistryV2ToV3AndSync(PriorityRegistry, [await Yamato.getPledge(await redeemer.getAddress()), await Yamato.getPledge(await redeemee.getAddress())]);
+        await upgradePriorityRegistryV2ToV3AndSync(PriorityRegistry, [
+          await Yamato.getPledge(await redeemer.getAddress()),
+          await Yamato.getPledge(await redeemee.getAddress()),
+        ]);
 
         await expect(
           Yamato.connect(redeemer).redeem(toERC20(toBorrow.mul(2) + ""), false)
@@ -522,7 +530,10 @@ describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
           FeePool.address
         );
 
-        await upgradePriorityRegistryV2ToV3AndSync(PriorityRegistry, [await Yamato.getPledge(redeemerAddr), await Yamato.getPledge(redeemeeAddr)]);
+        await upgradePriorityRegistryV2ToV3AndSync(PriorityRegistry, [
+          await Yamato.getPledge(redeemerAddr),
+          await Yamato.getPledge(redeemeeAddr),
+        ]);
 
         const txReceipt = await (
           await Yamato.connect(redeemer).redeem(
@@ -571,7 +582,7 @@ describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
 
         /* Get redemption budget by her own */
         await Yamato.connect(redeemer).deposit({
-          value: toERC20(toCollateralize * 20.2 + ""),
+          value: toERC20(toCollateralize * 20.4 + ""),
         });
         await Yamato.connect(redeemer).borrow(toERC20(toBorrow.mul(20) + ""));
 
@@ -582,7 +593,7 @@ describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
         await Yamato.connect(redeemee).borrow(toERC20(toBorrow.mul(20) + ""));
 
         await Yamato.connect(anotherRedeemee).deposit({
-          value: toERC20(toCollateralize * 20.1 + ""),
+          value: toERC20(toCollateralize * 20.2 + ""),
         });
         await Yamato.connect(anotherRedeemee).borrow(
           toERC20(toBorrow.mul(20) + "")
@@ -616,13 +627,18 @@ describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
         const redeemerAddr = await redeemer.getAddress();
         const redeemeeAddr = await redeemee.getAddress();
 
-        const redeemablePledge = await Yamato.getPledge(redeemeeAddr);
+        const redeemeePledgeBefore = await Yamato.getPledge(redeemeeAddr);
         const cjpyBalanceBefore = await CJPY.balanceOf(redeemerAddr);
         const feePoolBalanceBefore = await Yamato.provider.getBalance(
           FeePool.address
         );
 
-        await upgradePriorityRegistryV2ToV3AndSync(PriorityRegistry, [await Yamato.getPledge(redeemerAddr), await Yamato.getPledge(redeemeeAddr), await Yamato.getPledge(await anotherRedeemee.getAddress())]);
+        const PriorityRegistryV3: PriorityRegistryV3 =
+          await upgradePriorityRegistryV2ToV3AndSync(PriorityRegistry, [
+            await Yamato.getPledge(redeemerAddr),
+            await Yamato.getPledge(redeemeeAddr),
+            await Yamato.getPledge(await anotherRedeemee.getAddress()),
+          ]);
 
         const txReceipt = await (
           await Yamato.connect(redeemer).redeem(
@@ -630,20 +646,21 @@ describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
             true
           )
         ).wait();
-        const redeemedPledge = await Yamato.getPledge(redeemeeAddr);
+
+        const redeemeePledgeAfter = await Yamato.getPledge(redeemeeAddr);
         const cjpyBalanceAfter = await CJPY.balanceOf(redeemerAddr);
         const feePoolBalanceAfter = await Yamato.provider.getBalance(
           FeePool.address
         );
 
         expect(cjpyBalanceAfter).to.equal(cjpyBalanceBefore);
-        expect(redeemedPledge.coll).to.be.lt(redeemablePledge.coll);
+        expect(redeemeePledgeAfter.coll).to.be.lt(redeemeePledgeBefore.coll);
         expect(feePoolBalanceAfter).to.be.gt(feePoolBalanceBefore);
       });
     });
 
     describe("Context - A very large redemption", function () {
-      const COUNT = 70;
+      const COUNT = 10;
       let _ACCOUNTS;
       beforeEach(async () => {
         _ACCOUNTS = accounts;
@@ -704,7 +721,14 @@ describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
       it(`should be runnable in a block`, async function () {
         const redeemerAddr = await redeemer.getAddress();
 
-        await upgradePriorityRegistryV2ToV3AndSync(PriorityRegistry, await Promise.all(_ACCOUNTS.map(async acc=> await Yamato.getPledge(await acc.getAddress())) ) );
+        await upgradePriorityRegistryV2ToV3AndSync(
+          PriorityRegistry,
+          await Promise.all(
+            _ACCOUNTS.map(
+              async (acc) => await Yamato.getPledge(await acc.getAddress())
+            )
+          )
+        );
 
         const gasEstimation = await Yamato.estimateGas.redeem(
           toERC20(toBorrow.mul(1000) + ""),
@@ -824,7 +848,12 @@ describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
         const redeemerCjpyBalanceBefore = await CJPY.balanceOf(redeemerAddr);
         const poolCjpyBalanceBefore = await CJPY.balanceOf(Pool.address);
 
-        await upgradePriorityRegistryV2ToV3AndSync(PriorityRegistry, [await Yamato.getPledge(redeemerAddr), await Yamato.getPledge(await redeemee.getAddress()),await Yamato.getPledge(await anotherRedeemee.getAddress()), await Yamato.getPledge(await yetAnotherRedeemee.getAddress())]);
+        await upgradePriorityRegistryV2ToV3AndSync(PriorityRegistry, [
+          await Yamato.getPledge(redeemerAddr),
+          await Yamato.getPledge(await redeemee.getAddress()),
+          await Yamato.getPledge(await anotherRedeemee.getAddress()),
+          await Yamato.getPledge(await yetAnotherRedeemee.getAddress()),
+        ]);
 
         await (await Yamato.connect(redeemer).sweep()).wait();
         const sweptPledge = await Yamato.getPledge(sweepablePledge.owner);
@@ -893,7 +922,12 @@ describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
           )
         ).wait();
 
-        await upgradePriorityRegistryV2ToV3AndSync(PriorityRegistry, [await Yamato.getPledge(redeemerAddr), await Yamato.getPledge(await redeemee.getAddress()),await Yamato.getPledge(await anotherRedeemee.getAddress()), await Yamato.getPledge(await yetAnotherRedeemee.getAddress())]);
+        await upgradePriorityRegistryV2ToV3AndSync(PriorityRegistry, [
+          await Yamato.getPledge(redeemerAddr),
+          await Yamato.getPledge(await redeemee.getAddress()),
+          await Yamato.getPledge(await anotherRedeemee.getAddress()),
+          await Yamato.getPledge(await yetAnotherRedeemee.getAddress()),
+        ]);
 
         await (await Yamato.connect(redeemer).sweep()).wait();
         const sweptPledge = await Yamato.getPledge(sweepablePledge.owner);

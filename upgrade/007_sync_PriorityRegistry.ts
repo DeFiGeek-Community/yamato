@@ -17,7 +17,7 @@ let PriorityRegistryERC1967Proxy = readFileSync(
 ).toString();
 
 async function main() {
-    await setProvider();
+  await setProvider();
   let Yamato = new ethers.Contract(
     YamatoERC1967Proxy,
     genABI(NAME1),
@@ -29,19 +29,17 @@ async function main() {
     getFoundation()
   );
 
-//   await (await Yamato.pause()).wait();
-
-  let filter = Yamato.filters.Deposited(null, null)
+  let filter = Yamato.filters.Deposited(null, null);
   let logs = await Yamato.queryFilter(filter);
 
-  let pledges = await Promise.all(logs.map(async (log) => {
-    return await Yamato.getPledge(log.args.sender);
-  }))
-  console.log(pledges);
+  let pledgeOwners = logs
+    .map((log) => log.args.sender)
+    .filter((value, index, self) => self.indexOf(value) === index);
+  let pledges = await Promise.all(
+    pledgeOwners.map(async (owner) => await Yamato.getPledge(owner))
+  );
 
-//   await PriorityRegistry.syncRankedQueue(pledges);
-
-//   await (await Yamato.unpause()).wait();
+  await PriorityRegistry.syncRankedQueue(pledges);
 }
 
 main().catch((e) => console.log(e));
