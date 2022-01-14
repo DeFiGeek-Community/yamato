@@ -444,27 +444,12 @@ contract PriorityRegistryV3 is IPriorityRegistryV3, YamatoStore {
                     if (_nextout < rankedQueueTotalLen(_rank)) {
                         // icr check and cap addition
                         if (_icr >= 10000) {
-                            console.log(
-                                "[above] _icr:%s, _nextout:%s, add:%s",
-                                _icr,
-                                _nextout,
-                                _pledge.cappedRedemptionAmount(
-                                    mcrPercent * 100,
-                                    feed()
-                                )
-                            );
                             // icr=130%-based value
                             _cap += _pledge.cappedRedemptionAmount(
                                 mcrPercent * 100,
                                 feed()
                             );
                         } else {
-                            console.log(
-                                "[below] _icr:%s, _nextout:%s, add:%s",
-                                _icr,
-                                _nextout,
-                                (_pledge.coll * ethPriceInCurrency) / 1e18
-                            );
                             // coll-based value
                             _cap += (_pledge.coll * ethPriceInCurrency) / 1e18;
                         }
@@ -496,5 +481,20 @@ contract PriorityRegistryV3 is IPriorityRegistryV3, YamatoStore {
 
     function floor(uint256 _ICRpertenk) internal returns (uint256) {
         return _ICRpertenk / 100;
+    }
+
+    /*
+        ====================
+            Upgrade Helpers
+        ====================
+        - syncRankedQueue
+    */
+    function syncRankedQueue(IYamato.Pledge[] calldata pledges)
+        public
+        onlyGovernance
+    {
+        for (uint256 i = 0; i < pledges.length; i++) {
+            this.upsert(pledges[i]);
+        }
     }
 }
