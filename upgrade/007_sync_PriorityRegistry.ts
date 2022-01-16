@@ -6,6 +6,7 @@ import {
 import { readFileSync } from "fs";
 import { ethers } from "ethers";
 import { genABI } from "../src/genABI";
+import { PriorityRegistryV3 } from "../typechain";
 
 const NAME1 = "Yamato";
 const NAME2 = "PriorityRegistry";
@@ -23,10 +24,12 @@ async function main() {
     genABI(NAME1),
     getFoundation()
   );
-  let PriorityRegistry = new ethers.Contract(
-    PriorityRegistryERC1967Proxy,
-    genABI(NAME2),
-    getFoundation()
+  let PriorityRegistry: PriorityRegistryV3 = <PriorityRegistryV3>(
+    new ethers.Contract(
+      PriorityRegistryERC1967Proxy,
+      genABI(NAME2 + "V3"),
+      getFoundation()
+    )
   );
 
   let filter = Yamato.filters.Deposited(null, null);
@@ -38,6 +41,7 @@ async function main() {
   let pledges = await Promise.all(
     pledgeOwners.map(async (owner) => await Yamato.getPledge(owner))
   );
+  pledges = pledges.filter((p) => p.isCreated);
 
   await PriorityRegistry.syncRankedQueue(pledges);
 }
