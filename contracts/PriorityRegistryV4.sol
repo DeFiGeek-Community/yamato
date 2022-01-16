@@ -103,8 +103,8 @@ contract PriorityRegistryV4 is IPriorityRegistryV3, YamatoStore {
             2-2. Traverse from min(oldICR,newICR) to fill the loss of popRedeemable
         */
         // Note: All deletions could cause traverse.
-        // Note: Traversing to the ICR=MAX_UINT256 pledges are validated, don't worry about gas.
-        // Note: LICR is state variable and it will be undated here.
+        // Note: Traversing to the ICR=MAX_UINT256 pledges are checked, don't worry about gas cost explosion.
+        // Note: The lowest of oldICR, newICR, or lowestICR are to be the target. If targeted rankedQueue is empty, go upstair and update LICR.
         uint256 _traverseStartICR;
         if (_oldICRpercent > 0 && _newICRpercent > 0) {
             _traverseStartICR = LiquityMath._min(
@@ -117,7 +117,11 @@ contract PriorityRegistryV4 is IPriorityRegistryV3, YamatoStore {
             _traverseStartICR = _newICRpercent;
         }
 
-        if (_traverseStartICR > 0) _traverseToNextLICR(_traverseStartICR);
+        if (LICR > 0) {
+            _traverseStartICR = LiquityMath._min(_traverseStartICR, LICR);
+            if (rankedQueueLen(_traverseStartICR) == 0)
+                _traverseToNextLICR(_traverseStartICR);
+        }
 
         return _newICRpercent * 100;
     }
@@ -328,31 +332,16 @@ contract PriorityRegistryV4 is IPriorityRegistryV3, YamatoStore {
     }
 
     function _traverseToNextLICR(uint256 _icr) internal {
-        uint256 _mcr = uint256(IYamato(yamato()).MCR());
-
-        bool infLoopish = pledgeLength ==
-            rankedQueueLen(0) + rankedQueueLen(floor(2**256 - 1));
-        // Note: The _oldICRpercent == LICR now, and that former LICR-level has just been nullified. New licr is needed.
-
-        if (
-            rankedQueueLen(_icr) == 0 && /* Confirm the level is nullified */
-            _icr == LICR && /* Confirm the deleted ICR is lowest  */
-            pledgeLength > 1 && /* Not to scan infinitely */
-            LICR != 0 /* If 1st take, leave it to the logic in the bottom */
-        ) {
-            if (infLoopish) {
-                // Note: Okie you avoided inf loop but make sure you don't redeem ICR=MCR pledge
-                LICR = _mcr - 1;
-            } else {
-                // TODO: Out-of-gas fail safe
-                uint256 _next = _icr;
-                while (
-                    rankedQueueLen(_next) == 0 /* this level is empty! */
-                ) {
-                    _next++;
-                } // Note: if exist or out-of-range, stop it and set that level as the LICR
-                LICR = _next;
+        uint256 _reminder = pledgeLength -
+            (rankedQueueLen(0) + rankedQueueLen(floor(2**256 - 1)));
+        if (_reminder > 0) {
+            uint256 _next = _icr;
+            while (rankedQueueLen(_next) == 0) {
+                _next++;
             }
+            LICR = _next; // the first filled rankedQueue
+        } else {
+            LICR = 1; // default LICR is 1 because if LICR is 1, every upsert calls traverse and find a good next LICR
         }
     }
 
