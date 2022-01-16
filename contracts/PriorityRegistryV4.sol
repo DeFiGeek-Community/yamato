@@ -18,7 +18,7 @@ import "./Dependencies/LiquityMath.sol";
 import "hardhat/console.sol";
 
 // @dev For gas saving reason, we use percent denominated ICR only in this contract.
-contract PriorityRegistryV3 is IPriorityRegistryV3, YamatoStore {
+contract PriorityRegistryV4 is IPriorityRegistryV3, YamatoStore {
     using SafeMath for uint256;
     using PledgeLib for IYamato.Pledge;
 
@@ -483,7 +483,7 @@ contract PriorityRegistryV3 is IPriorityRegistryV3, YamatoStore {
         }
     }
 
-    function floor(uint256 _ICRpertenk) internal returns (uint256) {
+    function floor(uint256 _ICRpertenk) internal pure returns (uint256) {
         return _ICRpertenk / 100;
     }
 
