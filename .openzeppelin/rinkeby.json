@@ -6133,13 +6133,13 @@
           {
             "contract": "Yamato",
             "label": "pledges",
-            "type": "t_mapping(t_address,t_struct(Pledge)3977_storage)",
+            "type": "t_mapping(t_address,t_struct(Pledge)4164_storage)",
             "src": "contracts/Yamato.sol:92"
           },
           {
             "contract": "Yamato",
             "label": "flashlocks",
-            "type": "t_mapping(t_address,t_struct(FlashLockData)3986_storage)",
+            "type": "t_mapping(t_address,t_struct(FlashLockData)4173_storage)",
             "src": "contracts/Yamato.sol:93"
           }
         ],
@@ -6147,13 +6147,13 @@
           "t_uint256": {
             "label": "uint256"
           },
-          "t_mapping(t_address,t_struct(Pledge)3977_storage)": {
+          "t_mapping(t_address,t_struct(Pledge)4164_storage)": {
             "label": "mapping(address => struct IYamato.Pledge)"
           },
           "t_address": {
             "label": "address"
           },
-          "t_struct(Pledge)3977_storage": {
+          "t_struct(Pledge)4164_storage": {
             "label": "struct IYamato.Pledge",
             "members": [
               {
@@ -6181,10 +6181,10 @@
           "t_bool": {
             "label": "bool"
           },
-          "t_mapping(t_address,t_struct(FlashLockData)3986_storage)": {
+          "t_mapping(t_address,t_struct(FlashLockData)4173_storage)": {
             "label": "mapping(address => struct IYamato.FlashLockData)"
           },
-          "t_struct(FlashLockData)3986_storage": {
+          "t_struct(FlashLockData)4173_storage": {
             "label": "struct IYamato.FlashLockData",
             "members": [
               {
@@ -8206,6 +8206,188 @@
           },
           "t_bool": {
             "label": "bool"
+          }
+        }
+      }
+    },
+    "b2ce7ea18cf46754e0bac2151fc05f658dba2991ffcaaa804677aa4936f536b1": {
+      "address": "0xE9d31ac7567D2f969A1284C7a047Ad9f0Dc2a300",
+      "txHash": "0x699e4b0f1a913fc4b69a8cba834969125d8004c7468ac0e20b3f801ab028e0b5",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:21"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:26"
+          },
+          {
+            "contract": "ERC1967UpgradeUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:214"
+          },
+          {
+            "contract": "UUPSUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:80"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "governance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:20"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "pendingGovernance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:21"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "tester",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:22"
+          },
+          {
+            "contract": "YamatoBase",
+            "label": "YAMATO_SLOT_ID",
+            "type": "t_string_storage",
+            "src": "contracts/Dependencies/YamatoBase.sol:20"
+          },
+          {
+            "contract": "ReentrancyGuardUpgradeable",
+            "label": "_status",
+            "type": "t_uint256",
+            "src": "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol:37"
+          },
+          {
+            "contract": "ReentrancyGuardUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol:67"
+          },
+          {
+            "contract": "ContextUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:30"
+          },
+          {
+            "contract": "PausableUpgradeable",
+            "label": "_paused",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol:28"
+          },
+          {
+            "contract": "PausableUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol:96"
+          },
+          {
+            "contract": "YamatoV2",
+            "label": "totalColl",
+            "type": "t_uint256",
+            "src": "contracts/YamatoV2.sol:89"
+          },
+          {
+            "contract": "YamatoV2",
+            "label": "totalDebt",
+            "type": "t_uint256",
+            "src": "contracts/YamatoV2.sol:90"
+          },
+          {
+            "contract": "YamatoV2",
+            "label": "pledges",
+            "type": "t_mapping(t_address,t_struct(Pledge)4072_storage)",
+            "src": "contracts/YamatoV2.sol:92"
+          },
+          {
+            "contract": "YamatoV2",
+            "label": "flashlocks",
+            "type": "t_mapping(t_address,t_struct(FlashLockData)4081_storage)",
+            "src": "contracts/YamatoV2.sol:93"
+          }
+        ],
+        "types": {
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_mapping(t_address,t_struct(Pledge)4072_storage)": {
+            "label": "mapping(address => struct IYamato.Pledge)"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_struct(Pledge)4072_storage": {
+            "label": "struct IYamato.Pledge",
+            "members": [
+              {
+                "label": "coll",
+                "type": "t_uint256"
+              },
+              {
+                "label": "debt",
+                "type": "t_uint256"
+              },
+              {
+                "label": "isCreated",
+                "type": "t_bool"
+              },
+              {
+                "label": "owner",
+                "type": "t_address"
+              },
+              {
+                "label": "priority",
+                "type": "t_uint256"
+              }
+            ]
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_mapping(t_address,t_struct(FlashLockData)4081_storage)": {
+            "label": "mapping(address => struct IYamato.FlashLockData)"
+          },
+          "t_struct(FlashLockData)4081_storage": {
+            "label": "struct IYamato.FlashLockData",
+            "members": [
+              {
+                "label": "blockHeight",
+                "type": "t_uint256"
+              },
+              {
+                "label": "depositLock",
+                "type": "t_bool"
+              },
+              {
+                "label": "borrowLock",
+                "type": "t_bool"
+              },
+              {
+                "label": "withdrawLock",
+                "type": "t_bool"
+              }
+            ]
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_string_storage": {
+            "label": "string"
           }
         }
       }
