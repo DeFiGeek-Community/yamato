@@ -445,17 +445,23 @@ contract PriorityRegistryV4 is IPriorityRegistryV3, YamatoStore {
                     // to next index
                     _nextout++;
                     if (_nextout < rankedQueueTotalLen(_rank)) {
-                        _count--;
-                        // icr check and cap addition
-                        if (_icr >= 10000) {
-                            // icr=130%-based value
-                            _cap += _pledge.cappedRedemptionAmount(
-                                mcrPercent * 100,
-                                feed()
-                            );
+                        if (_pledge.isCreated) {
+                            _count--;
+                            // icr check and cap addition
+                            if (_icr >= 10000) {
+                                // icr=130%-based value
+                                _cap += _pledge.cappedRedemptionAmount(
+                                    mcrPercent * 100,
+                                    feed()
+                                );
+                            } else {
+                                // coll-based value
+                                _cap +=
+                                    (_pledge.coll * ethPriceInCurrency) /
+                                    1e18;
+                            }
                         } else {
-                            // coll-based value
-                            _cap += (_pledge.coll * ethPriceInCurrency) / 1e18;
+                            // null pledge. rank unchange, index increment.
                         }
                     } else {
                         // index outbounded
