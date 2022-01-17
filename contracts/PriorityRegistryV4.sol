@@ -407,7 +407,11 @@ contract PriorityRegistryV4 is IPriorityRegistryV4, YamatoStore {
             if (rankedQueueLen(_rank) > 0) {
                 _pledge = getRankedQueue(_rank, _nextout);
                 uint256 _icr = _pledge.getICR(feed());
-                if (_icr > 13000 || _count == 0 || _rank >= _checkpoint) {
+                if (
+                    _icr > _mcrPercent * 100 ||
+                    _count == 0 ||
+                    _rank >= _checkpoint
+                ) {
                     return _cap; // end
                 } else {
                     // to next index

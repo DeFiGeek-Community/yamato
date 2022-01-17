@@ -729,6 +729,104 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         expect(redeemeePledgeAfter.debt).to.be.lt(redeemeePledgeBefore.debt);
       });
     });
+    describe("Context - A large traversing and no gas exhaustion with 1% dump", function () {
+      let dumpedPriceBase = "397000000000";
+      let dumpedPrice = BigNumber.from(dumpedPriceBase).mul(1e12 + "");
+      beforeEach(async () => {
+        redeemer = accounts[0];
+        toCollateralize = 1;
+        toBorrow = (await PriceFeed.lastGoodPrice())
+          .mul(toCollateralize)
+          .mul(100)
+          .div(MCR)
+          .div(1e18 + "");
+
+        /*
+          A way larger priority pledge
+        */
+        await Yamato.connect(redeemer).deposit({
+          value: toERC20(toCollateralize * 1000 + ""),
+        });
+        await Yamato.connect(redeemer).borrow(toERC20(toBorrow.mul(10) + ""));
+
+        /*
+          priority<MCR pledges
+        */
+        for (var i = 1; i < accounts.length - 10; i++) {
+          await Yamato.connect(accounts[i]).deposit({
+            value: toERC20(toCollateralize * 0.1 + ""),
+          });
+          await Yamato.connect(accounts[i]).borrow(
+            toERC20(toBorrow.mul(1).div(10) + "")
+          );
+        }
+
+        /* Market Dump */
+        await (await ChainLinkEthUsd.setLastPrice(dumpedPriceBase)).wait(); //dec8
+        await (await Tellor.setLastPrice(dumpedPriceBase)).wait(); //dec8
+      });
+
+      it(`should redeem all pledges to ICR 130% and LICR is 130`, async function () {
+        await (
+          await Yamato.connect(redeemer).redeem(
+            toERC20(toBorrow.mul(9) + ""),
+            false,
+            { gasLimit: 30000000 }
+          )
+        ).wait();
+        expect(await PriorityRegistry.LICR()).to.eq(184);
+      });
+    });
+
+    describe("Context - A large traversing and no gas exhaustion with more than 30% dump", function () {
+      let dumpedPriceBase = "204000000000";
+      let dumpedPrice = BigNumber.from(dumpedPriceBase).mul(1e12 + "");
+      beforeEach(async () => {
+        redeemer = accounts[0];
+        toCollateralize = 1;
+        toBorrow = (await PriceFeed.lastGoodPrice())
+          .mul(toCollateralize)
+          .mul(100)
+          .div(MCR)
+          .div(1e18 + "");
+
+        /*
+          A way larger priority pledge
+        */
+        await Yamato.connect(redeemer).deposit({
+          value: toERC20(toCollateralize * 1000 + ""),
+        });
+        await Yamato.connect(redeemer).borrow(toERC20(toBorrow.mul(10) + ""));
+
+        /*
+          priority<MCR pledges
+        */
+        for (var i = 1; i < accounts.length - 17; i++) {
+          await Yamato.connect(accounts[i]).deposit({
+            value: toERC20(toCollateralize * 0.1 + ""),
+          });
+          await Yamato.connect(accounts[i]).borrow(
+            toERC20(toBorrow.mul(1).div(10) + "")
+          );
+        }
+
+        /* Market Dump */
+        await (await ChainLinkEthUsd.setLastPrice(dumpedPriceBase)).wait(); //dec8
+        await (await Tellor.setLastPrice(dumpedPriceBase)).wait(); //dec8
+      });
+
+      it(`should redeem all pledges to ICR 130% and LICR is 130`, async function () {
+        await (
+          await Yamato.connect(redeemer).redeem(
+            toERC20(toBorrow.mul(9) + ""),
+            false,
+            { gasLimit: 30000000 }
+          )
+        ).wait();
+        expect(await PriorityRegistry.LICR()).to.eq(130);
+      });
+    });
+
   });
   describe("sweep()", function () {
     let PRICE;

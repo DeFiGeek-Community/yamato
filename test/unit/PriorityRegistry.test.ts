@@ -560,13 +560,13 @@ describe("contract PriorityRegistry", function () {
       await (await yamatoDummy.bypassUpsert(toTyped(_inputPledge1))).wait();
 
       const nextSweepableBefore = await priorityRegistry.getRankedQueue(
-        await priorityRegistry.LICR(),
-        await priorityRegistry.rankedQueueNextout(await priorityRegistry.LICR())
+        0,
+        await priorityRegistry.rankedQueueNextout(0)
       );
       await (await yamatoDummy.bypassPopSweepable()).wait();
       const nextSweepableAfter = await priorityRegistry.getRankedQueue(
-        await priorityRegistry.LICR(),
-        await priorityRegistry.rankedQueueNextout(await priorityRegistry.LICR())
+        0,
+        await priorityRegistry.rankedQueueNextout(0)
       );
 
       expect(nextSweepableBefore.coll).to.eq(_coll1);
