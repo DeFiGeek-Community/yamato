@@ -19,6 +19,7 @@ import {
   YamatoRedeemer,
   YamatoSweeper,
   PriorityRegistry,
+  PriorityRegistryV4,
   Pool,
   ChainLinkMock__factory,
   TellorCallerMock__factory,
@@ -35,6 +36,7 @@ import {
   Pool__factory,
   FeePool__factory,
   PriorityRegistry__factory,
+  PriorityRegistryV4__factory,
 } from "../../typechain";
 import { getProxy, getLinkedProxy } from "../../src/testUtil";
 import { isToken } from "typescript";
@@ -58,7 +60,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
   let YamatoRedeemer: YamatoRedeemer;
   let YamatoSweeper: YamatoSweeper;
   let Pool: Pool;
-  let PriorityRegistry: PriorityRegistry;
+  let PriorityRegistry: PriorityRegistryV4;
   let accounts: Signer[];
   let ownerAddress: string;
   let userAddress: string;
@@ -164,8 +166,8 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
     Pool = await getProxy<Pool, Pool__factory>("Pool", [Yamato.address]);
 
     PriorityRegistry = await getLinkedProxy<
-      PriorityRegistry,
-      PriorityRegistry__factory
+      PriorityRegistryV4,
+      PriorityRegistryV4__factory
     >("PriorityRegistry", [Yamato.address], ["PledgeLib"]);
 
     await (
@@ -804,7 +806,10 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       it(`should run partial sweep`, async function () {
         const redeemerAddr = await redeemer.getAddress();
 
-        const sweepablePledge = await PriorityRegistry.nextSweepable();
+        const sweepablePledge = await PriorityRegistry.getRankedQueue(
+          0,
+          await PriorityRegistry.rankedQueueNextout(0)
+        );
         const redeemerCjpyBalanceBefore = await CJPY.balanceOf(redeemerAddr);
         const poolCjpyBalanceBefore = await CJPY.balanceOf(Pool.address);
 
@@ -839,7 +844,10 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       it(`should run full sweep`, async function () {
         const redeemerAddr = await redeemer.getAddress();
 
-        const sweepablePledge = await PriorityRegistry.nextSweepable();
+        const sweepablePledge = await PriorityRegistry.getRankedQueue(
+          0,
+          await PriorityRegistry.rankedQueueNextout(0)
+        );
         const poolCjpyBalanceBefore = await CJPY.balanceOf(Pool.address);
 
         await (
