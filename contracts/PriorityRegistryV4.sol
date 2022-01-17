@@ -63,12 +63,8 @@ contract PriorityRegistryV4 is IPriorityRegistryV4, YamatoStore {
             1. delete current pledge from sorted pledge and update LICR
         */
         if (
-            !(_pledge.debt == 0 && _oldICRpercent == 0) && /* Exclude "new pledge" */
-            pledgeLength > 0 && /* Avoid overflow */
-            leveledPledges[_oldICRpercent][_pledge.owner].isCreated
-            /* whether delete target exists */
+            !(_pledge.debt == 0 && _oldICRpercent == 0) && pledgeLength > 0 /* Exclude "new pledge" */ /* Avoid underflow */
         ) {
-            // TODO: 1st spec failing here
             _deletePledge(_pledge);
         }
 
@@ -85,9 +81,8 @@ contract PriorityRegistryV4 is IPriorityRegistryV4, YamatoStore {
 
         _pledge.priority = _newICRpercent * 100;
 
-        leveledPledges[_newICRpercent][_pledge.owner] = _pledge;
         rankedQueuePush(_newICRpercent, _pledge);
-        pledgeLength++;
+        pledgeLength += 1;
 
         /*
             3. Update LICR for new ICR data
@@ -182,13 +177,28 @@ contract PriorityRegistryV4 is IPriorityRegistryV4, YamatoStore {
             rankedQueueLen(LICR) > 0,
             "The current lowest ICR data is inconsistent with actual sorted pledges."
         );
+        uint256 _mcr = uint256(IYamato(yamato()).MCR()) * 100;
+        IYamato.Pledge memory poppablePledge = getRankedQueue(
+            LICR,
+            rankedQueueNextout(LICR)
+        );
+        IYamato.Pledge memory poppedPledge;
 
-        IYamato.Pledge memory poppedPledge = rankedQueuePop(LICR);
+        uint256 _icr = poppablePledge.getICR(feed());
 
-        // Note: Don't check priority, real ICR is the matter. ICR13000 pledge breaks here.
+        // Note: "ICR = MCR = Priority" then go to "MCR+1" rank
+        // Note: Tolerant against 30% dump + mass redemption
+        if (_icr == _mcr && _icr == poppablePledge.priority) {
+            for (uint256 i = 1; i < CHECKPOINT_BUFFER; i++) {
+                if (!poppedPledge.isCreated) {
+                    poppedPledge = rankedQueuePop(floor(_mcr) + i);
+                }
+            }
+        }
+
+        // Note: priority can be more than MCR, real ICR is the matter. ICR13000 pledge breaks here.
         require(
-            poppedPledge.getICR(feed()) <
-                uint256(IYamato(yamato()).MCR()) * 100,
+            poppedPledge.getICR(feed()) < _mcr,
             "You can't redeem if redeemable candidate is more than MCR."
         );
 
@@ -196,6 +206,8 @@ contract PriorityRegistryV4 is IPriorityRegistryV4, YamatoStore {
         // Note: redeem() has popRedeemable() first then upsert next, hence traversing will be done.
         // Note: Traversing to the ICR=MAX_UINT256 pledges are validated, don't worry about gas.
         // Note: LICR is state variable and it will be undated here.
+
+        pledgeLength -= 1;
 
         return poppedPledge;
     }
@@ -208,9 +220,10 @@ contract PriorityRegistryV4 is IPriorityRegistryV4, YamatoStore {
         public
         override
         onlyYamato
-        returns (IYamato.Pledge memory)
+        returns (IYamato.Pledge memory _poppedPledge)
     {
-        return rankedQueuePop(0);
+        _poppedPledge = rankedQueuePop(0);
+        pledgeLength -= 1;
     }
 
     /*
@@ -247,16 +260,18 @@ contract PriorityRegistryV4 is IPriorityRegistryV4, YamatoStore {
             rankedQueueLen(_icr) > 0,
             "Pop must not be done for empty queue"
         );
-        require(_nextout < _nextin, "Can't pop outbound data.");
-        while (!_pledge.isCreated && _nextout < _nextin) {
-            _pledge = fifoQueue.pledges[_nextout];
+        if (_nextout < _nextin) {
+            while (!_pledge.isCreated && _nextout < _nextin) {
+                _pledge = fifoQueue.pledges[_nextout];
 
-            _nextout++;
+                _nextout++;
+            }
+
+            if (_pledge.isCreated) {
+                delete fifoQueue.pledges[_nextout - 1];
+                fifoQueue.nextout = _nextout;
+            }
         }
-
-        require(_pledge.isCreated, "All queue were empty");
-        delete fifoQueue.pledges[_nextout - 1];
-        fifoQueue.nextout = _nextout;
     }
 
     function rankedQueueSearchAndDestroy(uint256 _icr, uint256 _i)
@@ -325,11 +340,11 @@ contract PriorityRegistryV4 is IPriorityRegistryV4, YamatoStore {
 
             if (targetPledge.owner == _owner) {
                 rankedQueueSearchAndDestroy(icr, _nextout);
+                pledgeLength -= 1;
                 break;
             }
             _nextout++;
         }
-        pledgeLength -= 1;
     }
 
     function _traverseToNextLICR(uint256 _icr) internal {
