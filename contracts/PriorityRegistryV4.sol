@@ -10,7 +10,7 @@ pragma solidity 0.8.4;
 //solhint-disable no-inline-assembly
 import "./Yamato.sol";
 import "./Interfaces/IPriceFeed.sol";
-import "./Interfaces/IPriorityRegistryV3.sol";
+import "./Interfaces/IPriorityRegistryV4.sol";
 import "./Dependencies/PledgeLib.sol";
 import "./Dependencies/YamatoStore.sol";
 import "./Dependencies/SafeMath.sol";
@@ -18,7 +18,7 @@ import "./Dependencies/LiquityMath.sol";
 import "hardhat/console.sol";
 
 // @dev For gas saving reason, we use percent denominated ICR only in this contract.
-contract PriorityRegistryV4 is IPriorityRegistryV3, YamatoStore {
+contract PriorityRegistryV4 is IPriorityRegistryV4, YamatoStore {
     using SafeMath for uint256;
     using PledgeLib for IYamato.Pledge;
 
@@ -27,6 +27,7 @@ contract PriorityRegistryV4 is IPriorityRegistryV3, YamatoStore {
     uint256 public override pledgeLength;
     uint256 public override LICR; // Note: Lowest ICR in percent
     mapping(uint256 => FifoQueue) rankedQueue;
+    uint256 constant CHECKPOINT_BUFFER = 55;
 
     function initialize(address _yamato) public initializer {
         __YamatoStore_init(_yamato);
@@ -332,16 +333,25 @@ contract PriorityRegistryV4 is IPriorityRegistryV3, YamatoStore {
     }
 
     function _traverseToNextLICR(uint256 _icr) internal {
+        uint256 _mcrPercent = uint256(IYamato(yamato()).MCR());
+        uint256 _checkpoint = _mcrPercent + CHECKPOINT_BUFFER; // 185*0.7=130 ... It's possible to be "priority=184 but deficit" with 30% dump, but "priority=20000 but deficit" is impossible.
         uint256 _reminder = pledgeLength -
             (rankedQueueLen(0) + rankedQueueLen(floor(2**256 - 1)));
         if (_reminder > 0) {
             uint256 _next = _icr;
-            while (rankedQueueLen(_next) == 0) {
-                _next++;
+            while (true) {
+                if (rankedQueueLen(_next) != 0) {
+                    LICR = _next; // the first filled rankedQueue
+                    break;
+                } else if (_next >= _checkpoint) {
+                    LICR = _checkpoint - 1; // default LICR
+                    break;
+                } else {
+                    _next++;
+                }
             }
-            LICR = _next; // the first filled rankedQueue
         } else {
-            LICR = 1; // default LICR is 1 because if LICR is 1, every upsert calls traverse and find a good next LICR
+            LICR = _checkpoint - 1; // default LICR is 184 because every upsert calls traverse but not waste gas
         }
     }
 
@@ -349,49 +359,17 @@ contract PriorityRegistryV4 is IPriorityRegistryV3, YamatoStore {
     ==============================
         Getters
     ==============================
-        - nextRedeemable
-        - nextSweepable
         - getRankedQueue
         - getRedeemablesCap
         - getSweepablesCap
     */
-    function nextRedeemable()
-        public
-        view
-        override
-        returns (IYamato.Pledge memory _poppingPledge)
-    {
-        if (
-            rankedQueue[LICR].nextout < rankedQueueTotalLen(LICR) &&
-            rankedQueueLen(LICR) > 0
-        ) {
-            _poppingPledge = rankedQueue[LICR].pledges[
-                rankedQueue[LICR].nextout
-            ];
-        }
-    }
-
-    function nextSweepable()
-        public
-        view
-        override
-        returns (IYamato.Pledge memory _poppingPledge)
-    {
-        if (
-            rankedQueue[0].nextout < rankedQueueTotalLen(0) &&
-            rankedQueueLen(0) > 0
-        ) {
-            _poppingPledge = rankedQueue[0].pledges[rankedQueue[0].nextout];
-        }
-    }
-
     function getRankedQueue(uint256 icr, uint256 i)
         public
         view
         override
         returns (IYamato.Pledge memory)
     {
-        uint256 _mcr = uint256(IYamato(yamato()).MCR());
+        uint256 _mcrPercent = uint256(IYamato(yamato()).MCR());
         IYamato.Pledge memory zeroPledge = IYamato.Pledge(
             0,
             0,
@@ -400,7 +378,7 @@ contract PriorityRegistryV4 is IPriorityRegistryV3, YamatoStore {
             0
         );
 
-        if (icr == _mcr && icr == LICR && rankedQueueLen(icr) == 0) {
+        if (icr == _mcrPercent && icr == LICR && rankedQueueLen(icr) == 0) {
             return zeroPledge;
         }
 
@@ -416,7 +394,8 @@ contract PriorityRegistryV4 is IPriorityRegistryV3, YamatoStore {
     }
 
     function getRedeemablesCap() external view returns (uint256 _cap) {
-        uint256 mcrPercent = uint256(IYamato(yamato()).MCR());
+        uint256 _mcrPercent = uint256(IYamato(yamato()).MCR());
+        uint256 _checkpoint = _mcrPercent + CHECKPOINT_BUFFER;
         uint256 ethPriceInCurrency = IPriceFeed(feed()).lastGoodPrice();
 
         uint256 _rank = 1;
@@ -428,7 +407,7 @@ contract PriorityRegistryV4 is IPriorityRegistryV3, YamatoStore {
             if (rankedQueueLen(_rank) > 0) {
                 _pledge = getRankedQueue(_rank, _nextout);
                 uint256 _icr = _pledge.getICR(feed());
-                if (_icr > 13000 || _count == 0) {
+                if (_icr > 13000 || _count == 0 || _rank >= _checkpoint) {
                     return _cap; // end
                 } else {
                     // to next index
@@ -440,13 +419,13 @@ contract PriorityRegistryV4 is IPriorityRegistryV3, YamatoStore {
                             if (_icr >= 10000) {
                                 // icr=130%-based value
                                 _cap += _pledge.cappedRedemptionAmount(
-                                    mcrPercent * 100,
+                                    _mcrPercent * 100,
                                     feed()
                                 );
                             } else {
                                 // coll-based value
                                 _cap +=
-                                    (_pledge.coll * ethPriceInCurrency) /
+                                    (_pledge.coll * ethPriceInCurrency) / // Note: getRedeemablesCap's under-MCR value is based on unfetched price
                                     1e18;
                             }
                         } else {
