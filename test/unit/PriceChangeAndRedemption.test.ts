@@ -826,7 +826,6 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         expect(await PriorityRegistry.LICR()).to.eq(130);
       });
     });
-
   });
   describe("sweep()", function () {
     let PRICE;
