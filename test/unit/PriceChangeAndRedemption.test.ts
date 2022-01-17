@@ -774,7 +774,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
             { gasLimit: 30000000 }
           )
         ).wait();
-        expect(await PriorityRegistry.LICR()).to.eq(184);
+        expect(await PriorityRegistry.LICR()).to.eq(130);
       });
     });
 
@@ -815,7 +815,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         await (await Tellor.setLastPrice(dumpedPriceBase)).wait(); //dec8
       });
 
-      it(`should redeem all pledges to ICR 130% and LICR is 130`, async function () {
+      it(`should redeem all pledges to ICR 0% and LICR is 184`, async function () {
         await (
           await Yamato.connect(redeemer).redeem(
             toERC20(toBorrow.mul(9) + ""),
@@ -823,7 +823,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
             { gasLimit: 30000000 }
           )
         ).wait();
-        expect(await PriorityRegistry.LICR()).to.eq(130);
+        expect(await PriorityRegistry.LICR()).to.eq(184);
       });
     });
   });
