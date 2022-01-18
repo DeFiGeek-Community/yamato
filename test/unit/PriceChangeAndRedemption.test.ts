@@ -348,7 +348,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         // pledge loop and traversing redemption must be cheap
         expect(
           await Yamato.estimateGas.redeem(toERC20(toBorrow.mul(9) + ""), false)
-        ).to.be.lt(2300000);
+        ).to.be.lt(3000000);
 
         const txReceipt = await (
           await Yamato.connect(redeemer).redeem(

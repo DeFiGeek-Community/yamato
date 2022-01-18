@@ -498,7 +498,7 @@ describe("contract PriorityRegistry", function () {
         await (await yamatoDummy.bypassUpsert(toTyped(_inputPledge1))).wait();
 
         await expect(yamatoDummy.bypassPopRedeemable()).to.be.revertedWith(
-          "You can't redeem if redeemable candidate is more than MCR."
+          "Pop must not be done for empty queue"
         );
       });
 
