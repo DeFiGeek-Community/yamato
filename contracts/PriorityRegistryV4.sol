@@ -10,7 +10,7 @@ pragma solidity 0.8.4;
 //solhint-disable no-inline-assembly
 import "./Yamato.sol";
 import "./Interfaces/IPriceFeed.sol";
-import "./Interfaces/IPriorityRegistryV3.sol";
+import "./Interfaces/IPriorityRegistryV4.sol";
 import "./Dependencies/PledgeLib.sol";
 import "./Dependencies/YamatoStore.sol";
 import "./Dependencies/SafeMath.sol";
@@ -18,7 +18,7 @@ import "./Dependencies/LiquityMath.sol";
 import "hardhat/console.sol";
 
 // @dev For gas saving reason, we use percent denominated ICR only in this contract.
-contract PriorityRegistryV4 is IPriorityRegistryV3, YamatoStore {
+contract PriorityRegistryV4 is IPriorityRegistryV4, YamatoStore {
     using SafeMath for uint256;
     using PledgeLib for IYamato.Pledge;
 
@@ -27,6 +27,7 @@ contract PriorityRegistryV4 is IPriorityRegistryV3, YamatoStore {
     uint256 public override pledgeLength;
     uint256 public override LICR; // Note: Lowest ICR in percent
     mapping(uint256 => FifoQueue) rankedQueue;
+    uint256 constant CHECKPOINT_BUFFER = 55;
 
     function initialize(address _yamato) public initializer {
         __YamatoStore_init(_yamato);
@@ -62,12 +63,8 @@ contract PriorityRegistryV4 is IPriorityRegistryV3, YamatoStore {
             1. delete current pledge from sorted pledge and update LICR
         */
         if (
-            !(_pledge.debt == 0 && _oldICRpercent == 0) && /* Exclude "new pledge" */
-            pledgeLength > 0 && /* Avoid overflow */
-            leveledPledges[_oldICRpercent][_pledge.owner].isCreated
-            /* whether delete target exists */
+            !(_pledge.debt == 0 && _oldICRpercent == 0) && pledgeLength > 0 /* Exclude "new pledge" */ /* Avoid underflow */
         ) {
-            // TODO: 1st spec failing here
             _deletePledge(_pledge);
         }
 
@@ -84,9 +81,8 @@ contract PriorityRegistryV4 is IPriorityRegistryV3, YamatoStore {
 
         _pledge.priority = _newICRpercent * 100;
 
-        leveledPledges[_newICRpercent][_pledge.owner] = _pledge;
         rankedQueuePush(_newICRpercent, _pledge);
-        pledgeLength++;
+        pledgeLength += 1;
 
         /*
             3. Update LICR for new ICR data
@@ -103,8 +99,8 @@ contract PriorityRegistryV4 is IPriorityRegistryV3, YamatoStore {
             2-2. Traverse from min(oldICR,newICR) to fill the loss of popRedeemable
         */
         // Note: All deletions could cause traverse.
-        // Note: Traversing to the ICR=MAX_UINT256 pledges are validated, don't worry about gas.
-        // Note: LICR is state variable and it will be undated here.
+        // Note: Traversing to the ICR=MAX_UINT256 pledges are checked, don't worry about gas cost explosion.
+        // Note: The lowest of oldICR, newICR, or lowestICR are to be the target. If targeted rankedQueue is empty, go upstair and update LICR.
         uint256 _traverseStartICR;
         if (_oldICRpercent > 0 && _newICRpercent > 0) {
             _traverseStartICR = LiquityMath._min(
@@ -117,7 +113,11 @@ contract PriorityRegistryV4 is IPriorityRegistryV3, YamatoStore {
             _traverseStartICR = _newICRpercent;
         }
 
-        if (_traverseStartICR > 0) _traverseToNextLICR(_traverseStartICR);
+        if (LICR > 0) {
+            _traverseStartICR = LiquityMath._min(_traverseStartICR, LICR);
+            if (rankedQueueLen(_traverseStartICR) == 0)
+                _traverseToNextLICR(_traverseStartICR);
+        }
 
         return _newICRpercent * 100;
     }
@@ -177,13 +177,40 @@ contract PriorityRegistryV4 is IPriorityRegistryV3, YamatoStore {
             rankedQueueLen(LICR) > 0,
             "The current lowest ICR data is inconsistent with actual sorted pledges."
         );
+        uint256 _mcr = uint256(IYamato(yamato()).MCR()) * 100;
 
-        IYamato.Pledge memory poppedPledge = rankedQueuePop(LICR);
+        /*
+            Dry pop inb4 real pop
+        */
+        IYamato.Pledge memory poppablePledge = getRankedQueue(
+            LICR,
+            rankedQueueNextout(LICR)
+        );
+        IYamato.Pledge memory poppedPledge;
+        uint256 _icr = poppablePledge.getICR(feed());
 
-        // Note: Don't check priority, real ICR is the matter. ICR13000 pledge breaks here.
+        /*
+            Overrun redemption; otherwise, naive redemption
+        */
+        // Note: "ICR = MCR = Priority" then go to "MCR+1" rank
+        // Note: Tolerant against 30% dump + mass redemption
+        if (_icr == _mcr && _icr == poppablePledge.priority) {
+            for (uint256 i = 1; i < CHECKPOINT_BUFFER; i++) {
+                if (!poppedPledge.isCreated) {
+                    poppedPledge = rankedQueuePop(floor(_mcr) + i);
+                }
+            }
+            require(
+                poppedPledge.isCreated,
+                "Nothing were redeemable until the checkpoint priority."
+            );
+        } else {
+            poppedPledge = rankedQueuePop(LICR);
+        }
+
+        // Note: priority can be more than MCR, real ICR is the matter. ICR13000 pledge breaks here.
         require(
-            poppedPledge.getICR(feed()) <
-                uint256(IYamato(yamato()).MCR()) * 100,
+            poppedPledge.getICR(feed()) < _mcr,
             "You can't redeem if redeemable candidate is more than MCR."
         );
 
@@ -191,6 +218,8 @@ contract PriorityRegistryV4 is IPriorityRegistryV3, YamatoStore {
         // Note: redeem() has popRedeemable() first then upsert next, hence traversing will be done.
         // Note: Traversing to the ICR=MAX_UINT256 pledges are validated, don't worry about gas.
         // Note: LICR is state variable and it will be undated here.
+
+        pledgeLength -= 1;
 
         return poppedPledge;
     }
@@ -203,9 +232,10 @@ contract PriorityRegistryV4 is IPriorityRegistryV3, YamatoStore {
         public
         override
         onlyYamato
-        returns (IYamato.Pledge memory)
+        returns (IYamato.Pledge memory _poppedPledge)
     {
-        return rankedQueuePop(0);
+        _poppedPledge = rankedQueuePop(0);
+        pledgeLength -= 1;
     }
 
     /*
@@ -242,16 +272,18 @@ contract PriorityRegistryV4 is IPriorityRegistryV3, YamatoStore {
             rankedQueueLen(_icr) > 0,
             "Pop must not be done for empty queue"
         );
-        require(_nextout < _nextin, "Can't pop outbound data.");
-        while (!_pledge.isCreated && _nextout < _nextin) {
-            _pledge = fifoQueue.pledges[_nextout];
+        if (_nextout < _nextin) {
+            while (!_pledge.isCreated && _nextout < _nextin) {
+                _pledge = fifoQueue.pledges[_nextout];
 
-            _nextout++;
+                _nextout++;
+            }
+
+            if (_pledge.isCreated) {
+                delete fifoQueue.pledges[_nextout - 1];
+                fifoQueue.nextout = _nextout;
+            }
         }
-
-        require(_pledge.isCreated, "All queue were empty");
-        delete fifoQueue.pledges[_nextout - 1];
-        fifoQueue.nextout = _nextout;
     }
 
     function rankedQueueSearchAndDestroy(uint256 _icr, uint256 _i)
@@ -320,39 +352,33 @@ contract PriorityRegistryV4 is IPriorityRegistryV3, YamatoStore {
 
             if (targetPledge.owner == _owner) {
                 rankedQueueSearchAndDestroy(icr, _nextout);
+                pledgeLength -= 1;
                 break;
             }
             _nextout++;
         }
-        pledgeLength -= 1;
     }
 
     function _traverseToNextLICR(uint256 _icr) internal {
-        uint256 _mcr = uint256(IYamato(yamato()).MCR());
-
-        bool infLoopish = pledgeLength ==
-            rankedQueueLen(0) + rankedQueueLen(floor(2**256 - 1));
-        // Note: The _oldICRpercent == LICR now, and that former LICR-level has just been nullified. New licr is needed.
-
-        if (
-            rankedQueueLen(_icr) == 0 && /* Confirm the level is nullified */
-            _icr == LICR && /* Confirm the deleted ICR is lowest  */
-            pledgeLength > 1 && /* Not to scan infinitely */
-            LICR != 0 /* If 1st take, leave it to the logic in the bottom */
-        ) {
-            if (infLoopish) {
-                // Note: Okie you avoided inf loop but make sure you don't redeem ICR=MCR pledge
-                LICR = _mcr - 1;
-            } else {
-                // TODO: Out-of-gas fail safe
-                uint256 _next = _icr;
-                while (
-                    rankedQueueLen(_next) == 0 /* this level is empty! */
-                ) {
+        uint256 _mcrPercent = uint256(IYamato(yamato()).MCR());
+        uint256 _checkpoint = _mcrPercent + CHECKPOINT_BUFFER; // 185*0.7=130 ... It's possible to be "priority=184 but deficit" with 30% dump, but "priority=20000 but deficit" is impossible.
+        uint256 _reminder = pledgeLength -
+            (rankedQueueLen(0) + rankedQueueLen(floor(2**256 - 1)));
+        if (_reminder > 0) {
+            uint256 _next = _icr;
+            while (true) {
+                if (rankedQueueLen(_next) != 0) {
+                    LICR = _next; // the first filled rankedQueue
+                    break;
+                } else if (_next >= _checkpoint) {
+                    LICR = _checkpoint - 1; // default LICR
+                    break;
+                } else {
                     _next++;
-                } // Note: if exist or out-of-range, stop it and set that level as the LICR
-                LICR = _next;
+                }
             }
+        } else {
+            LICR = _checkpoint - 1; // default LICR is 184 because every upsert calls traverse but not waste gas
         }
     }
 
@@ -360,49 +386,17 @@ contract PriorityRegistryV4 is IPriorityRegistryV3, YamatoStore {
     ==============================
         Getters
     ==============================
-        - nextRedeemable
-        - nextSweepable
         - getRankedQueue
         - getRedeemablesCap
         - getSweepablesCap
     */
-    function nextRedeemable()
-        public
-        view
-        override
-        returns (IYamato.Pledge memory _poppingPledge)
-    {
-        if (
-            rankedQueue[LICR].nextout < rankedQueueTotalLen(LICR) &&
-            rankedQueueLen(LICR) > 0
-        ) {
-            _poppingPledge = rankedQueue[LICR].pledges[
-                rankedQueue[LICR].nextout
-            ];
-        }
-    }
-
-    function nextSweepable()
-        public
-        view
-        override
-        returns (IYamato.Pledge memory _poppingPledge)
-    {
-        if (
-            rankedQueue[0].nextout < rankedQueueTotalLen(0) &&
-            rankedQueueLen(0) > 0
-        ) {
-            _poppingPledge = rankedQueue[0].pledges[rankedQueue[0].nextout];
-        }
-    }
-
     function getRankedQueue(uint256 icr, uint256 i)
         public
         view
         override
         returns (IYamato.Pledge memory)
     {
-        uint256 _mcr = uint256(IYamato(yamato()).MCR());
+        uint256 _mcrPercent = uint256(IYamato(yamato()).MCR());
         IYamato.Pledge memory zeroPledge = IYamato.Pledge(
             0,
             0,
@@ -411,7 +405,7 @@ contract PriorityRegistryV4 is IPriorityRegistryV3, YamatoStore {
             0
         );
 
-        if (icr == _mcr && icr == LICR && rankedQueueLen(icr) == 0) {
+        if (icr == _mcrPercent && icr == LICR && rankedQueueLen(icr) == 0) {
             return zeroPledge;
         }
 
@@ -427,7 +421,8 @@ contract PriorityRegistryV4 is IPriorityRegistryV3, YamatoStore {
     }
 
     function getRedeemablesCap() external view returns (uint256 _cap) {
-        uint256 mcrPercent = uint256(IYamato(yamato()).MCR());
+        uint256 _mcrPercent = uint256(IYamato(yamato()).MCR());
+        uint256 _checkpoint = _mcrPercent + CHECKPOINT_BUFFER;
         uint256 ethPriceInCurrency = IPriceFeed(feed()).lastGoodPrice();
 
         uint256 _rank = 1;
@@ -439,7 +434,11 @@ contract PriorityRegistryV4 is IPriorityRegistryV3, YamatoStore {
             if (rankedQueueLen(_rank) > 0) {
                 _pledge = getRankedQueue(_rank, _nextout);
                 uint256 _icr = _pledge.getICR(feed());
-                if (_icr > 13000 || _count == 0) {
+                if (
+                    _icr > _mcrPercent * 100 ||
+                    _count == 0 ||
+                    _rank >= _checkpoint
+                ) {
                     return _cap; // end
                 } else {
                     // to next index
@@ -451,13 +450,13 @@ contract PriorityRegistryV4 is IPriorityRegistryV3, YamatoStore {
                             if (_icr >= 10000) {
                                 // icr=130%-based value
                                 _cap += _pledge.cappedRedemptionAmount(
-                                    mcrPercent * 100,
+                                    _mcrPercent * 100,
                                     feed()
                                 );
                             } else {
                                 // coll-based value
                                 _cap +=
-                                    (_pledge.coll * ethPriceInCurrency) /
+                                    (_pledge.coll * ethPriceInCurrency) / // Note: getRedeemablesCap's under-MCR value is based on unfetched price
                                     1e18;
                             }
                         } else {

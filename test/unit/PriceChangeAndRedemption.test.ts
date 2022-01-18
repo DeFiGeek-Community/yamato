@@ -19,6 +19,7 @@ import {
   YamatoRedeemer,
   YamatoSweeper,
   PriorityRegistry,
+  PriorityRegistryV4,
   Pool,
   ChainLinkMock__factory,
   TellorCallerMock__factory,
@@ -35,6 +36,7 @@ import {
   Pool__factory,
   FeePool__factory,
   PriorityRegistry__factory,
+  PriorityRegistryV4__factory,
 } from "../../typechain";
 import { getProxy, getLinkedProxy } from "../../src/testUtil";
 import { isToken } from "typescript";
@@ -58,7 +60,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
   let YamatoRedeemer: YamatoRedeemer;
   let YamatoSweeper: YamatoSweeper;
   let Pool: Pool;
-  let PriorityRegistry: PriorityRegistry;
+  let PriorityRegistry: PriorityRegistryV4;
   let accounts: Signer[];
   let ownerAddress: string;
   let userAddress: string;
@@ -164,8 +166,8 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
     Pool = await getProxy<Pool, Pool__factory>("Pool", [Yamato.address]);
 
     PriorityRegistry = await getLinkedProxy<
-      PriorityRegistry,
-      PriorityRegistry__factory
+      PriorityRegistryV4,
+      PriorityRegistryV4__factory
     >("PriorityRegistry", [Yamato.address], ["PledgeLib"]);
 
     await (
@@ -346,7 +348,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         // pledge loop and traversing redemption must be cheap
         expect(
           await Yamato.estimateGas.redeem(toERC20(toBorrow.mul(9) + ""), false)
-        ).to.be.lt(2300000);
+        ).to.be.lt(3000000);
 
         const txReceipt = await (
           await Yamato.connect(redeemer).redeem(
@@ -727,6 +729,103 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         expect(redeemeePledgeAfter.debt).to.be.lt(redeemeePledgeBefore.debt);
       });
     });
+    describe("Context - A large traversing and no gas exhaustion with 1% dump", function () {
+      let dumpedPriceBase = "397000000000";
+      let dumpedPrice = BigNumber.from(dumpedPriceBase).mul(1e12 + "");
+      beforeEach(async () => {
+        redeemer = accounts[0];
+        toCollateralize = 1;
+        toBorrow = (await PriceFeed.lastGoodPrice())
+          .mul(toCollateralize)
+          .mul(100)
+          .div(MCR)
+          .div(1e18 + "");
+
+        /*
+          A way larger priority pledge
+        */
+        await Yamato.connect(redeemer).deposit({
+          value: toERC20(toCollateralize * 1000 + ""),
+        });
+        await Yamato.connect(redeemer).borrow(toERC20(toBorrow.mul(10) + ""));
+
+        /*
+          priority<MCR pledges
+        */
+        for (var i = 1; i < accounts.length - 10; i++) {
+          await Yamato.connect(accounts[i]).deposit({
+            value: toERC20(toCollateralize * 0.1 + ""),
+          });
+          await Yamato.connect(accounts[i]).borrow(
+            toERC20(toBorrow.mul(1).div(10) + "")
+          );
+        }
+
+        /* Market Dump */
+        await (await ChainLinkEthUsd.setLastPrice(dumpedPriceBase)).wait(); //dec8
+        await (await Tellor.setLastPrice(dumpedPriceBase)).wait(); //dec8
+      });
+
+      it(`should redeem all pledges to ICR 130% and LICR is 130`, async function () {
+        await (
+          await Yamato.connect(redeemer).redeem(
+            toERC20(toBorrow.mul(9) + ""),
+            false,
+            { gasLimit: 30000000 }
+          )
+        ).wait();
+        expect(await PriorityRegistry.LICR()).to.eq(130);
+      });
+    });
+
+    describe("Context - A large traversing and no gas exhaustion with more than 30% dump", function () {
+      let dumpedPriceBase = "204000000000";
+      let dumpedPrice = BigNumber.from(dumpedPriceBase).mul(1e12 + "");
+      beforeEach(async () => {
+        redeemer = accounts[0];
+        toCollateralize = 1;
+        toBorrow = (await PriceFeed.lastGoodPrice())
+          .mul(toCollateralize)
+          .mul(100)
+          .div(MCR)
+          .div(1e18 + "");
+
+        /*
+          A way larger priority pledge
+        */
+        await Yamato.connect(redeemer).deposit({
+          value: toERC20(toCollateralize * 1000 + ""),
+        });
+        await Yamato.connect(redeemer).borrow(toERC20(toBorrow.mul(10) + ""));
+
+        /*
+          priority<MCR pledges
+        */
+        for (var i = 1; i < accounts.length - 17; i++) {
+          await Yamato.connect(accounts[i]).deposit({
+            value: toERC20(toCollateralize * 0.1 + ""),
+          });
+          await Yamato.connect(accounts[i]).borrow(
+            toERC20(toBorrow.mul(1).div(10) + "")
+          );
+        }
+
+        /* Market Dump */
+        await (await ChainLinkEthUsd.setLastPrice(dumpedPriceBase)).wait(); //dec8
+        await (await Tellor.setLastPrice(dumpedPriceBase)).wait(); //dec8
+      });
+
+      it(`should redeem all pledges to ICR 0% and LICR is 184`, async function () {
+        await (
+          await Yamato.connect(redeemer).redeem(
+            toERC20(toBorrow.mul(9) + ""),
+            false,
+            { gasLimit: 30000000 }
+          )
+        ).wait();
+        expect(await PriorityRegistry.LICR()).to.eq(184);
+      });
+    });
   });
   describe("sweep()", function () {
     let PRICE;
@@ -804,7 +903,10 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       it(`should run partial sweep`, async function () {
         const redeemerAddr = await redeemer.getAddress();
 
-        const sweepablePledge = await PriorityRegistry.nextSweepable();
+        const sweepablePledge = await PriorityRegistry.getRankedQueue(
+          0,
+          await PriorityRegistry.rankedQueueNextout(0)
+        );
         const redeemerCjpyBalanceBefore = await CJPY.balanceOf(redeemerAddr);
         const poolCjpyBalanceBefore = await CJPY.balanceOf(Pool.address);
 
@@ -839,7 +941,10 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       it(`should run full sweep`, async function () {
         const redeemerAddr = await redeemer.getAddress();
 
-        const sweepablePledge = await PriorityRegistry.nextSweepable();
+        const sweepablePledge = await PriorityRegistry.getRankedQueue(
+          0,
+          await PriorityRegistry.rankedQueueNextout(0)
+        );
         const poolCjpyBalanceBefore = await CJPY.balanceOf(Pool.address);
 
         await (

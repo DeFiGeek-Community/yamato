@@ -12,7 +12,9 @@ import {
   YamatoDummy,
   YamatoDummy__factory,
   PriorityRegistry,
+  PriorityRegistryV4,
   PriorityRegistry__factory,
+  PriorityRegistryV4__factory,
   CJPY,
 } from "../../typechain";
 import { getFakeProxy, getLinkedProxy } from "../../src/testUtil";
@@ -28,8 +30,8 @@ describe("contract PriorityRegistry", function () {
   let mockFeed: FakeContract<PriceFeed>;
   let mockCJPY: FakeContract<CJPY>;
   let yamatoDummy: YamatoDummy;
-  let priorityRegistryWithYamatoMock;
-  let priorityRegistry;
+  let priorityRegistryWithYamatoMock: PriorityRegistryV4;
+  let priorityRegistry: PriorityRegistryV4;
   let accounts: Signer[];
   let address0: string;
   const PRICE = BigNumber.from(410000).mul(1e18 + "");
@@ -68,8 +70,8 @@ describe("contract PriorityRegistry", function () {
         For unit tests
       */
     priorityRegistryWithYamatoMock = await getLinkedProxy<
-      PriorityRegistry,
-      PriorityRegistry__factory
+      PriorityRegistryV4,
+      PriorityRegistryV4__factory
     >("PriorityRegistry", [mockYamato.address], ["PledgeLib"]);
 
     /*
@@ -80,8 +82,8 @@ describe("contract PriorityRegistry", function () {
     );
 
     priorityRegistry = await getLinkedProxy<
-      PriorityRegistry,
-      PriorityRegistry__factory
+      PriorityRegistryV4,
+      PriorityRegistryV4__factory
     >("PriorityRegistry", [yamatoDummy.address], ["PledgeLib"]);
 
     await (
@@ -491,13 +493,12 @@ describe("contract PriorityRegistry", function () {
           .mul(10)
           .div(13)
           .div(1e18 + "");
-        console.log(`_debt1:${_debt1}`);
         const _inputPledge1 = [_coll1, _debt1, true, _owner1, 13000];
 
         await (await yamatoDummy.bypassUpsert(toTyped(_inputPledge1))).wait();
 
         await expect(yamatoDummy.bypassPopRedeemable()).to.be.revertedWith(
-          "You can't redeem if redeemable candidate is more than MCR."
+          "Pop must not be done for empty queue"
         );
       });
 
@@ -522,7 +523,6 @@ describe("contract PriorityRegistry", function () {
         await (await yamatoDummy.bypassUpsert(toTyped(_inputPledge3))).wait();
         await (await yamatoDummy.bypassUpsert(toTyped(_inputPledge4))).wait();
 
-        console.log(_owner1, _owner2, _owner3, _owner4);
         const licr1 = await priorityRegistry.LICR();
         const pledge1 = await priorityRegistry.getRankedQueue(licr1, 0);
 
@@ -557,9 +557,15 @@ describe("contract PriorityRegistry", function () {
       const _inputPledge1 = [_coll1, _debt1, true, _owner1, 0];
       await (await yamatoDummy.bypassUpsert(toTyped(_inputPledge1))).wait();
 
-      const nextSweepableBefore = await priorityRegistry.nextSweepable();
+      const nextSweepableBefore = await priorityRegistry.getRankedQueue(
+        0,
+        await priorityRegistry.rankedQueueNextout(0)
+      );
       await (await yamatoDummy.bypassPopSweepable()).wait();
-      const nextSweepableAfter = await priorityRegistry.nextSweepable();
+      const nextSweepableAfter = await priorityRegistry.getRankedQueue(
+        0,
+        await priorityRegistry.rankedQueueNextout(0)
+      );
 
       expect(nextSweepableBefore.coll).to.eq(_coll1);
       expect(nextSweepableBefore.debt).to.eq(_debt1);
