@@ -517,7 +517,7 @@ contract PriorityRegistryV4 is IPriorityRegistryV4, YamatoStore {
         }
         for (uint256 i = 0; i < _acm.length; i++) {
             _rank = _acm[i];
-            if(_rank > 0) {
+            if (_rank > 0) {
                 _len = this.rankedQueueLen(_rank);
                 _sum += _len;
             }
@@ -525,8 +525,12 @@ contract PriorityRegistryV4 is IPriorityRegistryV4, YamatoStore {
 
         pledgeLength = _sum;
     }
-    function _exists(uint256[] memory _acm, uint256 _rank) internal returns (bool) {
-        for(uint256 i = 0; i < _acm.length; i++) {
+
+    function _exists(uint256[] memory _acm, uint256 _rank)
+        internal
+        returns (bool)
+    {
+        for (uint256 i = 0; i < _acm.length; i++) {
             if (_acm[i] == _rank) {
                 return true;
             }
