@@ -493,7 +493,6 @@ describe("contract PriorityRegistry", function () {
           .mul(10)
           .div(13)
           .div(1e18 + "");
-        console.log(`_debt1:${_debt1}`);
         const _inputPledge1 = [_coll1, _debt1, true, _owner1, 13000];
 
         await (await yamatoDummy.bypassUpsert(toTyped(_inputPledge1))).wait();
@@ -503,7 +502,7 @@ describe("contract PriorityRegistry", function () {
         );
       });
 
-      it.only(`succeeds to get the lowest pledge with priority\>0`, async function () {
+      it(`succeeds to get the lowest pledge with priority\>0`, async function () {
         const _owner1 = address0;
         const _coll1 = BigNumber.from("1000000000000000000");
         const _debt1 = BigNumber.from("410001000000000000000000");
@@ -524,16 +523,13 @@ describe("contract PriorityRegistry", function () {
         await (await yamatoDummy.bypassUpsert(toTyped(_inputPledge3))).wait();
         await (await yamatoDummy.bypassUpsert(toTyped(_inputPledge4))).wait();
 
-        console.log(_owner1, _owner2, _owner3, _owner4);
         const licr1 = await priorityRegistry.LICR();
         const pledge1 = await priorityRegistry.getRankedQueue(licr1, 0);
-        console.log(licr1, pledge1.owner, pledge1.priority+"");
 
         await (await yamatoDummy.bypassPopRedeemable()).wait();
 
         const licr2 = await priorityRegistry.LICR();
         const pledge2 = await priorityRegistry.getRankedQueue(licr2, 0);
-        console.log(licr2, pledge2.owner, pledge2.priority+"");
 
         expect(pledge1.owner).to.eq(_owner3);
         expect(pledge2.owner).to.eq(ethers.constants.AddressZero);

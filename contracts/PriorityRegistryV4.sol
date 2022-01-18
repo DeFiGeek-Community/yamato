@@ -178,14 +178,20 @@ contract PriorityRegistryV4 is IPriorityRegistryV4, YamatoStore {
             "The current lowest ICR data is inconsistent with actual sorted pledges."
         );
         uint256 _mcr = uint256(IYamato(yamato()).MCR()) * 100;
+
+        /*
+            Dry pop inb4 real pop
+        */
         IYamato.Pledge memory poppablePledge = getRankedQueue(
             LICR,
             rankedQueueNextout(LICR)
         );
         IYamato.Pledge memory poppedPledge;
-
         uint256 _icr = poppablePledge.getICR(feed());
 
+        /*
+            Overrun redemption; otherwise, naive redemption
+        */
         // Note: "ICR = MCR = Priority" then go to "MCR+1" rank
         // Note: Tolerant against 30% dump + mass redemption
         if (_icr == _mcr && _icr == poppablePledge.priority) {
@@ -194,6 +200,12 @@ contract PriorityRegistryV4 is IPriorityRegistryV4, YamatoStore {
                     poppedPledge = rankedQueuePop(floor(_mcr) + i);
                 }
             }
+            require(
+                poppedPledge.isCreated,
+                "Nothing were redeemable until the checkpoint priority."
+            );
+        } else {
+            poppedPledge = rankedQueuePop(LICR);
         }
 
         // Note: priority can be more than MCR, real ICR is the matter. ICR13000 pledge breaks here.
