@@ -66,6 +66,7 @@ contract PriorityRegistryV4 is IPriorityRegistryV4, YamatoStore {
             !(_pledge.debt == 0 && _oldICRpercent == 0) && pledgeLength > 0 /* Exclude "new pledge" */ /* Avoid underflow */
         ) {
             _deletePledge(_pledge);
+            pledgeLength--;
         }
 
         /* 
@@ -82,7 +83,7 @@ contract PriorityRegistryV4 is IPriorityRegistryV4, YamatoStore {
         _pledge.priority = _newICRpercent * 100;
 
         rankedQueuePush(_newICRpercent, _pledge);
-        pledgeLength += 1;
+        pledgeLength++;
 
         /*
             3. Update LICR for new ICR data
@@ -147,6 +148,7 @@ contract PriorityRegistryV4 is IPriorityRegistryV4, YamatoStore {
         );
 
         _deletePledge(_pledge);
+        pledgeLength--;
     }
 
     /*
@@ -159,7 +161,7 @@ contract PriorityRegistryV4 is IPriorityRegistryV4, YamatoStore {
 
     /*
         @notice LICR-based lowest ICR pledge getter
-        @dev Mutable read function. It pops.
+        @dev Mutable read function. It doesn't change pledgeLength until upsert runs.
         @return A pledge
     */
     function popRedeemable()
@@ -219,13 +221,14 @@ contract PriorityRegistryV4 is IPriorityRegistryV4, YamatoStore {
         // Note: Traversing to the ICR=MAX_UINT256 pledges are validated, don't worry about gas.
         // Note: LICR is state variable and it will be undated here.
 
-        pledgeLength -= 1;
+        // pledgeLength--;
 
         return poppedPledge;
     }
 
     /*
         @notice zero ICR pledge getter
+        @dev It doesn't change pledgeLength until remove runs.
         @return A pledge
     */
     function popSweepable()
@@ -235,7 +238,7 @@ contract PriorityRegistryV4 is IPriorityRegistryV4, YamatoStore {
         returns (IYamato.Pledge memory _poppedPledge)
     {
         _poppedPledge = rankedQueuePop(0);
-        pledgeLength -= 1;
+        // pledgeLength--;
     }
 
     /*
@@ -352,7 +355,6 @@ contract PriorityRegistryV4 is IPriorityRegistryV4, YamatoStore {
 
             if (targetPledge.owner == _owner) {
                 rankedQueueSearchAndDestroy(icr, _nextout);
-                pledgeLength -= 1;
                 break;
             }
             _nextout++;
@@ -502,8 +504,33 @@ contract PriorityRegistryV4 is IPriorityRegistryV4, YamatoStore {
         public
         onlyGovernance
     {
+        uint256 _rank;
+        uint256 _len;
+        uint256[] memory _acm = new uint256[](pledges.length);
+        uint256 _sum;
         for (uint256 i = 0; i < pledges.length; i++) {
-            this.upsert(pledges[i]);
+            _rank = floor(this.upsert(pledges[i]));
+            _len = this.rankedQueueLen(_rank);
+            if (!_exists(_acm, _rank)) {
+                _acm[i] = _rank;
+            }
         }
+        for (uint256 i = 0; i < _acm.length; i++) {
+            _rank = _acm[i];
+            if(_rank > 0) {
+                _len = this.rankedQueueLen(_rank);
+                _sum += _len;
+            }
+        }
+
+        pledgeLength = _sum;
+    }
+    function _exists(uint256[] memory _acm, uint256 _rank) internal returns (bool) {
+        for(uint256 i = 0; i < _acm.length; i++) {
+            if (_acm[i] == _rank) {
+                return true;
+            }
+        }
+        return false;
     }
 }
