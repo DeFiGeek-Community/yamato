@@ -796,7 +796,7 @@ describe("contract PriorityRegistry", function () {
 
       const cap = await priorityRegistry.getRedeemablesCap();
 
-      expect(cap).to.equal("3566999999999999999999997");
+      expect(cap).to.equal("396333333333333333333333");
     });
 
     it(`should return some value with rank 99`, async function () {
@@ -832,7 +832,7 @@ describe("contract PriorityRegistry", function () {
 
       const cap = await priorityRegistry.getRedeemablesCap();
 
-      expect(cap).to.equal("3653100000000000000000000");
+      expect(cap).to.equal("405900000000000000000000");
     });
 
     it(`should return some value with destroyed queue`, async function () {
@@ -872,7 +872,7 @@ describe("contract PriorityRegistry", function () {
 
       const cap = await priorityRegistry.getRedeemablesCap();
 
-      expect(cap).to.equal("3280000000000000000000000");
+      expect(cap).to.equal("410000000000000000000000");
     });
   });
   describe("getSweepablesCap()", function () {
