@@ -221,8 +221,6 @@ contract PriorityRegistryV4 is IPriorityRegistryV4, YamatoStore {
         // Note: Traversing to the ICR=MAX_UINT256 pledges are validated, don't worry about gas.
         // Note: LICR is state variable and it will be undated here.
 
-        // pledgeLength--;
-
         return poppedPledge;
     }
 
@@ -238,7 +236,6 @@ contract PriorityRegistryV4 is IPriorityRegistryV4, YamatoStore {
         returns (IYamato.Pledge memory _poppedPledge)
     {
         _poppedPledge = rankedQueuePop(0);
-        // pledgeLength--;
     }
 
     /*

@@ -43,9 +43,7 @@ async function main() {
   );
   pledges = pledges.filter((p) => p.isCreated);
 
-  console.log(pledges.length);
-
-  // await PriorityRegistry.syncRankedQueue(pledges);
+  await PriorityRegistry.syncRankedQueue(pledges);
 }
 
 main().catch((e) => console.log(e));
