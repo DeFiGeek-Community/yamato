@@ -674,19 +674,29 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
           .div(1e18 + "");
 
         /* A huge whale */
+        expect(await PriorityRegistry.pledgeLength()).to.eq(0);
         await Yamato.connect(redeemer).deposit({
           value: toERC20(toCollateralize * 2100 + ""),
         });
+        expect(await PriorityRegistry.pledgeLength()).to.eq(1);
         await Yamato.connect(redeemer).borrow(toERC20(toBorrow.mul(2000) + ""));
+        expect(await PriorityRegistry.pledgeLength()).to.eq(1);
 
         /* Tiny retail investors */
         for (var i = 1; i < _ACCOUNTS.length; i++) {
-          await Yamato.connect(_ACCOUNTS[i]).deposit({
-            value: toERC20(toCollateralize * 1 + ""),
-          });
-          await Yamato.connect(_ACCOUNTS[i]).borrow(
-            toERC20(toBorrow.mul(1) + "")
-          );
+          expect(await PriorityRegistry.pledgeLength()).to.eq(i);
+          await (
+            await Yamato.connect(_ACCOUNTS[i]).deposit({
+              value: toERC20(toCollateralize * 1 + ""),
+            })
+          ).wait();
+          expect(await PriorityRegistry.pledgeLength()).to.eq(i + 1);
+          await (
+            await Yamato.connect(_ACCOUNTS[i]).borrow(
+              toERC20(toBorrow.mul(1) + "")
+            )
+          ).wait();
+          expect(await PriorityRegistry.pledgeLength()).to.eq(i + 1);
         }
 
         /* Market Dump */
@@ -719,6 +729,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         );
         const statesBefore = await Yamato.getStates();
 
+        expect(await PriorityRegistry.pledgeLength()).to.eq(_ACCOUNTS.length);
         await (
           await Yamato.connect(redeemer).redeem(
             toERC20(toBorrow.mul(1000) + ""),
@@ -726,6 +737,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
             { gasLimit: 30000000 }
           )
         ).wait();
+        expect(await PriorityRegistry.pledgeLength()).to.eq(_ACCOUNTS.length);
 
         const redeemerETHBalanceAfter = await Yamato.provider.getBalance(
           redeemerAddr
