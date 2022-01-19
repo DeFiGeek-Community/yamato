@@ -433,18 +433,14 @@ contract PriorityRegistryV4 is IPriorityRegistryV4, YamatoStore {
             (rankedQueueLen(0) + rankedQueueLen(floor(2**256 - 1)));
         IYamato.Pledge memory _pledge;
         while (true) {
-            if (rankedQueueLen(_rank) > 0) {
-                _pledge = getRankedQueue(_rank, _nextout);
-                uint256 _icr = _pledge.getICR(feed());
-                if (
-                    _icr > _mcrPercent * 100 ||
-                    _count == 0 ||
-                    _rank >= _checkpoint
-                ) {
-                    return _cap; // end
-                } else {
-                    // to next index
-                    _nextout++;
+            _pledge = getRankedQueue(_rank, _nextout);
+            uint256 _icr = _pledge.getICR(feed());
+            if (
+                _icr > _mcrPercent * 100 || _count == 0 || _rank >= _checkpoint
+            ) {
+                return _cap; // end
+            } else {
+                if (rankedQueueLen(_rank) > 0 && _pledge.isCreated) {
                     if (_nextout < rankedQueueTotalLen(_rank)) {
                         if (_pledge.isCreated) {
                             _count--;
@@ -464,15 +460,17 @@ contract PriorityRegistryV4 is IPriorityRegistryV4, YamatoStore {
                         } else {
                             // null pledge. rank unchange, index increment.
                         }
+                        // to next index
+                        _nextout++;
                     } else {
                         // index outbounded
                         _rank++; // to next rank
                         _nextout = rankedQueueNextout(_rank); // default index
                         break;
                     }
+                } else {
+                    _rank++;
                 }
-            } else {
-                _rank++;
             }
         }
     }

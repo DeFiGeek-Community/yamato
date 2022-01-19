@@ -214,7 +214,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
         /* Get redemption budget by her own */
         await Yamato.connect(redeemer).deposit({
-          value: toERC20(toCollateralize * 7.1 + ""),
+          value: toERC20(toCollateralize * 100 + ""),
         });
         await Yamato.connect(redeemer).borrow(toERC20(toBorrow.mul(7) + ""));
 
@@ -229,9 +229,13 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         await (await Tellor.setLastPrice(dumpedPriceBase)).wait(); //dec8
       });
 
-      it(`should full-redeem a lowest pledge w/o infinite traversing nor no pledges redeemed but w/ reasonable gas.`, async function () {
+      it(`should full-redeem a all pledge w/o infinite traversing nor no pledges redeemed but w/ reasonable gas.`, async function () {
         let redeemerAddr = await redeemer.getAddress();
         let redeemeeAddr = await redeemee.getAddress();
+
+        await (await PriceFeed.fetchPrice()).wait();
+        const redeemableCapBefore = await PriorityRegistry.getRedeemablesCap();
+        const statesBefore = await Yamato.getStates();
 
         const totalSupplyBefore = await CJPY.totalSupply();
         const redeemerCJPYBalanceBefore = await CJPY.balanceOf(redeemerAddr);
@@ -256,6 +260,9 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
             false
           )
         ).wait();
+
+        const statesAfter = await Yamato.getStates();
+        expect(statesBefore[1].sub(statesAfter[1])).to.eq(redeemableCapBefore);
 
         const redeemedPledgeAfter = await Yamato.getPledge(redeemeeAddr);
 
@@ -295,7 +302,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
         /* Get redemption budget by her own */
         await Yamato.connect(redeemer).deposit({
-          value: toERC20(toCollateralize * 10.1 + ""),
+          value: toERC20(toCollateralize * 1000 + ""),
         });
         await Yamato.connect(redeemer).borrow(toERC20(toBorrow.mul(10) + ""));
 
@@ -325,11 +332,15 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         await (await Tellor.setLastPrice(dumpedPriceBase)).wait(); //dec8
       });
 
-      it(`should redeem all pledges with small CJPY amount even if there's a huge pledge`, async function () {
+      it(`should full-redeem all pledges with small CJPY amount even if there's a huge pledge`, async function () {
         // Note: If 10000<ICR<MCR then redemption amount shall be limited to "pledge.debt * (MCR - ICR) / ICR"; otherwise, full redemption.
         let redeemerAddr = await redeemer.getAddress();
         let redeemeeAddr = await redeemee.getAddress();
         let redeemeeAddr4 = await redeemee4.getAddress();
+
+        await (await PriceFeed.fetchPrice()).wait();
+        const redeemableCapBefore = await PriorityRegistry.getRedeemablesCap();
+        const statesBefore = await Yamato.getStates();
 
         const redeemedPledgeBefore = await Yamato.getPledge(redeemeeAddr);
         const redeemedPledge4Before = await Yamato.getPledge(redeemeeAddr4);
@@ -356,6 +367,9 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
             false
           )
         ).wait();
+
+        const statesAfter = await Yamato.getStates();
+        expect(statesBefore[1].sub(statesAfter[1])).to.eq(redeemableCapBefore);
 
         const redeemedPledgeAfter = await Yamato.getPledge(redeemeeAddr);
         const redeemedPledge4After = await Yamato.getPledge(redeemeeAddr4);
