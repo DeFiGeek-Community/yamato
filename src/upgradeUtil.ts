@@ -4,7 +4,7 @@ import { getLinkedContractFactory, deployLibrary } from "./testUtil";
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "fs";
 import { getDeploymentAddressPathWithTag, setNetwork } from "./deployUtil";
 import { execSync } from "child_process";
-import { PriorityRegistry, PriorityRegistryV4 } from "../typechain";
+import { PriorityRegistry, PriorityRegistryV5 } from "../typechain";
 
 export async function upgradeProxy<
   T extends BaseContract,
@@ -114,7 +114,7 @@ export function getLatestContractName(implNameBase) {
   }
 }
 
-export async function upgradePriorityRegistryV2ToV4AndSync(
+export async function upgradePriorityRegistryV2ToV5AndSync(
   PriorityRegistry: PriorityRegistry,
   pledges: {
     coll: BigNumberish;
@@ -123,9 +123,9 @@ export async function upgradePriorityRegistryV2ToV4AndSync(
     owner: string;
     priority: BigNumberish;
   }[]
-): Promise<PriorityRegistryV4> {
-  const inst: PriorityRegistryV4 = <PriorityRegistryV4>(
-    await upgradeLinkedProxy(PriorityRegistry.address, "PriorityRegistryV4", [
+): Promise<PriorityRegistryV5> {
+  const inst: PriorityRegistryV5 = <PriorityRegistryV5>(
+    await upgradeLinkedProxy(PriorityRegistry.address, "PriorityRegistryV5", [
       "PledgeLib",
     ])
   );
