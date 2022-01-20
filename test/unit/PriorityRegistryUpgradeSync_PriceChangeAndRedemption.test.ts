@@ -19,7 +19,7 @@ import {
   YamatoRedeemer,
   YamatoSweeper,
   PriorityRegistry,
-  PriorityRegistryV4,
+  PriorityRegistryV5,
   Pool,
   ChainLinkMock__factory,
   TellorCallerMock__factory,
@@ -38,7 +38,7 @@ import {
   PriorityRegistry__factory,
 } from "../../typechain";
 import { getProxy, getLinkedProxy } from "../../src/testUtil";
-import { upgradePriorityRegistryV2ToV4AndSync } from "../../src/upgradeUtil";
+import { upgradePriorityRegistryV2ToV5AndSync } from "../../src/upgradeUtil";
 
 chai.use(smock.matchers);
 chai.use(solidity);
@@ -244,7 +244,7 @@ describe("Upgraded_PriceChangeAndRedemption :: contract Yamato", () => {
           .div(MCR)
           .div(1e18 + "");
 
-        await upgradePriorityRegistryV2ToV4AndSync(PriorityRegistry, [
+        await upgradePriorityRegistryV2ToV5AndSync(PriorityRegistry, [
           await Yamato.getPledge(redeemerAddr),
           await Yamato.getPledge(redeemeeAddr),
         ]);
@@ -355,7 +355,7 @@ describe("Upgraded_PriceChangeAndRedemption :: contract Yamato", () => {
           .div(1e18 + "");
 
         expect(await PriorityRegistry.pledgeLength()).to.eq(pledgeLength);
-        await upgradePriorityRegistryV2ToV4AndSync(PriorityRegistry, [
+        await upgradePriorityRegistryV2ToV5AndSync(PriorityRegistry, [
           await Yamato.getPledge(redeemerAddr),
           await Yamato.getPledge(redeemeeAddr),
           await Yamato.getPledge(redeemeeAddr2),
@@ -459,7 +459,7 @@ describe("Upgraded_PriceChangeAndRedemption :: contract Yamato", () => {
       });
 
       it(`should not redeem any pledeges because no pledges are lower than MCR`, async function () {
-        await upgradePriorityRegistryV2ToV4AndSync(PriorityRegistry, [
+        await upgradePriorityRegistryV2ToV5AndSync(PriorityRegistry, [
           await Yamato.getPledge(await redeemer.getAddress()),
           await Yamato.getPledge(await redeemee.getAddress()),
         ]);
@@ -540,7 +540,7 @@ describe("Upgraded_PriceChangeAndRedemption :: contract Yamato", () => {
           FeePool.address
         );
 
-        await upgradePriorityRegistryV2ToV4AndSync(PriorityRegistry, [
+        await upgradePriorityRegistryV2ToV5AndSync(PriorityRegistry, [
           await Yamato.getPledge(redeemerAddr),
           await Yamato.getPledge(redeemeeAddr),
         ]);
@@ -643,8 +643,8 @@ describe("Upgraded_PriceChangeAndRedemption :: contract Yamato", () => {
           FeePool.address
         );
 
-        const PriorityRegistryV4: PriorityRegistryV4 =
-          await upgradePriorityRegistryV2ToV4AndSync(PriorityRegistry, [
+        const PriorityRegistryV5: PriorityRegistryV5 =
+          await upgradePriorityRegistryV2ToV5AndSync(PriorityRegistry, [
             await Yamato.getPledge(redeemerAddr),
             await Yamato.getPledge(redeemeeAddr),
             await Yamato.getPledge(await anotherRedeemee.getAddress()),
@@ -731,7 +731,7 @@ describe("Upgraded_PriceChangeAndRedemption :: contract Yamato", () => {
       it(`should be runnable in a block`, async function () {
         const redeemerAddr = await redeemer.getAddress();
 
-        await upgradePriorityRegistryV2ToV4AndSync(
+        await upgradePriorityRegistryV2ToV5AndSync(
           PriorityRegistry,
           await Promise.all(
             _ACCOUNTS.map(
@@ -858,7 +858,7 @@ describe("Upgraded_PriceChangeAndRedemption :: contract Yamato", () => {
         const redeemerCjpyBalanceBefore = await CJPY.balanceOf(redeemerAddr);
         const poolCjpyBalanceBefore = await CJPY.balanceOf(Pool.address);
 
-        await upgradePriorityRegistryV2ToV4AndSync(PriorityRegistry, [
+        await upgradePriorityRegistryV2ToV5AndSync(PriorityRegistry, [
           await Yamato.getPledge(redeemerAddr),
           await Yamato.getPledge(await redeemee.getAddress()),
           await Yamato.getPledge(await anotherRedeemee.getAddress()),
@@ -932,7 +932,7 @@ describe("Upgraded_PriceChangeAndRedemption :: contract Yamato", () => {
           )
         ).wait();
 
-        await upgradePriorityRegistryV2ToV4AndSync(PriorityRegistry, [
+        await upgradePriorityRegistryV2ToV5AndSync(PriorityRegistry, [
           await Yamato.getPledge(redeemerAddr),
           await Yamato.getPledge(await redeemee.getAddress()),
           await Yamato.getPledge(await anotherRedeemee.getAddress()),

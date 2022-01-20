@@ -6,7 +6,7 @@ import {
 import { readFileSync } from "fs";
 import { ethers } from "ethers";
 import { genABI } from "../src/genABI";
-import { PriorityRegistryV3 } from "../typechain";
+import { PriorityRegistryV5 } from "../typechain";
 
 const NAME1 = "Yamato";
 const NAME2 = "PriorityRegistry";
@@ -24,10 +24,10 @@ async function main() {
     genABI(NAME1),
     getFoundation()
   );
-  let PriorityRegistry: PriorityRegistryV3 = <PriorityRegistryV3>(
+  let PriorityRegistry: PriorityRegistryV5 = <PriorityRegistryV5>(
     new ethers.Contract(
       PriorityRegistryERC1967Proxy,
-      genABI(NAME2 + "V3"),
+      genABI(NAME2 + "V4"),
       getFoundation()
     )
   );
@@ -43,7 +43,13 @@ async function main() {
   );
   pledges = pledges.filter((p) => p.isCreated);
 
+  console.log(`pledges.length:${pledges.length}`);
+
+  console.log(`pledgeLength: ${await PriorityRegistry.pledgeLength()}`);
+
   await PriorityRegistry.syncRankedQueue(pledges);
+
+  console.log(`pledgeLength: ${await PriorityRegistry.pledgeLength()}`);
 }
 
 main().catch((e) => console.log(e));
