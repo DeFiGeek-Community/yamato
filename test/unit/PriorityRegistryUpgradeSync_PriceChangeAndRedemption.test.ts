@@ -778,7 +778,7 @@ describe("Upgraded_PriceChangeAndRedemption :: contract Yamato", () => {
       });
     });
   });
-  describe.only("sweep()", function () {
+  describe("sweep()", function () {
     let PRICE;
     const MCR = BigNumber.from(130);
     let toCollateralize;
