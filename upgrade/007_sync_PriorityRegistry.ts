@@ -47,7 +47,9 @@ async function main() {
 
   console.log(`pledgeLength: ${await PriorityRegistry.pledgeLength()}`);
 
-  await PriorityRegistry.syncRankedQueue(pledges);
+  await (
+    await PriorityRegistry.syncRankedQueue(pledges, { gasLimit: 30000000 })
+  ).wait();
 
   console.log(`pledgeLength: ${await PriorityRegistry.pledgeLength()}`);
 }
