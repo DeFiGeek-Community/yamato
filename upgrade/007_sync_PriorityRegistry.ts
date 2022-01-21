@@ -27,7 +27,7 @@ async function main() {
   let PriorityRegistry: PriorityRegistryV5 = <PriorityRegistryV5>(
     new ethers.Contract(
       PriorityRegistryERC1967Proxy,
-      genABI(NAME2 + "V4"),
+      genABI(NAME2 + "V5"),
       getFoundation()
     )
   );
@@ -48,7 +48,7 @@ async function main() {
   console.log(`pledgeLength: ${await PriorityRegistry.pledgeLength()}`);
 
   await (
-    await PriorityRegistry.syncRankedQueue(pledges, { gasLimit: 30000000 })
+    await PriorityRegistry.syncRankedQueue(pledges, { gasLimit: 14000000 })
   ).wait();
 
   console.log(`pledgeLength: ${await PriorityRegistry.pledgeLength()}`);

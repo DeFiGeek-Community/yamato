@@ -23,11 +23,21 @@ async function main() {
     )
   );
 
-  console.log(`nextResetRank: ${await PriorityRegistry.nextResetRank()}`);
+  console.log(
+    `nextResetRank[before]: ${await PriorityRegistry.nextResetRank()}`
+  );
+  console.log(
+    `getRedeemablesCap[before]: ${await PriorityRegistry.getRedeemablesCap()}`
+  );
 
-  await (await PriorityRegistry.resetQueue(0, { gasLimit: 14000000 })).wait();
+  await (await PriorityRegistry.resetQueue(1, { gasLimit: 14000000 })).wait(); // Given 0, 300 additive deletions. Given 1, 300 deletions from rank=1.
 
-  console.log(`nextResetRank: ${await PriorityRegistry.nextResetRank()}`);
+  console.log(
+    `nextResetRank[after]: ${await PriorityRegistry.nextResetRank()}`
+  );
+  console.log(
+    `getRedeemablesCap[after]: ${await PriorityRegistry.getRedeemablesCap()}`
+  );
 }
 
 main().catch((e) => console.log(e));
