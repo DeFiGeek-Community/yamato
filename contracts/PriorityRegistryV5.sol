@@ -28,6 +28,7 @@ contract PriorityRegistryV5 is IPriorityRegistryV4, YamatoStore {
     uint256 public override LICR; // Note: Lowest ICR in percent
     mapping(uint256 => FifoQueue) rankedQueue;
     uint256 constant CHECKPOINT_BUFFER = 55;
+    uint256 public nextResetRank;
 
     function initialize(address _yamato) public initializer {
         __YamatoStore_init(_yamato);
@@ -491,70 +492,35 @@ contract PriorityRegistryV5 is IPriorityRegistryV4, YamatoStore {
         ====================
             Upgrade Helpers
         ====================
+        - resetQueue
         - syncRankedQueue
     */
-    function syncRankedQueue(IYamato.Pledge[] calldata pledges)
-        public
-        onlyGovernance
-    {
+    function resetQueue(uint256 _defaultRank) public onlyGovernance {
+        if (_defaultRank != 0) {
+            nextResetRank = _defaultRank;
+        }
         /*
             Reset to avoid fragmented queue and redeem malfunction
         */
-        for (uint256 i = 0; i <= 300; i++) {
+        for (uint256 i = nextResetRank; i <= floor(2**256 - 1); i++) {
+            if (i > nextResetRank && i % 300 == 0) {
+                nextResetRank = i;
+                return;
+            }
             for (uint256 j = 0; j < rankedQueue[i].pledges.length; j++) {
                 delete rankedQueue[i].pledges[j];
             }
         }
-        for (
-            uint256 j = 0;
-            j < rankedQueue[floor(2**256 - 1)].pledges.length;
-            j++
-        ) {
-            delete rankedQueue[floor(2**256 - 1)].pledges[j];
-        }
-
-        /*
-            Update
-        */
-        uint256 _rank;
-        uint256 _len;
-        uint256[] memory _acm = new uint256[](pledges.length);
-        uint256 _sum;
-        for (uint256 i = 0; i < pledges.length; i++) {
-            _rank = floor(this.upsert(pledges[i]));
-            if (!_exists(_acm, _rank)) {
-                _acm[i] = _rank;
-            }
-        }
-
-        /*
-            Count len and check
-        */
-        for (uint256 i = 0; i < _acm.length; i++) {
-            _rank = _acm[i];
-            if (_rank > 0) {
-                _len = this.rankedQueueLen(_rank);
-                _sum += _len;
-            }
-        }
-        _sum += this.rankedQueueLen(0);
-        require(
-            pledges.length == _sum,
-            "Yamato and PriorityRegistry are inconsistent about the number of pledges."
-        );
-
-        pledgeLength = _sum;
     }
 
-    function _exists(uint256[] memory _acm, uint256 _rank)
-        internal
-        returns (bool)
+    function syncRankedQueue(IYamato.Pledge[] calldata pledges)
+        public
+        onlyGovernance
     {
-        for (uint256 i = 0; i < _acm.length; i++) {
-            if (_acm[i] == _rank) {
-                return true;
-            }
+        for (uint256 i = 0; i < pledges.length; i++) {
+            this.upsert(pledges[i]);
         }
-        return false;
+
+        pledgeLength = pledges.length;
     }
 }

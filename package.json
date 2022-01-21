@@ -33,6 +33,7 @@
     "upgrade:withdrawer": "hardhat run upgrade/003_upgrade_YamatoWithdrawer.ts --network rinkeby",
     "upgrade:yamato": "hardhat run upgrade/008_upgrade_Yamato.ts --network rinkeby",
     "upgradeSync:priorityRegistry": "ts-node upgrade/007_sync_PriorityRegistry.ts --rinkeby",
+    "upgradeSync:resetRankedQueue": "ts-node upgrade/009_reset_RankedQueue.ts --rinkeby",
     "verify:rinkeby": "hardhat verify --network rinkeby",
     "verify:rinkeby:all": "hardhat run src/verifyRinkebyContracts.ts",
     "verify:rinkeby:showURL": "ts-node src/showRinkebyProxyVerificationURLs.ts"
