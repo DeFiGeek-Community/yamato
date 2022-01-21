@@ -427,47 +427,44 @@ contract PriorityRegistryV5 is IPriorityRegistryV4, YamatoStore {
         uint256 _nextout = rankedQueueNextout(_rank);
         uint256 _count = pledgeLength -
             (rankedQueueLen(0) + rankedQueueLen(floor(2**256 - 1)));
-        IYamato.Pledge memory _pledge;
+        IYamato.Pledge memory _pledge = getRankedQueue(_rank, _nextout);
+        uint256 _icr = _pledge.getICR(feed());
         while (true) {
-            _pledge = getRankedQueue(_rank, _nextout);
-            uint256 _icr = _pledge.getICR(feed());
             if (
                 _icr > _mcrPercent * 100 || _count == 0 || _rank >= _checkpoint
             ) {
                 return _cap; // end
             } else {
-                if (rankedQueueLen(_rank) > 0 && _pledge.isCreated) {
-                    if (_nextout < rankedQueueTotalLen(_rank)) {
-                        if (_pledge.isCreated) {
-                            _count--;
-                            // icr check and cap addition
-                            if (_icr >= 10000) {
-                                // icr=130%-based value
-                                _cap += _pledge.cappedRedemptionAmount(
-                                    _mcrPercent * 100,
-                                    feed()
-                                );
-                            } else {
-                                // coll-based value
-                                _cap +=
-                                    (_pledge.coll * ethPriceInCurrency) / // Note: getRedeemablesCap's under-MCR value is based on unfetched price
-                                    1e18;
-                            }
+                if (
+                    rankedQueueLen(_rank) > 0 &&
+                    (_nextout < rankedQueueTotalLen(_rank)) /* in range */
+                ) {
+                    if (
+                        _pledge.isCreated /* to skip gap */
+                    ) {
+                        // icr check and cap addition
+                        if (_icr >= 10000) {
+                            // icr=130%-based value
+                            _cap += _pledge.cappedRedemptionAmount(
+                                _mcrPercent * 100,
+                                feed()
+                            );
                         } else {
-                            // null pledge. rank unchange, index increment.
+                            // coll-based value
+                            _cap +=
+                                (_pledge.coll * ethPriceInCurrency) / // Note: getRedeemablesCap's under-MCR value is based on unfetched price
+                                1e18;
                         }
-                        // to next index
-                        _nextout++;
-                    } else {
-                        // index outbounded
-                        _rank++; // to next rank
-                        _nextout = rankedQueueNextout(_rank); // default index
-                        break;
+                        _count--;
                     }
+                    _nextout++; // to next index
                 } else {
-                    _rank++;
+                    _rank++; // to next rank
+                    _nextout = rankedQueueNextout(_rank); // default index
                 }
             }
+            _pledge = getRankedQueue(_rank, _nextout);
+            _icr = _pledge.getICR(feed());
         }
     }
 
@@ -502,14 +499,22 @@ contract PriorityRegistryV5 is IPriorityRegistryV4, YamatoStore {
         /*
             Reset to avoid fragmented queue and redeem malfunction
         */
+        while (rankedQueue[0].pledges.length > 0) {
+            rankedQueue[0].pledges.pop();
+        }
+        while (rankedQueue[floor(2**256 - 1)].pledges.length > 0) {
+            rankedQueue[floor(2**256 - 1)].pledges.pop();
+        }
         for (uint256 i = nextResetRank; i <= floor(2**256 - 1); i++) {
-            if (i > nextResetRank && i % 300 == 0) {
+            if (i > nextResetRank && i % 500 == 0) {
                 nextResetRank = i;
                 return;
             }
-            for (uint256 j = 0; j < rankedQueue[i].pledges.length; j++) {
-                delete rankedQueue[i].pledges[j];
+            while (rankedQueue[i].pledges.length > 0) {
+                rankedQueue[i].pledges.pop();
             }
+
+            rankedQueue[i].nextout = 0;
         }
     }
 
