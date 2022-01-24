@@ -60,9 +60,11 @@ contract YamatoSweeper is IYamatoSweeper, YamatoAction {
             1. Sweeping
         */
         while (_reminder > 0) {
+            console.log("---- 1: %s", gasleft());
             try IPriorityRegistry(priorityRegistry()).popSweepable() returns (
                 IYamato.Pledge memory _sweepablePledge
             ) {
+                console.log("---- 2: %s", gasleft());
                 if (!_sweepablePledge.isCreated) break; // Note: No any more redeemable pledges
                 if (_sweepablePledge.owner == address(0x00)) break; // Note: No any more redeemable pledges
 
@@ -73,12 +75,13 @@ contract YamatoSweeper is IYamatoSweeper, YamatoAction {
                 if (!sPledge.isCreated) break; // Note: registry-yamato mismatch
                 if (sPledge.debt == 0) break; // Note: A once-swept pledge is called twice
                 _pledgesOwner[_loopCount] = _sweepablePledge.owner; // Note: For event
-
+                console.log("---- 3: %s", gasleft());
                 (
                     IYamato.Pledge memory _sweptPledge,
                     uint256 _sweptReminder,
                     uint256 sweepingAmount
                 ) = this.sweepDebt(sPledge, _reminder);
+                console.log("---- 4: %s", gasleft());
                 _reminder = _sweptReminder;
                 sPledge = _sweptPledge;
                 IYamato(yamato()).setPledge(sPledge.owner, sPledge);
