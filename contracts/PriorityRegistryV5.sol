@@ -447,7 +447,7 @@ contract PriorityRegistryV5 is IPriorityRegistryV4, YamatoStore {
                             // icr=130%-based value
                             _cap += _pledge.cappedRedemptionAmount(
                                 _mcrPercent * 100,
-                                feed()
+                                _icr
                             );
                         } else {
                             // coll-based value

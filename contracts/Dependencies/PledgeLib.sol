@@ -142,7 +142,7 @@ library PledgeLib {
     function cappedRedemptionAmount(
         IYamato.Pledge memory pledge,
         uint256 mcr,
-        address feed
+        uint256 icr
     ) public view returns (uint256) {
         /*
             collValuAfter/debtAfter = mcr/10000
@@ -161,6 +161,29 @@ library PledgeLib {
             k = (13000 - icrBefore) / 3000
               = -0.00033333333icrBefore + 4.33333333333 [10000<icrBefore<13000, 0<k<1]
         */
-        return (pledge.debt * (mcr - getICR(pledge, feed))) / (mcr - 10000);
+        return (pledge.debt * (mcr - icr)) / (mcr - 10000);
     }
+
+    function toBeRedeemed(
+        IYamato.Pledge memory pledge,
+        uint256 mcr,
+        uint256 icr,
+        uint256 ethPriceInCurrency
+    ) public view returns (uint256 _result) {
+        if (icr >= 10000) {
+            // icr=130%-based value
+            _result = cappedRedemptionAmount(
+                pledge,
+                mcr,
+                icr
+            );
+        } else {
+            // coll-based value
+            _result =
+                (pledge.coll * ethPriceInCurrency) / // Note: getRedeemablesCap's under-MCR value is based on unfetched price
+                1e18;
+        }
+
+    }
+
 }
