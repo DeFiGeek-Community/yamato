@@ -1115,7 +1115,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
             let tx = await Yamato.redeem(tenEthInCJPY, false);
             let txReceipt = await tx.wait();
-            expect(txReceipt.gasUsed).to.be.lt(10000000);
+            expect(txReceipt.gasUsed).to.be.lt(12000000);
           }
         });
         it("should full-sweep within 10m gas", async () => {
@@ -1134,7 +1134,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
           let tx = await Yamato.sweep();
           let txReceipt = await tx.wait();
-          expect(txReceipt.gasUsed).to.be.lt(10000000);
+          expect(txReceipt.gasUsed).to.be.lt(12000000);
         });
       });
     });

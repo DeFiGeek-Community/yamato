@@ -285,11 +285,13 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
             .rankedQueueNextout(vars._nextICR);
         vars._nextin = IPriorityRegistryV6(priorityRegistry())
             .rankedQueueTotalLen(vars._nextICR);
+        vars._maxCount = IYamatoV3(yamato()).maxRedeemableCount();
         IYamato.Pledge[] memory _bulkedPledges = new IYamato.Pledge[](
-            IYamatoV3(yamato()).maxRedeemableCount()
-        ); // TODO: loop count can't be predected
+            vars._maxCount
+        );
         while (
-            vars._toBeRedeemed < _args.wantToRedeemCurrencyAmount /* Just gathered as the sender wants */
+            vars._toBeRedeemed < _args.wantToRedeemCurrencyAmount || /* Just gathered as the sender wants */
+            vars._count < vars._maxCount
         ) {
             IYamato.Pledge memory _pledge = IPriorityRegistryV6(
                 priorityRegistry()

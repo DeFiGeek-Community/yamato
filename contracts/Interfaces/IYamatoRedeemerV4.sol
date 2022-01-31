@@ -29,5 +29,6 @@ interface IYamatoRedeemerV4 {
         uint256 _toBeRedeemed;
         uint256 _count;
         uint256 _redeemingAmount;
+        uint256 _maxCount;
     }
 }
