@@ -18,7 +18,9 @@ interface IPriorityRegistryV6 {
 
     function upsert(IYamato.Pledge memory _pledge) external returns (uint256);
 
-    function bulkUpsert(IYamato.Pledge[] memory _pledges) external returns (uint256[] memory);
+    function bulkUpsert(IYamato.Pledge[] memory _pledges)
+        external
+        returns (uint256[] memory);
 
     function remove(IYamato.Pledge memory _pledge) external;
 

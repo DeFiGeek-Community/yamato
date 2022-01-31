@@ -1056,7 +1056,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
             ).wait();
           }
 
-          const COUNT = 100;
+          const COUNT = await (<any>Yamato).maxRedeemableCount();
           for (var i = 0; i < COUNT; i++) {
             let bearer = accounts[(i % 14) + 5];
             let eoa = await bearer.getAddress();
@@ -1078,12 +1078,12 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
             let ethBal = await Yamato.provider.getBalance(accAddr);
             await (
               await Yamato.connect(_ACCOUNTS[i]).deposit({
-                value: BigNumber.from(1e17+""),
+                value: BigNumber.from(1e17 + ""),
               })
             ).wait();
             await (
               await Yamato.connect(_ACCOUNTS[i]).borrow(
-                  BigNumber.from(1e17+"")
+                BigNumber.from(1e17 + "")
                   .mul(await PriceFeed.lastGoodPrice())
                   .mul(100)
                   .div(MCR)
@@ -1105,30 +1105,38 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         });
         it.only("should redeem within 10m gas", async () => {
           let redeemerCJPYBalance = await CJPY.balanceOf(redeemerAddr);
-          let tenEthInCJPY = BigNumber.from(1e19+"").mul(await PriceFeed.lastGoodPrice()).div(1e18 + "");
+          let tenEthInCJPY = BigNumber.from(1e19 + "")
+            .mul(await PriceFeed.lastGoodPrice())
+            .div(1e18 + "");
           const rCOUNT = 10;
           for (var i = 0; i < rCOUNT; i++) {
-            let gas = await Yamato.estimateGas.redeem(tenEthInCJPY,false);
-            expect(gas).to.be.lt(10000000);
+            let gas = await Yamato.estimateGas.redeem(tenEthInCJPY, false);
+            expect(gas).to.be.lt(30000000);
+
+            let tx = await Yamato.redeem(tenEthInCJPY, false);
+            let txReceipt = await tx.wait();
+            expect(txReceipt.gasUsed).to.be.lt(10000000);
           }
         });
         it("should full-sweep within 10m gas", async () => {
-
           let redeemerCJPYBalance = await CJPY.balanceOf(redeemerAddr);
-          let tenEthInCJPY = BigNumber.from(1e19+"").mul(await PriceFeed.lastGoodPrice()).div(1e18 + "");
+          let tenEthInCJPY = BigNumber.from(1e19 + "")
+            .mul(await PriceFeed.lastGoodPrice())
+            .div(1e18 + "");
           await (
-            await Yamato.connect(redeemer).redeem(
-              tenEthInCJPY,
-              false,
-              { gasLimit: 30000000 }
-            )
+            await Yamato.connect(redeemer).redeem(tenEthInCJPY, false, {
+              gasLimit: 30000000,
+            })
           ).wait();
 
           let gas = await Yamato.estimateGas.sweep();
-          expect(gas).to.be.lt(10000000);
+          expect(gas).to.be.lt(30000000);
+
+          let tx = await Yamato.sweep();
+          let txReceipt = await tx.wait();
+          expect(txReceipt.gasUsed).to.be.lt(10000000);
         });
       });
-    
     });
   });
 });

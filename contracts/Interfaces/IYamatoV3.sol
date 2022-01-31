@@ -15,4 +15,6 @@ interface IYamatoV3 {
     function setPledges(IYamato.Pledge[] memory _pledges) external;
 
     function collFloor() external view returns (uint256);
+
+    function maxRedeemableCount() external view returns (uint256);
 }

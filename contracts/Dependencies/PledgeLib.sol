@@ -172,18 +172,12 @@ library PledgeLib {
     ) public view returns (uint256 _result) {
         if (icr >= 10000) {
             // icr=130%-based value
-            _result = cappedRedemptionAmount(
-                pledge,
-                mcr,
-                icr
-            );
+            _result = cappedRedemptionAmount(pledge, mcr, icr);
         } else {
             // coll-based value
             _result =
                 (pledge.coll * ethPriceInCurrency) / // Note: getRedeemablesCap's under-MCR value is based on unfetched price
                 1e18;
         }
-
     }
-
 }

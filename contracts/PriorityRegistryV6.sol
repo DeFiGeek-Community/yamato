@@ -136,13 +136,15 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         uint256 _deleteCount;
         uint256 _addCount;
         uint256[] memory _newPriorities = new uint256[](_pledges.length);
-        for(uint256 i; i < _pledges.length; i++) {
+        for (uint256 i; i < _pledges.length; i++) {
             IYamato.Pledge memory _pledge = _pledges[i];
-            
+
             uint256 _oldICRpercent = floor(_pledge.priority);
 
             require(
-                !(_pledge.coll == 0 && _pledge.debt == 0 && _oldICRpercent != 0),
+                !(_pledge.coll == 0 &&
+                    _pledge.debt == 0 &&
+                    _oldICRpercent != 0),
                 "Upsert Error: The logless zero pledge cannot be upserted. It should be removed."
             );
 
@@ -193,12 +195,15 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
 
         return _newPriorities;
     }
+
     function _isStoppable(uint256 _licrCandidate) internal view returns (bool) {
         uint256 _mcrPercent = uint256(IYamato(yamato()).MCR());
         uint256 _checkpoint = _mcrPercent + CHECKPOINT_BUFFER;
-        return !(_licrCandidate != 130 && rankedQueueLen(_licrCandidate) == 0 && _licrCandidate < _checkpoint) || _licrCandidate == 130;
+        return
+            !(_licrCandidate != 130 &&
+                rankedQueueLen(_licrCandidate) == 0 &&
+                _licrCandidate < _checkpoint) || _licrCandidate == 130;
     }
-
 
     /*
         @dev It removes "just full swept" or "just full withdrawn" pledges.
@@ -399,11 +404,21 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         }
     }
 
-    function rankedQueueTotalLen(uint256 _icr) public view override returns (uint256) {
+    function rankedQueueTotalLen(uint256 _icr)
+        public
+        view
+        override
+        returns (uint256)
+    {
         return rankedQueue[_icr].pledges.length;
     }
 
-    function rankedQueueNextout(uint256 _icr) public view override returns (uint256) {
+    function rankedQueueNextout(uint256 _icr)
+        public
+        view
+        override
+        returns (uint256)
+    {
         return rankedQueue[_icr].nextout;
     }
 
@@ -515,7 +530,11 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
                         _pledge.isCreated /* to skip gap */
                     ) {
                         // icr check and cap addition
-                        _cap += _pledge.toBeRedeemed(_mcrPercent*100, _icr, ethPriceInCurrency);
+                        _cap += _pledge.toBeRedeemed(
+                            _mcrPercent * 100,
+                            _icr,
+                            ethPriceInCurrency
+                        );
                         _count--;
                     }
                     _nextout++; // to next index
