@@ -1014,129 +1014,134 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         expect(sweptPledge.debt).to.equal(0);
         expect(sweptPledge.isCreated).to.be.false;
       });
+    });
+  });
+  describe("Context - gas estimation for 100 redeemees", async function () {
+    const MCR = BigNumber.from(130);
+    let toCollateralize;
+    let toBorrow;
+    let redeemer;
+    let redeemee;
+    let anotherRedeemee;
+    let yetAnotherRedeemee;
+    let redeemerAddr;
+    beforeEach(async () => {
+      redeemer = accounts[0];
+      redeemerAddr = await redeemer.getAddress();
+      toCollateralize = 1;
+      toBorrow = (await PriceFeed.lastGoodPrice())
+        .mul(toCollateralize)
+        .mul(100)
+        .div(MCR)
+        .div(1e18 + "");
 
-      describe("Context - gas estimation for 100 redeemees", async function () {
-        let redeemerAddr;
-        beforeEach(async () => {
-          await (await ChainLinkEthUsd.setLastPrice("404000000000")).wait(); //dec8
-          await (await Tellor.setLastPrice("403000000000")).wait(); //dec8
-          await (await PriceFeed.fetchPrice()).wait();
+      const _ACCOUNTS = [];
+      const transferPromise = [];
 
-          redeemerAddr = await redeemer.getAddress();
-          toCollateralize = 1;
-          toBorrow = (await PriceFeed.lastGoodPrice())
-            .mul(toCollateralize)
-            .mul(100)
-            .div(MCR)
-            .div(1e18 + "");
+      for (var i = 0; i < accounts.length; i++) {
+        let eoa = await accounts[i].getAddress();
+        let ethBal = await Yamato.provider.getBalance(eoa);
+        await (
+          await Yamato.connect(accounts[i]).deposit({
+            value: ethBal.mul(9).div(10),
+          })
+        ).wait();
+        let pledge = await Yamato.getPledge(eoa);
+        let price = await PriceFeed.lastGoodPrice();
+        let colVal = price.mul(pledge.coll).div(1e18 + "");
+        let maxBorrow = colVal.mul(100).div(MCR);
+        let realBorrow = maxBorrow.sub(pledge.debt).mul(9).div(10);
 
-          const _ACCOUNTS = [];
-          const transferPromise = [];
+        await (await Yamato.connect(accounts[i]).borrow(realBorrow)).wait();
+        await (
+          await CJPY.connect(accounts[i]).transfer(
+            redeemerAddr,
+            await CJPY.balanceOf(eoa)
+          )
+        ).wait();
+      }
 
-          for (var i = 0; i < 5; i++) {
-            let eoa = await accounts[i].getAddress();
-            let ethBal = await Yamato.provider.getBalance(eoa);
-            await (
-              await Yamato.connect(accounts[i]).deposit({
-                value: ethBal.mul(9).div(10),
-              })
-            ).wait();
-            let pledge = await Yamato.getPledge(eoa);
-            let price = await PriceFeed.lastGoodPrice();
-            let colVal = price.mul(pledge.coll).div(1e18 + "");
-            let maxBorrow = colVal.mul(100).div(MCR);
-            let realBorrow = maxBorrow.sub(pledge.debt);
+      const COUNT = await (<any>Yamato).maxRedeemableCount();
+      for (var i = 0; i < COUNT; i++) {
+        let bearer = accounts[i % accounts.length];
+        let eoa = await bearer.getAddress();
+        let ethBal = await Yamato.provider.getBalance(eoa);
+        let indivBal = ethBal.mul(14).div(COUNT).sub(1);
+        let wallet = Wallet.createRandom();
+        wallet = wallet.connect(Yamato.provider);
+        transferPromise.push(
+          bearer.sendTransaction({
+            to: wallet.address,
+            value: indivBal,
+          })
+        );
+        _ACCOUNTS.push(wallet);
+      }
 
-            await (await Yamato.connect(accounts[i]).borrow(realBorrow)).wait();
-            await (
-              await CJPY.connect(accounts[i]).transfer(
-                redeemerAddr,
-                await CJPY.balanceOf(eoa)
-              )
-            ).wait();
-          }
+      for (var i = 0; i < _ACCOUNTS.length; i++) {
+        let accAddr = await _ACCOUNTS[i].getAddress();
+        let ethBal = await Yamato.provider.getBalance(accAddr);
+        await (
+          await Yamato.connect(_ACCOUNTS[i]).deposit({
+            value: BigNumber.from(1e17 + ""),
+          })
+        ).wait();
+        await (
+          await Yamato.connect(_ACCOUNTS[i]).borrow(
+            BigNumber.from(1e17 + "")
+              .mul(await PriceFeed.lastGoodPrice())
+              .mul(100)
+              .div(MCR)
+              .div(1e18 + "")
+          )
+        ).wait();
+        await (
+          await CJPY.connect(_ACCOUNTS[i]).transfer(
+            redeemerAddr,
+            await CJPY.balanceOf(accAddr)
+          )
+        ).wait();
+      }
 
-          const COUNT = await (<any>Yamato).maxRedeemableCount();
-          for (var i = 0; i < COUNT; i++) {
-            let bearer = accounts[(i % 14) + 5];
-            let eoa = await bearer.getAddress();
-            let ethBal = await Yamato.provider.getBalance(eoa);
-            let indivBal = ethBal.mul(14).div(COUNT).sub(1);
-            let wallet = Wallet.createRandom();
-            wallet = wallet.connect(Yamato.provider);
-            transferPromise.push(
-              bearer.sendTransaction({
-                to: wallet.address,
-                value: indivBal,
-              })
-            );
-            _ACCOUNTS.push(wallet);
-          }
+      await (await ChainLinkEthUsd.setLastPrice("204000000000")).wait(); //dec8
+      await (await Tellor.setLastPrice("203000000000")).wait(); //dec8
 
-          for (var i = 0; i < _ACCOUNTS.length; i++) {
-            let accAddr = await _ACCOUNTS[i].getAddress();
-            let ethBal = await Yamato.provider.getBalance(accAddr);
-            await (
-              await Yamato.connect(_ACCOUNTS[i]).deposit({
-                value: BigNumber.from(1e17 + ""),
-              })
-            ).wait();
-            await (
-              await Yamato.connect(_ACCOUNTS[i]).borrow(
-                BigNumber.from(1e17 + "")
-                  .mul(await PriceFeed.lastGoodPrice())
-                  .mul(100)
-                  .div(MCR)
-                  .div(1e18 + "")
-              )
-            ).wait();
-            await (
-              await CJPY.connect(_ACCOUNTS[i]).transfer(
-                redeemerAddr,
-                await CJPY.balanceOf(accAddr)
-              )
-            ).wait();
-          }
+      await (await PriceFeed.fetchPrice()).wait();
+    });
+    it.only("should redeem within 10m gas", async () => {
+      let redeemerCJPYBalance = await CJPY.balanceOf(redeemerAddr);
+      let tenEthInCJPY = BigNumber.from(1e19 + "")
+        .mul(await PriceFeed.lastGoodPrice())
+        .div(1e18 + "");
+      const rCOUNT = 3;
+      for (var i = 0; i < rCOUNT; i++) {
+        let gas = await Yamato.estimateGas.redeem(tenEthInCJPY, false);
+        expect(gas).to.be.lt(30000000);
 
-          await (await ChainLinkEthUsd.setLastPrice("204000000000")).wait(); //dec8
-          await (await Tellor.setLastPrice("203000000000")).wait(); //dec8
-
-          await (await PriceFeed.fetchPrice()).wait();
+        let tx = await Yamato.redeem(tenEthInCJPY, false, {
+          gasLimit: 30000000
         });
-        it.only("should redeem within 10m gas", async () => {
-          let redeemerCJPYBalance = await CJPY.balanceOf(redeemerAddr);
-          let tenEthInCJPY = BigNumber.from(1e19 + "")
-            .mul(await PriceFeed.lastGoodPrice())
-            .div(1e18 + "");
-          const rCOUNT = 10;
-          for (var i = 0; i < rCOUNT; i++) {
-            let gas = await Yamato.estimateGas.redeem(tenEthInCJPY, false);
-            expect(gas).to.be.lt(30000000);
+        let txReceipt = await tx.wait();
+        expect(txReceipt.gasUsed).to.be.lt(12000000);
+      }
+    });
+    it("should full-sweep within 10m gas", async () => {
+      let redeemerCJPYBalance = await CJPY.balanceOf(redeemerAddr);
+      let tenEthInCJPY = BigNumber.from(1e19 + "")
+        .mul(await PriceFeed.lastGoodPrice())
+        .div(1e18 + "");
+      await (
+        await Yamato.connect(redeemer).redeem(tenEthInCJPY, false, {
+          gasLimit: 30000000,
+        })
+      ).wait();
 
-            let tx = await Yamato.redeem(tenEthInCJPY, false);
-            let txReceipt = await tx.wait();
-            expect(txReceipt.gasUsed).to.be.lt(12000000);
-          }
-        });
-        it("should full-sweep within 10m gas", async () => {
-          let redeemerCJPYBalance = await CJPY.balanceOf(redeemerAddr);
-          let tenEthInCJPY = BigNumber.from(1e19 + "")
-            .mul(await PriceFeed.lastGoodPrice())
-            .div(1e18 + "");
-          await (
-            await Yamato.connect(redeemer).redeem(tenEthInCJPY, false, {
-              gasLimit: 30000000,
-            })
-          ).wait();
+      let gas = await Yamato.estimateGas.sweep();
+      expect(gas).to.be.lt(30000000);
 
-          let gas = await Yamato.estimateGas.sweep();
-          expect(gas).to.be.lt(30000000);
-
-          let tx = await Yamato.sweep();
-          let txReceipt = await tx.wait();
-          expect(txReceipt.gasUsed).to.be.lt(12000000);
-        });
-      });
+      let tx = await Yamato.sweep();
+      let txReceipt = await tx.wait();
+      expect(txReceipt.gasUsed).to.be.lt(12000000);
     });
   });
 });

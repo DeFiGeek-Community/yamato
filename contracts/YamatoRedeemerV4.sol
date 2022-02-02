@@ -286,48 +286,47 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
         vars._nextin = IPriorityRegistryV6(priorityRegistry())
             .rankedQueueTotalLen(vars._nextICR);
         vars._maxCount = IYamatoV3(yamato()).maxRedeemableCount();
-        IYamato.Pledge[] memory _bulkedPledges = new IYamato.Pledge[](
-            vars._maxCount
-        );
+        vars._bulkedPledges = new IYamato.Pledge[](vars._maxCount);
+        vars._pledgesOwner = new address[](vars._maxCount);
         while (
-            vars._toBeRedeemed < _args.wantToRedeemCurrencyAmount || /* Just gathered as the sender wants */
+            vars._toBeRedeemed < _args.wantToRedeemCurrencyAmount && /* Just gathered as the sender wants */
             vars._count < vars._maxCount
         ) {
             IYamato.Pledge memory _pledge = IPriorityRegistryV6(
                 priorityRegistry()
             ).getRankedQueue(vars._nextICR, vars._nextout);
+
             vars._redeemingAmount = _pledge.toBeRedeemed(
                 vars._mcrPercent * 100,
                 _pledge.getICR(feed()),
                 vars.ethPriceInCurrency
             );
-            if (
-                _pledge.isCreated &&
-                vars._redeemingAmount == 0 &&
-                vars._nextICR == 130
-            ) {
-                vars._nextICR++;
-                vars._nextout = IPriorityRegistryV6(priorityRegistry())
-                    .rankedQueueNextout(vars._nextICR);
-                vars._nextin = IPriorityRegistryV6(priorityRegistry())
-                    .rankedQueueTotalLen(vars._nextICR);
-                continue; /* To avoid "just-on-MCR" pledges */
-            } else if (
-                _pledge.isCreated &&
-                vars._redeemingAmount == 0 &&
-                vars._nextICR != 130
-            ) {
-                break; /* full redemption but less than the sender wants */
-            }
 
-            _pledge.debt -= vars._redeemingAmount;
-            _pledge.coll -=
-                (vars._redeemingAmount * 1e18) /
-                vars.ethPriceInCurrency;
-            vars._toBeRedeemed += vars._redeemingAmount;
-            vars._pledgesOwner[vars._count] = _pledge.owner;
-            _bulkedPledges[vars._count] = _pledge;
-            vars._count++;
+            if (_pledge.isCreated) {
+                if (
+                    vars._redeemingAmount == 0 /* "just-on-MCR" pledge */
+                ) {
+                    if (vars._nextICR == 130) {
+                        vars._nextICR++;
+                        vars._nextout = IPriorityRegistryV6(priorityRegistry())
+                            .rankedQueueNextout(vars._nextICR);
+                        vars._nextin = IPriorityRegistryV6(priorityRegistry())
+                            .rankedQueueTotalLen(vars._nextICR);
+                        continue; /* To avoid "just-on-MCR" pledges */
+                    } else {
+                        break; /* full redemption but less than the sender wants */
+                    }
+                } else { /* state update for redeemed pledge */
+                    _pledge.debt -= vars._redeemingAmount;
+                    _pledge.coll -=
+                        (vars._redeemingAmount * 1e18) /
+                        vars.ethPriceInCurrency;
+                    vars._toBeRedeemed += vars._redeemingAmount;
+                    vars._pledgesOwner[vars._count] = _pledge.owner;
+                    vars._bulkedPledges[vars._count] = _pledge;
+                    vars._count++;
+                }
+            }
             vars._nextout++;
 
             if (vars._nextout >= vars._nextin) {
@@ -338,24 +337,33 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
                     .rankedQueueTotalLen(vars._nextICR);
             }
         }
-
+        
         /*
             External tx: bulkUpsert and LICR update
         */
+        // TODO: vars._bulkedPledgesから値があるやつだけを抽出してbulkする IYamato.Pledge[] をVarsに追加する
+        vars._bulkedTrimmedPledges = new IYamato.Pledge[](vars._count);
+        for (uint i; i < vars._bulkedPledges.length; i++) {
+            if (vars._bulkedPledges[i].isCreated) {
+                vars._bulkedTrimmedPledges[vars._trimmedCount] = vars._bulkedPledges[i];
+                vars._trimmedCount++;
+            }
+        }
+
         uint256[] memory _priorities = IPriorityRegistryV6(priorityRegistry())
-            .bulkUpsert(_bulkedPledges);
+            .bulkUpsert(vars._bulkedTrimmedPledges);
 
         /*
             On memory update: priority
         */
-        for (uint256 i; i < _bulkedPledges.length; i++) {
-            _bulkedPledges[i].priority = _priorities[i];
+        for (uint256 i; i < vars._bulkedTrimmedPledges.length; i++) {
+            vars._bulkedTrimmedPledges[i].priority = _priorities[i];
         }
 
         /*
             External tx: setPledges
         */
-        IYamatoV3(yamato()).setPledges(_bulkedPledges);
+        IYamatoV3(yamato()).setPledges(vars._bulkedTrimmedPledges);
 
         /*
             External tx: setTotalColl, setTotalDebt
