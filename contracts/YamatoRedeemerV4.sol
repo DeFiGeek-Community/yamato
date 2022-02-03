@@ -288,6 +288,7 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
         vars._maxCount = IYamatoV3(yamato()).maxRedeemableCount();
         vars._bulkedPledges = new IYamato.Pledge[](vars._maxCount);
         vars._pledgesOwner = new address[](vars._maxCount);
+
         while (
             vars._toBeRedeemed < _args.wantToRedeemCurrencyAmount && /* Just gathered as the sender wants */
             vars._count < vars._maxCount
@@ -316,7 +317,8 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
                     } else {
                         break; /* full redemption but less than the sender wants */
                     }
-                } else { /* state update for redeemed pledge */
+                } else {
+                    /* state update for redeemed pledge */
                     _pledge.debt -= vars._redeemingAmount;
                     _pledge.coll -=
                         (vars._redeemingAmount * 1e18) /
@@ -337,33 +339,24 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
                     .rankedQueueTotalLen(vars._nextICR);
             }
         }
-        
+
         /*
             External tx: bulkUpsert and LICR update
         */
-        // TODO: vars._bulkedPledgesから値があるやつだけを抽出してbulkする IYamato.Pledge[] をVarsに追加する
-        vars._bulkedTrimmedPledges = new IYamato.Pledge[](vars._count);
-        for (uint i; i < vars._bulkedPledges.length; i++) {
-            if (vars._bulkedPledges[i].isCreated) {
-                vars._bulkedTrimmedPledges[vars._trimmedCount] = vars._bulkedPledges[i];
-                vars._trimmedCount++;
-            }
-        }
-
         uint256[] memory _priorities = IPriorityRegistryV6(priorityRegistry())
-            .bulkUpsert(vars._bulkedTrimmedPledges);
+            .bulkUpsert(vars._bulkedPledges);
 
         /*
             On memory update: priority
         */
-        for (uint256 i; i < vars._bulkedTrimmedPledges.length; i++) {
-            vars._bulkedTrimmedPledges[i].priority = _priorities[i];
+        for (uint256 i; i < vars._bulkedPledges.length; i++) {
+            vars._bulkedPledges[i].priority = _priorities[i];
         }
 
         /*
             External tx: setPledges
         */
-        IYamatoV3(yamato()).setPledges(vars._bulkedTrimmedPledges);
+        IYamatoV3(yamato()).setPledges(vars._bulkedPledges);
 
         /*
             External tx: setTotalColl, setTotalDebt

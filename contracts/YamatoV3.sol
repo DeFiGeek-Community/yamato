@@ -219,6 +219,9 @@ contract YamatoV3 is
     {
         for (uint256 i; i < _pledges.length; i++) {
             Pledge memory _p = _pledges[i];
+            if (_p.isCreated == false) {
+                continue;
+            }
             setPledge(_p.owner, _p);
         }
     }

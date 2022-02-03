@@ -1113,17 +1113,15 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       let tenEthInCJPY = BigNumber.from(1e19 + "")
         .mul(await PriceFeed.lastGoodPrice())
         .div(1e18 + "");
-      const rCOUNT = 3;
-      for (var i = 0; i < rCOUNT; i++) {
-        let gas = await Yamato.estimateGas.redeem(tenEthInCJPY, false);
-        expect(gas).to.be.lt(30000000);
 
-        let tx = await Yamato.redeem(tenEthInCJPY, false, {
-          gasLimit: 30000000
-        });
-        let txReceipt = await tx.wait();
-        expect(txReceipt.gasUsed).to.be.lt(12000000);
-      }
+      let gas = await Yamato.estimateGas.redeem(tenEthInCJPY.div(2), false);
+      expect(gas).to.be.lt(30000000);
+
+      let tx = await Yamato.redeem(tenEthInCJPY, false, {
+        gasLimit: 30000000,
+      });
+      let txReceipt = await tx.wait();
+      expect(txReceipt.gasUsed).to.be.lt(15000000);
     });
     it("should full-sweep within 10m gas", async () => {
       let redeemerCJPYBalance = await CJPY.balanceOf(redeemerAddr);

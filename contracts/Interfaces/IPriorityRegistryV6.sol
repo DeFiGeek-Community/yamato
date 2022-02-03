@@ -15,6 +15,10 @@ interface IPriorityRegistryV6 {
         uint256 nextout;
         IYamato.Pledge[] pledges;
     }
+    struct DeleteDictItem {
+        bool isCreated;
+        uint256 index;
+    }
 
     function upsert(IYamato.Pledge memory _pledge) external returns (uint256);
 

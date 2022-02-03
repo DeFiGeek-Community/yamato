@@ -29,6 +29,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
     mapping(uint256 => FifoQueue) rankedQueue;
     uint256 constant CHECKPOINT_BUFFER = 55;
     uint256 public nextResetRank;
+    mapping(address => DeleteDictItem) deleteDict;
 
     function initialize(address _yamato) public initializer {
         __YamatoStore_init(_yamato);
@@ -139,6 +140,9 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         uint256[] memory _newPriorities = new uint256[](_pledges.length);
         for (uint256 i; i < _pledges.length; i++) {
             IYamato.Pledge memory _pledge = _pledges[i];
+            if (_pledge.isCreated == false) {
+                continue;
+            }
 
             uint256 _oldICRpercent = floor(_pledge.priority);
 
@@ -233,6 +237,12 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
 
         _deletePledge(_pledge);
         pledgeLength--;
+
+        /*
+            Reset deleteDict to make pledge fresh.
+        */
+        DeleteDictItem memory _d;
+        deleteDict[_pledge.owner] = _d;
     }
 
     /*
@@ -337,7 +347,12 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         override
         onlyYamato
     {
-        rankedQueue[_icr].pledges.push(_pledge);
+        FifoQueue storage fifoQueue = rankedQueue[_icr];
+        deleteDict[_pledge.owner] = DeleteDictItem(
+            true,
+            fifoQueue.pledges.length
+        );
+        fifoQueue.pledges.push(_pledge);
     }
 
     function rankedQueuePop(uint256 _icr)
@@ -372,12 +387,6 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         onlyYamato
     {
         FifoQueue storage fifoQueue = rankedQueue[_icr];
-        require(
-            _i < rankedQueueTotalLen(_icr),
-            "Search index must be less than the last index"
-        );
-        require(fifoQueue.pledges[_i].isCreated, "Delete target was null");
-
         delete fifoQueue.pledges[_i];
     }
 
@@ -421,23 +430,16 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
     */
     /*
         @dev delete of "address[] storage" causes gap in the list.
-             For reasonably gas-saved delete, you must swap target with tail then delete it.
+             deleteDict knows which pledge is in which index.
         @param _pledge the delete target
     */
     function _deletePledge(IYamato.Pledge memory _pledge) internal {
         uint256 _icr = floor(_pledge.priority);
-        address _owner = _pledge.owner;
-        uint256 _nextout = rankedQueue[_icr].nextout;
-        uint256 _nextin = rankedQueueTotalLen(_icr);
-
-        while (_nextout < _nextin) {
-            IYamato.Pledge memory targetPledge = getRankedQueue(_icr, _nextout);
-
-            if (targetPledge.owner == _owner) {
-                rankedQueueSearchAndDestroy(_icr, _nextout);
-                break;
-            }
-            _nextout++;
+        DeleteDictItem memory _item = deleteDict[_pledge.owner];
+        if (
+            _item.isCreated /* To distinguish isCreated=true and index=0 */
+        ) {
+            rankedQueueSearchAndDestroy(_icr, _item.index);
         }
     }
 
@@ -478,9 +480,9 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         override
         returns (IYamato.Pledge memory)
     {
-        if (i < rankedQueueTotalLen(_icr)) {
-            return rankedQueue[_icr].pledges[i];
-        }
+        // if (i < rankedQueueTotalLen(_icr)) {
+        return rankedQueue[_icr].pledges[i];
+        // }
     }
 
     function getRedeemablesCap() external view returns (uint256 _cap) {
