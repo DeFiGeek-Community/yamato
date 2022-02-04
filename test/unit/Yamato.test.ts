@@ -1117,7 +1117,7 @@ describe.only("contract Yamato", function () {
     });
   });
 
-  describe.only("redeem()", function () {
+  describe("redeem()", function () {
     let accounts,
       PRICE,
       PRICE_AFTER,
@@ -1192,7 +1192,7 @@ describe.only("contract Yamato", function () {
       await yamato.connect(accounts[5]).borrow(toERC20(toBorrow + ""));
     });
 
-    it(`should expense coll of lowest ICR pledges even if price change make diff between LICR and real ICR`, async function () {
+    it.only(`should expense coll of lowest ICR pledges even if price change make diff between LICR and real ICR`, async function () {
       let _pledge0 = await yamato.getPledge(accounts[0].address);
       let _pledge1 = await yamato.getPledge(accounts[1].address);
       let _pledge2 = await yamato.getPledge(accounts[2].address);
@@ -1242,7 +1242,7 @@ describe.only("contract Yamato", function () {
 
       expect(TCRAfter).to.gt(TCRBefore);
     });
-    it(`should shrink TCR when TCR \< 1`, async function () {
+    it.only(`should shrink TCR when TCR \< 1`, async function () {
       mockFeed.fetchPrice.returns(PRICE_AFTER.div(2));
       mockFeed.lastGoodPrice.returns(PRICE_AFTER.div(2));
       const TCRBefore = getTCR(
@@ -1259,7 +1259,7 @@ describe.only("contract Yamato", function () {
 
       expect(TCRAfter).to.lt(TCRBefore);
     });
-    it(`should not run if there are no ICR \< MCR pledges`, async function () {
+    it.only(`should not run if there are no ICR \< MCR pledges`, async function () {
       mockFeed.fetchPrice.returns(PRICE.mul(3));
       mockFeed.lastGoodPrice.returns(PRICE.mul(3));
       await expect(
