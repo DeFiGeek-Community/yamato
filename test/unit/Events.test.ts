@@ -157,7 +157,13 @@ describe("story Events", function () {
       mockPriorityRegistry.LICR.returns(1);
       mockPriorityRegistry.rankedQueueNextout.returns(0);
       mockPriorityRegistry.rankedQueueTotalLen.returns(0);
-      mockPriorityRegistry.getRankedQueue.returns([0,0,true,ethers.constants.AddressZero,0]);
+      mockPriorityRegistry.getRankedQueue.returns([
+        0,
+        0,
+        true,
+        ethers.constants.AddressZero,
+        0,
+      ]);
       mockPriorityRegistry.bulkUpsert.returns(Array(100).fill(0));
       mockPriorityRegistry.popRedeemable.returns(
         encode(
@@ -270,12 +276,9 @@ describe("story Events", function () {
         mockFeed.fetchPrice.returns(PRICE.div(2));
         mockFeed.lastGoodPrice.returns(PRICE.div(2));
       });
-      it.only(`should be emitted with proper args for Redeemed.`, async function () {
+      it(`should be emitted with proper args for Redeemed.`, async function () {
         // address indexed sender, uint256 cjpyAmount, uint256 ethAmount, uint256 price, boolean isCoreRedemption, uint256 gasCompensationAmount, address[] pledgesOwner
-        await expect(yamato.redeem(1, false)).to.emit(
-          yamato,
-          "Redeemed"
-        );
+        await expect(yamato.redeem(1, false)).to.emit(yamato, "Redeemed");
       });
       it(`should be emitted with proper args for RedeemedMeta.`, async function () {
         // address indexed sender, uint256 cjpyAmount, uint256 ethAmount, uint256 price, boolean isCoreRedemption, uint256 gasCompensationAmount, address[] pledgesOwner
