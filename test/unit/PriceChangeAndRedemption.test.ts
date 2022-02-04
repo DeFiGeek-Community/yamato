@@ -1108,7 +1108,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
       await (await PriceFeed.fetchPrice()).wait();
     });
-    it.only("should redeem within 10m gas", async () => {
+    it("should redeem within 10m gas", async () => {
       let redeemerCJPYBalance = await CJPY.balanceOf(redeemerAddr);
       let tenEthInCJPY = BigNumber.from(1e19 + "")
         .mul(await PriceFeed.lastGoodPrice())
