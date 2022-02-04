@@ -339,6 +339,7 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
                     .rankedQueueTotalLen(vars._nextICR);
             }
         }
+        require(vars.currencyAmountStart > vars._reminder, "No pledges are redeemed.");
 
         /*
             External tx: bulkUpsert and LICR update

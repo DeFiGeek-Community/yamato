@@ -86,7 +86,7 @@ contract YamatoWithdrawerV2 is IYamatoWithdrawer, YamatoAction {
 
         IYamato(yamato()).setPledge(pledge.owner, pledge);
 
-        IYamato(yamato()).setTotalDebt(totalColl - _ethAmount);
+        IYamato(yamato()).setTotalColl(totalColl - _ethAmount);
 
         /*
             5. Validate and update PriorityRegistry

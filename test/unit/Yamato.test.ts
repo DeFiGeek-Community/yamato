@@ -262,7 +262,7 @@ describe("contract Yamato - pure func quickier tests", function () {
   });
 });
 
-describe.only("contract Yamato", function () {
+describe("contract Yamato", function () {
   let mockPool: FakeContract<Pool>;
   let mockFeePool: FakeContract<FeePool>;
   let mockFeed: FakeContract<PriceFeed>;
@@ -946,7 +946,7 @@ describe.only("contract Yamato", function () {
       await expect(yamato.withdraw(toERC20(toCollateralize / 10 + ""))).to.not
         .reverted;
     });
-    it.only(`should reduce coll and totalColl`, async function () {
+    it(`should reduce coll and totalColl`, async function () {
       const MCR = BigNumber.from(130);
       const toCollateralize = 1;
       const toBorrow = PRICE.mul(toCollateralize)
@@ -1192,7 +1192,7 @@ describe.only("contract Yamato", function () {
       await yamato.connect(accounts[5]).borrow(toERC20(toBorrow + ""));
     });
 
-    it.only(`should expense coll of lowest ICR pledges even if price change make diff between LICR and real ICR`, async function () {
+    it(`should expense coll of lowest ICR pledges even if price change make diff between LICR and real ICR`, async function () {
       let _pledge0 = await yamato.getPledge(accounts[0].address);
       let _pledge1 = await yamato.getPledge(accounts[1].address);
       let _pledge2 = await yamato.getPledge(accounts[2].address);
@@ -1242,7 +1242,7 @@ describe.only("contract Yamato", function () {
 
       expect(TCRAfter).to.gt(TCRBefore);
     });
-    it.only(`should shrink TCR when TCR \< 1`, async function () {
+    it(`should shrink TCR when TCR \< 1`, async function () {
       mockFeed.fetchPrice.returns(PRICE_AFTER.div(2));
       mockFeed.lastGoodPrice.returns(PRICE_AFTER.div(2));
       const TCRBefore = getTCR(
@@ -1259,7 +1259,7 @@ describe.only("contract Yamato", function () {
 
       expect(TCRAfter).to.lt(TCRBefore);
     });
-    it.only(`should not run if there are no ICR \< MCR pledges`, async function () {
+    it(`should not run if there are no ICR \< MCR pledges`, async function () {
       mockFeed.fetchPrice.returns(PRICE.mul(3));
       mockFeed.lastGoodPrice.returns(PRICE.mul(3));
       await expect(

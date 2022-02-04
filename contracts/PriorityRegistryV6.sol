@@ -480,9 +480,9 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         override
         returns (IYamato.Pledge memory)
     {
-        // if (i < rankedQueueTotalLen(_icr)) {
-        return rankedQueue[_icr].pledges[i];
-        // }
+        if (i < rankedQueueTotalLen(_icr)) {
+          return rankedQueue[_icr].pledges[i];
+        }
     }
 
     function getRedeemablesCap() external view returns (uint256 _cap) {
