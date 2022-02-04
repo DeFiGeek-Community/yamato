@@ -158,7 +158,7 @@ describe("story Events", function () {
       mockPriorityRegistry.rankedQueueNextout.returns(0);
       mockPriorityRegistry.rankedQueueTotalLen.returns(0);
       mockPriorityRegistry.getRankedQueue.returns([0,0,true,ethers.constants.AddressZero,0]);
-      mockPriorityRegistry.bulkUpsert.returns([0]);
+      mockPriorityRegistry.bulkUpsert.returns(Array(100).fill(0));
       mockPriorityRegistry.popRedeemable.returns(
         encode(
           ["uint256", "uint256", "bool", "address", "uint256"],
