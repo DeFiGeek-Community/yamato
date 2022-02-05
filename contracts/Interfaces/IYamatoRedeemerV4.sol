@@ -23,6 +23,7 @@ interface IYamatoRedeemerV4 {
         uint256 _loopCount;
         uint8 _GRR;
         uint256 _mcrPercent;
+        uint256 _mcrPertenk;
         uint256 _nextICR;
         uint256 _nextout;
         uint256 _nextin;

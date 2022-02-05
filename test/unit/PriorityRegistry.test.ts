@@ -599,10 +599,11 @@ describe("contract PriorityRegistry", function () {
         await yamatoDummy.bypassRankedQueuePop(_index);
 
         let _deleteNextout = await priorityRegistry.rankedQueueNextout(_index);
-        await expect(yamatoDummy.bypassRankedQueueSearchAndDestroy(
-          _index,
-          _deleteNextout
-        )).to.be.revertedWith("reverted with panic code 0x32 (Array accessed at an out-of-bounds or negative index")
+        await expect(
+          yamatoDummy.bypassRankedQueueSearchAndDestroy(_index, _deleteNextout)
+        ).to.be.revertedWith(
+          "reverted with panic code 0x32 (Array accessed at an out-of-bounds or negative index"
+        );
       });
       it("push1 push2 push3 pop1 push4 push5 destroy2 pop3 destroy4 pop5 push1 push2 destroy1 pop2 = success", async function () {
         await yamatoDummy.bypassRankedQueuePush(_index, toTyped(_inputPledge1));

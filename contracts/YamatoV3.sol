@@ -199,15 +199,24 @@ contract YamatoV3 is
         onlyYamato
     {
         Pledge storage p = pledges[_owner];
-        p.coll = _p.coll;
-        p.debt = _p.debt;
-        if (_neutralityCheck(_p)) {
-            p.owner = address(0);
-            p.isCreated = false;
-            p.priority = 0;
-        } else {
+        if (p.coll != _p.coll) {
+            p.coll = _p.coll;
+        }
+        if (p.debt != _p.debt) {
+            p.debt = _p.debt;
+        }
+        if (_p.debt == 0 && _p.coll == 0) {
+            _p.owner = address(0);
+            _p.isCreated = false;
+            _p.priority = 0;
+        }
+        if (p.owner != _p.owner) {
             p.owner = _p.owner;
+        }
+        if (p.isCreated != _p.isCreated) {
             p.isCreated = _p.isCreated;
+        }
+        if (p.priority != _p.priority) {
             p.priority = _p.priority;
         }
     }
@@ -224,10 +233,6 @@ contract YamatoV3 is
             }
             setPledge(_p.owner, _p);
         }
-    }
-
-    function _neutralityCheck(Pledge memory _p) internal pure returns (bool) {
-        return _p.coll == 0 && _p.debt == 0;
     }
 
     function setTotalColl(uint256 _totalColl) public override onlyYamato {

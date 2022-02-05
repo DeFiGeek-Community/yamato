@@ -52,6 +52,7 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
         );
         vars._GRR = IYamato(yamato()).GRR();
         vars._mcrPercent = uint256(IYamato(yamato()).MCR());
+        vars._mcrPertenk = vars._mcrPercent * 100;
 
         /*
             On memory update: Get redemption candidates with calculating after-redemption state
@@ -64,41 +65,40 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
         vars._maxCount = IYamatoV3(yamato()).maxRedeemableCount();
         vars._bulkedPledges = new IYamato.Pledge[](vars._maxCount);
         vars._pledgesOwner = new address[](vars._maxCount);
+        IPriorityRegistryV6 _prv6 = IPriorityRegistryV6(priorityRegistry());
 
-        uint256 gasmeter =  gasleft();
-        while (
-            vars._toBeRedeemed < _args.wantToRedeemCurrencyAmount && /* Just gathered as the sender wants */
-            vars._count < vars._maxCount
-        ) {
-            IYamato.Pledge memory _pledge = IPriorityRegistryV6(
-                priorityRegistry()
-            ).rankedQueuePop(vars._nextICR);
+        uint256 gasmeter = gasleft();
+        while (true) {
+            address _pledgeAddr = _prv6.rankedQueuePop(vars._nextICR);
 
-            if (_pledge.isCreated == false) {
+            if (_pledgeAddr == address(0)) {
                 vars._nextICR++;
                 continue; /* That rank has been exhausted */
             }
 
-            vars._redeemingAmount = _pledge.toBeRedeemed(
-                vars._mcrPercent * 100,
-                _pledge.getICR(feed()),
-                vars.ethPriceInCurrency
+            IYamato.Pledge memory _pledge = IYamato(yamato()).getPledge(
+                _pledgeAddr
             );
+            uint256 _ICRpertenk = _pledge.getICR(feed());
 
             if (
-                vars._redeemingAmount == 0 /* "just-on-MCR" pledge */
+                vars._nextICR == vars._mcrPercent &&
+                _ICRpertenk == vars._mcrPertenk /* priority=realICR=MCR */
             ) {
-                if (vars._nextICR == 130) {
-                    vars._nextICR++;
-                    vars._nextout = IPriorityRegistryV6(priorityRegistry())
-                        .rankedQueueNextout(vars._nextICR);
-                    vars._nextin = IPriorityRegistryV6(priorityRegistry())
-                        .rankedQueueTotalLen(vars._nextICR);
-                    continue; /* To avoid "just-on-MCR" pledges */
-                } else {
-                    break; /* full redemption but less than the sender wants */
-                }
+                vars._nextICR++;
+                vars._nextout = _prv6.rankedQueueNextout(vars._nextICR);
+                vars._nextin = _prv6.rankedQueueTotalLen(vars._nextICR);
+                continue; /* To avoid "just-on-MCR" pledges */
             } else {
+                vars._redeemingAmount = _pledge.toBeRedeemed(
+                    vars._mcrPertenk,
+                    _ICRpertenk,
+                    vars.ethPriceInCurrency
+                );
+
+                if (vars._redeemingAmount == 0) {
+                    break; /* Given "just-on-MCR" pledge, full redemption but less than the sender wants */
+                }
                 /* state update for redeemed pledge */
                 _pledge.debt -= vars._redeemingAmount;
                 _pledge.coll -=
@@ -108,8 +108,14 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
                 vars._pledgesOwner[vars._count] = _pledge.owner;
                 vars._bulkedPledges[vars._count] = _pledge;
                 vars._count++;
-            }
 
+                if (vars._toBeRedeemed >= _args.wantToRedeemCurrencyAmount) {
+                    break; /* redeeming amount reached to the target */
+                }
+                if (vars._count >= vars._maxCount) {
+                    break; /* count reached to the target */
+                }
+            }
         }
         console.log("while:%s", gasmeter - gasleft());
         require(vars._toBeRedeemed > 0, "No pledges are redeemed.");
@@ -133,7 +139,7 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
             External tx: setPledges
         */
 
-        gasmeter = gasleft(); 
+        gasmeter = gasleft();
         IYamatoV3(yamato()).setPledges(vars._bulkedPledges);
         console.log("setPledges:%s", gasmeter - gasleft());
 
@@ -174,7 +180,7 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
             _redemptionBearer = _args.sender;
             _returningDestination = _args.sender;
         }
-        gasmeter = gasleft(); 
+        gasmeter = gasleft();
         IPool(pool()).sendETH(
             _returningDestination,
             (vars._toBeRedeemed * 1e18) / vars.ethPriceInCurrency
@@ -202,8 +208,6 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
             );
     }
 
-
-
     /*****************************************************
         !!! Deprecated but in the IYamatoRedeemer.sol !!!
     *****************************************************/
@@ -219,5 +223,4 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
         uint256 reminder;
         return (sPledge, reminder);
     }
-
 }

@@ -99,7 +99,11 @@ contract YamatoDummy {
         priorityRegistry.rankedQueuePush(_icr, _pledge);
     }
 
-    function bypassRankedQueuePop(uint256 _icr) external onlyTester returns (IYamato.Pledge memory) {
+    function bypassRankedQueuePop(uint256 _icr)
+        external
+        onlyTester
+        returns (IYamato.Pledge memory)
+    {
         return priorityRegistry.rankedQueuePop(_icr);
     }
 
