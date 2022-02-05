@@ -1190,9 +1190,21 @@ describe("contract Yamato", function () {
         .connect(accounts[5])
         .deposit({ value: toERC20(toCollateralize * 3 + "") });
       await yamato.connect(accounts[5]).borrow(toERC20(toBorrow + ""));
+
+      console.log(
+        accounts[0].address,
+        accounts[1].address,
+        accounts[2].address,
+        accounts[3].address,
+        accounts[4].address,
+        accounts[5].address
+      );
     });
 
     it(`should expense coll of lowest ICR pledges even if price change make diff between LICR and real ICR`, async function () {
+      /*
+        Note: lower ICR pledges and higher ICR pledges are in the same LICR rank. Lower one must be redeemed first.
+      */
       let _pledge0 = await yamato.getPledge(accounts[0].address);
       let _pledge1 = await yamato.getPledge(accounts[1].address);
       let _pledge2 = await yamato.getPledge(accounts[2].address);
