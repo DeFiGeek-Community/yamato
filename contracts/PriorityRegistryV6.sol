@@ -236,12 +236,12 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         override
         onlyYamato
     {
-        FifoQueue storage fifoQueue = rankedQueue[_icr];
+        address[] storage pledgeAddrs = rankedQueue[_icr].pledges;
         deleteDict[_pledgeAddr] = DeleteDictItem(
             true,
-            uint248(fifoQueue.pledges.length)
+            uint248(pledgeAddrs.length)
         );
-        fifoQueue.pledges.push(_pledgeAddr);
+        pledgeAddrs.push(_pledgeAddr);
     }
 
     function rankedQueuePop(uint256 _icr)
@@ -256,16 +256,16 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
 
         uint256 _nextin = rankedQueueTotalLen(_icr);
 
-        if (_nextout < _nextin) {
-            while (_pledgeAddr == address(0) && _nextout < _nextin) {
-                _pledgeAddr = fifoQueue.pledges[_nextout];
-
-                _nextout++;
+        while (true) {
+            if (_nextout >= _nextin) {
+                break;
             }
-
-            if (_pledgeAddr != address(0)) {
-                delete fifoQueue.pledges[_nextout - 1];
-                fifoQueue.nextout = _nextout;
+            _pledgeAddr = fifoQueue.pledges[_nextout];
+            _nextout++;
+            if(_pledgeAddr != address(0)) {
+                delete fifoQueue.pledges[_nextout];
+                fifoQueue.nextout = _nextout + 1;
+                break; /* = return _pledgeAddr */
             }
         }
     }
@@ -275,8 +275,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         override
         onlyYamato
     {
-        FifoQueue storage fifoQueue = rankedQueue[_icr];
-        delete fifoQueue.pledges[_i];
+        delete rankedQueue[_icr].pledges[_i];
     }
 
     function rankedQueueLen(uint256 _icr) public view returns (uint256 count) {

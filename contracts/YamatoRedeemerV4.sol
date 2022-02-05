@@ -67,7 +67,6 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
         vars._pledgesOwner = new address[](vars._maxCount);
         IPriorityRegistryV6 _prv6 = IPriorityRegistryV6(priorityRegistry());
 
-        uint256 gasmeter = gasleft();
         while (true) {
             address _pledgeAddr = _prv6.rankedQueuePop(vars._nextICR);
 
@@ -117,16 +116,13 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
                 }
             }
         }
-        console.log("while:%s", gasmeter - gasleft());
         require(vars._toBeRedeemed > 0, "No pledges are redeemed.");
 
         /*
             External tx: bulkUpsert and LICR update
         */
-        gasmeter = gasleft();
         uint256[] memory _priorities = IPriorityRegistryV6(priorityRegistry())
             .bulkUpsert(vars._bulkedPledges);
-        console.log("bulkUpsert:%s", gasmeter - gasleft());
 
         /*
             On memory update: priority
@@ -139,9 +135,7 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
             External tx: setPledges
         */
 
-        gasmeter = gasleft();
         IYamatoV3(yamato()).setPledges(vars._bulkedPledges);
-        console.log("setPledges:%s", gasmeter - gasleft());
 
         /*
             External tx: setTotalColl, setTotalDebt
@@ -180,7 +174,6 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
             _redemptionBearer = _args.sender;
             _returningDestination = _args.sender;
         }
-        gasmeter = gasleft();
         IPool(pool()).sendETH(
             _returningDestination,
             (vars._toBeRedeemed * 1e18) / vars.ethPriceInCurrency
@@ -196,7 +189,6 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
         uint256 gasCompensationInETH = ((vars._toBeRedeemed * 1e18) /
             vars.ethPriceInCurrency) * (vars._GRR / 100);
         IPool(pool()).sendETH(_args.sender, gasCompensationInETH);
-        console.log("transfers:%s", gasmeter - gasleft());
 
         return
             RedeemedArgs(
