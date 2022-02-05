@@ -415,128 +415,6 @@ describe("contract PriorityRegistry", function () {
     });
   });
 
-  describe("popRedeemable()", function () {
-    it(`fails to call it from EOA`, async function () {
-      await expect(priorityRegistry.popRedeemable()).to.be.revertedWith(
-        "You are not Yamato contract."
-      );
-    });
-    it(`fails to run in the all-sludge state`, async function () {
-      await expect(yamatoDummy.bypassPopRedeemable()).to.be.revertedWith(
-        "pledgeLength=0 :: Need to upsert at least once."
-      );
-    });
-    it(`fails to pop the zero pledge because it isn't redeemable.`, async function () {
-      const _owner1 = address0;
-      const _coll1 = BigNumber.from("0");
-      const _debt1 = BigNumber.from("410001000000000000000000");
-      const _inputPledge1 = [_coll1, _debt1, true, _owner1, 0];
-      await (await yamatoDummy.bypassUpsert(toTyped(_inputPledge1))).wait();
-
-      expect(await priorityRegistry.pledgeLength()).to.eq(1);
-
-      await expect(yamatoDummy.bypassPopRedeemable()).to.be.revertedWith(
-        "licr=0 :: Need to upsert at least once."
-      );
-    });
-
-    it(`succeeds to fetch even by account 3 of hardhat`, async function () {
-      const _owner1 = await accounts[3].getAddress();
-      const _coll1 = BigNumber.from("1000000000000000000");
-      const _debt1 = BigNumber.from("410001000000000000000000");
-      const _inputPledge1 = [_coll1, _debt1, true, _owner1, 1];
-
-      await (await yamatoDummy.bypassUpsert(toTyped(_inputPledge1))).wait();
-
-      const licr1 = await priorityRegistry.LICR();
-      const pledge1 = await priorityRegistry.getRankedQueue(licr1, 0);
-
-      await (await yamatoDummy.bypassPopRedeemable()).wait();
-
-      const licr2 = await priorityRegistry.LICR();
-      const pledge2 = await priorityRegistry.getRankedQueue(licr2, 0);
-
-      expect(pledge1.owner).to.eq(_owner1);
-      expect(pledge2.owner).to.eq(ethers.constants.AddressZero);
-      expect(licr2).to.eq(99); // Note: No traversal by popRedeemable. It must be done by upsert.
-    });
-
-    describe("Context of priority", function () {
-      it(`succeeds to get the lowest pledge with coll>0 debt>0 priority=0`, async function () {
-        const _owner1 = address0;
-        const _coll1 = BigNumber.from("1000000000000000000");
-        const _debt1 = BigNumber.from("410001000000000000000000");
-        const _inputPledge1 = [_coll1, _debt1, true, _owner1, 0];
-
-        await expect(yamatoDummy.bypassUpsert(toTyped(_inputPledge1))).to.be.not
-          .reverted;
-      });
-
-      it(`fails to get the lowest but MAX_INT pledge \(=new pledge / coll>0 debt=0 priority=0\)`, async function () {
-        const _owner1 = address0;
-        const _coll1 = BigNumber.from("1000000000000000000");
-        const _debt1 = BigNumber.from("0");
-        const _inputPledge1 = [_coll1, _debt1, true, _owner1, 0];
-
-        await (await yamatoDummy.bypassUpsert(toTyped(_inputPledge1))).wait();
-
-        await expect(yamatoDummy.bypassPopRedeemable()).to.be.revertedWith(
-          "You can't redeem if redeemable candidate is more than MCR."
-        );
-      });
-
-      it(`fails to get the lowest but MCR pledge`, async function () {
-        const _owner1 = address0;
-        const _coll1 = BigNumber.from("1000000000000000000");
-        const _debt1 = _coll1
-          .mul(PRICE)
-          .mul(10)
-          .div(13)
-          .div(1e18 + "");
-        const _inputPledge1 = [_coll1, _debt1, true, _owner1, 13000];
-
-        await (await yamatoDummy.bypassUpsert(toTyped(_inputPledge1))).wait();
-
-        await expect(yamatoDummy.bypassPopRedeemable()).to.be.revertedWith(
-          "Pop must not be done for empty queue"
-        );
-      });
-
-      it(`succeeds to get the lowest pledge with priority\>0`, async function () {
-        const _owner1 = address0;
-        const _coll1 = BigNumber.from("1000000000000000000");
-        const _debt1 = BigNumber.from("410001000000000000000000");
-        const _owner2 = await accounts[1].getAddress();
-        const _coll2 = BigNumber.from("2000000000000000000");
-        const _debt2 = BigNumber.from("410001000000000000000000");
-        const _owner3 = await accounts[2].getAddress();
-        const _debt3 = _debt1.add("41001000000000000000000");
-        const _owner4 = await accounts[3].getAddress();
-        const _debt4 = _debt2.add("41002000000000000000000");
-        const _inputPledge1 = [_coll1, _debt1, true, _owner1, 1];
-        const _inputPledge2 = [_coll2, _debt2, true, _owner2, 1];
-        const _inputPledge3 = [_coll1, _debt3, true, _owner3, 99];
-        const _inputPledge4 = [_coll2, _debt4, true, _owner4, 199];
-
-        await (await yamatoDummy.bypassUpsert(toTyped(_inputPledge1))).wait();
-        await (await yamatoDummy.bypassUpsert(toTyped(_inputPledge2))).wait();
-        await (await yamatoDummy.bypassUpsert(toTyped(_inputPledge3))).wait();
-        await (await yamatoDummy.bypassUpsert(toTyped(_inputPledge4))).wait();
-
-        const licr1 = await priorityRegistry.LICR();
-        const pledge1 = await priorityRegistry.getRankedQueue(licr1, 0);
-
-        await (await yamatoDummy.bypassPopRedeemable()).wait();
-
-        const licr2 = await priorityRegistry.LICR();
-        const pledge2 = await priorityRegistry.getRankedQueue(licr2, 0);
-
-        expect(pledge1.owner).to.eq(_owner3);
-        expect(pledge2.owner).to.eq(ethers.constants.AddressZero);
-      });
-    });
-  });
-
   describe("popSweepable()", function () {
     it(`fails to call it from EOA`, async function () {
       await expect(priorityRegistry.popSweepable()).to.be.revertedWith(
@@ -697,9 +575,9 @@ describe("contract PriorityRegistry", function () {
       beforeEach(async () => {
         _owner1 = address0;
         const _coll1 = BigNumber.from(1e18 + "");
-        const _debt1 = BigNumber.from(PRICE).mul(1e18 + "");
+        const _debt1 = BigNumber.from(PRICE.div(1e18 + "")).mul(1e18 + "");
         const _icr1 = _coll1
-          .mul(PRICE)
+          .mul(PRICE.div(1e18 + ""))
           .mul(10000)
           .div(_debt1)
           .div(1e18 + "");
@@ -708,20 +586,23 @@ describe("contract PriorityRegistry", function () {
       });
       it("push1 pop1 pop? = fail", async function () {
         await yamatoDummy.bypassRankedQueuePush(_index, toTyped(_inputPledge1));
+        let _nextout1 = await priorityRegistry.rankedQueueNextout(_index);
         await yamatoDummy.bypassRankedQueuePop(_index);
-        await expect(
-          yamatoDummy.bypassRankedQueuePop(_index)
-        ).to.be.revertedWith("Pop must not be done for empty queue");
+        let _nextout2 = await priorityRegistry.rankedQueueNextout(_index);
+        await yamatoDummy.bypassRankedQueuePop(_index);
+        let _nextout3 = await priorityRegistry.rankedQueueNextout(_index);
+        expect(_nextout2).to.eq(_nextout1.add(1));
+        expect(_nextout3).to.eq(_nextout2);
       });
       it("push1 pop1 destroy1 = fail", async function () {
         await yamatoDummy.bypassRankedQueuePush(_index, toTyped(_inputPledge1));
         await yamatoDummy.bypassRankedQueuePop(_index);
-        await expect(
-          yamatoDummy.bypassRankedQueueSearchAndDestroy(
-            _index,
-            await priorityRegistry.rankedQueueNextout(_index)
-          )
-        ).to.be.revertedWith("Searched queue must have at least an item");
+
+        let _deleteNextout = await priorityRegistry.rankedQueueNextout(_index);
+        await expect(yamatoDummy.bypassRankedQueueSearchAndDestroy(
+          _index,
+          _deleteNextout
+        )).to.be.revertedWith("reverted with panic code 0x32 (Array accessed at an out-of-bounds or negative index")
       });
       it("push1 push2 push3 pop1 push4 push5 destroy2 pop3 destroy4 pop5 push1 push2 destroy1 pop2 = success", async function () {
         await yamatoDummy.bypassRankedQueuePush(_index, toTyped(_inputPledge1));

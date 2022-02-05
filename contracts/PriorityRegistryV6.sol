@@ -212,6 +212,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         onlyYamato
         returns (IYamato.Pledge memory _poppedPledge)
     {
+        require(rankedQueueLen(0) > 0, "Pop must not be done for empty queue");
         _poppedPledge = rankedQueuePop(0);
     }
 
