@@ -12,6 +12,22 @@ pragma solidity 0.8.4;
 import "./IYamato.sol";
 
 interface IYamatoSweeper {
+    struct Vars {
+        uint256 sweepReserve;
+        uint256 _GRR;
+        uint256 maxGasCompensation;
+        uint256 _reminder;
+        uint256 _gasReductedSweepCapacity;
+        uint256 pledgeLength;
+        uint256 _maxCount;
+        uint256 _loopCount;
+        uint256 _toBeSwept;
+        IYamato.Pledge[] _bulkedPledges;
+        address[] _pledgesOwner;
+
+    }   
+
+
     function runSweep(address _sender)
         external
         returns (

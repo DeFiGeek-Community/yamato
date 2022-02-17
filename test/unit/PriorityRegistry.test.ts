@@ -12,9 +12,9 @@ import {
   YamatoDummy,
   YamatoDummy__factory,
   PriorityRegistry,
-  PriorityRegistryV4,
+  PriorityRegistryV6,
   PriorityRegistry__factory,
-  PriorityRegistryV4__factory,
+  PriorityRegistryV6__factory,
   CJPY,
 } from "../../typechain";
 import { getFakeProxy, getLinkedProxy } from "../../src/testUtil";
@@ -30,8 +30,8 @@ describe("contract PriorityRegistry", function () {
   let mockFeed: FakeContract<PriceFeed>;
   let mockCJPY: FakeContract<CJPY>;
   let yamatoDummy: YamatoDummy;
-  let priorityRegistryWithYamatoMock: PriorityRegistryV4;
-  let priorityRegistry: PriorityRegistryV4;
+  let priorityRegistryWithYamatoMock: PriorityRegistryV6;
+  let priorityRegistry: PriorityRegistryV6;
   let accounts: Signer[];
   let address0: string;
   const PRICE = BigNumber.from(410000).mul(1e18 + "");
@@ -70,8 +70,8 @@ describe("contract PriorityRegistry", function () {
         For unit tests
       */
     priorityRegistryWithYamatoMock = await getLinkedProxy<
-      PriorityRegistryV4,
-      PriorityRegistryV4__factory
+      PriorityRegistryV6,
+      PriorityRegistryV6__factory
     >("PriorityRegistry", [mockYamato.address], ["PledgeLib"]);
 
     /*
@@ -82,8 +82,8 @@ describe("contract PriorityRegistry", function () {
     );
 
     priorityRegistry = await getLinkedProxy<
-      PriorityRegistryV4,
-      PriorityRegistryV4__factory
+      PriorityRegistryV6,
+      PriorityRegistryV6__factory
     >("PriorityRegistry", [yamatoDummy.address], ["PledgeLib"]);
 
     await (
@@ -191,11 +191,11 @@ describe("contract PriorityRegistry", function () {
       const _pledgeAfter = [_collAfter, _debtAfter, true, address0, _ICRBefore]; // Note: Have the very last ICR here
       await (await yamatoDummy.bypassUpsert(toTyped(_pledgeAfter))).wait();
 
-      const replacingPledge = await priorityRegistry.getRankedQueue(
+      const replacingPledgeAddr = await priorityRegistry.getRankedQueue(
         _ICRBefore,
         0
       );
-      expect(replacingPledge.owner).to.eq(ethers.constants.AddressZero);
+      expect(replacingPledgeAddr).to.eq(ethers.constants.AddressZero);
 
       const pledgeLength3 = await priorityRegistry.pledgeLength();
       expect(pledgeLength3).to.equal(pledgeLength2);
@@ -435,22 +435,18 @@ describe("contract PriorityRegistry", function () {
       const _inputPledge1 = [_coll1, _debt1, true, _owner1, 0];
       await (await yamatoDummy.bypassUpsert(toTyped(_inputPledge1))).wait();
 
-      const nextSweepableBefore = await priorityRegistry.getRankedQueue(
+      const nextSweepableBeforeAddr = await priorityRegistry.getRankedQueue(
         0,
         await priorityRegistry.rankedQueueNextout(0)
       );
       await (await yamatoDummy.bypassPopSweepable()).wait();
-      const nextSweepableAfter = await priorityRegistry.getRankedQueue(
+      const nextSweepableAfterAddr = await priorityRegistry.getRankedQueue(
         0,
         await priorityRegistry.rankedQueueNextout(0)
       );
 
-      expect(nextSweepableBefore.coll).to.eq(_coll1);
-      expect(nextSweepableBefore.debt).to.eq(_debt1);
-      expect(nextSweepableBefore.owner).to.eq(_owner1);
-      expect(nextSweepableAfter.coll).to.eq(0);
-      expect(nextSweepableAfter.debt).to.eq(0);
-      expect(nextSweepableAfter.isCreated).to.eq(false);
+      expect(nextSweepableBeforeAddr).to.eq(_owner1);
+      expect(nextSweepableAfterAddr).to.eq(ethers.constants.AddressZero);
     });
   });
 

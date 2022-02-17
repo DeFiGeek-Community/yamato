@@ -71,6 +71,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         onlyYamato
         returns (uint256[] memory)
     {
+        uint256 _ethPriceInCurrency = IPriceFeed(feed()).lastGoodPrice();
         uint256 _deleteCount;
         uint256 _addCount;
         uint256[] memory _newPriorities = new uint256[](_pledges.length);
@@ -103,7 +104,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
                 2. insert new pledge
             */
 
-            uint256 _newICRPertenk = _pledge.getICR(feed());
+            uint256 _newICRPertenk = _pledge.getICRWithPrice(_ethPriceInCurrency);
             uint256 _newICRpercent = floor(_newICRPertenk);
 
             require(
@@ -136,7 +137,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
                 - If empty, start traversing from that rank.
         */
         uint256 _licrCandidate = _detectLowestICR(
-            _pledges[0].getICR(feed()),
+            _pledges[0].getICRWithPrice(_ethPriceInCurrency),
             floor(_pledges[0].priority),
             LICR
         );
@@ -202,7 +203,6 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
     ==============================
         Mutable Getters
     ==============================
-        - popRedeemable
         - popSweepable
     */
 
@@ -250,24 +250,25 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         onlyYamato
         returns (address _pledgeAddr)
     {
+
         FifoQueue storage fifoQueue = rankedQueue[_icr];
-
         uint256 _nextout = fifoQueue.nextout;
-
         uint256 _nextin = rankedQueueTotalLen(_icr);
 
-        while (true) {
-            if (_nextout >= _nextin) {
-                break;
-            }
+        if (_nextout < _nextin) {
             _pledgeAddr = fifoQueue.pledges[_nextout];
-            _nextout++;
-            if(_pledgeAddr != address(0)) {
-                delete fifoQueue.pledges[_nextout];
-                fifoQueue.nextout = _nextout + 1;
-                break; /* = return _pledgeAddr */
+
+            if (_pledgeAddr == address(0)){
+                while (_nextout < _nextin || _pledgeAddr == address(0)) {
+                    _nextout++;
+                    _pledgeAddr = fifoQueue.pledges[_nextout];
+                }
             }
+
+            delete fifoQueue.pledges[_nextout];
+            fifoQueue.nextout = _nextout + 1;
         }
+
     }
 
     function rankedQueueSearchAndDestroy(uint256 _icr, uint256 _i)
@@ -386,7 +387,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         IYamato.Pledge memory _pledge = IYamato(yamato()).getPledge(
             _pledgeAddr
         );
-        uint256 _icr = _pledge.getICR(feed());
+        uint256 _icr = _pledge.getICRWithPrice(ethPriceInCurrency);
         while (true) {
             if (
                 _icr > _mcrPercent * 100 || _count == 0 || _rank >= _checkpoint
@@ -417,7 +418,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
             _pledgeAddr = getRankedQueue(_rank, _nextout);
             _pledge = IYamato(yamato()).getPledge(_pledgeAddr);
 
-            _icr = _pledge.getICR(feed());
+            _icr = _pledge.getICRWithPrice(ethPriceInCurrency);
         }
     }
 

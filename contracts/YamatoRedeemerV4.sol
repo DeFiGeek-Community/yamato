@@ -78,7 +78,7 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
             IYamato.Pledge memory _pledge = IYamato(yamato()).getPledge(
                 _pledgeAddr
             );
-            uint256 _ICRpertenk = _pledge.getICR(feed());
+            uint256 _ICRpertenk = _pledge.getICRWithPrice(vars.ethPriceInCurrency);
 
             if (
                 vars._nextICR == vars._mcrPercent &&
@@ -99,6 +99,7 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
                     break; /* Given "just-on-MCR" pledge, full redemption but less than the sender wants */
                 }
                 /* state update for redeemed pledge */
+
                 _pledge.debt -= vars._redeemingAmount;
                 _pledge.coll -=
                     (vars._redeemingAmount * 1e18) /

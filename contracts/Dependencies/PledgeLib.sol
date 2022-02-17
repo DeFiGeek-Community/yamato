@@ -44,6 +44,30 @@ library PledgeLib {
         }
     }
 
+    /// @notice Calculate ICR for the memory Pledge
+    /// @dev It's cheaper than "getICR"
+    /// @param _pledge having coll and debt
+    /// @param _ethPriceInCurrency price in decimal=18 padded uint
+    /// @return _ICR in uint256
+    function getICRWithPrice(IYamato.Pledge memory _pledge, uint256 _ethPriceInCurrency)
+        public
+        view
+        returns (uint256 _ICR)
+    {
+        uint256 _debt = _pledge.debt; // dec18
+
+        if (_debt != 0) {
+            // Note: ICR is per-ten-k in Yamato
+            _ICR = (10000 * (_pledge.coll * _ethPriceInCurrency) / 1e18) / _debt;
+        } else {
+            if (_pledge.coll > 0) {
+                _ICR = 2**256 - 1;
+            } else {
+                _ICR = 0;
+            }
+        }
+    }    
+
     function toMem(IYamato.Pledge storage _pledge)
         public
         view
@@ -170,14 +194,14 @@ library PledgeLib {
         uint256 icr,
         uint256 ethPriceInCurrency
     ) public view returns (uint256 _result) {
-        if (10000 <= icr && icr < mcr) {
-            // icr=130%-based value
-            _result = cappedRedemptionAmount(pledge, mcr, icr);
-        } else if (icr < 10000) {
+        if (icr < 10000) {
             // coll-based value
             _result =
                 (pledge.coll * ethPriceInCurrency) / // Note: getRedeemablesCap's under-MCR value is based on unfetched price
                 1e18;
+        } else if (10000 <= icr && icr < mcr) {
+            // icr=130%-based value
+            _result = cappedRedemptionAmount(pledge, mcr, icr);
         } else {
             _result = 0;
         }

@@ -62,7 +62,7 @@ contract YamatoV3 is
     uint8 public constant SRR = 20; // SweepReserveRate in pertenk
     uint8 public constant override GRR = 1; // GasReserveRate in pertenk
     uint256 public constant override(IYamatoV3) collFloor = 1e16; // 0.01 ETH is the floor
-    uint256 public constant override(IYamatoV3) maxRedeemableCount = 100; // 0.01 ETH is the floor
+    uint256 public constant override(IYamatoV3) maxRedeemableCount = 50; // 5ETH is the max redeemable amount per a tx.
 
     // Use hash-slot pointer. You will be less anxious to modularise contracts later.
     string constant CURRENCY_OS_SLOT_ID = "deps.CurrencyOS";

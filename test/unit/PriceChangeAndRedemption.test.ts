@@ -1016,7 +1016,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       });
     });
   });
-  describe("Context - gas estimation for 100 redeemees", async function () {
+  describe("Context - gas estimation for max redeemees headcount (= 50 by default)", async function () {
     const MCR = BigNumber.from(130);
     let toCollateralize;
     let toBorrow;
@@ -1108,7 +1108,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
       await (await PriceFeed.fetchPrice()).wait();
     });
-    it.only("should redeem within 10m gas", async () => {
+    it("should redeem within 10m gas", async () => {
       let redeemerCJPYBalance = await CJPY.balanceOf(redeemerAddr);
       let tenEthInCJPY = BigNumber.from(1e19 + "")
         .mul(await PriceFeed.lastGoodPrice())
@@ -1121,9 +1121,9 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         gasLimit: 30000000,
       });
       let txReceipt = await tx.wait();
-      expect(txReceipt.gasUsed).to.be.lt(16000000);
+      expect(txReceipt.gasUsed).to.be.lt(10000000);
     });
-    it("should full-sweep within 10m gas", async () => {
+    it.only("should full-sweep within 16m gas", async () => {
       let redeemerCJPYBalance = await CJPY.balanceOf(redeemerAddr);
       let tenEthInCJPY = BigNumber.from(1e19 + "")
         .mul(await PriceFeed.lastGoodPrice())
@@ -1139,7 +1139,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
       let tx = await Yamato.sweep();
       let txReceipt = await tx.wait();
-      expect(txReceipt.gasUsed).to.be.lt(12000000);
+      expect(txReceipt.gasUsed).to.be.lt(16000000);
     });
   });
 });
