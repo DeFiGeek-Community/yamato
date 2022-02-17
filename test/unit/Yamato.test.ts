@@ -1387,7 +1387,7 @@ describe("contract Yamato", function () {
 
       expect(mockFeed.fetchPrice).to.have.called;
       expect(mockPool.sendCurrency).to.have.calledOnce;
-      expect(mockPool.useSweepReserve).to.have.calledThrice; // two pledges will be swept
+      expect(mockPool.useSweepReserve).to.have.calledTwice; // two pledges will be swept
     });
   });
 

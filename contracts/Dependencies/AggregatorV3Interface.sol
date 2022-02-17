@@ -25,7 +25,7 @@ interface AggregatorV3Interface {
         );
 
     function latestRoundData()
-        external
+        external view
         returns (
             uint80 roundId,
             int256 answer,
