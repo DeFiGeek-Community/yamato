@@ -34,9 +34,13 @@ interface IPriorityRegistryV6 {
 
     function LICR() external view returns (uint256);
 
+    function MAX_PRIORITY() external view returns (uint256);
+
     function pledgeLength() external view returns (uint256);
 
     function rankedQueueNextout(uint256 _icr) external view returns (uint256);
+
+    function rankedQueueLen(uint256 _icr) external view returns (uint256);
 
     function rankedQueueTotalLen(uint256 _icr) external view returns (uint256);
 

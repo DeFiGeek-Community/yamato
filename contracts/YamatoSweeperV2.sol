@@ -77,6 +77,7 @@ contract YamatoSweeperV2 is IYamatoSweeper, YamatoAction {
             IYamato.Pledge memory _pledge = _yamato.getPledge(
                 _pledgeAddr
             );
+
             uint256 _pledgeDebt = _pledge.debt;
 
             if (_pledgeDebt >= vars._reminder) {
@@ -88,6 +89,7 @@ contract YamatoSweeperV2 is IYamatoSweeper, YamatoAction {
                 vars._reminder -= _pledgeDebt;
                 vars._toBeSwept += _pledgeDebt;
             }
+            _pledge.coll = 0; // Note: Sometimes very tiny coll would be there but ignore it.
 
             vars._pledgesOwner[vars._loopCount] = _pledge.owner; // Note: For event
             vars._bulkedPledges[vars._loopCount] = _pledge;
