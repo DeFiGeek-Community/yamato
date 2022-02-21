@@ -51,16 +51,19 @@ contract YamatoSweeperV2 is IYamatoSweeper, YamatoAction {
         IYamatoSweeper.Vars memory vars;
 
         vars.sweepReserve = IPool(pool()).sweepReserve();
-        require(vars.sweepReserve > 0, "Sweep failure: sweep reserve is empty.");
+        require(
+            vars.sweepReserve > 0,
+            "Sweep failure: sweep reserve is empty."
+        );
         vars._GRR = IYamato(yamato()).GRR();
         vars.maxGasCompensation = vars.sweepReserve * (vars._GRR / 100);
         vars._reminder = vars.sweepReserve - vars.maxGasCompensation; //Note: Secure gas compensation
         vars._gasReductedSweepCapacity = vars._reminder;
-        vars.pledgeLength = IPriorityRegistry(priorityRegistry()).pledgeLength();
+        vars.pledgeLength = IPriorityRegistry(priorityRegistry())
+            .pledgeLength();
         vars._pledgesOwner = new address[](vars.pledgeLength);
         vars._bulkedPledges = new IYamato.Pledge[](vars.pledgeLength);
         vars._maxCount = IYamatoV3(yamato()).maxRedeemableCount();
-
 
         /*
             1. Sweeping
@@ -74,9 +77,7 @@ contract YamatoSweeperV2 is IYamatoSweeper, YamatoAction {
                 break;
             }
 
-            IYamato.Pledge memory _pledge = _yamato.getPledge(
-                _pledgeAddr
-            );
+            IYamato.Pledge memory _pledge = _yamato.getPledge(_pledgeAddr);
 
             uint256 _pledgeDebt = _pledge.debt;
 
@@ -96,11 +97,10 @@ contract YamatoSweeperV2 is IYamatoSweeper, YamatoAction {
 
             vars._loopCount++;
 
-
             if (vars._toBeSwept >= vars._gasReductedSweepCapacity) {
                 break; /* redeeming amount reached to the target */
             }
-            if(vars._loopCount >= vars._maxCount) {
+            if (vars._loopCount >= vars._maxCount) {
                 break;
             }
         }
@@ -109,9 +109,9 @@ contract YamatoSweeperV2 is IYamatoSweeper, YamatoAction {
         /*
             Update pledges
         */
-        for(uint256 i; i < vars._bulkedPledges.length; i++) {
+        for (uint256 i; i < vars._bulkedPledges.length; i++) {
             IYamato.Pledge memory _pledge = vars._bulkedPledges[i];
-            if(_pledge.debt == 0) {
+            if (_pledge.debt == 0) {
                 _prv6.remove(_pledge);
                 _yamato.setPledge(_pledge.owner, _pledge.nil());
             } else {
@@ -119,7 +119,6 @@ contract YamatoSweeperV2 is IYamatoSweeper, YamatoAction {
                 _yamato.setPledge(_pledge.owner, _pledge);
             }
         }
-
 
         /*
             Update global state
@@ -133,7 +132,6 @@ contract YamatoSweeperV2 is IYamatoSweeper, YamatoAction {
         IPool(pool()).useSweepReserve(vars._toBeSwept);
         ICurrencyOS(currencyOS()).burnCurrency(pool(), vars._toBeSwept);
 
-
         /*
             Gas compensation
         */
@@ -143,8 +141,6 @@ contract YamatoSweeperV2 is IYamatoSweeper, YamatoAction {
 
         return (vars._toBeSwept, gasCompensationInCurrency, vars._pledgesOwner);
     }
-
-
 
     /*
         @dev Deprecated in V2.

@@ -5,7 +5,7 @@ import { existsSync, readdirSync, readFileSync, writeFileSync } from "fs";
 import { getDeploymentAddressPathWithTag, setNetwork } from "./deployUtil";
 import { execSync } from "child_process";
 import { PriorityRegistry, PriorityRegistryV5 } from "../typechain";
-import chalk from 'chalk';
+import chalk from "chalk";
 
 export async function upgradeProxy<
   T extends BaseContract,
@@ -73,7 +73,11 @@ export async function runUpgrade(implNameBase, linkings = []) {
       linkings.length > 0
         ? await upgradeLinkedProxy(ERC1967Proxy, implName, linkings)
         : await upgradeProxy(ERC1967Proxy, implName);
-    console.log(chalk.gray(`        [success] ${implName}=${inst.address} is upgraded to ERC1967Proxy`));
+    console.log(
+      chalk.gray(
+        `        [success] ${implName}=${inst.address} is upgraded to ERC1967Proxy`
+      )
+    );
 
     const implAddr = await (<any>inst).getImplementation();
     const implPath = getDeploymentAddressPathWithTag(implNameBase, "UUPSImpl");

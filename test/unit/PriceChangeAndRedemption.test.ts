@@ -1018,7 +1018,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
   });
 
   describe("Context - gas estimation for max redeemees headcount (= 50 by default)", async function () {
-    async function fillMinPledgesWithICR(icr){
+    async function fillMinPledgesWithICR(icr) {
       const MCR = BigNumber.from(130);
 
       let redeemer = accounts[0];
@@ -1030,10 +1030,10 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         .mul(100)
         .div(MCR)
         .div(1e18 + "");
-    
+
       const _ACCOUNTS = [];
       const transferPromise = [];
-    
+
       for (var i = 0; i < accounts.length; i++) {
         let eoa = await accounts[i].getAddress();
         let ethBal = await Yamato.provider.getBalance(eoa);
@@ -1046,7 +1046,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         let colVal = price.mul(pledge.coll).div(1e18 + "");
         let maxBorrow = colVal.mul(100).div(MCR);
         let realBorrow = maxBorrow.sub(pledge.debt).mul(9).div(10);
-    
+
         await (await Yamato.connect(accounts[i]).borrow(realBorrow)).wait();
         await (
           await CJPY.connect(accounts[i]).transfer(
@@ -1055,7 +1055,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
           )
         ).wait();
       }
-    
+
       const COUNT = await (<any>Yamato).maxRedeemableCount();
       for (var i = 0; i < COUNT; i++) {
         let bearer = accounts[i % accounts.length];
@@ -1097,13 +1097,20 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
           )
         ).wait();
       }
-    
-      let coef = BigNumber.from(100).sub(MCR.sub(icr))
-      let adjustedPriceInUSD = price.div(115).mul(coef).div(100).div(1e12+"");
-      let adjustedPriceInJPY = price.mul(coef).div(100).div(1e14+"");
+
+      let coef = BigNumber.from(100).sub(MCR.sub(icr));
+      let adjustedPriceInUSD = price
+        .div(115)
+        .mul(coef)
+        .div(100)
+        .div(1e12 + "");
+      let adjustedPriceInJPY = price
+        .mul(coef)
+        .div(100)
+        .div(1e14 + "");
       await (await ChainLinkEthUsd.setLastPrice(adjustedPriceInUSD)).wait(); //dec8
       await (await Tellor.setLastPrice(adjustedPriceInJPY)).wait(); //dec8
-    
+
       await (await PriceFeed.fetchPrice()).wait();
     }
     describe("Context - less than 100% ICR", async function () {
@@ -1134,7 +1141,6 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
     });
 
     describe.only("Context - exactly 100% ICR", async function () {
-
       beforeEach(async () => {
         await fillMinPledgesWithICR(100);
       });
@@ -1152,7 +1158,6 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         let txReceipt1 = await tx1.wait();
         expect(txReceipt1.gasUsed).to.be.lt(10000000);
 
-
         let gas2 = await Yamato.estimateGas.sweep();
         expect(gas2).to.be.lt(30000000);
 
@@ -1162,9 +1167,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       });
     });
 
-
     describe.only("Context - exactly 110% ICR", async function () {
-
       beforeEach(async () => {
         await fillMinPledgesWithICR(110);
       });
@@ -1182,7 +1185,6 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         let txReceipt1 = await tx1.wait();
         expect(txReceipt1.gasUsed).to.be.lt(10000000);
 
-
         let gas2 = await Yamato.estimateGas.sweep();
         expect(gas2).to.be.lt(30000000);
 
@@ -1192,9 +1194,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       });
     });
 
-
     describe.only("Context - exactly 120% ICR", async function () {
-    
       beforeEach(async () => {
         await fillMinPledgesWithICR(120);
       });
@@ -1212,7 +1212,6 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         let txReceipt1 = await tx1.wait();
         expect(txReceipt1.gasUsed).to.be.lt(10000000);
 
-
         let gas2 = await Yamato.estimateGas.sweep();
         expect(gas2).to.be.lt(30000000);
 
@@ -1223,4 +1222,3 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
     });
   });
 });
-

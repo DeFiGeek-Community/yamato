@@ -28,7 +28,8 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
     uint256 public override LICR; // Note: Lowest ICR in percent
     mapping(uint256 => FifoQueue) rankedQueue;
     uint256 constant CHECKPOINT_BUFFER = 55;
-    uint256 public override constant MAX_PRIORITY = 1157920892373161954235709850086879078532699846656405640394575840079131296399; // (2**256 - 1) / 100
+    uint256 public constant override MAX_PRIORITY =
+        1157920892373161954235709850086879078532699846656405640394575840079131296399; // (2**256 - 1) / 100
     uint256 public nextResetRank;
     mapping(address => DeleteDictItem) deleteDict;
 
@@ -105,7 +106,9 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
                 2. insert new pledge
             */
 
-            uint256 _newICRPertenk = _pledge.getICRWithPrice(_ethPriceInCurrency);
+            uint256 _newICRPertenk = _pledge.getICRWithPrice(
+                _ethPriceInCurrency
+            );
             uint256 _newICRpercent = floor(_newICRPertenk);
 
             require(
@@ -251,7 +254,6 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         onlyYamato
         returns (address _pledgeAddr)
     {
-
         FifoQueue storage fifoQueue = rankedQueue[_icr];
         uint256 _nextout = fifoQueue.nextout;
         uint256 _nextin = rankedQueueTotalLen(_icr);
@@ -259,7 +261,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         if (_nextout < _nextin) {
             _pledgeAddr = fifoQueue.pledges[_nextout];
 
-            if (_pledgeAddr == address(0)){
+            if (_pledgeAddr == address(0)) {
                 while (_nextout < _nextin || _pledgeAddr == address(0)) {
                     _nextout++;
                     _pledgeAddr = fifoQueue.pledges[_nextout];
@@ -269,7 +271,6 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
             delete fifoQueue.pledges[_nextout];
             fifoQueue.nextout = _nextout + 1;
         }
-
     }
 
     function rankedQueueSearchAndDestroy(uint256 _icr, uint256 _i)
@@ -280,7 +281,12 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         delete rankedQueue[_icr].pledges[_i];
     }
 
-    function rankedQueueLen(uint256 _icr) public view override returns (uint256 count) {
+    function rankedQueueLen(uint256 _icr)
+        public
+        view
+        override
+        returns (uint256 count)
+    {
         FifoQueue storage fifoQueue = rankedQueue[_icr];
         for (
             uint256 i = fifoQueue.nextout;

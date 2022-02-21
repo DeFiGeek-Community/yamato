@@ -9,7 +9,7 @@ import {
   upgradeLinkedProxy,
   upgradeProxy,
 } from "./upgradeUtil";
-import chalk from 'chalk';
+import chalk from "chalk";
 
 // @dev UUPS
 export async function getFakeProxy<T extends BaseContract>(
@@ -53,7 +53,11 @@ export async function getProxy<
     // console.log(`${implName} is going to be deployed to ERC1967Proxy...`);
 
     const inst: T = <T>await upgradeProxy(defaultInst.address, implName);
-    console.log(chalk.gray(`        [success] ${implName}=${inst.address} is upgraded to ERC1967Proxy`));
+    console.log(
+      chalk.gray(
+        `        [success] ${implName}=${inst.address} is upgraded to ERC1967Proxy`
+      )
+    );
     return inst;
   }
 }
@@ -97,7 +101,11 @@ export async function getLinkedProxy<
     const inst: T = <T>(
       await upgradeLinkedProxy(defaultInst.address, implName, libralies)
     );
-    console.log(chalk.gray(`        [success] ${implName}=${inst.address} is upgraded to ERC1967Proxy`));
+    console.log(
+      chalk.gray(
+        `        [success] ${implName}=${inst.address} is upgraded to ERC1967Proxy`
+      )
+    );
     return inst;
   }
 }

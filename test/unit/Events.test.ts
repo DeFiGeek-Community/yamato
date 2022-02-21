@@ -159,7 +159,9 @@ describe("story Events", function () {
       mockPriorityRegistry.rankedQueueTotalLen.returns(0);
       mockPriorityRegistry.getRankedQueue.returns(ethers.constants.AddressZero);
       mockPriorityRegistry.bulkUpsert.returns(Array(100).fill(0));
-      mockPriorityRegistry.popSweepable.returns(await yamato.signer.getAddress());
+      mockPriorityRegistry.popSweepable.returns(
+        await yamato.signer.getAddress()
+      );
 
       toCollateralize = 1;
       toBorrow = PRICE.mul(toCollateralize)
@@ -246,7 +248,9 @@ describe("story Events", function () {
         mockCJPY.balanceOf.returns(PRICE.mul(10));
         mockFeed.fetchPrice.returns(PRICE.div(2));
         mockFeed.lastGoodPrice.returns(PRICE.div(2));
-        mockPriorityRegistry.rankedQueuePop.returns(await accounts[1].getAddress());
+        mockPriorityRegistry.rankedQueuePop.returns(
+          await accounts[1].getAddress()
+        );
       });
       it(`should be emitted with proper args for Redeemed.`, async function () {
         // address indexed sender, uint256 cjpyAmount, uint256 ethAmount, uint256 price, boolean isCoreRedemption, uint256 gasCompensationAmount, address[] pledgesOwner
@@ -282,8 +286,14 @@ describe("story Events", function () {
         mockCJPY.balanceOf.returns(PRICE.mul(10));
         mockFeed.fetchPrice.returns(PRICE.div(2));
         mockFeed.lastGoodPrice.returns(PRICE.div(2));
-        mockPriorityRegistry.rankedQueuePop.returnsAtCall(0, await accounts[0].getAddress());
-        mockPriorityRegistry.rankedQueuePop.returnsAtCall(1, await accounts[1].getAddress());
+        mockPriorityRegistry.rankedQueuePop.returnsAtCall(
+          0,
+          await accounts[0].getAddress()
+        );
+        mockPriorityRegistry.rankedQueuePop.returnsAtCall(
+          1,
+          await accounts[1].getAddress()
+        );
         await (await yamato.redeem(toERC20(toBorrow + ""), false)).wait();
       });
       it(`should be emitted with proper args.`, async function () {

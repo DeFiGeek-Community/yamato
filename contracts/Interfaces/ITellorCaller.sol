@@ -4,7 +4,8 @@ pragma solidity 0.8.4;
 
 interface ITellorCaller {
     function getTellorCurrentValue(uint256 _requestId)
-        external view
+        external
+        view
         returns (
             bool,
             uint256,

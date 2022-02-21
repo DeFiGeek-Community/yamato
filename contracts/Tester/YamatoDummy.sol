@@ -29,7 +29,7 @@ contract YamatoDummy {
     address governance;
     address tester;
     uint8 public MCR = 130; // MinimumCollateralizationRatio in pertenk
-    mapping(address=>IYamato.Pledge) pledges;
+    mapping(address => IYamato.Pledge) pledges;
 
     constructor(address _currencyOS) {
         currencyOS = _currencyOS;
@@ -176,7 +176,11 @@ contract YamatoDummy {
         return permit;
     }
 
-    function getPledge(address _owner) public view returns (IYamato.Pledge memory _p) {
+    function getPledge(address _owner)
+        public
+        view
+        returns (IYamato.Pledge memory _p)
+    {
         _p = pledges[_owner];
     }
 }

@@ -169,7 +169,11 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
      * it uses the last good price seen by Liquity.
      *
      */
-    function _simulatePrice() internal view returns (uint256 _price, Status _status) {
+    function _simulatePrice()
+        internal
+        view
+        returns (uint256 _price, Status _status)
+    {
         /*
             The early quit by 0xMotoko (Oct 13, 2021)
         */
@@ -285,7 +289,10 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
                 if (
                     _bothOraclesSimilarPrice(chainlinkResponse, tellorResponse)
                 ) {
-                    _price = _scaleChainlinkPriceByDigits(uint256(chainlinkResponse.answer), chainlinkResponse.decimals);
+                    _price = _scaleChainlinkPriceByDigits(
+                        uint256(chainlinkResponse.answer),
+                        chainlinkResponse.decimals
+                    );
                     _status = Status.chainlinkWorking;
                     return (_price, _status);
                 }
@@ -305,7 +312,10 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
             }
 
             // If Chainlink is working, return Chainlink current price (no status change)
-            _price = _scaleChainlinkPriceByDigits(uint256(chainlinkResponse.answer), chainlinkResponse.decimals);
+            _price = _scaleChainlinkPriceByDigits(
+                uint256(chainlinkResponse.answer),
+                chainlinkResponse.decimals
+            );
             return (_price, _status);
         }
 
@@ -320,7 +330,10 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
                 )
             ) {
                 // _changeStatus(Status.chainlinkWorking);
-                _price = _scaleChainlinkPriceByDigits(uint256(chainlinkResponse.answer), chainlinkResponse.decimals);
+                _price = _scaleChainlinkPriceByDigits(
+                    uint256(chainlinkResponse.answer),
+                    chainlinkResponse.decimals
+                );
                 _status = Status.chainlinkWorking;
                 return (_price, _status);
             }
@@ -362,7 +375,10 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
                 )
             ) {
                 // _changeStatus(Status.chainlinkWorking);
-                _price = _scaleChainlinkPriceByDigits(uint256(chainlinkResponse.answer), chainlinkResponse.decimals);
+                _price = _scaleChainlinkPriceByDigits(
+                    uint256(chainlinkResponse.answer),
+                    chainlinkResponse.decimals
+                );
                 _status = Status.chainlinkWorking;
                 return (_price, _status);
             }
@@ -423,7 +439,10 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
             // if Chainlink is live and Tellor is broken, remember Tellor broke, and return Chainlink price
             if (_tellorIsBroken(tellorResponse)) {
                 // _changeStatus(Status.usingChainlinkTellorUntrusted);
-                _price = _scaleChainlinkPriceByDigits(uint256(chainlinkResponse.answer), chainlinkResponse.decimals);
+                _price = _scaleChainlinkPriceByDigits(
+                    uint256(chainlinkResponse.answer),
+                    chainlinkResponse.decimals
+                );
                 _status = Status.usingChainlinkTellorUntrusted;
                 return (_price, _status);
             }
@@ -439,7 +458,10 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
             // if prices are within 5%, and return Chainlink price.
             if (_bothOraclesSimilarPrice(chainlinkResponse, tellorResponse)) {
                 // _changeStatus(Status.chainlinkWorking);
-                _price = _scaleChainlinkPriceByDigits(uint256(chainlinkResponse.answer), chainlinkResponse.decimals);
+                _price = _scaleChainlinkPriceByDigits(
+                    uint256(chainlinkResponse.answer),
+                    chainlinkResponse.decimals
+                );
                 _status = Status.chainlinkWorking;
                 return (_price, _status);
             }
@@ -477,7 +499,10 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
                 )
             ) {
                 // _changeStatus(Status.chainlinkWorking);
-                _price = _scaleChainlinkPriceByDigits(uint256(chainlinkResponse.answer), chainlinkResponse.decimals);
+                _price = _scaleChainlinkPriceByDigits(
+                    uint256(chainlinkResponse.answer),
+                    chainlinkResponse.decimals
+                );
                 _status = Status.chainlinkWorking;
                 return (_price, _status);
             }
@@ -499,7 +524,10 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
             // Otherwise if Chainlink is live and deviated <50% from it's previous price and Tellor is still untrusted,
             // return Chainlink price (no status change)
 
-            _price = _scaleChainlinkPriceByDigits(uint256(chainlinkResponse.answer), chainlinkResponse.decimals);
+            _price = _scaleChainlinkPriceByDigits(
+                uint256(chainlinkResponse.answer),
+                chainlinkResponse.decimals
+            );
             _status = status;
             return (_price, _status);
         }
@@ -520,7 +548,6 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
 
         return _price;
     }
-
 
     // --- Helper functions ---
 
@@ -755,7 +782,8 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
     // --- Oracle response wrapper functions ---
 
     function _getCurrentTellorResponse()
-        internal view
+        internal
+        view
         returns (TellorResponse memory tellorResponse)
     {
         try
@@ -777,7 +805,8 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
     }
 
     function _getCurrentChainlinkResponse()
-        internal view
+        internal
+        view
         returns (ChainlinkResponse memory chainlinkResponse)
     {
         ChainlinkResponse memory ethChainlinkResponseInUSD;

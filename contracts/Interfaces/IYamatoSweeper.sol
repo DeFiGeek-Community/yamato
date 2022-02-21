@@ -24,9 +24,7 @@ interface IYamatoSweeper {
         uint256 _toBeSwept;
         IYamato.Pledge[] _bulkedPledges;
         address[] _pledgesOwner;
-
-    }   
-
+    }
 
     function runSweep(address _sender)
         external

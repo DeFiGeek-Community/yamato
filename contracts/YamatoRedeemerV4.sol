@@ -47,7 +47,8 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
         vars.ethPriceInCurrency = IPriceFeed(feed()).fetchPrice();
         vars.currencyAmountStart = _args.wantToRedeemCurrencyAmount;
         vars._reminder = _args.wantToRedeemCurrencyAmount;
-        vars._pledgeLength = IPriorityRegistry(priorityRegistry()).pledgeLength();
+        vars._pledgeLength = IPriorityRegistry(priorityRegistry())
+            .pledgeLength();
         vars._pledgesOwner = new address[](vars._pledgeLength);
         vars._GRR = IYamato(yamato()).GRR();
         vars._mcrPercent = uint256(IYamato(yamato()).MCR());
@@ -65,7 +66,10 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
         vars._bulkedPledges = new IYamato.Pledge[](vars._maxCount);
         vars._pledgesOwner = new address[](vars._maxCount);
         IPriorityRegistryV6 _prv6 = IPriorityRegistryV6(priorityRegistry());
-        vars._activePledgeLength = vars._pledgeLength - _prv6.rankedQueueLen(0) - _prv6.rankedQueueLen(_prv6.MAX_PRIORITY());
+        vars._activePledgeLength =
+            vars._pledgeLength -
+            _prv6.rankedQueueLen(0) -
+            _prv6.rankedQueueLen(_prv6.MAX_PRIORITY());
 
         while (true) {
             address _pledgeAddr = _prv6.rankedQueuePop(vars._nextICR);
@@ -82,7 +86,9 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
             IYamato.Pledge memory _pledge = IYamato(yamato()).getPledge(
                 _pledgeAddr
             );
-            uint256 _ICRpertenk = _pledge.getICRWithPrice(vars.ethPriceInCurrency);
+            uint256 _ICRpertenk = _pledge.getICRWithPrice(
+                vars.ethPriceInCurrency
+            );
 
             if (
                 vars._nextICR == vars._mcrPercent &&

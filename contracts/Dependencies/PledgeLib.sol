@@ -49,16 +49,17 @@ library PledgeLib {
     /// @param _pledge having coll and debt
     /// @param _ethPriceInCurrency price in decimal=18 padded uint
     /// @return _ICR in uint256
-    function getICRWithPrice(IYamato.Pledge memory _pledge, uint256 _ethPriceInCurrency)
-        public
-        view
-        returns (uint256 _ICR)
-    {
+    function getICRWithPrice(
+        IYamato.Pledge memory _pledge,
+        uint256 _ethPriceInCurrency
+    ) public view returns (uint256 _ICR) {
         uint256 _debt = _pledge.debt; // dec18
 
         if (_debt != 0) {
             // Note: ICR is per-ten-k in Yamato
-            _ICR = (10000 * (_pledge.coll * _ethPriceInCurrency) / 1e18) / _debt;
+            _ICR =
+                ((10000 * (_pledge.coll * _ethPriceInCurrency)) / 1e18) /
+                _debt;
         } else {
             if (_pledge.coll > 0) {
                 _ICR = 2**256 - 1;
@@ -66,7 +67,7 @@ library PledgeLib {
                 _ICR = 0;
             }
         }
-    }    
+    }
 
     function toMem(IYamato.Pledge storage _pledge)
         public
