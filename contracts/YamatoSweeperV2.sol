@@ -84,13 +84,13 @@ contract YamatoSweeperV2 is IYamatoSweeper, YamatoAction {
             if (_pledgeDebt >= vars._reminder) {
                 _pledge.debt = _pledgeDebt - vars._reminder;
                 vars._reminder = 0;
-                vars._toBeSwept += _pledgeDebt - vars._reminder;
+                vars._toBeSwept += vars._reminder;
             } else {
                 _pledge.debt = 0;
                 vars._reminder -= _pledgeDebt;
                 vars._toBeSwept += _pledgeDebt;
             }
-            _pledge.coll = 0; // Note: Sometimes very tiny coll would be there but ignore it.
+            _pledge.coll = 0; // Note: Sometimes very tiny coll would be there but ignore it. Don't reduce totalColl.
 
             vars._pledgesOwner[vars._loopCount] = _pledge.owner; // Note: For event
             vars._bulkedPledges[vars._loopCount] = _pledge;
@@ -105,6 +105,7 @@ contract YamatoSweeperV2 is IYamatoSweeper, YamatoAction {
             }
         }
         require(vars._toBeSwept > 0, "At least a pledge should be swept.");
+        require(vars.sweepReserve > vars._toBeSwept, "Too much sweeping.");
 
         /*
             Update pledges

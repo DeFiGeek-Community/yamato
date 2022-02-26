@@ -19,7 +19,7 @@ import {
   YamatoRedeemer,
   YamatoSweeper,
   PriorityRegistry,
-  PriorityRegistryV4,
+  PriorityRegistryV6,
   Pool,
   ChainLinkMock__factory,
   TellorCallerMock__factory,
@@ -36,7 +36,7 @@ import {
   Pool__factory,
   FeePool__factory,
   PriorityRegistry__factory,
-  PriorityRegistryV4__factory,
+  PriorityRegistryV6__factory,
 } from "../../typechain";
 import { getProxy, getLinkedProxy } from "../../src/testUtil";
 import { isToken } from "typescript";
@@ -60,7 +60,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
   let YamatoRedeemer: YamatoRedeemer;
   let YamatoSweeper: YamatoSweeper;
   let Pool: Pool;
-  let PriorityRegistry: PriorityRegistryV4;
+  let PriorityRegistry: PriorityRegistryV6;
   let accounts: Signer[];
   let ownerAddress: string;
   let userAddress: string;
@@ -166,8 +166,8 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
     Pool = await getProxy<Pool, Pool__factory>("Pool", [Yamato.address]);
 
     PriorityRegistry = await getLinkedProxy<
-      PriorityRegistryV4,
-      PriorityRegistryV4__factory
+      PriorityRegistryV6,
+      PriorityRegistryV6__factory
     >("PriorityRegistry", [Yamato.address], ["PledgeLib"]);
 
     await (
@@ -929,10 +929,10 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       it(`should run partial sweep`, async function () {
         const redeemerAddr = await redeemer.getAddress();
 
-        const sweepablePledge = await PriorityRegistry.getRankedQueue(
+        const sweepablePledge = await Yamato.getPledge(await PriorityRegistry.getRankedQueue(
           0,
           await PriorityRegistry.rankedQueueNextout(0)
-        );
+        ));
         const redeemerCjpyBalanceBefore = await CJPY.balanceOf(redeemerAddr);
         const poolCjpyBalanceBefore = await CJPY.balanceOf(Pool.address);
 
@@ -967,10 +967,10 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       it(`should run full sweep`, async function () {
         const redeemerAddr = await redeemer.getAddress();
 
-        const sweepablePledge = await PriorityRegistry.getRankedQueue(
+        const sweepablePledge = await Yamato.getPledge(await PriorityRegistry.getRankedQueue(
           0,
           await PriorityRegistry.rankedQueueNextout(0)
-        );
+        ));
         const poolCjpyBalanceBefore = await CJPY.balanceOf(Pool.address);
 
         await (
@@ -1017,7 +1017,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
     });
   });
 
-  describe("Context - gas estimation for max redeemees headcount (= 50 by default)", async function () {
+  describe.only("Context - gas estimation for max redeemees headcount (= 50 by default)", async function () {
     async function fillMinPledgesWithICR(icr) {
       const MCR = BigNumber.from(130);
 
@@ -1039,7 +1039,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         let ethBal = await Yamato.provider.getBalance(eoa);
         await (
           await Yamato.connect(accounts[i]).deposit({
-            value: ethBal.mul(9).div(10),
+            value: ethBal.mul(6).div(10),
           })
         ).wait();
         let pledge = await Yamato.getPledge(eoa);
@@ -1059,15 +1059,15 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       const COUNT = await (<any>Yamato).maxRedeemableCount();
       for (var i = 0; i < COUNT; i++) {
         let bearer = accounts[i % accounts.length];
-        let eoa = await bearer.getAddress();
-        let ethBal = await Yamato.provider.getBalance(eoa);
-        let indivBal = ethBal.mul(14).div(COUNT).sub(1);
+        let bearerAddr = await bearer.getAddress();
+        let bearerEthBal = await Yamato.provider.getBalance(bearerAddr);
+        let ethDonation = bearerEthBal.mul(18).div(COUNT).sub(1); // remain to bearer a bit
         let wallet = Wallet.createRandom();
         wallet = wallet.connect(Yamato.provider);
         transferPromise.push(
           bearer.sendTransaction({
             to: wallet.address,
-            value: indivBal,
+            value: ethDonation,
           })
         );
         _ACCOUNTS.push(wallet);
@@ -1097,17 +1097,19 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
           )
         ).wait();
       }
+      let pledgeBeforeDump = await Yamato.getPledge(await _ACCOUNTS[0].getAddress());
 
-      let coef = BigNumber.from(100).sub(MCR.sub(icr));
+      let beforeICRNearMCR = pledgeBeforeDump.coll.mul(price).mul(100).div(pledgeBeforeDump.debt).div(1e18+"");
+      let coef = BigNumber.from(1e18+"").mul(icr).div(beforeICRNearMCR);
       let adjustedPriceInUSD = price
         .div(115)
         .mul(coef)
-        .div(100)
-        .div(1e12 + "");
+        .div(1e18+"")
+        .div(1e10 + "");
       let adjustedPriceInJPY = price
         .mul(coef)
-        .div(100)
-        .div(1e14 + "");
+        .div(1e18+"")
+        .div(1e12 + "");
       await (await ChainLinkEthUsd.setLastPrice(adjustedPriceInUSD)).wait(); //dec8
       await (await Tellor.setLastPrice(adjustedPriceInJPY)).wait(); //dec8
 
@@ -1118,6 +1120,11 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         await fillMinPledgesWithICR(90);
       });
       it("should redeem within 10m gas and sweep within 16m gas", async () => {
+        let redeemerAddr = await accounts[0].getAddress();
+        let cjpyBalanceBefore = await CJPY.balanceOf(redeemerAddr);
+        let ethBalanceBefore = await Yamato.provider.getBalance(redeemerAddr);
+
+
         let tenEthInCJPY = BigNumber.from(1e19 + "")
           .mul(await PriceFeed.lastGoodPrice())
           .div(1e18 + "");
@@ -1130,6 +1137,17 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         });
         let txReceipt1 = await tx1.wait();
         expect(txReceipt1.gasUsed).to.be.lt(10000000);
+        let sweepablePledge = await Yamato.getPledge(await PriorityRegistry.getRankedQueue(0, await PriorityRegistry.rankedQueueNextout(0)));
+        expect(sweepablePledge.coll).to.eq(1); // This test case remains a tiny coll
+
+
+
+        let ethBalanceAfter = await Yamato.provider.getBalance(redeemerAddr);
+        let redemptionReturn = ethBalanceAfter.sub(ethBalanceBefore);
+        let txcost = txReceipt1.gasUsed.mul(txReceipt1.effectiveGasPrice);
+        expect(redemptionReturn.add(txcost).add(1)).to.eq(BigNumber.from(5e18+""));
+
+
 
         let gas2 = await Yamato.estimateGas.sweep();
         expect(gas2).to.be.lt(30000000);
@@ -1140,11 +1158,16 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       });
     });
 
-    describe.only("Context - exactly 100% ICR", async function () {
+    describe("Context - exactly 100% ICR", async function () {
       beforeEach(async () => {
         await fillMinPledgesWithICR(100);
       });
       it("should redeem within 10m gas and sweep within 16m gas", async () => {
+        let redeemerAddr = await accounts[0].getAddress();
+        let cjpyBalanceBefore = await CJPY.balanceOf(redeemerAddr);
+        let ethBalanceBefore = await Yamato.provider.getBalance(redeemerAddr);
+
+
         let tenEthInCJPY = BigNumber.from(1e19 + "")
           .mul(await PriceFeed.lastGoodPrice())
           .div(1e18 + "");
@@ -1158,6 +1181,13 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         let txReceipt1 = await tx1.wait();
         expect(txReceipt1.gasUsed).to.be.lt(10000000);
 
+
+        let ethBalanceAfter = await Yamato.provider.getBalance(redeemerAddr);
+        let redemptionReturn = ethBalanceAfter.sub(ethBalanceBefore);
+        let txcost = txReceipt1.gasUsed.mul(txReceipt1.effectiveGasPrice);
+        expect(redemptionReturn.add(txcost).add(1)).to.eq(BigNumber.from(5e18+""));
+
+
         let gas2 = await Yamato.estimateGas.sweep();
         expect(gas2).to.be.lt(30000000);
 
@@ -1167,11 +1197,16 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       });
     });
 
-    describe.only("Context - exactly 110% ICR", async function () {
+    describe("Context - exactly 110% ICR", async function () {
       beforeEach(async () => {
         await fillMinPledgesWithICR(110);
       });
       it("should redeem within 10m gas and sweep within 16m gas", async () => {
+        let redeemerAddr = await accounts[0].getAddress();
+        let cjpyBalanceBefore = await CJPY.balanceOf(redeemerAddr);
+        let ethBalanceBefore = await Yamato.provider.getBalance(redeemerAddr);
+
+
         let tenEthInCJPY = BigNumber.from(1e19 + "")
           .mul(await PriceFeed.lastGoodPrice())
           .div(1e18 + "");
@@ -1185,20 +1220,27 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         let txReceipt1 = await tx1.wait();
         expect(txReceipt1.gasUsed).to.be.lt(10000000);
 
-        let gas2 = await Yamato.estimateGas.sweep();
-        expect(gas2).to.be.lt(30000000);
+        let ethBalanceAfter = await Yamato.provider.getBalance(redeemerAddr);
+        let redemptionReturn = ethBalanceAfter.sub(ethBalanceBefore);
+        let txcost = txReceipt1.gasUsed.mul(txReceipt1.effectiveGasPrice);
+        expect(redemptionReturn.add(txcost)).to.lte(BigNumber.from(5e18+"").mul(5).div(6));
+        expect(redemptionReturn.add(txcost)).to.gt(BigNumber.from(5e18+"").mul(3).div(6));
 
-        let tx2 = await Yamato.sweep();
-        let txReceipt2 = await tx2.wait();
-        expect(txReceipt2.gasUsed).to.be.lt(16000000);
+
+        await expect(Yamato.sweep()).to.be.revertedWith("At least a pledge should be swept.");
       });
     });
 
-    describe.only("Context - exactly 120% ICR", async function () {
+    describe("Context - exactly 120% ICR", async function () {
       beforeEach(async () => {
         await fillMinPledgesWithICR(120);
       });
       it("should redeem within 10m gas and sweep within 16m gas", async () => {
+        let redeemerAddr = await accounts[0].getAddress();
+        let cjpyBalanceBefore = await CJPY.balanceOf(redeemerAddr);
+        let ethBalanceBefore = await Yamato.provider.getBalance(redeemerAddr);
+
+
         let tenEthInCJPY = BigNumber.from(1e19 + "")
           .mul(await PriceFeed.lastGoodPrice())
           .div(1e18 + "");
@@ -1212,12 +1254,16 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         let txReceipt1 = await tx1.wait();
         expect(txReceipt1.gasUsed).to.be.lt(10000000);
 
-        let gas2 = await Yamato.estimateGas.sweep();
-        expect(gas2).to.be.lt(30000000);
 
-        let tx2 = await Yamato.sweep();
-        let txReceipt2 = await tx2.wait();
-        expect(txReceipt2.gasUsed).to.be.lt(16000000);
+        let ethBalanceAfter = await Yamato.provider.getBalance(redeemerAddr);
+        let redemptionReturn = ethBalanceAfter.sub(ethBalanceBefore);
+        let txcost = txReceipt1.gasUsed.mul(txReceipt1.effectiveGasPrice);
+        expect(redemptionReturn.add(txcost)).to.lte(BigNumber.from(5e18+"").mul(3).div(6));
+        expect(redemptionReturn.add(txcost)).to.gt(BigNumber.from(5e18+"").mul(1).div(6));
+
+        
+
+        await expect(Yamato.sweep()).to.be.revertedWith("At least a pledge should be swept.");
       });
     });
   });

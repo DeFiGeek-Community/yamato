@@ -110,6 +110,7 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
                 }
                 /* state update for redeemed pledge */
 
+                console.log(_pledge.getICRWithPrice(vars.ethPriceInCurrency));
                 _pledge.debt -= vars._redeemingAmount;
                 _pledge.coll -=
                     (vars._redeemingAmount * 1e18) /
