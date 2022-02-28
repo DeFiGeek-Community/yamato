@@ -1058,6 +1058,24 @@ describe("contract Yamato", function () {
 
       expect(mockPriorityRegistry.remove).to.have.calledOnce;
     });
+    it(`should revert if withdrawal remaining <0.1ETH happens`, async function () {
+      await yamato.deposit({ value: BigNumber.from(1e18 + "") });
+      await expect(
+        yamato.withdraw(BigNumber.from(1e18 + "").sub(1e17 + ""))
+      ).to.be.revertedWith(
+        "Deposit or Withdraw can't make pledge less than floor size."
+      );
+    });
+    it(`should NOT revert if withdrawal remaining >=0.1ETH happens`, async function () {
+      await yamato.deposit({ value: BigNumber.from(1e18 + "") });
+      await expect(
+        yamato.withdraw(
+          BigNumber.from(1e18 + "")
+            .sub(1e17 + "")
+            .sub(1)
+        )
+      ).not.to.be.reverted;
+    });
     it(`should neutralize a pledge even after full repay`, async function () {
       const MCR = BigNumber.from(130);
       const toCollateralize = 1;
