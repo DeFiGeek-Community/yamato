@@ -549,6 +549,13 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
         return _price;
     }
 
+    function getStatus() external view returns (Status) {
+        (uint256 _price, Status _status) = _simulatePrice();
+
+        return _status;
+    }
+
+
     // --- Helper functions ---
 
     /* Chainlink is considered broken if its current or previous round data is in any way bad. We check the previous round
