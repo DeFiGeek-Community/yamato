@@ -55,6 +55,8 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
      * to return to using the Chainlink oracle. 18-digit precision.
      */
     uint256 public constant MAX_PRICE_DIFFERENCE_BETWEEN_ORACLES = 5e16; // 5%
+    uint256 public constant MAX_PRICE_DIFFERENCE_FOR_TELLOR_ADJUSTMENT = 5e16; // 5%
+    uint256 public constant ADJUSTMENT_COOLTIME = 1000; // in blocks
     /*
         =========================
         ~~~ SAFE HAVEN ~~~
@@ -73,6 +75,7 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
     // The last good price seen from an oracle by Liquity
     uint256 public override lastGoodPrice;
     uint256 lastSeen;
+    uint256 lastAdjusted;
     /*
         =========================
         !!! DANGER ZONE !!!
@@ -172,12 +175,16 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
     function _simulatePrice()
         internal
         view
-        returns (uint256 _price, Status _status)
+        returns (
+            uint256 _price,
+            Status _status,
+            bool _isAdjusted
+        )
     {
         /*
             The early quit by 0xMotoko (Oct 13, 2021)
         */
-        if (lastSeen == block.number) return (lastGoodPrice, status);
+        if (lastSeen == block.number) return (lastGoodPrice, status, false);
 
         // Get current and previous price data from Chainlink, and current price data from Tellor
         ChainlinkResponse
@@ -200,7 +207,7 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
                     // _changeStatus(Status.bothOraclesUntrusted);
                     _price = lastGoodPrice;
                     _status = Status.bothOraclesUntrusted;
-                    return (_price, _status);
+                    return (_price, _status, false);
                 }
                 /*
                  * If Tellor is only frozen but otherwise returning valid data, return the last good price.
@@ -210,21 +217,41 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
                     // _changeStatus(Status.usingTellorChainlinkUntrusted);
                     _price = lastGoodPrice;
                     _status = Status.usingTellorChainlinkUntrusted;
-                    return (_price, _status);
+                    return (_price, _status, false);
                 }
 
+                // [ Deprecated ]
                 // If Chainlink is broken and Tellor is working, switch to Tellor and return current Tellor price
                 // _changeStatus(Status.usingTellorChainlinkUntrusted);
+                //
+                // [ New Design - @0xMotoko Mar 2, 2022 ]
+                // If Chainlink is broken and Tellor is working, check Tellor and compare with lastGoodPrice. Because unconditional trust for Tellor price is less secure.
+                // If that diff is less than 5%, apply that Tellor price.
+                // Unless, gracefully adjust lastGoodPrice by 5% toward the Tellor price direction.
+                // This graceful adjustment must be permitted only once in the 1000 blocks to take a day for 30% price adjustment.
 
-                /*
-                [ How to get price ]
-                    _scaleChainlinkPriceByDigits(uint256(chainlinkResponse.answer), chainlinkResponse.decimals);
-                    _scaleTellorPriceByDigits(tellorResponse.value)
-                */
+                if (
+                    _tellorAndLastGoodPriceSimilarPrice(tellorResponse) ==
+                    false &&
+                    (lastAdjusted == 0 ||
+                        lastAdjusted + ADJUSTMENT_COOLTIME < block.number)
+                ) {
+                    _price =
+                        (lastGoodPrice *
+                            (1e18 +
+                                MAX_PRICE_DIFFERENCE_FOR_TELLOR_ADJUSTMENT)) /
+                        1e18;
+                    _status = Status.bothOraclesUntrusted;
+                    return (_price, _status, true);
+                } else {
+                    _price = _scaleTellorPriceByDigits(tellorResponse.value);
+                    _status = Status.usingTellorChainlinkUntrusted;
+                    return (_price, _status, false);
+                }
 
                 _price = _scaleTellorPriceByDigits(tellorResponse.value);
                 _status = Status.usingTellorChainlinkUntrusted;
-                return (_price, _status);
+                return (_price, _status, false);
             }
 
             // If Chainlink is frozen, try Tellor
@@ -234,7 +261,7 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
                     // _changeStatus(Status.usingChainlinkTellorUntrusted);
                     _price = lastGoodPrice;
                     _status = Status.usingChainlinkTellorUntrusted;
-                    return (_price, _status);
+                    return (_price, _status, false);
                 }
 
                 // 0xMotoko added at Aug 23, 2021 :: Because when ChainLink and Tellor are frozen simultaneouslly, returning usingTellorChainlinkFrozen is wrong.
@@ -242,7 +269,7 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
                     // _changeStatus(Status.bothOraclesUntrusted);
                     _price = lastGoodPrice;
                     _status = Status.bothOraclesUntrusted;
-                    return (_price, _status);
+                    return (_price, _status, false);
                 }
 
                 // If Tellor is frozen or working, remember Chainlink froze, and switch to Tellor
@@ -251,12 +278,12 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
 
                 if (_tellorIsFrozen(tellorResponse)) {
                     _price = lastGoodPrice;
-                    return (_price, _status);
+                    return (_price, _status, false);
                 }
 
                 // If Tellor is working, use it
                 _price = _scaleTellorPriceByDigits(tellorResponse.value);
-                return (_price, _status);
+                return (_price, _status, false);
             }
 
             // If Chainlink price has changed by > 50% between two consecutive rounds, compare it to Tellor's price
@@ -271,7 +298,7 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
                     // _changeStatus(Status.bothOraclesUntrusted);
                     _price = lastGoodPrice;
                     _status = Status.bothOraclesUntrusted;
-                    return (_price, _status);
+                    return (_price, _status, false);
                 }
 
                 // If Tellor is frozen, switch to Tellor and return last good price
@@ -279,7 +306,7 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
                     // _changeStatus(Status.usingTellorChainlinkUntrusted);
                     _price = lastGoodPrice;
                     _status = Status.usingTellorChainlinkUntrusted;
-                    return (_price, _status);
+                    return (_price, _status, false);
                 }
 
                 /*
@@ -294,7 +321,7 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
                         chainlinkResponse.decimals
                     );
                     _status = Status.chainlinkWorking;
-                    return (_price, _status);
+                    return (_price, _status, false);
                 }
 
                 // If Tellor is live but the oracles differ too much in price, conclude that Chainlink's initial price deviation was
@@ -302,7 +329,7 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
                 // _changeStatus(Status.usingTellorChainlinkUntrusted);
                 _price = _scaleTellorPriceByDigits(tellorResponse.value);
                 _status = Status.usingTellorChainlinkUntrusted;
-                return (_price, _status);
+                return (_price, _status, false);
             }
 
             // If Chainlink is working and Tellor is broken, remember Tellor is broken
@@ -316,7 +343,7 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
                 uint256(chainlinkResponse.answer),
                 chainlinkResponse.decimals
             );
-            return (_price, _status);
+            return (_price, _status, false);
         }
 
         // --- CASE 2: The system fetched last price from Tellor ---
@@ -335,14 +362,14 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
                     chainlinkResponse.decimals
                 );
                 _status = Status.chainlinkWorking;
-                return (_price, _status);
+                return (_price, _status, false);
             }
 
             if (_tellorIsBroken(tellorResponse)) {
                 // _changeStatus(Status.bothOraclesUntrusted);
                 _price = lastGoodPrice;
                 _status = Status.bothOraclesUntrusted;
-                return (_price, _status);
+                return (_price, _status, false);
             }
 
             /*
@@ -352,13 +379,13 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
             if (_tellorIsFrozen(tellorResponse)) {
                 _price = lastGoodPrice;
                 _status = status;
-                return (_price, _status);
+                return (_price, _status, false);
             }
 
             // Otherwise, use Tellor price
             _price = _scaleTellorPriceByDigits(tellorResponse.value);
             _status = status;
-            return (_price, _status);
+            return (_price, _status, false);
         }
 
         // --- CASE 3: Both oracles were untrusted at the last price fetch ---
@@ -380,13 +407,13 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
                     chainlinkResponse.decimals
                 );
                 _status = Status.chainlinkWorking;
-                return (_price, _status);
+                return (_price, _status, false);
             }
 
             // Otherwise, return the last good price - both oracles are still untrusted (no status change)
             _price = lastGoodPrice;
             _status = status;
-            return (_price, _status);
+            return (_price, _status, false);
         }
 
         // --- CASE 4: Using Tellor, and Chainlink is frozen ---
@@ -397,7 +424,7 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
                     // _changeStatus(Status.bothOraclesUntrusted);
                     _price = lastGoodPrice;
                     _status = Status.bothOraclesUntrusted;
-                    return (_price, _status);
+                    return (_price, _status, false);
                 }
 
                 // If Chainlink is broken, remember it and switch to using Tellor
@@ -406,12 +433,12 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
 
                 if (_tellorIsFrozen(tellorResponse)) {
                     _price = lastGoodPrice;
-                    return (_price, _status);
+                    return (_price, _status, false);
                 }
 
                 // If Tellor is working, return Tellor current price
                 _price = _scaleTellorPriceByDigits(tellorResponse.value);
-                return (_price, _status);
+                return (_price, _status, false);
             }
 
             if (_chainlinkIsFrozen(chainlinkResponse)) {
@@ -420,20 +447,20 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
                     // _changeStatus(Status.usingChainlinkTellorUntrusted);
                     _price = lastGoodPrice;
                     _status = Status.usingChainlinkTellorUntrusted;
-                    return (_price, _status);
+                    return (_price, _status, false);
                 }
 
                 // If both are frozen, just use lastGoodPrice
                 if (_tellorIsFrozen(tellorResponse)) {
                     _price = lastGoodPrice;
                     _status = status;
-                    return (_price, _status);
+                    return (_price, _status, false);
                 }
 
                 // if Chainlink is frozen and Tellor is working, keep using Tellor (no status change)
                 _price = _scaleTellorPriceByDigits(tellorResponse.value);
                 _status = status;
-                return (_price, _status);
+                return (_price, _status, false);
             }
 
             // if Chainlink is live and Tellor is broken, remember Tellor broke, and return Chainlink price
@@ -444,14 +471,14 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
                     chainlinkResponse.decimals
                 );
                 _status = Status.usingChainlinkTellorUntrusted;
-                return (_price, _status);
+                return (_price, _status, false);
             }
 
             // If Chainlink is live and Tellor is frozen, just use last good price (no status change) since we have no basis for comparison
             if (_tellorIsFrozen(tellorResponse)) {
                 _price = lastGoodPrice;
                 _status = status;
-                return (_price, _status);
+                return (_price, _status, false);
             }
 
             // If Chainlink is live and Tellor is working, compare prices. Switch to Chainlink
@@ -463,14 +490,14 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
                     chainlinkResponse.decimals
                 );
                 _status = Status.chainlinkWorking;
-                return (_price, _status);
+                return (_price, _status, false);
             }
 
             // Otherwise if Chainlink is live but price not within 5% of Tellor, distrust Chainlink, and return Tellor price
             // _changeStatus(Status.usingTellorChainlinkUntrusted);
             _price = _scaleTellorPriceByDigits(tellorResponse.value);
             _status = Status.usingTellorChainlinkUntrusted;
-            return (_price, _status);
+            return (_price, _status, false);
         }
 
         // --- CASE 5: Using Chainlink, Tellor is untrusted ---
@@ -480,14 +507,14 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
                 // _changeStatus(Status.bothOraclesUntrusted);
                 _price = lastGoodPrice;
                 _status = Status.bothOraclesUntrusted;
-                return (_price, _status);
+                return (_price, _status, false);
             }
 
             // If Chainlink is frozen, return last good price (no status change)
             if (_chainlinkIsFrozen(chainlinkResponse)) {
                 _price = lastGoodPrice;
                 _status = status;
-                return (_price, _status);
+                return (_price, _status, false);
             }
 
             // If Chainlink and Tellor are both live, unbroken and similar price, switch back to chainlinkWorking and return Chainlink price
@@ -504,7 +531,7 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
                     chainlinkResponse.decimals
                 );
                 _status = Status.chainlinkWorking;
-                return (_price, _status);
+                return (_price, _status, false);
             }
 
             // If Chainlink is live but deviated >50% from it's previous price and Tellor is still untrusted, switch
@@ -518,7 +545,7 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
                 // _changeStatus(Status.bothOraclesUntrusted);
                 _price = lastGoodPrice;
                 _status = Status.bothOraclesUntrusted;
-                return (_price, _status);
+                return (_price, _status, false);
             }
 
             // Otherwise if Chainlink is live and deviated <50% from it's previous price and Tellor is still untrusted,
@@ -529,32 +556,41 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
                 chainlinkResponse.decimals
             );
             _status = status;
-            return (_price, _status);
+            return (_price, _status, false);
         }
     }
 
     function fetchPrice() external override returns (uint256) {
-        (uint256 _price, Status _status) = _simulatePrice();
+        (uint256 _price, Status _status, bool _isAdjusted) = _simulatePrice();
 
         _changeStatus(_status);
 
         _storePrice(_price);
 
+        if (_isAdjusted) {
+            lastAdjusted = block.number;
+        }
+
         return _price;
     }
 
     function getPrice() external view returns (uint256) {
-        (uint256 _price, Status _status) = _simulatePrice();
+        (uint256 _price, Status _status, bool _isAdjusted) = _simulatePrice();
 
         return _price;
     }
 
     function getStatus() external view returns (Status) {
-        (uint256 _price, Status _status) = _simulatePrice();
+        (uint256 _price, Status _status, bool _isAdjusted) = _simulatePrice();
 
         return _status;
     }
 
+    function getIsAdjusted() external view returns (bool) {
+        (uint256 _price, Status _status, bool _isAdjusted) = _simulatePrice();
+
+        return _isAdjusted;
+    }
 
     // --- Helper functions ---
 
@@ -718,6 +754,21 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
          * the honest market price, as it is unlikely that both have been broken/hacked and are still in-sync.
          */
         return percentPriceDifference <= MAX_PRICE_DIFFERENCE_BETWEEN_ORACLES;
+    }
+
+    function _tellorAndLastGoodPriceSimilarPrice(
+        TellorResponse memory _tellorResponse
+    ) internal view returns (bool) {
+        uint256 scaledTellorPrice = _scaleTellorPriceByDigits(
+            _tellorResponse.value
+        );
+        uint256 minPrice = LiquityMath._min(scaledTellorPrice, lastGoodPrice);
+        uint256 maxPrice = LiquityMath._max(scaledTellorPrice, lastGoodPrice);
+        uint256 percentPriceDifference = ((maxPrice - minPrice) *
+            DECIMAL_PRECISION) / minPrice;
+        return
+            percentPriceDifference <=
+            MAX_PRICE_DIFFERENCE_FOR_TELLOR_ADJUSTMENT;
     }
 
     function _scaleChainlinkPriceByDigits(uint256 _price, uint256 _answerDigits)
