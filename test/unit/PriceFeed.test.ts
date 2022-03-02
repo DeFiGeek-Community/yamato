@@ -55,22 +55,30 @@ function assertTellor(price, status, testData){
 }
 function assertUnchange(price, status, lastGoodPrice){
   expect(status).to.not.eq(0);
-  expect(status).to.not.eq(1);
   expect(status).to.not.eq(3);
-  expect(status).to.not.eq(4);
   expect(price.toString().slice(0,6)).to.eq(`${lastGoodPrice}`.slice(0,6));
 }
+
 
 async function setMocks(conf: MockConf) {
   let cPriceEthInUsd = BigNumber.from(conf.price.chainlink.ethInUsd).mul(
     BigNumber.from(10).pow(CHAINLINK_DIGITS)
   );
+  if(conf.price.chainlink.ethInUsd == 0) {
+    cPriceEthInUsd = BigNumber.from(0);
+  }
   let cPriceJpyInUsd = BigNumber.from(
     conf.price.chainlink.jpyInUsd * 10 ** CHAINLINK_DIGITS
   );
+  if(conf.price.chainlink.jpyInUsd == 0) {
+    cPriceJpyInUsd = BigNumber.from(0);
+  }
   let tPrice = BigNumber.from(conf.price.tellor).mul(
     BigNumber.from(10).pow(TELLOR_DIGITS)
   );
+  if(conf.price.tellor == 0) {
+    tPrice = BigNumber.from(0);
+  }
   let cDiffEthInUsd = conf.silentFor.chainlink.ethInUsd; // TIMEOUT = 14400 secs
   let cDiffJpyInUsd = conf.silentFor.chainlink.jpyInUsd;
   let tDiff = conf.silentFor.tellor;
@@ -222,7 +230,7 @@ describe("PriceFeed", function () {
 
       lastMockInput = {
         price: {
-          chainlink: { ethInUsd: lastMockInput.price.chainlink.ethInUsd*1.5, jpyInUsd: 0.0091 }, // 362637
+          chainlink: { ethInUsd: lastMockInput.price.chainlink.ethInUsd*1.5, jpyInUsd: 0.0091 },
           tellor: 351648*1.5,
         },
         silentFor: {
@@ -239,7 +247,7 @@ describe("PriceFeed", function () {
 
       lastMockInput = {
         price: {
-          chainlink: { ethInUsd: lastMockInput.price.chainlink.ethInUsd*2+1, jpyInUsd: 0.0091 }, // 362637
+          chainlink: { ethInUsd: lastMockInput.price.chainlink.ethInUsd*2+1, jpyInUsd: 0.0091 },
           tellor: 351648*2+1,
         },
         silentFor: {
@@ -256,7 +264,7 @@ describe("PriceFeed", function () {
 
       lastMockInput = {
         price: {
-          chainlink: { ethInUsd: lastMockInput.price.chainlink.ethInUsd*2+1, jpyInUsd: 0.0091 }, // 362637
+          chainlink: { ethInUsd: lastMockInput.price.chainlink.ethInUsd*2+1, jpyInUsd: 0.0091 },
           tellor: 351648,
         },
         silentFor: {
@@ -274,7 +282,7 @@ describe("PriceFeed", function () {
 
       lastMockInput = {
         price: {
-          chainlink: { ethInUsd: lastMockInput.price.chainlink.ethInUsd*1.5, jpyInUsd: 0.0091 }, // 362637
+          chainlink: { ethInUsd: lastMockInput.price.chainlink.ethInUsd*1.5, jpyInUsd: 0.0091 },
           tellor: 351648,
         },
         silentFor: {
@@ -291,7 +299,7 @@ describe("PriceFeed", function () {
 
       lastMockInput = {
         price: {
-          chainlink: { ethInUsd: lastMockInput.price.chainlink.ethInUsd*2+1, jpyInUsd: 0.0091 }, // 362637
+          chainlink: { ethInUsd: lastMockInput.price.chainlink.ethInUsd*2+1, jpyInUsd: 0.0091 },
           tellor: 351648,
         },
         silentFor: {
@@ -303,7 +311,7 @@ describe("PriceFeed", function () {
       assertTellor(await feed.getPrice(), await feed.getStatus(), lastMockInput);
     });
 
-    it.only(`should get tellor data with a stable chainlink and a less-fructuated tellor`, async function () {
+    it(`should get tellor data with a stable chainlink and a less-fructuated tellor`, async function () {
       (<any>feed.provider).send("evm_increaseTime", [3200]);
       (<any>feed.provider).send("evm_mine");
 
@@ -320,7 +328,7 @@ describe("PriceFeed", function () {
       await setMocks(lastMockInput);
       assertTellor(await feed.getPrice(), await feed.getStatus(), lastMockInput);
     });
-    it.only(`should get tellor data with a stable chainlink and a more-fructuated tellor`, async function () {
+    it(`should get tellor data with a stable chainlink and a more-fructuated tellor`, async function () {
       (<any>feed.provider).send("evm_increaseTime", [3200]);
       (<any>feed.provider).send("evm_mine");
 
@@ -340,8 +348,45 @@ describe("PriceFeed", function () {
 
 
 
-    describe.only("Contect - recovery from untrusted feed", function () {
-      it(`should recover to use chainlink from an untrusted chainlink and a good tellor`, async function () {
+    describe("Contect - recovery from untrusted feed", function () {
+      it.only(`should recover to use chainlink from an untrusted chainlink and a good tellor`, async function () {
+        // setMocks(zeroPrice) => Untrusted
+        (<any>feed.provider).send("evm_increaseTime", [3200]);
+        (<any>feed.provider).send("evm_mine");
+        lastMockInput = {
+          price: {
+            chainlink: { ethInUsd: 0, jpyInUsd: 999999 }, // answer=0
+            tellor: lastMockInput.price.tellor*2+1,
+          },
+          silentFor: {
+            chainlink: { ethInUsd: 14401, jpyInUsd: 14401 },
+            tellor: 14400, // 14401 and tellor will be frozen
+          }
+        }
+        await setMocks(lastMockInput);
+  
+        // getPrice
+        // assertUnchange
+        assertUnchange(await feed.getPrice(), await feed.getStatus(), await feed.lastGoodPrice());
+
+        // setMocks([un]similarPrice)
+        (<any>feed.provider).send("evm_increaseTime", [3200]);
+        (<any>feed.provider).send("evm_mine");
+        lastMockInput = {
+          price: {
+            chainlink: { ethInUsd: 3200, jpyInUsd: 0.0091 }, // 362637
+            tellor: 351648,
+          },
+          silentFor: {
+            chainlink: { ethInUsd: 14400, jpyInUsd: 14400 },
+            tellor: 14400, // 14401 and tellor will be frozen
+          }
+        }
+        await setMocks(lastMockInput);
+
+        // getPrice
+        // assertChainlink
+        assertChainlink(await feed.getPrice(), await feed.getStatus(), lastMockInput);
       });
       it(`should recover to use chainlink from a good chainlink and an untrusted tellor`, async function () {
       });
