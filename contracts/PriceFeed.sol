@@ -230,24 +230,7 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
                 // Unless, gracefully adjust lastGoodPrice by 5% toward the Tellor price direction.
                 // This graceful adjustment must be permitted only once in the 1000 blocks to take a day for 30% price adjustment.
 
-                if (
-                    _tellorAndLastGoodPriceSimilarPrice(tellorResponse) ==
-                    false &&
-                    (lastAdjusted == 0 ||
-                        lastAdjusted + ADJUSTMENT_COOLTIME < block.number)
-                ) {
-                    _price =
-                        (lastGoodPrice *
-                            (1e18 +
-                                MAX_PRICE_DIFFERENCE_FOR_TELLOR_ADJUSTMENT)) /
-                        1e18;
-                    _status = Status.bothOraclesUntrusted;
-                    return (_price, _status, true);
-                } else {
-                    _price = _scaleTellorPriceByDigits(tellorResponse.value);
-                    _status = Status.usingTellorChainlinkUntrusted;
-                    return (_price, _status, false);
-                }
+                return _safeUsingTellorOrGracefulAdjustment(tellorResponse);
 
                 _price = _scaleTellorPriceByDigits(tellorResponse.value);
                 _status = Status.usingTellorChainlinkUntrusted;
@@ -264,14 +247,6 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
                     return (_price, _status, false);
                 }
 
-                // 0xMotoko added at Aug 23, 2021 :: Because when ChainLink and Tellor are frozen simultaneouslly, returning usingTellorChainlinkFrozen is wrong.
-                if (_tellorIsFrozen(tellorResponse)) {
-                    // _changeStatus(Status.bothOraclesUntrusted);
-                    _price = lastGoodPrice;
-                    _status = Status.bothOraclesUntrusted;
-                    return (_price, _status, false);
-                }
-
                 // If Tellor is frozen or working, remember Chainlink froze, and switch to Tellor
                 // _changeStatus(Status.usingTellorChainlinkFrozen);
                 _status = Status.usingTellorChainlinkFrozen;
@@ -281,9 +256,7 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
                     return (_price, _status, false);
                 }
 
-                // If Tellor is working, use it
-                _price = _scaleTellorPriceByDigits(tellorResponse.value);
-                return (_price, _status, false);
+                return _safeUsingTellorOrGracefulAdjustment(tellorResponse);
             }
 
             // If Chainlink price has changed by > 50% between two consecutive rounds, compare it to Tellor's price
@@ -293,6 +266,7 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
                     prevChainlinkResponse
                 )
             ) {
+
                 // If Tellor is broken, both oracles are untrusted, and return last good price
                 if (_tellorIsBroken(tellorResponse)) {
                     // _changeStatus(Status.bothOraclesUntrusted);
@@ -324,12 +298,21 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
                     return (_price, _status, false);
                 }
 
-                // If Tellor is live but the oracles differ too much in price, conclude that Chainlink's initial price deviation was
-                // an oracle failure. Switch to Tellor, and use Tellor price
-                // _changeStatus(Status.usingTellorChainlinkUntrusted);
-                _price = _scaleTellorPriceByDigits(tellorResponse.value);
-                _status = Status.usingTellorChainlinkUntrusted;
-                return (_price, _status, false);
+                // Note: Dump here
+                uint256 currentScaledPrice = _scaleChainlinkPriceByDigits(
+                    uint256(chainlinkResponse.answer),
+                    chainlinkResponse.decimals
+                );
+                uint256 prevScaledPrice = _scaleChainlinkPriceByDigits(
+                    uint256(prevChainlinkResponse.answer),
+                    prevChainlinkResponse.decimals
+                );
+
+                // return (currentScaledPrice, Status.chainlinkWorking, true);
+                return (prevChainlinkResponse.decimals*1000 + chainlinkResponse.decimals, Status.chainlinkWorking, true);
+                // return ((currentScaledPrice + prevScaledPrice) * 100 / currentScaledPrice, Status.chainlinkWorking, true);
+
+                return _safeUsingTellorOrGracefulAdjustment(tellorResponse);
             }
 
             // If Chainlink is working and Tellor is broken, remember Tellor is broken
@@ -771,6 +754,35 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
             MAX_PRICE_DIFFERENCE_FOR_TELLOR_ADJUSTMENT;
     }
 
+    function _safeUsingTellorOrGracefulAdjustment(
+        TellorResponse memory _tellorResponse
+    )
+        internal
+        view
+        returns (
+            uint256 _price,
+            Status _status,
+            bool _isAdjusted
+        )
+    {
+        if (
+            _tellorAndLastGoodPriceSimilarPrice(_tellorResponse) == false &&
+            (lastAdjusted == 0 ||
+                lastAdjusted + ADJUSTMENT_COOLTIME < block.number)
+        ) {
+            _price =
+                (lastGoodPrice *
+                    (1e18 + MAX_PRICE_DIFFERENCE_FOR_TELLOR_ADJUSTMENT)) /
+                1e18;
+            _status = Status.bothOraclesUntrusted;
+            _isAdjusted = true;
+        } else {
+            _price = _scaleTellorPriceByDigits(_tellorResponse.value);
+            _status = Status.usingTellorChainlinkUntrusted;
+            _isAdjusted = false;
+        }
+    }
+
     function _scaleChainlinkPriceByDigits(uint256 _price, uint256 _answerDigits)
         internal
         pure
@@ -928,7 +940,8 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
         }
 
         chainlinkResponse.roundId = ethChainlinkResponseInUSD.roundId;
-        chainlinkResponse.decimals = uint8(TARGET_DIGITS);
+        // chainlinkResponse.decimals = uint8(TARGET_DIGITS); // Bug: dec=18 is wrong maybe here
+        chainlinkResponse.decimals = uint8(ETHUSD_DIGITS);
         chainlinkResponse.answer = int256(
             (uint256(ethChainlinkResponseInUSD.answer) *
                 (10 **
