@@ -160,18 +160,7 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
 
     // --- Functions ---
 
-    /*
-     * fetchPrice():
-     * Returns the latest price obtained from the Oracle. Called by Liquity functions that require a current price.
-     *
-     * Also callable by anyone externally.
-     *
-     * Non-view function - it stores the last good price seen by Liquity.
-     *
-     * Uses a main oracle (Chainlink) and a fallback oracle (Tellor) in case Chainlink fails. If both fail,
-     * it uses the last good price seen by Liquity.
-     *
-     */
+    /// @dev An internal function to dry run oracle usage determination logic. Can use it for view func or write func. ChainLink is the main oracle.
     function _simulatePrice()
         internal
         view
@@ -230,12 +219,9 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
                 // Unless, gracefully adjust lastGoodPrice by 5% toward the Tellor price direction.
                 // This graceful adjustment must be permitted only once in the 1000 blocks to take a day for 30% price adjustment.
 
-                return _safeUsingTellorOrGracefulAdjustment(tellorResponse);
-
-                _price = _scaleTellorPriceByDigits(tellorResponse.value);
-                _status = Status.usingTellorChainlinkUntrusted;
-                return (_price, _status, false);
+                return _safeUsingTellorOrGracefulAdjustment(tellorResponse, Status.usingTellorChainlinkUntrusted);
             }
+
 
             // If Chainlink is frozen, try Tellor
             if (_chainlinkIsFrozen(chainlinkResponse)) {
@@ -256,7 +242,7 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
                     return (_price, _status, false);
                 }
 
-                return _safeUsingTellorOrGracefulAdjustment(tellorResponse);
+                return _safeUsingTellorOrGracefulAdjustment(tellorResponse, _status);
             }
 
             // If Chainlink price has changed by > 50% between two consecutive rounds, compare it to Tellor's price
@@ -298,21 +284,8 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
                     return (_price, _status, false);
                 }
 
-                // Note: Dump here
-                uint256 currentScaledPrice = _scaleChainlinkPriceByDigits(
-                    uint256(chainlinkResponse.answer),
-                    chainlinkResponse.decimals
-                );
-                uint256 prevScaledPrice = _scaleChainlinkPriceByDigits(
-                    uint256(prevChainlinkResponse.answer),
-                    prevChainlinkResponse.decimals
-                );
 
-                // return (currentScaledPrice, Status.chainlinkWorking, true);
-                return (prevChainlinkResponse.decimals*1000 + chainlinkResponse.decimals, Status.chainlinkWorking, true);
-                // return ((currentScaledPrice + prevScaledPrice) * 100 / currentScaledPrice, Status.chainlinkWorking, true);
-
-                return _safeUsingTellorOrGracefulAdjustment(tellorResponse);
+                return _safeUsingTellorOrGracefulAdjustment(tellorResponse, Status.usingTellorChainlinkUntrusted);
             }
 
             // If Chainlink is working and Tellor is broken, remember Tellor is broken
@@ -332,6 +305,7 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
         // --- CASE 2: The system fetched last price from Tellor ---
         if (status == Status.usingTellorChainlinkUntrusted) {
             // If both Tellor and Chainlink are live, unbroken, and reporting similar prices, switch back to Chainlink
+            // When chainlink just recovered, this condition won't be met because prev is broken. One more tick is needed.
             if (
                 _bothOraclesLiveAndUnbrokenAndSimilarPrice(
                     chainlinkResponse,
@@ -755,7 +729,8 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
     }
 
     function _safeUsingTellorOrGracefulAdjustment(
-        TellorResponse memory _tellorResponse
+        TellorResponse memory _tellorResponse,
+        Status _inheritedStatus
     )
         internal
         view
@@ -778,7 +753,7 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
             _isAdjusted = true;
         } else {
             _price = _scaleTellorPriceByDigits(_tellorResponse.value);
-            _status = Status.usingTellorChainlinkUntrusted;
+            _status = _inheritedStatus;
             _isAdjusted = false;
         }
     }
@@ -940,8 +915,8 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
         }
 
         chainlinkResponse.roundId = ethChainlinkResponseInUSD.roundId;
-        // chainlinkResponse.decimals = uint8(TARGET_DIGITS); // Bug: dec=18 is wrong maybe here
-        chainlinkResponse.decimals = uint8(ETHUSD_DIGITS);
+        chainlinkResponse.decimals = uint8(TARGET_DIGITS); // Note: 0xMotoko at Mar 3, 2022. dec=18 was wrong here
+        // chainlinkResponse.decimals = uint8(ETHUSD_DIGITS);
         chainlinkResponse.answer = int256(
             (uint256(ethChainlinkResponseInUSD.answer) *
                 (10 **
@@ -990,7 +965,8 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
                             _jpyOracleDecimals))) / uint256(_jpyInUSD)
             );
             prevChainlinkResponse.timestamp = timestamp;
-            prevChainlinkResponse.decimals = _currentDecimals;
+            // prevChainlinkResponse.decimals = _currentDecimals; // Note: 0xMotoko at Mar 3, 2022. dec=18?
+            prevChainlinkResponse.decimals = uint8(TARGET_DIGITS);
             prevChainlinkResponse.success = true;
             return prevChainlinkResponse;
         } catch {
