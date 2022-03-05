@@ -168,7 +168,7 @@ async function setMocks(conf: MockConf) {
   lastChainLinkAnswer = cPriceEthInUsd;
   mockRoundCount++;
 }
-describe.only("PriceFeed", function () {
+describe("PriceFeed", function () {
   let lastMockInput;
   beforeEach(async () => {
     accounts = await ethers.getSigners();

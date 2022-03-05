@@ -262,7 +262,7 @@ describe("contract Yamato - pure func quickier tests", function () {
   });
 });
 
-describe("contract Yamato", function () {
+describe.only("contract Yamato", function () {
   let mockPool: FakeContract<Pool>;
   let mockFeePool: FakeContract<FeePool>;
   let mockFeed: FakeContract<PriceFeed>;
@@ -1061,7 +1061,7 @@ describe("contract Yamato", function () {
     it(`should revert if withdrawal remaining <0.1ETH happens`, async function () {
       await yamato.deposit({ value: BigNumber.from(1e18 + "") });
       await expect(
-        yamato.withdraw(BigNumber.from(1e18 + "").sub(1e17 + ""))
+        yamato.withdraw(BigNumber.from(1e18 + "").sub(1e17 + "").add(1))
       ).to.be.revertedWith(
         "Deposit or Withdraw can't make pledge less than floor size."
       );

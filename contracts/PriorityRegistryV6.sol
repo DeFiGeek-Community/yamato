@@ -9,6 +9,7 @@ pragma solidity 0.8.4;
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 import "./Yamato.sol";
+import "./Interfaces/IYamatoV3.sol";
 import "./Interfaces/IPriceFeed.sol";
 import "./Interfaces/IPriorityRegistryV6.sol";
 import "./Dependencies/PledgeLib.sol";
@@ -27,7 +28,6 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
     uint256 public override pledgeLength;
     uint256 public override LICR; // Note: Lowest ICR in percent
     mapping(uint256 => FifoQueue) rankedQueue;
-    uint256 constant CHECKPOINT_BUFFER = 55;
     uint256 public constant override MAX_PRIORITY =
         1157920892373161954235709850086879078532699846656405640394575840079131296399; // (2**256 - 1) / 100
     uint256 public nextResetRank;
@@ -341,7 +341,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
 
     function _traverseToNextLICR(uint256 _icr) internal {
         uint256 _mcrPercent = uint256(IYamato(yamato()).MCR());
-        uint256 _checkpoint = _mcrPercent + CHECKPOINT_BUFFER; // 185*0.7=130 ... It's possible to be "priority=184 but deficit" with 30% dump, but "priority=20000 but deficit" is impossible.
+        uint256 _checkpoint = _mcrPercent + IYamatoV3(yamato()).CHECKPOINT_BUFFER(); // 185*0.7=130 ... It's possible to be "priority=184 but deficit" with 30% dump, but "priority=20000 but deficit" is impossible.
         uint256 _reminder = pledgeLength -
             (rankedQueueLen(0) + rankedQueueLen(MAX_PRIORITY));
         if (_reminder > 0) {
@@ -383,7 +383,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
 
     function getRedeemablesCap() external view returns (uint256 _cap) {
         uint256 _mcrPercent = uint256(IYamato(yamato()).MCR());
-        uint256 _checkpoint = _mcrPercent + CHECKPOINT_BUFFER;
+        uint256 _checkpoint = _mcrPercent + IYamatoV3(yamato()).CHECKPOINT_BUFFER();
         uint256 ethPriceInCurrency = IPriceFeed(feed()).lastGoodPrice();
 
         uint256 _rank = 1;

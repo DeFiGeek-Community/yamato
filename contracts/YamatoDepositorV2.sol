@@ -60,7 +60,7 @@ contract YamatoDepositorV2 is IYamatoDepositor, YamatoAction {
             "Those can't be called in the same block."
         );
         require(
-            pledge.coll > IYamatoV3(yamato()).collFloor(),
+            pledge.coll >= IYamatoV3(yamato()).collFloor(),
             "Deposit or Withdraw can't make pledge less than floor size."
         );
 

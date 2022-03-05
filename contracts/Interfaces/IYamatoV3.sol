@@ -17,4 +17,6 @@ interface IYamatoV3 {
     function collFloor() external view returns (uint256);
 
     function maxRedeemableCount() external view returns (uint256);
+
+    function CHECKPOINT_BUFFER() external view returns (uint256);
 }

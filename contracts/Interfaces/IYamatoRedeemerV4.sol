@@ -33,6 +33,7 @@ interface IYamatoRedeemerV4 {
         uint256 _maxCount;
         uint256 _pledgeLength;
         uint256 _activePledgeLength;
+        uint256 _checkpoint;
         IYamato.Pledge[] _bulkedPledges;
     }
 }

@@ -70,11 +70,12 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
             vars._pledgeLength -
             _prv6.rankedQueueLen(0) -
             _prv6.rankedQueueLen(_prv6.MAX_PRIORITY());
+        vars._checkpoint = vars._mcrPercent + IYamatoV3(yamato()).CHECKPOINT_BUFFER();
 
         while (true) {
             address _pledgeAddr = _prv6.rankedQueuePop(vars._nextICR);
 
-            if (vars._activePledgeLength - vars._count == 0) {
+            if (vars._activePledgeLength - vars._count == 0 || vars._nextICR >= vars._checkpoint) {
                 break; /* inf loop checker */
             }
 
@@ -110,7 +111,6 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
                 }
                 /* state update for redeemed pledge */
 
-                console.log(_pledge.getICRWithPrice(vars.ethPriceInCurrency));
                 _pledge.debt -= vars._redeemingAmount;
                 _pledge.coll -=
                     (vars._redeemingAmount * 1e18) /

@@ -97,7 +97,7 @@ contract YamatoWithdrawerV2 is IYamatoWithdrawer, YamatoAction {
                 5-b. Reasonable partial withdrawal
             */
             require(
-                pledge.coll > IYamatoV3(yamato()).collFloor(),
+                pledge.coll >= IYamatoV3(yamato()).collFloor(),
                 "Deposit or Withdraw can't make pledge less than floor size."
             );
             require(
