@@ -44,28 +44,36 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
         returns (RedeemedArgs memory)
     {
         IYamatoRedeemerV4.RunRedeemVars memory vars;
+        IPriorityRegistryV6 _prv6 = IPriorityRegistryV6(priorityRegistry());
+        ICurrencyOS _currencyOS = ICurrencyOS(currencyOS());
+        IERC20 _cjpy = IERC20(_currencyOS.currency());
+        IYamato _yamato = IYamato(yamato());
+
         vars.ethPriceInCurrency = IPriceFeed(feed()).fetchPrice();
-        vars.currencyAmountStart = _args.wantToRedeemCurrencyAmount;
+        if (_args.isCoreRedemption) {
+            _args.wantToRedeemCurrencyAmount = IPool(pool()).redemptionReserve();
+            require(_args.wantToRedeemCurrencyAmount > 0, "The redemption reserve is empty.");
+        } else {
+            require(_cjpy.balanceOf(msg.sender) <= _args.wantToRedeemCurrencyAmount, "Insufficient currency balance to redeem.");
+        }
         vars._reminder = _args.wantToRedeemCurrencyAmount;
         vars._pledgeLength = IPriorityRegistry(priorityRegistry())
             .pledgeLength();
         vars._pledgesOwner = new address[](vars._pledgeLength);
-        vars._GRR = IYamato(yamato()).GRR();
-        vars._mcrPercent = uint256(IYamato(yamato()).MCR());
+        vars._GRR = _yamato.GRR();
+        vars._mcrPercent = uint256(_yamato.MCR());
         vars._mcrPertenk = vars._mcrPercent * 100;
 
         /*
             On memory update: Get redemption candidates with calculating after-redemption state
         */
-        vars._nextICR = IPriorityRegistryV6(priorityRegistry()).LICR();
-        vars._nextout = IPriorityRegistryV6(priorityRegistry())
-            .rankedQueueNextout(vars._nextICR);
-        vars._nextin = IPriorityRegistryV6(priorityRegistry())
-            .rankedQueueTotalLen(vars._nextICR);
+        vars._nextICR = _prv6.LICR();
+        vars._nextICR = vars._nextICR == 0 ? 1 : vars._nextICR;
+        vars._nextout = _prv6.rankedQueueNextout(vars._nextICR);
+        vars._nextin = _prv6.rankedQueueTotalLen(vars._nextICR);
         vars._maxCount = IYamatoV3(yamato()).maxRedeemableCount();
         vars._bulkedPledges = new IYamato.Pledge[](vars._maxCount);
         vars._pledgesOwner = new address[](vars._maxCount);
-        IPriorityRegistryV6 _prv6 = IPriorityRegistryV6(priorityRegistry());
         vars._activePledgeLength =
             vars._pledgeLength -
             _prv6.rankedQueueLen(0) -
@@ -84,9 +92,7 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
                 continue; /* That rank has been exhausted */
             }
 
-            IYamato.Pledge memory _pledge = IYamato(yamato()).getPledge(
-                _pledgeAddr
-            );
+            IYamato.Pledge memory _pledge = _yamato.getPledge(_pledgeAddr);
             uint256 _ICRpertenk = _pledge.getICRWithPrice(
                 vars.ethPriceInCurrency
             );
@@ -109,6 +115,9 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
                 if (vars._redeemingAmount == 0) {
                     break; /* Given "just-on-MCR" pledge, full redemption but less than the sender wants */
                 }
+                if (vars._toBeRedeemed + vars._redeemingAmount > _args.wantToRedeemCurrencyAmount) {
+                    vars._redeemingAmount = _args.wantToRedeemCurrencyAmount - vars._toBeRedeemed; /* Limiting redeeming amount within the amount sender has. */
+                }
                 /* state update for redeemed pledge */
 
                 _pledge.debt -= vars._redeemingAmount;
@@ -120,8 +129,8 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
                 vars._bulkedPledges[vars._count] = _pledge;
                 vars._count++;
 
-                if (vars._toBeRedeemed >= _args.wantToRedeemCurrencyAmount) {
-                    break; /* redeeming amount reached to the target */
+                if (vars._toBeRedeemed == _args.wantToRedeemCurrencyAmount) {
+                    break; /* Could pile up money as sender wants. */
                 }
                 if (vars._count >= vars._maxCount) {
                     break; /* count reached to the target */
@@ -129,6 +138,7 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
             }
         }
         require(vars._toBeRedeemed > 0, "No pledges are redeemed.");
+        require(vars._toBeRedeemed <= _args.wantToRedeemCurrencyAmount, "Redeeming amount exceeds bearer's balance.");
 
         /*
             External tx: bulkUpsert and LICR update
@@ -190,7 +200,7 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
             _returningDestination,
             (vars._toBeRedeemed * 1e18) / vars.ethPriceInCurrency
         );
-        ICurrencyOS(currencyOS()).burnCurrency(
+        _currencyOS.burnCurrency(
             _redemptionBearer,
             vars._toBeRedeemed
         );

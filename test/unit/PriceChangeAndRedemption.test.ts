@@ -44,7 +44,7 @@ import { isToken } from "typescript";
 chai.use(smock.matchers);
 chai.use(solidity);
 
-describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
+describe("PriceChangeAndRedemption :: contract Yamato", () => {
   let ChainLinkEthUsd: ChainLinkMock;
   let ChainLinkUsdJpy: ChainLinkMock;
   let Tellor: TellorCallerMock;
@@ -209,7 +209,7 @@ describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
         redeemer = accounts[0];
         redeemee = accounts[1];
         toCollateralize = 1;
-        toBorrow = (await PriceFeed.lastGoodPrice())
+        toBorrow = (await PriceFeed.getPrice())
           .mul(toCollateralize)
           .mul(100)
           .div(MCR)
@@ -221,7 +221,7 @@ describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
         });
         await Yamato.connect(redeemer).borrow(toERC20(toBorrow.mul(7) + ""));
 
-        /* Set the only and to-be-lowest ICR */
+        /* Set the just-one and to-be-lowest ICR */
         await Yamato.connect(redeemee).deposit({
           value: toERC20(toCollateralize + ""),
         });
@@ -300,7 +300,7 @@ describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
         redeemee4 = accounts[4];
 
         toCollateralize = 1;
-        toBorrow = (await PriceFeed.lastGoodPrice())
+        toBorrow = (await PriceFeed.getPrice())
           .mul(toCollateralize)
           .mul(100)
           .div(MCR)
@@ -312,7 +312,7 @@ describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
         });
         await Yamato.connect(redeemer).borrow(toERC20(toBorrow.mul(10) + ""));
 
-        /* Set the only and to-be-lowest ICR */
+        /* Set the just-one and to-be-lowest ICR */
         await Yamato.connect(redeemee4).deposit({
           value: toERC20(toCollateralize + ""),
         });
@@ -345,18 +345,20 @@ describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
         let redeemeeAddr4 = await redeemee4.getAddress();
 
         await (await PriceFeed.fetchPrice()).wait();
+        const dumpedEffectivePrice = await PriceFeed.getPrice();
         const redeemableCapBefore = await PriorityRegistry.getRedeemablesCap();
         const statesBefore = await Yamato.getStates();
 
         const redeemedPledgeBefore = await Yamato.getPledge(redeemeeAddr);
         const redeemedPledge4Before = await Yamato.getPledge(redeemeeAddr4);
+
         const totalSupplyBefore = await CJPY.totalSupply();
         const redeemerCJPYBalanceBefore = await CJPY.balanceOf(redeemerAddr);
         const redeemerETHBalanceBefore = await Yamato.provider.getBalance(
           redeemerAddr
         );
 
-        toBorrow = dumpedPrice
+        toBorrow = dumpedEffectivePrice
           .mul(toCollateralize)
           .mul(100)
           .div(MCR)
@@ -401,30 +403,30 @@ describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
 
         expect(
           redeemedPledgeAfter.coll
-            .mul(dumpedPrice)
+            .mul(dumpedEffectivePrice)
             .div(redeemedPledgeAfter.debt)
             .div(1e14 + "")
         ).to.be.gt(
           redeemedPledgeBefore.coll
-            .mul(dumpedPrice)
+            .mul(dumpedEffectivePrice)
             .div(redeemedPledgeBefore.debt)
             .div(1e14 + "")
         ); // 100<ICR<130 then ICR cured
         expect(
           redeemedPledgeAfter.coll
-            .mul(dumpedPrice)
+            .mul(dumpedEffectivePrice)
             .div(redeemedPledgeAfter.debt)
             .div(1e14 + "")
         ).to.eq(13000); // check real ICR cirtainly limited at MCR
         expect(redeemedPledgeAfter.priority).to.eq(13000); // 7 times large pledge must be full redeemed
         expect(
           redeemedPledge4After.coll
-            .mul(dumpedPrice)
+            .mul(dumpedEffectivePrice)
             .div(redeemedPledge4After.debt)
             .div(1e14 + "")
         ).to.be.gt(
           redeemedPledge4Before.coll
-            .mul(dumpedPrice)
+            .mul(dumpedEffectivePrice)
             .div(redeemedPledge4Before.debt)
             .div(1e14 + "")
         ); // 100<ICR<130 then ICR cured
@@ -436,7 +438,7 @@ describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
       beforeEach(async () => {
         redeemer = accounts[0];
         redeemee = accounts[1];
-        PRICE = await PriceFeed.lastGoodPrice();
+        PRICE = await PriceFeed.getPrice();
         toCollateralize = 1;
         toBorrow = PRICE.mul(toCollateralize)
           .mul(100)
@@ -473,7 +475,7 @@ describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
         redeemee = accounts[1];
         anotherRedeemee = accounts[2];
         toCollateralize = 1;
-        toBorrow = (await PriceFeed.lastGoodPrice())
+        toBorrow = (await PriceFeed.getPrice())
           .mul(toCollateralize)
           .mul(100)
           .div(MCR)
@@ -519,8 +521,9 @@ describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
       it(`should redeem w/o making LICR broken and w/ reasonable gas`, async function () {
         const redeemerAddr = await redeemer.getAddress();
         const redeemeeAddr = await redeemee.getAddress();
+        const dumpedEffectivePrice = await PriceFeed.getPrice();
 
-        toBorrow = dumpedPrice
+        toBorrow = dumpedEffectivePrice
           .mul(toCollateralize)
           .mul(100)
           .div(MCR)
@@ -569,12 +572,15 @@ describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
     describe("Context - core redemption", function () {
       let dumpedPriceBase = 204000000000;
       let dumpedPrice = BigNumber.from(dumpedPriceBase).mul(1e12 + "");
+      let dumpedEffectivePrice;
+      let yetAnotherRedeemee;
       beforeEach(async () => {
         redeemer = accounts[0];
         redeemee = accounts[1];
         anotherRedeemee = accounts[2];
+        yetAnotherRedeemee = accounts[3];
         toCollateralize = 1;
-        toBorrow = (await PriceFeed.lastGoodPrice())
+        toBorrow = (await PriceFeed.getPrice())
           .mul(toCollateralize)
           .mul(100)
           .div(MCR)
@@ -599,11 +605,27 @@ describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
           toERC20(toBorrow.mul(20) + "")
         );
 
+        await Yamato.connect(yetAnotherRedeemee).deposit({
+          value: toERC20(toCollateralize * 20 + ""),
+        });
+        await Yamato.connect(yetAnotherRedeemee).borrow(
+          toERC20(toBorrow.mul(20) + "")
+        );
+
+        await Yamato.connect(accounts[4]).deposit({
+          value: toERC20(toCollateralize * 20 + ""),
+        });
+        await Yamato.connect(accounts[4]).borrow(
+          toERC20(toBorrow.mul(20) + "")
+        );
+        
+
         /* Market Dump */
         await (await ChainLinkEthUsd.setLastPrice(dumpedPriceBase)).wait(); //dec8
         await (await Tellor.setLastPrice(Math.ceil(dumpedPriceBase*1.14))).wait(); //dec8
+        dumpedEffectivePrice = await PriceFeed.getPrice();
 
-        toBorrow = dumpedPrice
+        toBorrow = dumpedEffectivePrice
           .mul(toCollateralize)
           .mul(100)
           .div(MCR)
@@ -673,7 +695,7 @@ describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
         await Promise.all(transferPromise);
 
         toCollateralize = 1;
-        toBorrow = (await PriceFeed.lastGoodPrice())
+        toBorrow = (await PriceFeed.getPrice())
           .mul(toCollateralize)
           .mul(100)
           .div(MCR)
@@ -713,7 +735,7 @@ describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
           await Tellor.connect(redeemer).setLastPrice("203000000000")
         ).wait(); //dec8
 
-        toBorrow = (await PriceFeed.lastGoodPrice())
+        toBorrow = (await PriceFeed.getPrice())
           .mul(toCollateralize)
           .mul(100)
           .div(MCR)
@@ -761,13 +783,13 @@ describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
         expect(redeemeePledgeAfter.debt).to.be.lt(redeemeePledgeBefore.debt);
       });
     });
-    describe("Context - A large traversing and no gas exhaustion with 1% dump", function () {
+    describe.only("Context - A large traversing and no gas exhaustion with 1% dump", function () {
       let dumpedPriceBase = 397000000000;
       let dumpedPrice = BigNumber.from(dumpedPriceBase).mul(1e12 + "");
       beforeEach(async () => {
         redeemer = accounts[0];
         toCollateralize = 1;
-        toBorrow = (await PriceFeed.lastGoodPrice())
+        toBorrow = (await PriceFeed.getPrice())
           .mul(toCollateralize)
           .mul(100)
           .div(MCR)
@@ -796,6 +818,8 @@ describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
         /* Market Dump */
         await (await ChainLinkEthUsd.setLastPrice(dumpedPriceBase)).wait(); //dec8
         await (await Tellor.setLastPrice(Math.ceil(dumpedPriceBase*1.14))).wait(); //dec8
+
+        let debugPledge = await Yamato.getPledge(await accounts[1].getAddress());
       });
 
       it(`should redeem all pledges to ICR 130% and LICR is 130`, async function () {
@@ -806,17 +830,18 @@ describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
             { gasLimit: 30000000 }
           )
         ).wait();
+        expect(await PriorityRegistry.getRedeemablesCap()).to.eq(0);
         expect(await PriorityRegistry.LICR()).to.eq(130);
       });
     });
 
-    describe("Context - A large traversing and no gas exhaustion with more than 30% dump", function () {
+    describe.only("Context - A large traversing and no gas exhaustion with more than 30% dump", function () {
       let dumpedPriceBase = 204000000000;
       let dumpedPrice = BigNumber.from(dumpedPriceBase).mul(1e12 + "");
       beforeEach(async () => {
         redeemer = accounts[0];
         toCollateralize = 1;
-        toBorrow = (await PriceFeed.lastGoodPrice())
+        toBorrow = (await PriceFeed.getPrice())
           .mul(toCollateralize)
           .mul(100)
           .div(MCR)
@@ -874,7 +899,7 @@ describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
       anotherRedeemee = accounts[2];
       yetAnotherRedeemee = accounts[3];
       toCollateralize = 1;
-      toBorrow = (await PriceFeed.lastGoodPrice())
+      toBorrow = (await PriceFeed.getPrice())
         .mul(toCollateralize)
         .mul(100)
         .div(MCR)
@@ -909,7 +934,7 @@ describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
       await (await ChainLinkEthUsd.setLastPrice("204000000000")).wait(); //dec8
       await (await Tellor.setLastPrice("203000000000")).wait(); //dec8
 
-      toBorrow = (await PriceFeed.lastGoodPrice())
+      toBorrow = (await PriceFeed.getPrice())
         .mul(toCollateralize)
         .mul(100)
         .div(MCR)
@@ -932,7 +957,7 @@ describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
         ).wait();
       });
 
-      it(`should run partial sweep`, async function () {
+      it.only(`should run partial sweep`, async function () {
         const redeemerAddr = await redeemer.getAddress();
 
         const sweepablePledge = await Yamato.getPledge(
@@ -972,7 +997,7 @@ describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
           )
         ).wait();
       });
-      it(`should run full sweep`, async function () {
+      it.only(`should run full sweep`, async function () {
         const redeemerAddr = await redeemer.getAddress();
 
         const sweepablePledge = await Yamato.getPledge(
@@ -1034,7 +1059,7 @@ describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
       let redeemer = accounts[0];
       let redeemerAddr = await redeemer.getAddress();
       let toCollateralize = 1;
-      let price = await PriceFeed.lastGoodPrice();
+      let price = await PriceFeed.getPrice();
       let toBorrow = price
         .mul(toCollateralize)
         .mul(100)
@@ -1143,7 +1168,7 @@ describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
         let ethBalanceBefore = await Yamato.provider.getBalance(redeemerAddr);
 
         let tenEthInCJPY = BigNumber.from(1e19 + "")
-          .mul(await PriceFeed.lastGoodPrice())
+          .mul(await PriceFeed.getPrice())
           .div(1e18 + "");
 
         let gas1 = await Yamato.estimateGas.redeem(tenEthInCJPY.div(2), false);
@@ -1188,7 +1213,7 @@ describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
         let ethBalanceBefore = await Yamato.provider.getBalance(redeemerAddr);
 
         let tenEthInCJPY = BigNumber.from(1e19 + "")
-          .mul(await PriceFeed.lastGoodPrice())
+          .mul(await PriceFeed.getPrice())
           .div(1e18 + "");
 
         let gas1 = await Yamato.estimateGas.redeem(tenEthInCJPY.div(2), false);
@@ -1226,7 +1251,7 @@ describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
         let ethBalanceBefore = await Yamato.provider.getBalance(redeemerAddr);
 
         let tenEthInCJPY = BigNumber.from(1e19 + "")
-          .mul(await PriceFeed.lastGoodPrice())
+          .mul(await PriceFeed.getPrice())
           .div(1e18 + "");
 
         let gas1 = await Yamato.estimateGas.redeem(tenEthInCJPY.div(2), false);
@@ -1268,7 +1293,7 @@ describe.only("PriceChangeAndRedemption :: contract Yamato", () => {
         let ethBalanceBefore = await Yamato.provider.getBalance(redeemerAddr);
 
         let tenEthInCJPY = BigNumber.from(1e19 + "")
-          .mul(await PriceFeed.lastGoodPrice())
+          .mul(await PriceFeed.getPrice())
           .div(1e18 + "");
 
         let gas1 = await Yamato.estimateGas.redeem(tenEthInCJPY.div(2), false);
