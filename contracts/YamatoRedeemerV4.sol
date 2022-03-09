@@ -139,6 +139,7 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
         }
         require(vars._toBeRedeemed > 0, "No pledges are redeemed.");
         require(vars._toBeRedeemed <= _args.wantToRedeemCurrencyAmount, "Redeeming amount exceeds bearer's balance.");
+        console.log("len:%s icr:%s prio:%s", vars._bulkedPledges.length, vars._bulkedPledges[0].getICRWithPrice(vars.ethPriceInCurrency), vars._bulkedPledges[0].priority);
 
         /*
             External tx: bulkUpsert and LICR update

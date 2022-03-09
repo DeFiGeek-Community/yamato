@@ -783,7 +783,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         expect(redeemeePledgeAfter.debt).to.be.lt(redeemeePledgeBefore.debt);
       });
     });
-    describe.only("Context - A large traversing and no gas exhaustion with 1% dump", function () {
+    describe("Context - A large traversing and no gas exhaustion with 1% dump", function () {
       let dumpedPriceBase = 397000000000;
       let dumpedPrice = BigNumber.from(dumpedPriceBase).mul(1e12 + "");
       beforeEach(async () => {
@@ -818,11 +818,9 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         /* Market Dump */
         await (await ChainLinkEthUsd.setLastPrice(dumpedPriceBase)).wait(); //dec8
         await (await Tellor.setLastPrice(Math.ceil(dumpedPriceBase*1.14))).wait(); //dec8
-
-        let debugPledge = await Yamato.getPledge(await accounts[1].getAddress());
       });
 
-      it(`should redeem all pledges to ICR 130% and LICR is 130`, async function () {
+      it.only(`should redeem all pledges to ICR 130% and LICR is 130`, async function () {
         await (
           await Yamato.connect(redeemer).redeem(
             toERC20(toBorrow.mul(9) + ""),
@@ -835,10 +833,16 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       });
     });
 
-    describe.only("Context - A large traversing and no gas exhaustion with more than 30% dump", function () {
+    describe("Context - A large traversing and no gas exhaustion with more than 30% dump", function () {
       let dumpedPriceBase = 204000000000;
       let dumpedPrice = BigNumber.from(dumpedPriceBase).mul(1e12 + "");
       beforeEach(async () => {
+        /* Market Dump */
+        await (await ChainLinkEthUsd.setLastPrice(dumpedPriceBase*2)).wait(); //dec8
+        await (await Tellor.setLastPrice(Math.ceil(dumpedPriceBase*2*1.14))).wait(); //dec8
+        (<any>Yamato.provider).send("evm_increaseTime", [3200]);
+        (<any>Yamato.provider).send("evm_mine");  
+
         redeemer = accounts[0];
         toCollateralize = 1;
         toBorrow = (await PriceFeed.getPrice())
@@ -870,6 +874,8 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         /* Market Dump */
         await (await ChainLinkEthUsd.setLastPrice(dumpedPriceBase)).wait(); //dec8
         await (await Tellor.setLastPrice(Math.ceil(dumpedPriceBase*1.14))).wait(); //dec8
+        (<any>Yamato.provider).send("evm_increaseTime", [3200]);
+        (<any>Yamato.provider).send("evm_mine");  
       });
 
       it(`should redeem all pledges to ICR 0% and LICR is 184`, async function () {

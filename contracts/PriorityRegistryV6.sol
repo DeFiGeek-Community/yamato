@@ -141,12 +141,21 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
                 - If empty, start traversing from that rank.
         */
         uint256 _licrCandidate = _detectLowestICR(
-            _pledges[0].getICRWithPrice(_ethPriceInCurrency),
-            floor(_pledges[0].priority),
+            _pledges[_pledges.length - 1].getICRWithPrice(_ethPriceInCurrency),
+            floor(_pledges[_pledges.length - 1].priority),
             LICR
         );
-        if (rankedQueueLen(_licrCandidate) == 0) {
-            _traverseToNextLICR(_licrCandidate);
+        console.log("LICR:%s  _licrCandidate:%s", LICR, _licrCandidate);
+        if (_licrCandidate < LICR || LICR == 0) {
+            if (_licrCandidate > 0) {
+                if (rankedQueueLen(_licrCandidate) > 0) {
+                    LICR = _licrCandidate;
+                } else {
+                    _traverseToNextLICR(_licrCandidate);
+                }
+            } else {
+                _traverseToNextLICR(LICR+1); /* If _licrCandidate=0 (just after full-redemption) and current LICR will be obsoleted. Then search next. */             
+            }
         }
 
         return _newPriorities;
@@ -348,7 +357,11 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
             uint256 _next = _icr;
             while (true) {
                 if (rankedQueueLen(_next) != 0) {
-                    LICR = _next; // the first filled rankedQueue
+                    if (LICR == _mcrPercent && _icr == _mcrPercent) {
+                        _next++; // skip just-to-MCR redemption
+                    } else {
+                        LICR = _next; // the first filled rankedQueue
+                    }
                     break;
                 } else if (_next >= _checkpoint) {
                     LICR = _checkpoint - 1; // default LICR
