@@ -145,7 +145,6 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
             floor(_pledges[_pledges.length - 1].priority),
             LICR
         );
-        console.log("LICR:%s  _licrCandidate:%s", LICR, _licrCandidate);
         if (_licrCandidate < LICR || LICR == 0) {
             if (_licrCandidate > 0) {
                 if (rankedQueueLen(_licrCandidate) > 0) {
@@ -154,7 +153,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
                     _traverseToNextLICR(_licrCandidate);
                 }
             } else {
-                _traverseToNextLICR(LICR+1); /* If _licrCandidate=0 (just after full-redemption) and current LICR will be obsoleted. Then search next. */             
+                _traverseToNextLICR(1); /* If _licrCandidate=0 (just after full-redemption) and current LICR will be obsoleted. Then search next. */             
             }
         }
 

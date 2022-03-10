@@ -70,6 +70,7 @@ contract YamatoSweeperV2 is IYamatoSweeper, YamatoAction {
         */
         IYamato _yamato = IYamato(yamato());
         IPriorityRegistryV6 _prv6 = IPriorityRegistryV6(priorityRegistry());
+        require(_prv6.rankedQueueLen(0) > 0, "No sweepables.");
         while (true) {
             address _pledgeAddr = _prv6.rankedQueuePop(0);
 
@@ -80,16 +81,17 @@ contract YamatoSweeperV2 is IYamatoSweeper, YamatoAction {
             IYamato.Pledge memory _pledge = _yamato.getPledge(_pledgeAddr);
 
             uint256 _pledgeDebt = _pledge.debt;
-
+            
             if (_pledgeDebt >= vars._reminder) {
                 _pledge.debt = _pledgeDebt - vars._reminder;
-                vars._reminder = 0;
                 vars._toBeSwept += vars._reminder;
+                vars._reminder = 0;
             } else {
                 _pledge.debt = 0;
-                vars._reminder -= _pledgeDebt;
                 vars._toBeSwept += _pledgeDebt;
+                vars._reminder -= _pledgeDebt;
             }
+
             _pledge.coll = 0; // Note: Sometimes very tiny coll would be there but ignore it. Don't reduce totalColl.
 
             vars._pledgesOwner[vars._loopCount] = _pledge.owner; // Note: For event
@@ -105,7 +107,7 @@ contract YamatoSweeperV2 is IYamatoSweeper, YamatoAction {
             }
         }
         require(vars._toBeSwept > 0, "At least a pledge should be swept.");
-        require(vars.sweepReserve > vars._toBeSwept, "Too much sweeping.");
+        require(vars.sweepReserve - vars.maxGasCompensation >= vars._toBeSwept, "Too much sweeping.");
 
         /*
             Update pledges

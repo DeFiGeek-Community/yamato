@@ -820,7 +820,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         await (await Tellor.setLastPrice(Math.ceil(dumpedPriceBase*1.14))).wait(); //dec8
       });
 
-      it.only(`should redeem all pledges to ICR 130% and LICR is 130`, async function () {
+      it(`should redeem all pledges to ICR 130% and LICR is 184`, async function () {
         await (
           await Yamato.connect(redeemer).redeem(
             toERC20(toBorrow.mul(9) + ""),
@@ -828,8 +828,10 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
             { gasLimit: 30000000 }
           )
         ).wait();
+        expect(await PriorityRegistry.rankedQueueLen(0)).to.eq(0);
+        expect(await PriorityRegistry.rankedQueueLen(130)).to.be.gt(0);
         expect(await PriorityRegistry.getRedeemablesCap()).to.eq(0);
-        expect(await PriorityRegistry.LICR()).to.eq(130);
+        expect(await PriorityRegistry.LICR()).to.eq(184);
       });
     });
 
@@ -886,6 +888,8 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
             { gasLimit: 30000000 }
           )
         ).wait();
+        expect(await PriorityRegistry.rankedQueueLen(130)).to.eq(0);
+        expect(await PriorityRegistry.rankedQueueLen(0)).to.be.gt(0);
         expect(await PriorityRegistry.LICR()).to.eq(184);
       });
     });
@@ -913,9 +917,9 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
       /* Get redemption budget by her own */
       await Yamato.connect(redeemer).deposit({
-        value: toERC20(toCollateralize * 40.5 + ""),
+        value: toERC20(toCollateralize * 90.5 + ""),
       });
-      await Yamato.connect(redeemer).borrow(toERC20(toBorrow.mul(40) + ""));
+      await Yamato.connect(redeemer).borrow(toERC20(toBorrow.mul(85) + ""));
 
       /* Set the only and to-be-lowest ICR */
       await Yamato.connect(redeemee).deposit({
@@ -951,19 +955,13 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       beforeEach(async () => {
         await (
           await Yamato.connect(redeemer).redeem(
-            toERC20(toBorrow.mul(1) + ""),
-            false
-          )
-        ).wait();
-        await (
-          await Yamato.connect(redeemer).redeem(
-            toERC20(toBorrow.mul(15) + ""),
+            toERC20(toBorrow.mul(100) + ""),
             false
           )
         ).wait();
       });
 
-      it.only(`should run partial sweep`, async function () {
+      it(`should run partial sweep`, async function () {
         const redeemerAddr = await redeemer.getAddress();
 
         const sweepablePledge = await Yamato.getPledge(
@@ -991,14 +989,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       beforeEach(async () => {
         await (
           await Yamato.connect(redeemer).redeem(
-            toERC20(toBorrow.mul(9) + ""),
-            false
-          )
-        ).wait();
-
-        await (
-          await Yamato.connect(redeemer).redeem(
-            toERC20(toBorrow.mul(9) + ""),
+            toERC20(toBorrow.mul(50) + ""),
             false
           )
         ).wait();
