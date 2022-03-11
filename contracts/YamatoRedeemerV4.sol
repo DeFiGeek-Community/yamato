@@ -118,13 +118,22 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
                 if (vars._toBeRedeemed + vars._redeemingAmount > _args.wantToRedeemCurrencyAmount) {
                     vars._redeemingAmount = _args.wantToRedeemCurrencyAmount - vars._toBeRedeemed; /* Limiting redeeming amount within the amount sender has. */
                 }
+                vars._redeemingAmountInEth = (vars._redeemingAmount * 1e18) /
+                    vars.ethPriceInCurrency;
                 /* state update for redeemed pledge */
 
                 _pledge.debt -= vars._redeemingAmount;
-                _pledge.coll -=
-                    (vars._redeemingAmount * 1e18) /
-                    vars.ethPriceInCurrency;
+
+                _pledge.coll -= vars._redeemingAmountInEth;
+                if(_pledge.coll == 1) {
+                    /* Adjust tiny remaining ETH */
+                    _pledge.coll = 0;
+                    vars._redeemingAmountInEth += 1;
+                    vars._redeemingAmount += vars.ethPriceInCurrency / 1e18;
+                }
+
                 vars._toBeRedeemed += vars._redeemingAmount;
+                vars._toBeRedeemedInEth += vars._redeemingAmountInEth;
                 vars._pledgesOwner[vars._count] = _pledge.owner;
                 vars._bulkedPledges[vars._count] = _pledge;
                 vars._count++;
@@ -165,10 +174,7 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
         (uint256 totalColl, uint256 totalDebt, , , , ) = IYamato(yamato())
             .getStates();
         IYamato(yamato()).setTotalDebt(totalDebt - vars._toBeRedeemed);
-        IYamato(yamato()).setTotalColl(
-            totalColl - (vars._toBeRedeemed * 1e18) / vars.ethPriceInCurrency
-        );
-
+        IYamato(yamato()).setTotalColl(totalColl - vars._toBeRedeemedInEth);
         /*
             Handle compensations
         */
@@ -198,7 +204,7 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
         }
         IPool(pool()).sendETH(
             _returningDestination,
-            (vars._toBeRedeemed * 1e18) / vars.ethPriceInCurrency
+            vars._toBeRedeemedInEth
         );
         _currencyOS.burnCurrency(
             _redemptionBearer,
@@ -208,14 +214,13 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
         /*
             4. Gas compensation
         */
-        uint256 gasCompensationInETH = ((vars._toBeRedeemed * 1e18) /
-            vars.ethPriceInCurrency) * (vars._GRR / 100);
+        uint256 gasCompensationInETH = vars._toBeRedeemedInEth * (vars._GRR / 100);
         IPool(pool()).sendETH(_args.sender, gasCompensationInETH);
 
         return
             RedeemedArgs(
                 vars._toBeRedeemed,
-                (vars._toBeRedeemed * 1e18) / vars.ethPriceInCurrency,
+                vars._toBeRedeemedInEth,
                 vars._pledgesOwner,
                 vars.ethPriceInCurrency,
                 gasCompensationInETH

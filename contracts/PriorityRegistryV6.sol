@@ -270,7 +270,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
             _pledgeAddr = fifoQueue.pledges[_nextout];
 
             if (_pledgeAddr == address(0)) {
-                while (_nextout < _nextin || _pledgeAddr == address(0)) {
+                while (_nextout < _nextin - 1 /* len - 1 is the upper bound */ || _pledgeAddr == address(0)) {
                     _nextout++;
                     _pledgeAddr = fifoQueue.pledges[_nextout];
                 }

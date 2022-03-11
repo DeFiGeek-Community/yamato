@@ -28,8 +28,10 @@ interface IYamatoRedeemerV4 {
         uint256 _nextout;
         uint256 _nextin;
         uint256 _toBeRedeemed;
+        uint256 _toBeRedeemedInEth;
         uint256 _count;
         uint256 _redeemingAmount;
+        uint256 _redeemingAmountInEth;
         uint256 _maxCount;
         uint256 _pledgeLength;
         uint256 _activePledgeLength;
