@@ -59,11 +59,9 @@ contract YamatoSweeperV2 is IYamatoSweeper, YamatoAction {
         vars.maxGasCompensation = vars.sweepReserve * (vars._GRR / 100);
         vars._reminder = vars.sweepReserve - vars.maxGasCompensation; //Note: Secure gas compensation
         vars._gasReductedSweepCapacity = vars._reminder;
-        vars.pledgeLength = IPriorityRegistry(priorityRegistry())
-            .pledgeLength();
-        vars._pledgesOwner = new address[](vars.pledgeLength);
-        vars._bulkedPledges = new IYamato.Pledge[](vars.pledgeLength);
         vars._maxCount = IYamatoV3(yamato()).maxRedeemableCount();
+        vars._pledgesOwner = new address[](vars._maxCount);
+        vars._bulkedPledges = new IYamato.Pledge[](vars._maxCount);
 
         /*
             1. Sweeping
@@ -73,6 +71,7 @@ contract YamatoSweeperV2 is IYamatoSweeper, YamatoAction {
         require(_prv6.rankedQueueLen(0) > 0, "No sweepables.");
         while (true) {
             address _pledgeAddr = _prv6.rankedQueuePop(0);
+
 
             if (_pledgeAddr == address(0)) {
                 break;
@@ -93,6 +92,10 @@ contract YamatoSweeperV2 is IYamatoSweeper, YamatoAction {
             }
 
             _pledge.coll = 0; // Note: Sometimes very tiny coll would be there but ignore it. Don't reduce totalColl.
+
+
+    
+            console.log(vars._loopCount, vars._maxCount);
 
             vars._pledgesOwner[vars._loopCount] = _pledge.owner; // Note: For event
             vars._bulkedPledges[vars._loopCount] = _pledge;
@@ -130,6 +133,7 @@ contract YamatoSweeperV2 is IYamatoSweeper, YamatoAction {
             Update global state
         */
         (, uint256 totalDebt, , , , ) = _yamato.getStates();
+        console.log(totalDebt, vars._toBeSwept);
         _yamato.setTotalDebt(totalDebt - vars._toBeSwept);
 
         /*

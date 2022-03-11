@@ -106,7 +106,7 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
             }
 
             IYamato.Pledge memory _pledge = _yamato.getPledge(_pledgeAddr);
-
+            
             uint256 _ICRpertenk = _pledge.getICRWithPrice(
                 vars.ethPriceInCurrency
             );

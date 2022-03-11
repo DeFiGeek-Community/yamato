@@ -18,7 +18,6 @@ interface IYamatoSweeper {
         uint256 maxGasCompensation;
         uint256 _reminder;
         uint256 _gasReductedSweepCapacity;
-        uint256 pledgeLength;
         uint256 _maxCount;
         uint256 _loopCount;
         uint256 _toBeSwept;

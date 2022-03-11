@@ -278,26 +278,33 @@ describe("story Events", function () {
         await (
           await yamato
             .connect(accounts[1])
-            .deposit({ value: toERC20(toCollateralize + "") })
+            .deposit({ value: toERC20(toCollateralize*10 + "") })
         ).wait();
         await (
-          await yamato.connect(accounts[1]).borrow(toERC20(toBorrow + ""))
+          await yamato.connect(accounts[1]).borrow(toERC20(toBorrow.mul(10) + ""))
         ).wait();
+        await (
+          await yamato
+            .connect(accounts[2])
+            .deposit({ value: toERC20(toCollateralize*0.1 + "") })
+        ).wait();
+        await (
+          await yamato.connect(accounts[2]).borrow(toERC20(toBorrow.div(10) + ""))
+        ).wait();
+
         mockCJPY.balanceOf.returns(PRICE.mul(10));
         mockFeed.fetchPrice.returns(PRICE.div(2));
         mockFeed.lastGoodPrice.returns(PRICE.div(2));
         mockPriorityRegistry.rankedQueuePop.returnsAtCall(
           0,
-          await accounts[0].getAddress()
-        );
-        mockPriorityRegistry.rankedQueuePop.returnsAtCall(
-          1,
           await accounts[1].getAddress()
         );
+        mockPriorityRegistry.rankedQueuePop.whenCalledWith(0).returns(await accounts[2].getAddress());
         await (await yamato.redeem(toERC20(toBorrow + ""), false)).wait();
       });
       it(`should be emitted with proper args.`, async function () {
         // address indexed sender, uint256 cjpyAmount, uint256 gasCompensationAmount, address[] pledgesOwner
+        mockPriorityRegistry.rankedQueueLen.whenCalledWith(0).returns(1);
         await expect(yamato.sweep()).to.emit(yamato, "Swept");
       });
     });

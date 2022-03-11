@@ -195,6 +195,8 @@ describe("PriceFeed", function () {
       resetFlag: true,
     };
     await setMocks(lastMockInput);
+    lastMockInput.resetFlag = false;
+    await setMocks(lastMockInput);
     feed = await getProxy<PriceFeed, PriceFeed__factory>("PriceFeed", [
       mockAggregatorV3EthUsd.address,
       mockAggregatorV3JpyUsd.address,
