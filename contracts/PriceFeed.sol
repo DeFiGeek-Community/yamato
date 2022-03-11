@@ -219,9 +219,12 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
                 // Unless, gracefully adjust lastGoodPrice by 5% toward the Tellor price direction.
                 // This graceful adjustment must be permitted only once in the 1000 blocks to take a day for 30% price adjustment.
 
-                return _safeUsingTellorOrGracefulAdjustment(tellorResponse, Status.usingTellorChainlinkUntrusted);
+                return
+                    _safeUsingTellorOrGracefulAdjustment(
+                        tellorResponse,
+                        Status.usingTellorChainlinkUntrusted
+                    );
             }
-
 
             // If Chainlink is frozen, try Tellor
             if (_chainlinkIsFrozen(chainlinkResponse)) {
@@ -242,7 +245,11 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
                     return (_price, _status, false);
                 }
 
-                return _safeUsingTellorOrGracefulAdjustment(tellorResponse, _status);
+                return
+                    _safeUsingTellorOrGracefulAdjustment(
+                        tellorResponse,
+                        _status
+                    );
             }
 
             // If Chainlink price has changed by > 50% between two consecutive rounds, compare it to Tellor's price
@@ -252,7 +259,6 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
                     prevChainlinkResponse
                 )
             ) {
-
                 // If Tellor is broken, both oracles are untrusted, and return last good price
                 if (_tellorIsBroken(tellorResponse)) {
                     // _changeStatus(Status.bothOraclesUntrusted);
@@ -284,8 +290,11 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
                     return (_price, _status, false);
                 }
 
-
-                return _safeUsingTellorOrGracefulAdjustment(tellorResponse, Status.usingTellorChainlinkUntrusted);
+                return
+                    _safeUsingTellorOrGracefulAdjustment(
+                        tellorResponse,
+                        Status.usingTellorChainlinkUntrusted
+                    );
             }
 
             // If Chainlink is working and Tellor is broken, remember Tellor is broken

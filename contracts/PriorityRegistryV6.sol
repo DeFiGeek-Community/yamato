@@ -153,7 +153,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
                     _traverseToNextLICR(_licrCandidate);
                 }
             } else {
-                _traverseToNextLICR(1); /* If _licrCandidate=0 (just after full-redemption) and current LICR will be obsoleted. Then search next. */             
+                _traverseToNextLICR(1); /* If _licrCandidate=0 (just after full-redemption) and current LICR will be obsoleted. Then search next. */
             }
         }
 
@@ -270,7 +270,10 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
             _pledgeAddr = fifoQueue.pledges[_nextout];
 
             if (_pledgeAddr == address(0)) {
-                while (_nextout < _nextin - 1 /* len - 1 is the upper bound */ || _pledgeAddr == address(0)) {
+                while (
+                    _nextout < _nextin - 1 || /* len - 1 is the upper bound */
+                    _pledgeAddr == address(0)
+                ) {
                     _nextout++;
                     _pledgeAddr = fifoQueue.pledges[_nextout];
                 }
@@ -349,7 +352,8 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
 
     function _traverseToNextLICR(uint256 _icr) internal {
         uint256 _mcrPercent = uint256(IYamato(yamato()).MCR());
-        uint256 _checkpoint = _mcrPercent + IYamatoV3(yamato()).CHECKPOINT_BUFFER(); // 185*0.7=130 ... It's possible to be "priority=184 but deficit" with 30% dump, but "priority=20000 but deficit" is impossible.
+        uint256 _checkpoint = _mcrPercent +
+            IYamatoV3(yamato()).CHECKPOINT_BUFFER(); // 185*0.7=130 ... It's possible to be "priority=184 but deficit" with 30% dump, but "priority=20000 but deficit" is impossible.
         uint256 _reminder = pledgeLength -
             (rankedQueueLen(0) + rankedQueueLen(MAX_PRIORITY));
         if (_reminder > 0) {
@@ -395,7 +399,8 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
 
     function getRedeemablesCap() external view returns (uint256 _cap) {
         uint256 _mcrPercent = uint256(IYamato(yamato()).MCR());
-        uint256 _checkpoint = _mcrPercent + IYamatoV3(yamato()).CHECKPOINT_BUFFER();
+        uint256 _checkpoint = _mcrPercent +
+            IYamatoV3(yamato()).CHECKPOINT_BUFFER();
         uint256 ethPriceInCurrency = IPriceFeed(feed()).lastGoodPrice();
 
         uint256 _rank = 1;

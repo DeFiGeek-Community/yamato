@@ -96,11 +96,11 @@ function assertAdjusted(
   }
   expect(price.toString().slice(0, 6)).to.eq(
     `${lastGoodPrice.mul(coef).div(1e18 + "")}`.slice(0, 6)
-  );  
+  );
 }
 
 async function setMocks(conf: MockConf) {
-  if(conf.resetFlag) {
+  if (conf.resetFlag) {
     mockRoundCount = 2;
     lastChainLinkAnswer = undefined;
   }
@@ -141,13 +141,15 @@ async function setMocks(conf: MockConf) {
     now - cDiffEthInUsd,
     2 /* unused */,
   ]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
-  mockAggregatorV3EthUsd.getRoundData.whenCalledWith(mockRoundCount - 1).returns([
-    mockRoundCount - 1,
-    lastChainLinkAnswer ? lastChainLinkAnswer : cPriceEthInUsd,
-    now - cDiffEthInUsd /* unused */,
-    now - cDiffEthInUsd,
-    mockRoundCount - 1 /* unused */,
-  ]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
+  mockAggregatorV3EthUsd.getRoundData
+    .whenCalledWith(mockRoundCount - 1)
+    .returns([
+      mockRoundCount - 1,
+      lastChainLinkAnswer ? lastChainLinkAnswer : cPriceEthInUsd,
+      now - cDiffEthInUsd /* unused */,
+      now - cDiffEthInUsd,
+      mockRoundCount - 1 /* unused */,
+    ]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
   mockAggregatorV3JpyUsd.decimals.returns(CHAINLINK_DIGITS); // uint8
   mockAggregatorV3JpyUsd.latestRoundData.returns([
     mockRoundCount,
@@ -156,13 +158,15 @@ async function setMocks(conf: MockConf) {
     now - cDiffJpyInUsd,
     mockRoundCount /* unused */,
   ]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
-  mockAggregatorV3JpyUsd.getRoundData.whenCalledWith(mockRoundCount - 1).returns([
-    mockRoundCount - 1,
-    cPriceJpyInUsd,
-    now - cDiffJpyInUsd /* unused */,
-    now - cDiffJpyInUsd,
-    mockRoundCount - 1 /* unused */,
-  ]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
+  mockAggregatorV3JpyUsd.getRoundData
+    .whenCalledWith(mockRoundCount - 1)
+    .returns([
+      mockRoundCount - 1,
+      cPriceJpyInUsd,
+      now - cDiffJpyInUsd /* unused */,
+      now - cDiffJpyInUsd,
+      mockRoundCount - 1 /* unused */,
+    ]); // uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
   mockTellorCaller.getTellorCurrentValue.returns([true, tPrice, now - tDiff]); // bool ifRetrieve, uint256 value, uint256 _timestampRetrieved
 
   lastChainLinkAnswer = cPriceEthInUsd;
@@ -188,7 +192,7 @@ describe("PriceFeed", function () {
         chainlink: { ethInUsd: 7200, jpyInUsd: 7200 },
         tellor: 7200,
       },
-      resetFlag: true
+      resetFlag: true,
     };
     await setMocks(lastMockInput);
     feed = await getProxy<PriceFeed, PriceFeed__factory>("PriceFeed", [
@@ -728,7 +732,11 @@ describe("PriceFeed", function () {
 
       await (await feed.fetchPrice()).wait();
 
-      assertTellor(await feed.lastGoodPrice(), await feed.getStatus(), lastMockInput);
+      assertTellor(
+        await feed.lastGoodPrice(),
+        await feed.getStatus(),
+        lastMockInput
+      );
     });
   });
 });

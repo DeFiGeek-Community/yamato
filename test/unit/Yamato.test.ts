@@ -1061,7 +1061,11 @@ describe("contract Yamato", function () {
     it(`should revert if withdrawal remaining <0.1ETH happens`, async function () {
       await yamato.deposit({ value: BigNumber.from(1e18 + "") });
       await expect(
-        yamato.withdraw(BigNumber.from(1e18 + "").sub(1e17 + "").add(1))
+        yamato.withdraw(
+          BigNumber.from(1e18 + "")
+            .sub(1e17 + "")
+            .add(1)
+        )
       ).to.be.revertedWith(
         "Deposit or Withdraw can't make pledge less than floor size."
       );
@@ -1208,15 +1212,6 @@ describe("contract Yamato", function () {
         .connect(accounts[5])
         .deposit({ value: toERC20(toCollateralize * 3 + "") });
       await yamato.connect(accounts[5]).borrow(toERC20(toBorrow + ""));
-
-      console.log(
-        accounts[0].address,
-        accounts[1].address,
-        accounts[2].address,
-        accounts[3].address,
-        accounts[4].address,
-        accounts[5].address
-      );
     });
 
     it(`should expense coll of lowest ICR pledges even if price change make diff between LICR and real ICR`, async function () {
@@ -1314,7 +1309,45 @@ describe("contract Yamato", function () {
       await yamato.connect(accounts[0]).redeem(toERC20(toBorrow + ""), false);
       expect(mockCurrencyOS.burnCurrency).to.have.calledOnce;
     });
-    it.skip(`TODO: should NOT revert if excessive redemption amount comes in.`);
+    it(`should NOT revert if excessive redemption amount comes in.`, async function () {
+      await (
+        await yamato
+          .connect(accounts[0])
+          .deposit({ value: BigNumber.from(1e18 + "").mul(170) })
+      ).wait();
+      let toBorrowHuge = BigNumber.from(1e18 + "")
+        .mul(165)
+        .mul(PRICE_AFTER)
+        .mul(100)
+        .div(MCR)
+        .div(1e18 + "");
+      await (await yamato.connect(accounts[0]).borrow(toBorrowHuge)).wait();
+
+      mockCJPY.balanceOf.returns(toBorrowHuge.mul(11).div(10));
+
+      await expect(yamato.connect(accounts[0]).redeem(toBorrowHuge, false)).not
+        .to.be.reverted;
+    });
+    it(`should revert if one doesn't have enough CJPY balance`, async function () {
+      await (
+        await yamato
+          .connect(accounts[0])
+          .deposit({ value: BigNumber.from(1e18 + "").mul(170) })
+      ).wait();
+      let toBorrowHuge = BigNumber.from(1e18 + "")
+        .mul(165)
+        .mul(PRICE_AFTER)
+        .mul(100)
+        .div(MCR)
+        .div(1e18 + "");
+      await (await yamato.connect(accounts[0]).borrow(toBorrowHuge)).wait();
+
+      mockCJPY.balanceOf.returns(toERC20(toBorrow.mul(70) + ""));
+
+      await expect(
+        yamato.connect(accounts[0]).redeem(toBorrowHuge, false)
+      ).to.be.revertedWith("Insufficient currency balance to redeem.");
+    });
   });
 
   describe("sweep()", function () {

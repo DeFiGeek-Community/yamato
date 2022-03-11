@@ -61,7 +61,7 @@ contract YamatoV3 is
     uint8 public constant RRR = 80; // RedemptionReserveRate in pertenk
     uint8 public constant SRR = 20; // SweepReserveRate in pertenk
     uint8 public constant override GRR = 1; // GasReserveRate in pertenk
-    // TODO: Comment-in here later 
+    // TODO: Comment-in here later
     uint256 public constant override(IYamatoV3) collFloor = 1e17; // 0.1 ETH is the floor
     uint256 public constant override(IYamatoV3) maxRedeemableCount = 50; // 5ETH is the max redeemable amount per a tx.
     uint256 public constant override(IYamatoV3) CHECKPOINT_BUFFER = 55;

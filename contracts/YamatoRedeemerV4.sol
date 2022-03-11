@@ -51,10 +51,18 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
 
         vars.ethPriceInCurrency = IPriceFeed(feed()).fetchPrice();
         if (_args.isCoreRedemption) {
-            _args.wantToRedeemCurrencyAmount = IPool(pool()).redemptionReserve();
-            require(_args.wantToRedeemCurrencyAmount > 0, "The redemption reserve is empty.");
+            _args.wantToRedeemCurrencyAmount = IPool(pool())
+                .redemptionReserve();
+            require(
+                _args.wantToRedeemCurrencyAmount > 0,
+                "The redemption reserve is empty."
+            );
         } else {
-            require(_cjpy.balanceOf(msg.sender) <= _args.wantToRedeemCurrencyAmount, "Insufficient currency balance to redeem.");
+            require(
+                _cjpy.balanceOf(_args.sender) >=
+                    _args.wantToRedeemCurrencyAmount,
+                "Insufficient currency balance to redeem."
+            );
         }
         vars._reminder = _args.wantToRedeemCurrencyAmount;
         vars._pledgeLength = IPriorityRegistry(priorityRegistry())
@@ -78,12 +86,17 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
             vars._pledgeLength -
             _prv6.rankedQueueLen(0) -
             _prv6.rankedQueueLen(_prv6.MAX_PRIORITY());
-        vars._checkpoint = vars._mcrPercent + IYamatoV3(yamato()).CHECKPOINT_BUFFER();
+        vars._checkpoint =
+            vars._mcrPercent +
+            IYamatoV3(yamato()).CHECKPOINT_BUFFER();
 
         while (true) {
             address _pledgeAddr = _prv6.rankedQueuePop(vars._nextICR);
 
-            if (vars._activePledgeLength - vars._count == 0 || vars._nextICR >= vars._checkpoint) {
+            if (
+                vars._activePledgeLength - vars._count == 0 ||
+                vars._nextICR >= vars._checkpoint
+            ) {
                 break; /* inf loop checker */
             }
 
@@ -93,6 +106,7 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
             }
 
             IYamato.Pledge memory _pledge = _yamato.getPledge(_pledgeAddr);
+
             uint256 _ICRpertenk = _pledge.getICRWithPrice(
                 vars.ethPriceInCurrency
             );
@@ -112,20 +126,31 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
                     vars.ethPriceInCurrency
                 );
 
-                if (vars._redeemingAmount == 0) {
-                    break; /* Given "just-on-MCR" pledge, full redemption but less than the sender wants */
+                if (
+                    vars._redeemingAmount == 0 &&
+                    _ICRpertenk >= vars._mcrPertenk
+                ) {
+                    _pledge.priority = _ICRpertenk;
+                    continue; /* To skip until next poppables. */
+                    // break; /* Given "just-on-MCR" pledge, full redemption but less than the sender wants */
                 }
-                if (vars._toBeRedeemed + vars._redeemingAmount > _args.wantToRedeemCurrencyAmount) {
-                    vars._redeemingAmount = _args.wantToRedeemCurrencyAmount - vars._toBeRedeemed; /* Limiting redeeming amount within the amount sender has. */
+                if (
+                    vars._toBeRedeemed + vars._redeemingAmount >
+                    _args.wantToRedeemCurrencyAmount
+                ) {
+                    vars._redeemingAmount =
+                        _args.wantToRedeemCurrencyAmount -
+                        vars._toBeRedeemed; /* Limiting redeeming amount within the amount sender has. */
                 }
-                vars._redeemingAmountInEth = (vars._redeemingAmount * 1e18) /
+                vars._redeemingAmountInEth =
+                    (vars._redeemingAmount * 1e18) /
                     vars.ethPriceInCurrency;
                 /* state update for redeemed pledge */
 
                 _pledge.debt -= vars._redeemingAmount;
 
                 _pledge.coll -= vars._redeemingAmountInEth;
-                if(_pledge.coll == 1) {
+                if (_pledge.coll == 1) {
                     /* Adjust tiny remaining ETH */
                     _pledge.coll = 0;
                     vars._redeemingAmountInEth += 1;
@@ -147,7 +172,10 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
             }
         }
         require(vars._toBeRedeemed > 0, "No pledges are redeemed.");
-        require(vars._toBeRedeemed <= _args.wantToRedeemCurrencyAmount, "Redeeming amount exceeds bearer's balance.");
+        require(
+            vars._toBeRedeemed <= _args.wantToRedeemCurrencyAmount,
+            "Redeeming amount exceeds bearer's balance."
+        );
 
         /*
             External tx: bulkUpsert and LICR update
@@ -202,19 +230,14 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
             _redemptionBearer = _args.sender;
             _returningDestination = _args.sender;
         }
-        IPool(pool()).sendETH(
-            _returningDestination,
-            vars._toBeRedeemedInEth
-        );
-        _currencyOS.burnCurrency(
-            _redemptionBearer,
-            vars._toBeRedeemed
-        );
+        IPool(pool()).sendETH(_returningDestination, vars._toBeRedeemedInEth);
+        _currencyOS.burnCurrency(_redemptionBearer, vars._toBeRedeemed);
 
         /*
             4. Gas compensation
         */
-        uint256 gasCompensationInETH = vars._toBeRedeemedInEth * (vars._GRR / 100);
+        uint256 gasCompensationInETH = vars._toBeRedeemedInEth *
+            (vars._GRR / 100);
         IPool(pool()).sendETH(_args.sender, gasCompensationInETH);
 
         return

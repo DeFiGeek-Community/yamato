@@ -81,7 +81,7 @@ contract YamatoSweeperV2 is IYamatoSweeper, YamatoAction {
             IYamato.Pledge memory _pledge = _yamato.getPledge(_pledgeAddr);
 
             uint256 _pledgeDebt = _pledge.debt;
-            
+
             if (_pledgeDebt >= vars._reminder) {
                 _pledge.debt = _pledgeDebt - vars._reminder;
                 vars._toBeSwept += vars._reminder;
@@ -107,7 +107,10 @@ contract YamatoSweeperV2 is IYamatoSweeper, YamatoAction {
             }
         }
         require(vars._toBeSwept > 0, "At least a pledge should be swept.");
-        require(vars.sweepReserve - vars.maxGasCompensation >= vars._toBeSwept, "Too much sweeping.");
+        require(
+            vars.sweepReserve - vars.maxGasCompensation >= vars._toBeSwept,
+            "Too much sweeping."
+        );
 
         /*
             Update pledges

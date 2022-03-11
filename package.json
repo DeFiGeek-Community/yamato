@@ -13,7 +13,6 @@
   "license": "MIT",
   "author": "",
   "scripts": {
-    "postinstall": "patch-package",
     "analyze": "rm -f slither-output.json && slither --filter-paths node_modules --json slither-output.json .",
     "analyze:resultRet": "jq -r '.results.detectors|map(select(\"High\"==.impact)|.elements|length)|add' slither-output.json",
     "analyze:summary": "rm -f slither-output.json && slither --filter-paths node_modules --print human-summary --json slither-output.json .",
@@ -22,6 +21,7 @@
     "deploy:rinkeby": "hardhat deploy --network rinkeby",
     "deploy:rinkeby:reset": "rm -f ./deployments/rinkeby/*",
     "format": "sort-package-json && prettier --write .",
+    "postinstall": "patch-package",
     "lint:check": "solhint 'contracts/**/*.sol' && prettier --check .",
     "test": "npm run test:reset && NODE_OPTIONS=--max_old_space_size=4096 hardhat test",
     "test:integration": "hardhat run src/integrity.ts",
