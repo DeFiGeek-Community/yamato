@@ -278,18 +278,22 @@ describe("story Events", function () {
         await (
           await yamato
             .connect(accounts[1])
-            .deposit({ value: toERC20(toCollateralize*10 + "") })
+            .deposit({ value: toERC20(toCollateralize * 10 + "") })
         ).wait();
         await (
-          await yamato.connect(accounts[1]).borrow(toERC20(toBorrow.mul(10) + ""))
+          await yamato
+            .connect(accounts[1])
+            .borrow(toERC20(toBorrow.mul(10) + ""))
         ).wait();
         await (
           await yamato
             .connect(accounts[2])
-            .deposit({ value: toERC20(toCollateralize*0.1 + "") })
+            .deposit({ value: toERC20(toCollateralize * 0.1 + "") })
         ).wait();
         await (
-          await yamato.connect(accounts[2]).borrow(toERC20(toBorrow.div(10) + ""))
+          await yamato
+            .connect(accounts[2])
+            .borrow(toERC20(toBorrow.div(10) + ""))
         ).wait();
 
         mockCJPY.balanceOf.returns(PRICE.mul(10));
@@ -299,7 +303,9 @@ describe("story Events", function () {
           0,
           await accounts[1].getAddress()
         );
-        mockPriorityRegistry.rankedQueuePop.whenCalledWith(0).returns(await accounts[2].getAddress());
+        mockPriorityRegistry.rankedQueuePop
+          .whenCalledWith(0)
+          .returns(await accounts[2].getAddress());
         await (await yamato.redeem(toERC20(toBorrow + ""), false)).wait();
       });
       it(`should be emitted with proper args.`, async function () {

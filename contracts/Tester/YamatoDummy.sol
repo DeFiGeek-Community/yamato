@@ -29,6 +29,7 @@ contract YamatoDummy {
     address governance;
     address tester;
     uint8 public MCR = 130; // MinimumCollateralizationRatio in pertenk
+    uint256 public constant CHECKPOINT_BUFFER = 55;
     mapping(address => IYamato.Pledge) pledges;
 
     constructor(address _currencyOS) {

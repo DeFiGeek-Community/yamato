@@ -65,9 +65,6 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
             );
         }
         vars._reminder = _args.wantToRedeemCurrencyAmount;
-        vars._pledgeLength = IPriorityRegistry(priorityRegistry())
-            .pledgeLength();
-        vars._pledgesOwner = new address[](vars._pledgeLength);
         vars._GRR = _yamato.GRR();
         vars._mcrPercent = uint256(_yamato.MCR());
         vars._mcrPertenk = vars._mcrPercent * 100;
@@ -80,12 +77,9 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
         vars._nextout = _prv6.rankedQueueNextout(vars._nextICR);
         vars._nextin = _prv6.rankedQueueTotalLen(vars._nextICR);
         vars._maxCount = IYamatoV3(yamato()).maxRedeemableCount();
-        vars._bulkedPledges = new IYamato.Pledge[](vars._maxCount);
+        vars._bulkedPledges = new IYamato.Pledge[](vars._maxCount * 2);
+        vars._skippedPledges = new IYamato.Pledge[](vars._maxCount);
         vars._pledgesOwner = new address[](vars._maxCount);
-        vars._activePledgeLength =
-            vars._pledgeLength -
-            _prv6.rankedQueueLen(0) -
-            _prv6.rankedQueueLen(_prv6.MAX_PRIORITY());
         vars._checkpoint =
             vars._mcrPercent +
             IYamatoV3(yamato()).CHECKPOINT_BUFFER();
@@ -94,9 +88,9 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
             address _pledgeAddr = _prv6.rankedQueuePop(vars._nextICR);
 
             if (
-                vars._activePledgeLength - vars._count == 0 ||
                 vars._nextICR >= vars._checkpoint
             ) {
+                // Bug: This inf loop checker can't deal with intentional MAX_PRIORITY-1 pledge
                 break; /* inf loop checker */
             }
 
@@ -106,7 +100,7 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
             }
 
             IYamato.Pledge memory _pledge = _yamato.getPledge(_pledgeAddr);
-            
+
             uint256 _ICRpertenk = _pledge.getICRWithPrice(
                 vars.ethPriceInCurrency
             );
@@ -130,9 +124,9 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
                     vars._redeemingAmount == 0 &&
                     _ICRpertenk >= vars._mcrPertenk
                 ) {
-                    _pledge.priority = _ICRpertenk;
+                    vars._skippedPledges[vars._skipCount] = _pledge;
+                    vars._skipCount++;
                     continue; /* To skip until next poppables. */
-                    // break; /* Given "just-on-MCR" pledge, full redemption but less than the sender wants */
                 }
                 if (
                     vars._toBeRedeemed + vars._redeemingAmount >
@@ -176,6 +170,16 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
             vars._toBeRedeemed <= _args.wantToRedeemCurrencyAmount,
             "Redeeming amount exceeds bearer's balance."
         );
+
+        /*
+            Merge skipped pledges to re-redeem later
+        */
+        for (uint256 i; i < vars._maxCount; ) {
+            vars._bulkedPledges[vars._maxCount + i] = vars._skippedPledges[i];
+            unchecked {
+                ++i;
+            }
+        }
 
         /*
             External tx: bulkUpsert and LICR update

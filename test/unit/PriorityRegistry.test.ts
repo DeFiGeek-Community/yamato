@@ -148,7 +148,7 @@ describe("contract PriorityRegistry", function () {
     });
 
     it(`succeeds to be called from Yamato.`, async function () {
-      const pledgeLengthBefore = await priorityRegistry.pledgeLength();
+      const pledgeLengthBefore = await priorityRegistry.rankedQueueLen(0);
 
       const _pledge = [
         BigNumber.from("100000000000000000"),
@@ -159,7 +159,7 @@ describe("contract PriorityRegistry", function () {
       ];
       await (await yamatoDummy.bypassUpsert(toTyped(_pledge))).wait();
 
-      const pledgeLengthAfter = await priorityRegistry.pledgeLength();
+      const pledgeLengthAfter = await priorityRegistry.rankedQueueLen(0);
 
       expect(pledgeLengthAfter).to.eq(pledgeLengthBefore.add(1));
     });
@@ -181,9 +181,9 @@ describe("contract PriorityRegistry", function () {
         address0,
         _ICRDefault,
       ];
-      const pledgeLength1 = await priorityRegistry.pledgeLength();
+      const pledgeLength1 = await priorityRegistry.rankedQueueLen(_ICRDefault.div(100));
       await (await yamatoDummy.bypassUpsert(toTyped(_pledgeBefore))).wait();
-      const pledgeLength2 = await priorityRegistry.pledgeLength();
+      const pledgeLength2 = await priorityRegistry.rankedQueueLen(_ICRDefault.div(100));
       expect(pledgeLength2).to.eq(pledgeLength1.add(1));
 
       const _collAfter = BigNumber.from("0");
@@ -197,11 +197,11 @@ describe("contract PriorityRegistry", function () {
       );
       expect(replacingPledgeAddr).to.eq(ethers.constants.AddressZero);
 
-      const pledgeLength3 = await priorityRegistry.pledgeLength();
+      const pledgeLength3 = await priorityRegistry.rankedQueueLen(_ICRBefore.div(100));
       expect(pledgeLength3).to.equal(pledgeLength2);
     });
     it(`succeeds to upsert coll=0 debt/=0 pledge`, async function () {
-      const pledgeLengthBefore = await priorityRegistry.pledgeLength();
+      const pledgeLengthBefore = await priorityRegistry.rankedQueueLen(0);
 
       const _pledge = [
         BigNumber.from("0"),
@@ -212,12 +212,12 @@ describe("contract PriorityRegistry", function () {
       ];
       await (await yamatoDummy.bypassUpsert(toTyped(_pledge))).wait();
 
-      const pledgeLengthAfter = await priorityRegistry.pledgeLength();
+      const pledgeLengthAfter = await priorityRegistry.rankedQueueLen(0);
 
       expect(pledgeLengthAfter).to.eq(pledgeLengthBefore.add(1));
     });
     it(`succeeds to upsert coll/=0 debt=0 pledge`, async function () {
-      const pledgeLengthBefore = await priorityRegistry.pledgeLength();
+      const pledgeLengthBefore = await priorityRegistry.rankedQueueLen(0);
 
       const _pledge = [
         BigNumber.from("1"),
@@ -228,7 +228,7 @@ describe("contract PriorityRegistry", function () {
       ];
       await (await yamatoDummy.bypassUpsert(toTyped(_pledge))).wait();
 
-      const pledgeLengthAfter = await priorityRegistry.pledgeLength();
+      const pledgeLengthAfter = await priorityRegistry.rankedQueueLen(0);
 
       expect(pledgeLengthAfter).to.eq(pledgeLengthBefore.add(1));
     });
@@ -350,9 +350,9 @@ describe("contract PriorityRegistry", function () {
         0,
       ];
 
-      const pledgeLengthBefore = await priorityRegistry.pledgeLength();
+      const pledgeLengthBefore = await priorityRegistry.rankedQueueLen(0);
       await (await yamatoDummy.bypassRemove(toTyped(_sweptPledge))).wait();
-      const pledgeLengthAfter = await priorityRegistry.pledgeLength();
+      const pledgeLengthAfter = await priorityRegistry.rankedQueueLen(0);
 
       expect(pledgeLengthAfter).to.eq(pledgeLengthBefore.sub(1));
     });
@@ -378,9 +378,9 @@ describe("contract PriorityRegistry", function () {
         maxPriority,
       ];
 
-      const pledgeLengthBefore = await priorityRegistry.pledgeLength();
+      const pledgeLengthBefore = await priorityRegistry.rankedQueueLen(BigNumber.from(2).pow(256).sub(1).div(100));
       await (await yamatoDummy.bypassRemove(toTyped(_withdrawnPledge))).wait();
-      const pledgeLengthAfter = await priorityRegistry.pledgeLength();
+      const pledgeLengthAfter = await priorityRegistry.rankedQueueLen(BigNumber.from(2).pow(256).sub(1).div(100));
 
       expect(pledgeLengthAfter).to.eq(pledgeLengthBefore.sub(1));
     });
@@ -407,9 +407,9 @@ describe("contract PriorityRegistry", function () {
         maxPriority,
       ];
 
-      const pledgeLengthBefore = await priorityRegistry.pledgeLength();
+      const pledgeLengthBefore = await priorityRegistry.rankedQueueLen(BigNumber.from(2).pow(256).sub(1).div(100));
       await (await yamatoDummy.bypassRemove(toTyped(_withdrawnPledge))).wait();
-      const pledgeLengthAfter = await priorityRegistry.pledgeLength();
+      const pledgeLengthAfter = await priorityRegistry.rankedQueueLen(BigNumber.from(2).pow(256).sub(1).div(100));
 
       expect(pledgeLengthAfter).to.eq(pledgeLengthBefore.sub(1));
     });
@@ -522,6 +522,9 @@ describe("contract PriorityRegistry", function () {
       expect(lenT2).to.eq(lenT3); // delete sentence doesn't change array length
       expect(len3).to.eq(lenT3.sub(1)); // Total Length after pop will be bigger than real length
     });
+    it.skip(
+      "should skip an accidental 'effectiveICR is more than priority due to the price pump' pledge in the rank(priority)"
+    );
   });
   describe("rankedQueueSearchAndDestroy()", function () {
     let _owner1;

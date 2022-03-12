@@ -33,9 +33,11 @@ interface IYamatoRedeemerV4 {
         uint256 _redeemingAmount;
         uint256 _redeemingAmountInEth;
         uint256 _maxCount;
+        uint256 _skipCount;
         uint256 _pledgeLength;
         uint256 _activePledgeLength;
         uint256 _checkpoint;
         IYamato.Pledge[] _bulkedPledges;
+        IYamato.Pledge[] _skippedPledges;
     }
 }

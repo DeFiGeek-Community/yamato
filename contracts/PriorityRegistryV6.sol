@@ -25,7 +25,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
 
     mapping(uint256 => mapping(address => IYamato.Pledge)) leveledPledges; // ICR => owner => Pledge
     mapping(uint256 => address[]) private levelIndice; // ICR => owner[]
-    uint256 public override pledgeLength;
+    uint256 public override pledgeLength; // Note: Deprecated in V6
     uint256 public override LICR; // Note: Lowest ICR in percent
     mapping(uint256 => FifoQueue) rankedQueue;
     uint256 public constant override MAX_PRIORITY =
@@ -74,8 +74,6 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         returns (uint256[] memory)
     {
         uint256 _ethPriceInCurrency = IPriceFeed(feed()).lastGoodPrice();
-        uint256 _deleteCount;
-        uint256 _addCount;
         uint256[] memory _newPriorities = new uint256[](_pledges.length);
         for (uint256 i; i < _pledges.length; i++) {
             IYamato.Pledge memory _pledge = _pledges[i];
@@ -96,10 +94,9 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
                 1. delete current pledge from sorted pledge and update LICR
             */
             if (
-                !(_pledge.debt == 0 && _oldICRpercent == 0) && pledgeLength > 0 /* Exclude "new pledge" */ /* Avoid underflow */
+                !(_pledge.debt == 0 && _oldICRpercent == 0) /* Exclude "new pledge" */
             ) {
                 _deletePledge(_pledge);
-                _deleteCount++;
             }
 
             /* 
@@ -119,15 +116,9 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
             _pledge.priority = _newICRPertenk;
 
             rankedQueuePush(_newICRpercent, _pledge.owner);
-            _addCount++;
 
             _newPriorities[i] = _newICRPertenk;
         }
-
-        /*
-            length update
-        */
-        pledgeLength = pledgeLength + _addCount - _deleteCount;
 
         /*
             LICR update or traverse
@@ -202,7 +193,6 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         );
 
         _deletePledge(_pledge);
-        pledgeLength--;
 
         /*
             Reset deleteDict to make pledge fresh.
@@ -354,27 +344,21 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         uint256 _mcrPercent = uint256(IYamato(yamato()).MCR());
         uint256 _checkpoint = _mcrPercent +
             IYamatoV3(yamato()).CHECKPOINT_BUFFER(); // 185*0.7=130 ... It's possible to be "priority=184 but deficit" with 30% dump, but "priority=20000 but deficit" is impossible.
-        uint256 _reminder = pledgeLength -
-            (rankedQueueLen(0) + rankedQueueLen(MAX_PRIORITY));
-        if (_reminder > 0) {
-            uint256 _next = _icr;
-            while (true) {
-                if (rankedQueueLen(_next) != 0) {
-                    if (LICR == _mcrPercent && _icr == _mcrPercent) {
-                        _next++; // skip just-to-MCR redemption
-                    } else {
-                        LICR = _next; // the first filled rankedQueue
-                    }
-                    break;
-                } else if (_next >= _checkpoint) {
-                    LICR = _checkpoint - 1; // default LICR
-                    break;
+        uint256 _next = _icr;
+        while (true) {
+            if (rankedQueueLen(_next) != 0) {
+                if (LICR == _mcrPercent && _icr == _mcrPercent) {
+                    _next++; // skip just-to-MCR redemption
                 } else {
-                    _next++;
+                    LICR = _next; // the first filled rankedQueue
                 }
+                break;
+            } else if (_next >= _checkpoint) {
+                LICR = _checkpoint - 1; // default LICR
+                break;
+            } else {
+                _next++;
             }
-        } else {
-            LICR = _checkpoint - 1; // default LICR is 184 because every upsert calls traverse but not waste gas
         }
     }
 
@@ -405,8 +389,6 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
 
         uint256 _rank = 1;
         uint256 _nextout = rankedQueueNextout(_rank);
-        uint256 _count = pledgeLength -
-            (rankedQueueLen(0) + rankedQueueLen(MAX_PRIORITY));
         address _pledgeAddr = getRankedQueue(_rank, _nextout);
         IYamato.Pledge memory _pledge = IYamato(yamato()).getPledge(
             _pledgeAddr
@@ -414,7 +396,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         uint256 _icr = _pledge.getICRWithPrice(ethPriceInCurrency);
         while (true) {
             if (
-                _icr > _mcrPercent * 100 || _count == 0 || _rank >= _checkpoint
+                _icr > _mcrPercent * 100 || _rank >= _checkpoint
             ) {
                 return _cap; // end
             } else {
@@ -431,7 +413,6 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
                             _icr,
                             ethPriceInCurrency
                         );
-                        _count--;
                     }
                     _nextout++; // to next index
                 } else {
@@ -505,8 +486,6 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         for (uint256 i = 0; i < pledges.length; i++) {
             this.upsert(pledges[i]);
         }
-
-        pledgeLength = pledges.length;
     }
 
     /******************************

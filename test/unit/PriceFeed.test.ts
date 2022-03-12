@@ -12,6 +12,7 @@ import {
 import { getProxy } from "../../src/testUtil";
 import { assert } from "console";
 import { getStatic } from "ethers/lib/utils";
+import { setProvider } from "../../src/deployUtil";
 
 chai.use(smock.matchers);
 chai.use(solidity);
@@ -195,8 +196,14 @@ describe("PriceFeed", function () {
       resetFlag: true,
     };
     await setMocks(lastMockInput);
+
+
+    (<any>accounts[0].provider).send("evm_increaseTime", [3200]);
+    (<any>accounts[0].provider).send("evm_mine");
+
     lastMockInput.resetFlag = false;
     await setMocks(lastMockInput);
+
     feed = await getProxy<PriceFeed, PriceFeed__factory>("PriceFeed", [
       mockAggregatorV3EthUsd.address,
       mockAggregatorV3JpyUsd.address,

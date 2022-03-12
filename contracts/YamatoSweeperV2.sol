@@ -72,7 +72,6 @@ contract YamatoSweeperV2 is IYamatoSweeper, YamatoAction {
         while (true) {
             address _pledgeAddr = _prv6.rankedQueuePop(0);
 
-
             if (_pledgeAddr == address(0)) {
                 break;
             }
@@ -92,10 +91,6 @@ contract YamatoSweeperV2 is IYamatoSweeper, YamatoAction {
             }
 
             _pledge.coll = 0; // Note: Sometimes very tiny coll would be there but ignore it. Don't reduce totalColl.
-
-
-    
-            console.log(vars._loopCount, vars._maxCount);
 
             vars._pledgesOwner[vars._loopCount] = _pledge.owner; // Note: For event
             vars._bulkedPledges[vars._loopCount] = _pledge;
@@ -133,7 +128,6 @@ contract YamatoSweeperV2 is IYamatoSweeper, YamatoAction {
             Update global state
         */
         (, uint256 totalDebt, , , , ) = _yamato.getStates();
-        console.log(totalDebt, vars._toBeSwept);
         _yamato.setTotalDebt(totalDebt - vars._toBeSwept);
 
         /*
