@@ -627,9 +627,7 @@ describe("contract PriorityRegistry", function () {
           await priorityRegistry.rankedQueueNextout(_index)
         );
 
-        console.log("1---", await priorityRegistry.rankedQueueLen(_index),await priorityRegistry.rankedQueueTotalLen(_index),await priorityRegistry.rankedQueueNextout(_index));
         await yamatoDummy.bypassRankedQueuePop(_index);
-        console.log("2---", await priorityRegistry.rankedQueueLen(_index),await priorityRegistry.rankedQueueTotalLen(_index),await priorityRegistry.rankedQueueNextout(_index));
 
         await yamatoDummy.bypassRankedQueueSearchAndDestroy(
           _index,
@@ -654,8 +652,9 @@ describe("contract PriorityRegistry", function () {
   });
 
   describe("getRedeemablesCap()", function () {
-    it.only(`should return some value with rank 101`, async function () {
-      const _coll1 = BigNumber.from(101).mul(1e16 + "");
+    it(`should return some value with rank 101`, async function () {
+      const targetRank = 101;
+      const _coll1 = BigNumber.from(targetRank).mul(1e16 + "");
       const _debt1 = BigNumber.from(410000).mul(1e18 + ""); // PRICE=410000, ICR=100%
       const _prio1 = BigNumber.from(100 + "");
       for (var i = 0; i < 10; i++) {
@@ -687,11 +686,12 @@ describe("contract PriorityRegistry", function () {
 
       const cap = await priorityRegistry.getRedeemablesCap();
 
-      expect(cap).to.equal("396333333333333333333333");
+      expect(cap).to.equal(_debt1.mul(BigNumber.from(130).sub(targetRank)).div(30).mul(10)); // Note: 100-130 range logic
     });
 
-    it.only(`should return some value with rank 99`, async function () {
-      const _coll1 = BigNumber.from(99).mul(1e16 + "");
+    it(`should return some value with rank 99`, async function () {
+      const targetRank = 99;
+      const _coll1 = BigNumber.from(targetRank).mul(1e16 + "");
       const _debt1 = BigNumber.from(410000).mul(1e18 + ""); // PRICE=410000, ICR=100%
       const _prio1 = BigNumber.from(100 + "");
       for (var i = 0; i < 10; i++) {
@@ -723,11 +723,12 @@ describe("contract PriorityRegistry", function () {
 
       const cap = await priorityRegistry.getRedeemablesCap();
 
-      expect(cap).to.equal("405900000000000000000000");
+      expect(cap).to.equal(_debt1.mul(targetRank).div(100).mul(10)); // Note: -100 range logic
     });
 
-    it.only(`should return some value with destroyed queue`, async function () {
-      const _coll1 = BigNumber.from(100).mul(1e16 + "");
+    it(`should return some value with destroyed queue`, async function () {
+      const targetRank = 100;
+      const _coll1 = BigNumber.from(targetRank).mul(1e16 + "");
       const _debt1 = BigNumber.from(410000).mul(1e18 + ""); // PRICE=410000, ICR=100%
       const _prio1 = BigNumber.from(100 + "");
       for (var i = 0; i < 10; i++) {
@@ -763,7 +764,7 @@ describe("contract PriorityRegistry", function () {
 
       const cap = await priorityRegistry.getRedeemablesCap();
 
-      expect(cap).to.equal("410000000000000000000000");
+      expect(cap).to.equal(_debt1.mul(targetRank).div(100).mul(9)); // Note: -100 range logic AND a deleted pledge
     });
   });
   describe("getSweepablesCap()", function () {
