@@ -257,11 +257,11 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         uint256 _nextin = rankedQueueTotalLen(_icr);
 
         if (_nextout < _nextin) {
-            _pledgeAddr = fifoQueue.pledges[_nextout];
+            _pledgeAddr = fifoQueue.pledges[_nextout]; // Note: It enables early finish and can save gas
 
             if (_pledgeAddr == address(0)) {
                 while (
-                    _nextout < _nextin - 1 || /* len - 1 is the upper bound */
+                    _nextout < _nextin - 1 && /* len - 1 is the upper bound */
                     _pledgeAddr == address(0)
                 ) {
                     _nextout++;
@@ -272,6 +272,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
             delete fifoQueue.pledges[_nextout];
             fifoQueue.nextout = _nextout + 1;
         }
+
     }
 
     function rankedQueueSearchAndDestroy(uint256 _icr, uint256 _i)
