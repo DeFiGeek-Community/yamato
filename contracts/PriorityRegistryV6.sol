@@ -272,7 +272,6 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
             delete fifoQueue.pledges[_nextout];
             fifoQueue.nextout = _nextout + 1;
         }
-
     }
 
     function rankedQueueSearchAndDestroy(uint256 _icr, uint256 _i)
@@ -396,9 +395,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         );
         uint256 _icr = _pledge.getICRWithPrice(ethPriceInCurrency);
         while (true) {
-            if (
-                _icr > _mcrPercent * 100 || _rank >= _checkpoint
-            ) {
+            if (_icr > _mcrPercent * 100 || _rank >= _checkpoint) {
                 return _cap; // end
             } else {
                 if (

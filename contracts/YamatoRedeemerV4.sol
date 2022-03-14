@@ -87,9 +87,7 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
         while (true) {
             address _pledgeAddr = _prv6.rankedQueuePop(vars._nextICR);
 
-            if (
-                vars._nextICR >= vars._checkpoint
-            ) {
+            if (vars._nextICR >= vars._checkpoint) {
                 // Bug: This inf loop checker can't deal with intentional MAX_PRIORITY-1 pledge
                 break; /* inf loop checker */
             }
