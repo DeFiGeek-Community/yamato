@@ -196,11 +196,11 @@ describe("PriceFeed", function () {
       resetFlag: true,
     };
     await setMocks(lastMockInput);
-
-
-    (<any>accounts[0].provider).send("evm_increaseTime", [3200]);
+    (<any>accounts[0].provider).send("evm_increaseTime", [1200]);
     (<any>accounts[0].provider).send("evm_mine");
 
+    lastMockInput.silentFor.chainlink.ethInUsd = 1000; // Note: To avoid frozen response due to other depending specs
+    lastMockInput.silentFor.chainlink.jpyInUsd = 1000;
     lastMockInput.resetFlag = false;
     await setMocks(lastMockInput);
 
