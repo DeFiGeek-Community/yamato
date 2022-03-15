@@ -142,6 +142,7 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
                 _pledge.debt -= vars._redeemingAmount;
 
                 _pledge.coll -= vars._redeemingAmountInEth;
+
                 if (_pledge.coll == 1) {
                     /* Adjust tiny remaining ETH */
                     _pledge.coll = 0;

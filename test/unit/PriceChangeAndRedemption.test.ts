@@ -103,6 +103,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
     )).deploy();
 
     await (await ChainLinkEthUsd.setLastPrice(400000000000)).wait(); //dec8
+    await (await ChainLinkUsdJpy.setLastPrice(877000)).wait();
     await (await Tellor.setLastPrice(Math.ceil(400000000000 * 1.14))).wait(); //dec8
 
     PriceFeed = await getProxy<PriceFeed, PriceFeed__factory>("PriceFeed", [
@@ -230,6 +231,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
         /* Market Dump */
         await (await ChainLinkEthUsd.setLastPrice(dumpedPriceBase)).wait(); //dec8
+        await (await ChainLinkUsdJpy.setLastPrice(877000)).wait();
         await (
           await Tellor.setLastPrice(Math.ceil(dumpedPriceBase * 1.14))
         ).wait(); //dec8
@@ -340,6 +342,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
         /* Market Dump */
         await (await ChainLinkEthUsd.setLastPrice(dumpedPriceBase)).wait(); //dec8
+        await (await ChainLinkUsdJpy.setLastPrice(877000)).wait();
         await (
           await Tellor.setLastPrice(Math.ceil(dumpedPriceBase * 1.14))
         ).wait(); //dec8
@@ -505,6 +508,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
         /* Market Dump */
         await (await ChainLinkEthUsd.setLastPrice(300000000000)).wait(); //dec8
+        await (await ChainLinkUsdJpy.setLastPrice(877000)).wait();
         await (
           await Tellor.setLastPrice(Math.ceil(300000000000 * 1.14))
         ).wait(); //dec8
@@ -517,6 +521,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
         /* Market Pump */
         await (await ChainLinkEthUsd.setLastPrice(600000000000)).wait(); //dec8
+        await (await ChainLinkUsdJpy.setLastPrice(877000)).wait();
         await (
           await Tellor.setLastPrice(Math.ceil(600000000000 * 1.14))
         ).wait(); //dec8
@@ -538,6 +543,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
         /* Market Dump */
         await (await ChainLinkEthUsd.setLastPrice(dumpedPriceBase)).wait(); //dec8
+        await (await ChainLinkUsdJpy.setLastPrice(877000)).wait();
         await (
           await Tellor.setLastPrice(Math.ceil(dumpedPriceBase * 1.14))
         ).wait(); //dec8
@@ -648,6 +654,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
         /* Market Dump */
         await (await ChainLinkEthUsd.setLastPrice(dumpedPriceBase)).wait(); //dec8
+        await (await ChainLinkUsdJpy.setLastPrice(877000)).wait();
         await (
           await Tellor.setLastPrice(Math.ceil(dumpedPriceBase * 1.14))
         ).wait(); //dec8
@@ -738,6 +745,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         await (
           await ChainLinkEthUsd.connect(redeemer).setLastPrice("204000000000")
         ).wait(); //dec8
+        await (await ChainLinkUsdJpy.setLastPrice(877000)).wait();
         await (
           await Tellor.connect(redeemer).setLastPrice("203000000000")
         ).wait(); //dec8
@@ -796,6 +804,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         await (
           await ChainLinkEthUsd.setLastPrice(Math.ceil(dumpedPriceBase * 1.01))
         ).wait(); //dec8
+        await (await ChainLinkUsdJpy.setLastPrice(877000)).wait();
         await (
           await Tellor.setLastPrice(Math.ceil(dumpedPriceBase * 1.01 * 1.14))
         ).wait(); //dec8
@@ -831,6 +840,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
         /* Market Dump */
         await (await ChainLinkEthUsd.setLastPrice(dumpedPriceBase)).wait(); //dec8
+        await (await ChainLinkUsdJpy.setLastPrice(877000)).wait();
         await (
           await Tellor.setLastPrice(Math.ceil(dumpedPriceBase * 1.14))
         ).wait(); //dec8
@@ -857,6 +867,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       beforeEach(async () => {
         /* Market Dump */
         await (await ChainLinkEthUsd.setLastPrice(dumpedPriceBase * 3)).wait(); //dec8
+        await (await ChainLinkUsdJpy.setLastPrice(877000)).wait();
         await (
           await Tellor.setLastPrice(Math.ceil(dumpedPriceBase * 3 * 1.14))
         ).wait(); //dec8
@@ -894,6 +905,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
         /* Market Dump */
         await (await ChainLinkEthUsd.setLastPrice(dumpedPriceBase)).wait(); //dec8
+        await (await ChainLinkUsdJpy.setLastPrice(877000)).wait();
         await (
           await Tellor.setLastPrice(Math.ceil(dumpedPriceBase * 1.14))
         ).wait(); //dec8
@@ -963,6 +975,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
       /* Market Dump */
       await (await ChainLinkEthUsd.setLastPrice("204000000000")).wait(); //dec8
+      await (await ChainLinkUsdJpy.setLastPrice(877000)).wait();
       await (await Tellor.setLastPrice("203000000000")).wait(); //dec8
 
       toBorrow = (await PriceFeed.getPrice())
@@ -1075,6 +1088,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
     let initialPriceBase = 397000000000;
     let initialPrice = BigNumber.from(initialPriceBase).mul(1e12 + "");
     async function fillMinPledgesWithICR(icr) {
+      await (await ChainLinkEthUsd.setLastPrice(initialPriceBase)).wait(); //dec8
       await (await ChainLinkEthUsd.setLastPrice(initialPriceBase)).wait(); //dec8
       await (
         await Tellor.setLastPrice(Math.ceil(initialPriceBase * 1.14))
@@ -1217,12 +1231,13 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         await fillMinPledgesWithICR(100);
       });
       it("should redeem within 10m gas and sweep within 16m gas", async () => {
+        const price = await PriceFeed.getPrice();
         let redeemerAddr = await accounts[0].getAddress();
         let cjpyBalanceBefore = await CJPY.balanceOf(redeemerAddr);
         let ethBalanceBefore = await Yamato.provider.getBalance(redeemerAddr);
 
         let fiveEthInCJPY = BigNumber.from(5e18 + "")
-          .mul(await PriceFeed.getPrice())
+          .mul(price)
           .div(1e18 + "")
           .add(49e18 + ""); // fill tiny diff
 
