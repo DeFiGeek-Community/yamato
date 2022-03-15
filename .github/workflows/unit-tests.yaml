@@ -26,6 +26,8 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Install dependencies
+        env:
+          PRIVATE_KEY: ${{ secrets.CI_PRIVATE_KEY }}
         run: |
           mkdir -p ~/.ssh
           echo "$PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
