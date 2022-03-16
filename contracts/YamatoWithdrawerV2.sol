@@ -16,6 +16,7 @@ import "./Dependencies/YamatoAction.sol";
 import "./Dependencies/PledgeLib.sol";
 import "./Dependencies/SafeMath.sol";
 import "./Interfaces/IYamato.sol";
+import "./Interfaces/IYamatoV3.sol";
 import "./Interfaces/IFeePool.sol";
 import "./Interfaces/ICurrencyOS.sol";
 import "./Interfaces/IYamatoWithdrawer.sol";
@@ -78,6 +79,7 @@ contract YamatoWithdrawerV2 is IYamatoWithdrawer, YamatoAction {
         */
         // Note: SafeMath unintentionally checks full withdrawal
         pledge.coll = pledge.coll - _ethAmount;
+
         IYamato(yamato()).setPledge(pledge.owner, pledge);
 
         IYamato(yamato()).setTotalColl(totalColl - _ethAmount);
@@ -94,6 +96,10 @@ contract YamatoWithdrawerV2 is IYamatoWithdrawer, YamatoAction {
             /*
                 5-b. Reasonable partial withdrawal
             */
+            require(
+                pledge.coll >= IYamatoV3(yamato()).collFloor(),
+                "Deposit or Withdraw can't make pledge less than floor size."
+            );
             require(
                 pledge.getICR(feed()) >= uint256(IYamato(yamato()).MCR()) * 100,
                 "Withdrawal failure: ICR can't be less than MCR after withdrawal."

@@ -13,7 +13,7 @@ import "../Dependencies/PledgeLib.sol";
 import "../Interfaces/IYamato.sol";
 import "../Interfaces/IFeePool.sol";
 import "../Interfaces/ICurrencyOS.sol";
-import "../Interfaces/IPriorityRegistryV3.sol";
+import "../Interfaces/IPriorityRegistryV6.sol";
 import "../Pool.sol";
 import "../PriceFeed.sol";
 import "hardhat/console.sol";
@@ -21,7 +21,7 @@ import "hardhat/console.sol";
 contract YamatoDummy {
     using PledgeLib for IYamato.Pledge;
     using PledgeLib for uint256;
-    IPriorityRegistryV3 priorityRegistry;
+    IPriorityRegistryV6 priorityRegistry;
     IPool pool;
     address public currencyOS;
     address public feePool;
@@ -29,6 +29,8 @@ contract YamatoDummy {
     address governance;
     address tester;
     uint8 public MCR = 130; // MinimumCollateralizationRatio in pertenk
+    uint256 public constant CHECKPOINT_BUFFER = 55;
+    mapping(address => IYamato.Pledge) pledges;
 
     constructor(address _currencyOS) {
         currencyOS = _currencyOS;
@@ -42,7 +44,7 @@ contract YamatoDummy {
         public
         onlyGovernance
     {
-        priorityRegistry = IPriorityRegistryV3(_priorityRegistry);
+        priorityRegistry = IPriorityRegistryV6(_priorityRegistry);
     }
 
     function setPool(address _pool) public onlyGovernance {
@@ -77,6 +79,7 @@ contract YamatoDummy {
     }
 
     function bypassUpsert(IYamato.Pledge calldata _pledge) external onlyTester {
+        pledges[_pledge.owner] = _pledge;
         priorityRegistry.upsert(_pledge);
     }
 
@@ -96,11 +99,15 @@ contract YamatoDummy {
         uint256 _icr,
         IYamato.Pledge calldata _pledge
     ) external onlyTester {
-        priorityRegistry.rankedQueuePush(_icr, _pledge);
+        priorityRegistry.rankedQueuePush(_icr, _pledge.owner);
     }
 
-    function bypassRankedQueuePop(uint256 _icr) external onlyTester {
-        priorityRegistry.rankedQueuePop(_icr);
+    function bypassRankedQueuePop(uint256 _icr)
+        external
+        onlyTester
+        returns (address)
+    {
+        return priorityRegistry.rankedQueuePop(_icr);
     }
 
     function bypassRankedQueueSearchAndDestroy(uint256 _icr, uint256 _i)
@@ -168,5 +175,13 @@ contract YamatoDummy {
             if (_sender == deps[i]) permit = true;
         }
         return permit;
+    }
+
+    function getPledge(address _owner)
+        public
+        view
+        returns (IYamato.Pledge memory _p)
+    {
+        _p = pledges[_owner];
     }
 }

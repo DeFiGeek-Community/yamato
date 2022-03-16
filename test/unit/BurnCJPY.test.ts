@@ -185,6 +185,9 @@ describe("burnCurrency :: contract Yamato", () => {
     let toBorrow;
 
     beforeEach(async () => {
+      await (await ChainLinkEthUsd.setLastPrice("404000000000")).wait(); //dec8
+      await (await Tellor.setLastPrice("403000000000")).wait(); //dec8
+
       await (await PriceFeed.fetchPrice()).wait();
       PRICE = await PriceFeed.lastGoodPrice();
       toCollateralize = 1;
@@ -237,7 +240,7 @@ describe("burnCurrency :: contract Yamato", () => {
 
       const txReceipt = await (
         await Yamato.connect(redeemerSigner).redeem(
-          toERC20(toBorrow.mul(3) + ""),
+          toERC20(toBorrow.div(2) + ""),
           false
         )
       ).wait();

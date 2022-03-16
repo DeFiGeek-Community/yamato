@@ -14,7 +14,7 @@ index bbd3f2d..b5430b9 100644
          const startTime = Date.now();
          // eslint-disable-next-line no-constant-condition
 diff --git a/node_modules/@openzeppelin/upgrades-core/dist/validate/overrides.js b/node_modules/@openzeppelin/upgrades-core/dist/validate/overrides.js
-index 70d04ff..8f2cbd8 100644
+index 70d04ff..ba2963b 100644
 --- a/node_modules/@openzeppelin/upgrades-core/dist/validate/overrides.js
 +++ b/node_modules/@openzeppelin/upgrades-core/dist/validate/overrides.js
 @@ -50,6 +50,7 @@ function withValidationDefaults(opts) {
@@ -24,6 +24,17 @@ index 70d04ff..8f2cbd8 100644
 +
      if (opts.kind === 'transparent') {
          errors = errors.filter(error => error.kind !== 'missing-public-upgradeto');
+     }
+@@ -62,7 +63,9 @@ function processExceptions(contractName, errors, opts) {
+                 return !isException;
+             });
+             if (exceptionsFound && errorDescription) {
+-                (0, log_1.logWarning)(`Potentially unsafe deployment of ${contractName}`, errorDescription);
++                if(errorDescription.join("").indexOf("external-library-linking") == -1 ) {
++                    (0, log_1.logWarning)(`Potentially unsafe deployment of ${contractName}`, errorDescription);
++                }
+             }
+         }
      }
 diff --git a/node_modules/@openzeppelin/upgrades-core/src/deployment.ts b/node_modules/@openzeppelin/upgrades-core/src/deployment.ts
 index d1d3582..50267c8 100644

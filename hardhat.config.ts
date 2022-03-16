@@ -42,6 +42,10 @@ module.exports = {
   networks: {
     hardhat: {
       allowUnlimitedContractSize: true,
+      accounts: {
+        count: 200,
+        accountsBalance: "1000000000000000000000000",
+      },
     },
     rinkeby: {
       url: process.env.ALCHEMY_URL,

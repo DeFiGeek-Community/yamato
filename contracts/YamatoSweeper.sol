@@ -73,7 +73,6 @@ contract YamatoSweeper is IYamatoSweeper, YamatoAction {
                 if (!sPledge.isCreated) break; // Note: registry-yamato mismatch
                 if (sPledge.debt == 0) break; // Note: A once-swept pledge is called twice
                 _pledgesOwner[_loopCount] = _sweepablePledge.owner; // Note: For event
-
                 (
                     IYamato.Pledge memory _sweptPledge,
                     uint256 _sweptReminder,

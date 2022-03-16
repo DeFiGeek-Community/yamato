@@ -42,6 +42,226 @@ import {
 chai.use(smock.matchers);
 chai.use(solidity);
 
+describe("contract Yamato - pure func quickier tests", function () {
+  let mockPool: FakeContract<Pool>;
+  let mockFeePool: FakeContract<FeePool>;
+  let mockFeed: FakeContract<PriceFeed>;
+  let mockYMT: FakeContract<YMT>;
+  let mockCJPY: FakeContract<CJPY>;
+  let mockCurrencyOS: FakeContract<CurrencyOS>;
+  let mockPriorityRegistry: FakeContract<PriorityRegistry>;
+  let yamato: Yamato;
+  let yamatoDepositor: YamatoDepositor;
+  let yamatoBorrower: YamatoBorrower;
+  let yamatoRepayer: YamatoRepayer;
+  let yamatoWithdrawer: YamatoWithdrawer;
+  let yamatoRedeemer: YamatoRedeemer;
+  let yamatoSweeper: YamatoSweeper;
+  let yamatoDummy: YamatoDummy;
+  let pool: Pool;
+  let priorityRegistry: PriorityRegistry;
+  let PRICE: BigNumber;
+  let MCR: BigNumber;
+  let accounts: Signer[];
+  let ownerAddress: string;
+
+  before(async () => {
+    accounts = await ethers.getSigners();
+    ownerAddress = await accounts[0].getAddress();
+
+    mockPool = await smock.fake<Pool>("Pool");
+    mockFeePool = await getFakeProxy<FeePool>("FeePool");
+    mockFeed = await getFakeProxy<PriceFeed>("PriceFeed");
+    mockYMT = await smock.fake<YMT>("YMT");
+    mockCJPY = await smock.fake<CJPY>("CJPY");
+    mockCurrencyOS = await smock.fake<CurrencyOS>("CurrencyOS");
+
+    const PledgeLib = (
+      await (await ethers.getContractFactory("PledgeLib")).deploy()
+    ).address;
+
+    // Note: Yamato's constructor needs this mock and so the line below has to be called here.
+    mockCurrencyOS.feed.returns(mockFeed.address);
+    mockCurrencyOS.feePool.returns(mockFeePool.address);
+    mockCurrencyOS.currency.returns(mockCJPY.address);
+
+    yamato = await getLinkedProxy<Yamato, Yamato__factory>(
+      "Yamato",
+      [mockCurrencyOS.address],
+      ["PledgeLib"]
+    );
+
+    yamatoDepositor = await getLinkedProxy<
+      YamatoDepositor,
+      YamatoDepositor__factory
+    >("YamatoDepositor", [yamato.address], ["PledgeLib"]);
+
+    yamatoBorrower = await getLinkedProxy<
+      YamatoBorrower,
+      YamatoBorrower__factory
+    >("YamatoBorrower", [yamato.address], ["PledgeLib"]);
+
+    yamatoRepayer = await getLinkedProxy<YamatoRepayer, YamatoRepayer__factory>(
+      "YamatoRepayer",
+      [yamato.address],
+      ["PledgeLib"]
+    );
+
+    yamatoWithdrawer = await getLinkedProxy<
+      YamatoWithdrawer,
+      YamatoWithdrawer__factory
+    >("YamatoWithdrawer", [yamato.address], ["PledgeLib"]);
+
+    yamatoRedeemer = await getLinkedProxy<
+      YamatoRedeemer,
+      YamatoRedeemer__factory
+    >("YamatoRedeemer", [yamato.address], ["PledgeLib"]);
+
+    yamatoSweeper = await getLinkedProxy<YamatoSweeper, YamatoSweeper__factory>(
+      "YamatoSweeper",
+      [yamato.address],
+      ["PledgeLib"]
+    );
+
+    yamatoDummy = await (<YamatoDummy__factory>await ethers.getContractFactory(
+      "YamatoDummy",
+      {
+        libraries: { PledgeLib },
+      }
+    )).deploy(mockCurrencyOS.address); // This has test funcs to size Yamato contract
+
+    mockPriorityRegistry = await getFakeProxy<PriorityRegistry>(
+      "PriorityRegistry"
+    );
+
+    await (
+      await yamato.setDeps(
+        yamatoDepositor.address,
+        yamatoBorrower.address,
+        yamatoRepayer.address,
+        yamatoWithdrawer.address,
+        yamatoRedeemer.address,
+        yamatoSweeper.address,
+        mockPool.address,
+        mockPriorityRegistry.address
+      )
+    ).wait();
+
+    // Note: Will use later for mintCurrency mockery test in borrow spec
+    pool = await getProxy<Pool, Pool__factory>("Pool", [yamato.address]);
+
+    // Note: Will use later for the redeem() test
+    priorityRegistry = await getLinkedProxy<
+      PriorityRegistry,
+      PriorityRegistry__factory
+    >("PriorityRegistry", [yamato.address], ["PledgeLib"]);
+
+    await (
+      await yamatoDummy.setPriorityRegistry(priorityRegistry.address)
+    ).wait();
+
+    PRICE = BigNumber.from(260000).mul(1e18 + "");
+    MCR = BigNumber.from(130);
+
+    mockCJPY.balanceOf.returns(PRICE.mul(1).mul(100).div(MCR));
+    mockPool.depositRedemptionReserve.returns(0);
+    mockPool.depositSweepReserve.returns(0);
+    mockPool.sendETH.returns(0);
+    mockFeed.fetchPrice.returns(PRICE);
+    mockFeed.lastGoodPrice.returns(PRICE);
+    mockPool.redemptionReserve.returns(1);
+    mockPool.sweepReserve.returns(BigNumber.from("99999999000000000000000000"));
+    mockPriorityRegistry.yamato.returns(yamato.address);
+    mockPriorityRegistry.upsert.returns(0);
+    mockPriorityRegistry.remove.returns(0);
+    mockPriorityRegistry.popRedeemable.returns(
+      encode(
+        ["uint256", "uint256", "bool", "address", "uint256"],
+        [
+          BigNumber.from("1000000000000000"),
+          BigNumber.from("300001000000000000000"),
+          true,
+          await yamato.signer.getAddress(),
+          0,
+        ]
+      )
+    );
+    mockPriorityRegistry.popSweepable.returns(
+      encode(
+        ["uint256", "uint256", "bool", "address", "uint256"],
+        [
+          BigNumber.from(0),
+          BigNumber.from("300001000000000000000"),
+          true,
+          await yamato.signer.getAddress(),
+          0,
+        ]
+      )
+    );
+  });
+
+  describe("FR()", function () {
+    /* Given ICR, get borrowing fee. */
+    it(`should be reverted for ICR 11000 pertenk`, async function () {
+      await expect(yamatoDummy.FR(11000)).to.be.reverted;
+    });
+    it(`should be reverted for ICR 11001 pertenk`, async function () {
+      await expect(yamatoDummy.FR(11001)).to.be.reverted;
+    });
+    it(`should be reverted for ICR 11002 pertenk`, async function () {
+      await expect(yamatoDummy.FR(11002)).to.be.reverted;
+    });
+    it(`should be reverted for ICR 11010 pertenk`, async function () {
+      await expect(yamatoDummy.FR(11010)).to.be.reverted;
+    });
+    it(`should be reverted for ICR 12500 pertenk`, async function () {
+      await expect(yamatoDummy.FR(12500)).to.be.reverted;
+    });
+    it(`should be reverted for ICR 12900 pertenk`, async function () {
+      await expect(yamatoDummy.FR(12900)).to.be.reverted;
+    });
+    it(`returns 400 pertenk for ICR 13000 pertenk`, async function () {
+      expect(await yamatoDummy.FR(13000)).to.eq(400);
+    });
+    it(`returns 210 pertenk for ICR 14900 pertenk`, async function () {
+      expect(await yamatoDummy.FR(14900)).to.eq(210);
+    });
+    it(`returns 200 pertenk for ICR 15000 pertenk`, async function () {
+      expect(await yamatoDummy.FR(15000)).to.eq(200);
+    });
+    it(`returns 150 pertenk for ICR 17500 pertenk`, async function () {
+      expect(await yamatoDummy.FR(17500)).to.eq(150);
+    });
+    it(`returns 102 pertenk for ICR 19900 pertenk`, async function () {
+      expect(await yamatoDummy.FR(19900)).to.eq(102);
+    });
+    it(`returns 100 pertenk for ICR 20000 pertenk`, async function () {
+      expect(await yamatoDummy.FR(20000)).to.eq(100);
+    });
+    it(`returns 85 pertenk for ICR 25000 pertenk`, async function () {
+      expect(await yamatoDummy.FR(25000)).to.eq(85);
+    });
+    it(`returns 70 pertenk for ICR 30000 pertenk`, async function () {
+      expect(await yamatoDummy.FR(30000)).to.eq(70);
+    });
+    it(`returns 40 pertenk for ICR 40000 pertenk`, async function () {
+      expect(await yamatoDummy.FR(40000)).to.eq(40);
+    });
+    it(`returns 11 pertenk for ICR 49700 pertenk`, async function () {
+      expect(await yamatoDummy.FR(49700)).to.eq(11);
+    });
+    it(`returns 11 pertenk for ICR 49800 pertenk`, async function () {
+      expect(await yamatoDummy.FR(49800)).to.eq(11);
+    });
+    it(`returns 11 pertenk for ICR 49900 pertenk`, async function () {
+      expect(await yamatoDummy.FR(49900)).to.eq(11);
+    });
+    it(`returns 10 pertenk for ICR 50000 pertenk`, async function () {
+      expect(await yamatoDummy.FR(50000)).to.eq(10);
+    });
+  });
+});
+
 describe("contract Yamato", function () {
   let mockPool: FakeContract<Pool>;
   let mockFeePool: FakeContract<FeePool>;
@@ -318,66 +538,6 @@ describe("contract Yamato", function () {
       // Deposit on it and check not error
       await expect(yamato.deposit({ value: toERC20(toCollateralize + "") })).to
         .be.not.reverted;
-    });
-  });
-  describe("FR()", function () {
-    /* Given ICR, get borrowing fee. */
-    it(`should be reverted for ICR 11000 pertenk`, async function () {
-      await expect(yamatoDummy.FR(11000)).to.be.reverted;
-    });
-    it(`should be reverted for ICR 11001 pertenk`, async function () {
-      await expect(yamatoDummy.FR(11001)).to.be.reverted;
-    });
-    it(`should be reverted for ICR 11002 pertenk`, async function () {
-      await expect(yamatoDummy.FR(11002)).to.be.reverted;
-    });
-    it(`should be reverted for ICR 11010 pertenk`, async function () {
-      await expect(yamatoDummy.FR(11010)).to.be.reverted;
-    });
-    it(`should be reverted for ICR 12500 pertenk`, async function () {
-      await expect(yamatoDummy.FR(12500)).to.be.reverted;
-    });
-    it(`should be reverted for ICR 12900 pertenk`, async function () {
-      await expect(yamatoDummy.FR(12900)).to.be.reverted;
-    });
-    it(`returns 400 pertenk for ICR 13000 pertenk`, async function () {
-      expect(await yamatoDummy.FR(13000)).to.eq(400);
-    });
-    it(`returns 210 pertenk for ICR 14900 pertenk`, async function () {
-      expect(await yamatoDummy.FR(14900)).to.eq(210);
-    });
-    it(`returns 200 pertenk for ICR 15000 pertenk`, async function () {
-      expect(await yamatoDummy.FR(15000)).to.eq(200);
-    });
-    it(`returns 150 pertenk for ICR 17500 pertenk`, async function () {
-      expect(await yamatoDummy.FR(17500)).to.eq(150);
-    });
-    it(`returns 102 pertenk for ICR 19900 pertenk`, async function () {
-      expect(await yamatoDummy.FR(19900)).to.eq(102);
-    });
-    it(`returns 100 pertenk for ICR 20000 pertenk`, async function () {
-      expect(await yamatoDummy.FR(20000)).to.eq(100);
-    });
-    it(`returns 85 pertenk for ICR 25000 pertenk`, async function () {
-      expect(await yamatoDummy.FR(25000)).to.eq(85);
-    });
-    it(`returns 70 pertenk for ICR 30000 pertenk`, async function () {
-      expect(await yamatoDummy.FR(30000)).to.eq(70);
-    });
-    it(`returns 40 pertenk for ICR 40000 pertenk`, async function () {
-      expect(await yamatoDummy.FR(40000)).to.eq(40);
-    });
-    it(`returns 11 pertenk for ICR 49700 pertenk`, async function () {
-      expect(await yamatoDummy.FR(49700)).to.eq(11);
-    });
-    it(`returns 11 pertenk for ICR 49800 pertenk`, async function () {
-      expect(await yamatoDummy.FR(49800)).to.eq(11);
-    });
-    it(`returns 11 pertenk for ICR 49900 pertenk`, async function () {
-      expect(await yamatoDummy.FR(49900)).to.eq(11);
-    });
-    it(`returns 10 pertenk for ICR 50000 pertenk`, async function () {
-      expect(await yamatoDummy.FR(50000)).to.eq(10);
     });
   });
   describe("borrow()", function () {
@@ -898,6 +1058,28 @@ describe("contract Yamato", function () {
 
       expect(mockPriorityRegistry.remove).to.have.calledOnce;
     });
+    it(`should revert if withdrawal remaining <0.1ETH happens`, async function () {
+      await yamato.deposit({ value: BigNumber.from(1e18 + "") });
+      await expect(
+        yamato.withdraw(
+          BigNumber.from(1e18 + "")
+            .sub(1e17 + "")
+            .add(1)
+        )
+      ).to.be.revertedWith(
+        "Deposit or Withdraw can't make pledge less than floor size."
+      );
+    });
+    it(`should NOT revert if withdrawal remaining >=0.1ETH happens`, async function () {
+      await yamato.deposit({ value: BigNumber.from(1e18 + "") });
+      await expect(
+        yamato.withdraw(
+          BigNumber.from(1e18 + "")
+            .sub(1e17 + "")
+            .sub(1)
+        )
+      ).not.to.be.reverted;
+    });
     it(`should neutralize a pledge even after full repay`, async function () {
       const MCR = BigNumber.from(130);
       const toCollateralize = 1;
@@ -1033,6 +1215,9 @@ describe("contract Yamato", function () {
     });
 
     it(`should expense coll of lowest ICR pledges even if price change make diff between LICR and real ICR`, async function () {
+      /*
+        Note: lower ICR pledges and higher ICR pledges are in the same LICR rank. Lower one must be redeemed first.
+      */
       let _pledge0 = await yamato.getPledge(accounts[0].address);
       let _pledge1 = await yamato.getPledge(accounts[1].address);
       let _pledge2 = await yamato.getPledge(accounts[2].address);
@@ -1124,7 +1309,45 @@ describe("contract Yamato", function () {
       await yamato.connect(accounts[0]).redeem(toERC20(toBorrow + ""), false);
       expect(mockCurrencyOS.burnCurrency).to.have.calledOnce;
     });
-    it.skip(`TODO: should NOT revert if excessive redemption amount comes in.`);
+    it(`should NOT revert if excessive redemption amount comes in.`, async function () {
+      await (
+        await yamato
+          .connect(accounts[0])
+          .deposit({ value: BigNumber.from(1e18 + "").mul(170) })
+      ).wait();
+      let toBorrowHuge = BigNumber.from(1e18 + "")
+        .mul(165)
+        .mul(PRICE_AFTER)
+        .mul(100)
+        .div(MCR)
+        .div(1e18 + "");
+      await (await yamato.connect(accounts[0]).borrow(toBorrowHuge)).wait();
+
+      mockCJPY.balanceOf.returns(toBorrowHuge.mul(11).div(10));
+
+      await expect(yamato.connect(accounts[0]).redeem(toBorrowHuge, false)).not
+        .to.be.reverted;
+    });
+    it(`should revert if one doesn't have enough CJPY balance`, async function () {
+      await (
+        await yamato
+          .connect(accounts[0])
+          .deposit({ value: BigNumber.from(1e18 + "").mul(170) })
+      ).wait();
+      let toBorrowHuge = BigNumber.from(1e18 + "")
+        .mul(165)
+        .mul(PRICE_AFTER)
+        .mul(100)
+        .div(MCR)
+        .div(1e18 + "");
+      await (await yamato.connect(accounts[0]).borrow(toBorrowHuge)).wait();
+
+      mockCJPY.balanceOf.returns(toERC20(toBorrow.mul(70) + ""));
+
+      await expect(
+        yamato.connect(accounts[0]).redeem(toBorrowHuge, false)
+      ).to.be.revertedWith("Insufficient currency balance to redeem.");
+    });
   });
 
   describe("sweep()", function () {
@@ -1215,7 +1438,7 @@ describe("contract Yamato", function () {
 
       expect(mockFeed.fetchPrice).to.have.called;
       expect(mockPool.sendCurrency).to.have.calledOnce;
-      expect(mockPool.useSweepReserve).to.have.calledTwice;
+      expect(mockPool.useSweepReserve).to.have.calledTwice; // two pledges will be swept
     });
   });
 

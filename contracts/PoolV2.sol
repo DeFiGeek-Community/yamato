@@ -64,12 +64,19 @@ contract PoolV2 is IPool, YamatoStore, ReentrancyGuardUpgradeable {
             address(this),
             amount
         ); // onlyYamato
+
         redemptionReserve += amount;
         emit RedemptionReserveDeposited(msg.sender, amount, redemptionReserve);
     }
 
     function useRedemptionReserve(uint256 amount) public override onlyYamato {
-        redemptionReserve -= amount;
+        require(
+            redemptionReserve >= amount,
+            "You can't use the redemption reserve more than the pool has."
+        );
+        unchecked {
+            redemptionReserve -= amount;
+        }
         emit RedemptionReserveUsed(msg.sender, amount, redemptionReserve);
     }
 
@@ -83,7 +90,13 @@ contract PoolV2 is IPool, YamatoStore, ReentrancyGuardUpgradeable {
     }
 
     function useSweepReserve(uint256 amount) public override onlyYamato {
-        sweepReserve -= amount;
+        require(
+            sweepReserve >= amount,
+            "You can't use the sweep reserve more than the pool has."
+        );
+        unchecked {
+            sweepReserve -= amount;
+        }
         emit SweepReserveUsed(msg.sender, amount, sweepReserve);
     }
 

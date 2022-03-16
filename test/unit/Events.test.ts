@@ -9,8 +9,8 @@ import {
   Pool,
   FeePool,
   PriceFeed,
-  PriorityRegistry,
-  PriorityRegistry__factory,
+  PriorityRegistryV6,
+  PriorityRegistryV6__factory,
   Yamato,
   YamatoDepositor,
   YamatoBorrower,
@@ -45,7 +45,7 @@ describe("story Events", function () {
     let mockYMT: FakeContract<YMT>;
     let mockCJPY: FakeContract<CJPY>;
     let mockCurrencyOS: FakeContract<CurrencyOS>;
-    let mockPriorityRegistry: FakeContract<PriorityRegistry>;
+    let mockPriorityRegistry: FakeContract<PriorityRegistryV6>;
     let yamato: Yamato;
     let yamatoDepositor: YamatoDepositor;
     let yamatoBorrower: YamatoBorrower;
@@ -53,7 +53,7 @@ describe("story Events", function () {
     let yamatoWithdrawer: YamatoWithdrawer;
     let yamatoRedeemer: YamatoRedeemer;
     let yamatoSweeper: YamatoSweeper;
-    let priorityRegistry: PriorityRegistry;
+    let priorityRegistry: PriorityRegistryV6;
     let PRICE: BigNumber;
     let MCR: BigNumber;
     let accounts: Signer[];
@@ -75,7 +75,7 @@ describe("story Events", function () {
       const PledgeLib = (
         await (await ethers.getContractFactory("PledgeLib")).deploy()
       ).address;
-      const priorityRegistryContractFactory = <PriorityRegistry__factory>(
+      const priorityRegistryContractFactory = <PriorityRegistryV6__factory>(
         await ethers.getContractFactory("PriorityRegistry", {
           libraries: { PledgeLib },
         })
@@ -121,8 +121,8 @@ describe("story Events", function () {
         YamatoSweeper__factory
       >("YamatoSweeper", [yamato.address], ["PledgeLib"]);
 
-      mockPriorityRegistry = await getFakeProxy<PriorityRegistry>(
-        "PriorityRegistry"
+      mockPriorityRegistry = await getFakeProxy<PriorityRegistryV6>(
+        "PriorityRegistryV6"
       );
 
       await (
@@ -154,29 +154,13 @@ describe("story Events", function () {
       mockPriorityRegistry.pledgeLength.returns(2);
       mockPriorityRegistry.upsert.returns(0);
       mockPriorityRegistry.remove.returns(0);
-      mockPriorityRegistry.popRedeemable.returns(
-        encode(
-          ["uint256", "uint256", "bool", "address", "uint256"],
-          [
-            BigNumber.from("1000000000000000"),
-            BigNumber.from("300001000000000000000"),
-            true,
-            await yamato.signer.getAddress(),
-            0,
-          ]
-        )
-      );
+      mockPriorityRegistry.LICR.returns(1);
+      mockPriorityRegistry.rankedQueueNextout.returns(0);
+      mockPriorityRegistry.rankedQueueTotalLen.returns(0);
+      mockPriorityRegistry.getRankedQueue.returns(ethers.constants.AddressZero);
+      mockPriorityRegistry.bulkUpsert.returns(Array(100).fill(0));
       mockPriorityRegistry.popSweepable.returns(
-        encode(
-          ["uint256", "uint256", "bool", "address", "uint256"],
-          [
-            BigNumber.from(0),
-            BigNumber.from("300001000000000000000"),
-            true,
-            await yamato.signer.getAddress(),
-            0,
-          ]
-        )
+        await yamato.signer.getAddress()
       );
 
       toCollateralize = 1;
@@ -264,13 +248,13 @@ describe("story Events", function () {
         mockCJPY.balanceOf.returns(PRICE.mul(10));
         mockFeed.fetchPrice.returns(PRICE.div(2));
         mockFeed.lastGoodPrice.returns(PRICE.div(2));
+        mockPriorityRegistry.rankedQueuePop.returns(
+          await accounts[1].getAddress()
+        );
       });
       it(`should be emitted with proper args for Redeemed.`, async function () {
         // address indexed sender, uint256 cjpyAmount, uint256 ethAmount, uint256 price, boolean isCoreRedemption, uint256 gasCompensationAmount, address[] pledgesOwner
-        await expect(yamato.redeem(toERC20(toBorrow + ""), false)).to.emit(
-          yamato,
-          "Redeemed"
-        );
+        await expect(yamato.redeem(1, false)).to.emit(yamato, "Redeemed");
       });
       it(`should be emitted with proper args for RedeemedMeta.`, async function () {
         // address indexed sender, uint256 cjpyAmount, uint256 ethAmount, uint256 price, boolean isCoreRedemption, uint256 gasCompensationAmount, address[] pledgesOwner
@@ -294,18 +278,39 @@ describe("story Events", function () {
         await (
           await yamato
             .connect(accounts[1])
-            .deposit({ value: toERC20(toCollateralize + "") })
+            .deposit({ value: toERC20(toCollateralize * 10 + "") })
         ).wait();
         await (
-          await yamato.connect(accounts[1]).borrow(toERC20(toBorrow + ""))
+          await yamato
+            .connect(accounts[1])
+            .borrow(toERC20(toBorrow.mul(10) + ""))
         ).wait();
+        await (
+          await yamato
+            .connect(accounts[2])
+            .deposit({ value: toERC20(toCollateralize * 0.1 + "") })
+        ).wait();
+        await (
+          await yamato
+            .connect(accounts[2])
+            .borrow(toERC20(toBorrow.div(10) + ""))
+        ).wait();
+
         mockCJPY.balanceOf.returns(PRICE.mul(10));
         mockFeed.fetchPrice.returns(PRICE.div(2));
         mockFeed.lastGoodPrice.returns(PRICE.div(2));
+        mockPriorityRegistry.rankedQueuePop.returnsAtCall(
+          0,
+          await accounts[1].getAddress()
+        );
+        mockPriorityRegistry.rankedQueuePop
+          .whenCalledWith(0)
+          .returns(await accounts[2].getAddress());
         await (await yamato.redeem(toERC20(toBorrow + ""), false)).wait();
       });
       it(`should be emitted with proper args.`, async function () {
         // address indexed sender, uint256 cjpyAmount, uint256 gasCompensationAmount, address[] pledgesOwner
+        mockPriorityRegistry.rankedQueueLen.whenCalledWith(0).returns(1);
         await expect(yamato.sweep()).to.emit(yamato, "Swept");
       });
     });

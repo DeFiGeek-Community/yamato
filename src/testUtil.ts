@@ -9,6 +9,7 @@ import {
   upgradeLinkedProxy,
   upgradeProxy,
 } from "./upgradeUtil";
+import chalk from "chalk";
 
 // @dev UUPS
 export async function getFakeProxy<T extends BaseContract>(
@@ -49,10 +50,14 @@ export async function getProxy<
   if (implName.length == 0) {
     return defaultInst;
   } else {
-    console.log(`${implName} is going to be deployed to ERC1967Proxy...`);
+    // console.log(`${implName} is going to be deployed to ERC1967Proxy...`);
 
     const inst: T = <T>await upgradeProxy(defaultInst.address, implName);
-    console.log(`${inst.address} is upgraded to ${implName}`);
+    console.log(
+      chalk.gray(
+        `        [success] ${implName}=${inst.address} is upgraded to ERC1967Proxy`
+      )
+    );
     return inst;
   }
 }
@@ -66,7 +71,7 @@ export async function getLinkedProxy<
   libralies: string[],
   versionSpecification?: number | undefined
 ): Promise<T> {
-  console.log(`getLinkedProxy: deploying libs...`);
+  // console.log(`getLinkedProxy: deploying libs...`);
   let Libraries = {};
   for (var i = 0; i < libralies.length; i++) {
     let libraryName = libralies[i];
@@ -91,12 +96,16 @@ export async function getLinkedProxy<
   if (implName.length == 0) {
     return defaultInst;
   } else {
-    console.log(`${implName} is going to be deployed to ERC1967Proxy...`);
+    // console.log(`${implName} is going to be deployed to ERC1967Proxy...`);
 
     const inst: T = <T>(
       await upgradeLinkedProxy(defaultInst.address, implName, libralies)
     );
-    console.log(`${inst.address} is upgraded to ${implName}`);
+    console.log(
+      chalk.gray(
+        `        [success] ${implName}=${inst.address} is upgraded to ERC1967Proxy`
+      )
+    );
     return inst;
   }
 }
@@ -107,7 +116,7 @@ export async function deployLibrary(libraryName) {
   try {
     _LibAddr = readFileSync(filepath).toString();
   } catch (e) {
-    console.log("Non-cacheable environment. Skip cache.");
+    // console.log("Non-cacheable environment. Skip cache.");
   }
 
   if (
@@ -115,7 +124,7 @@ export async function deployLibrary(libraryName) {
     existsSync(filepath) &&
     _LibAddr
   ) {
-    console.log(`${libraryName} is already deployed and use ${_LibAddr}`);
+    // console.log(`${libraryName} is already deployed and use ${_LibAddr}`);
     return new ethers.Contract(_LibAddr, genABI("PledgeLib", true));
   }
   const Library = await ethers.getContractFactory(libraryName);
@@ -131,7 +140,7 @@ export async function deployLibrary(libraryName) {
   }
 
   await library.deployed();
-  console.log(`libs deployed.`);
+  // console.log(`libs deployed.`);
   return library;
 }
 
