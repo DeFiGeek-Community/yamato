@@ -455,6 +455,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
     function resetNextResetRank() public onlyGovernance {
         nextResetRank = 0;
     }
+
     function resetQueue(uint256 _defaultRank) public onlyGovernance {
         if (_defaultRank != 0) {
             nextResetRank = _defaultRank;

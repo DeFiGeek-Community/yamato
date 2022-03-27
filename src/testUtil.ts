@@ -201,17 +201,17 @@ export function getTCR(
 
 export async function assertDebtIntegrity(Yamato, CJPY) {
   await setProvider();
-  
+
   /*
     1. Get all users and the pool
-  */  
+  */
   let filter = Yamato.filters.Deposited(null, null);
   let logs = await Yamato.queryFilter(filter);
 
   let pledgeOwners = logs
     .map((log) => log.args.sender)
     .filter((value, index, self) => self.indexOf(value) === index);
-  let pledges:any = await Promise.all(
+  let pledges: any = await Promise.all(
     pledgeOwners.map(async (owner) => await Yamato.getPledge(owner))
   );
   pledges = pledges.filter((p) => p.isCreated);
@@ -219,12 +219,12 @@ export async function assertDebtIntegrity(Yamato, CJPY) {
   /*
     2. Sum up all coll, debt, and CJPY balance 
   */
- let acmTotalColl = BigNumber.from(0);
- let acmTotalDebt = BigNumber.from(0);
- for(var i = 0; i < pledges.length; i++) {
-   acmTotalColl = acmTotalColl.add(pledges[i].coll);
-   acmTotalDebt = acmTotalDebt.add(pledges[i].debt);
- }
+  let acmTotalColl = BigNumber.from(0);
+  let acmTotalDebt = BigNumber.from(0);
+  for (var i = 0; i < pledges.length; i++) {
+    acmTotalColl = acmTotalColl.add(pledges[i].coll);
+    acmTotalDebt = acmTotalDebt.add(pledges[i].debt);
+  }
 
   /*
     3. Compare pledgeSum, totalSum, and tokenSum
