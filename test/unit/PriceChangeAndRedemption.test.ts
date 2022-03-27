@@ -38,7 +38,7 @@ import {
   PriorityRegistry__factory,
   PriorityRegistryV6__factory,
 } from "../../typechain";
-import { getProxy, getLinkedProxy } from "../../src/testUtil";
+import { getProxy, getLinkedProxy, assertDebtIntegrity } from "../../src/testUtil";
 import { isToken } from "typescript";
 
 chai.use(smock.matchers);
@@ -293,6 +293,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         ).to.be.gt(redeemerETHBalanceBefore);
         expect(redeemedPledgeAfter.coll).to.be.eq(0);
         expect(redeemedPledgeAfter.priority).to.be.eq(0);
+        expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true
       });
     });
     describe("Context - with 1% dump", function () {
@@ -442,6 +443,8 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
             .div(1e14 + "")
         ); // 100<ICR<130 then ICR cured
         expect(redeemedPledge4After.priority).to.eq(13000); // WallBeforeLastPledge = 7 units * (130-129)/129 + 1 unit * (130-129)/129 * 4 pledges
+        expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true
+
       });
     });
 
@@ -598,6 +601,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         expect(redeemedPledgeAfter.coll).to.be.eq(0); // Bug: Sometimes coll remains "1" in uint256. It must be "0"
         expect(redeemedPledgeAfter.priority).to.be.eq(0);
         expect(feePoolBalanceAfter).to.be.eq(feePoolBalanceBefore);
+        expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true
       });
     });
 
@@ -706,6 +710,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         expect(cjpyBalanceAfter).to.equal(cjpyBalanceBefore);
         expect(redeemedPledge.coll).to.be.lt(redeemablePledge.coll);
         expect(feePoolBalanceAfter).to.be.gt(feePoolBalanceBefore);
+        expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true
       });
     });
 
@@ -795,6 +800,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         expect(statesAfter[1]).to.be.lt(statesBefore[1]); //totalDebt
         expect(redeemeePledgeAfter.coll).to.be.lt(redeemeePledgeBefore.coll);
         expect(redeemeePledgeAfter.debt).to.be.lt(redeemeePledgeBefore.debt);
+        expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true
       });
     });
     describe("Context - A large traversing and no gas exhaustion with 1% dump", function () {
@@ -858,6 +864,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         expect(await PriorityRegistry.rankedQueueLen(130)).to.be.gt(0);
         expect(await PriorityRegistry.getRedeemablesCap()).to.eq(0);
         expect(await PriorityRegistry.LICR()).to.eq(130);
+        expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true
       });
     });
 
@@ -924,6 +931,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         expect(await PriorityRegistry.rankedQueueLen(0)).to.be.gt(0);
         expect(await PriorityRegistry.rankedQueueLen(130)).to.eq(0);
         expect(await PriorityRegistry.LICR()).to.eq(184);
+        expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true
       });
     });
   });
@@ -1017,6 +1025,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         expect(poolCjpyBalanceAfter).to.be.lt(poolCjpyBalanceBefore);
         expect(sweptPledge.debt).to.be.lt(sweepablePledge.debt);
         expect(sweptPledge.isCreated).to.be.true;
+        expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true
       });
     });
 
@@ -1080,6 +1089,8 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         expect(poolCjpyBalanceAfter).to.be.lt(poolCjpyBalanceBefore);
         expect(sweptPledge.debt).to.equal(0);
         expect(sweptPledge.isCreated).to.be.false;
+
+        expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true
       });
     });
   });
@@ -1223,6 +1234,8 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         let tx2 = await Yamato.sweep();
         let txReceipt2 = await tx2.wait();
         expect(txReceipt2.gasUsed).to.be.lt(16000000);
+
+        expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true
       });
     });
 
@@ -1274,6 +1287,8 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         let tx2 = await Yamato.sweep();
         let txReceipt2 = await tx2.wait();
         expect(txReceipt2.gasUsed).to.be.lt(16000000);
+
+        expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true
       });
     });
 
@@ -1314,6 +1329,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
             .div(6)
         );
 
+        expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true
         await expect(Yamato.sweep()).to.be.revertedWith("No sweepables.");
       });
     });
@@ -1355,6 +1371,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
             .div(6)
         );
 
+        expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true
         await expect(Yamato.sweep()).to.be.revertedWith("No sweepables.");
       });
     });

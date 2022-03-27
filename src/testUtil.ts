@@ -10,6 +10,12 @@ import {
   upgradeProxy,
 } from "./upgradeUtil";
 import chalk from "chalk";
+import {
+  getDeploymentAddressPathWithTag,
+  getFoundation,
+  setProvider,
+} from "./deployUtil";
+import { PriorityRegistryV6 } from "../typechain";
 
 // @dev UUPS
 export async function getFakeProxy<T extends BaseContract>(
@@ -190,5 +196,59 @@ export function getTCR(
     return BigNumber.from("0");
   } else {
     return totalColl.mul(denominatedPrice).div(totalDebt);
+  }
+}
+
+export async function assertDebtIntegrity(Yamato, CJPY) {
+  await setProvider();
+  
+  /*
+    1. Get all users and the pool
+  */  
+  let filter = Yamato.filters.Deposited(null, null);
+  let logs = await Yamato.queryFilter(filter);
+
+  let pledgeOwners = logs
+    .map((log) => log.args.sender)
+    .filter((value, index, self) => self.indexOf(value) === index);
+  let pledges:any = await Promise.all(
+    pledgeOwners.map(async (owner) => await Yamato.getPledge(owner))
+  );
+  pledges = pledges.filter((p) => p.isCreated);
+
+  /*
+    2. Sum up all coll, debt, and CJPY balance 
+  */
+ let acmTotalColl = BigNumber.from(0);
+ let acmTotalDebt = BigNumber.from(0);
+ for(var i = 0; i < pledges.length; i++) {
+   acmTotalColl = acmTotalColl.add(pledges[i].coll);
+   acmTotalDebt = acmTotalDebt.add(pledges[i].debt);
+ }
+
+  /*
+    3. Compare pledgeSum, totalSum, and tokenSum
+  */
+  let states = await Yamato.getStates();
+  let totalColl = states[0];
+  let totalDebt = states[1];
+  let totalSupply = await CJPY.totalSupply();
+
+  let msg = "";
+  if (totalColl.eq(acmTotalColl) === false) {
+    msg += ` / Coll inconsistent (${totalColl}, ${acmTotalColl})`;
+  }
+  if (totalDebt.eq(acmTotalDebt) === false) {
+    msg += ` / Debt inconsistent (${totalDebt}, ${acmTotalDebt})`;
+  }
+  if (totalSupply.eq(totalDebt) === false) {
+    msg += ` / Supply inconsistent (${totalSupply}, ${totalDebt})`;
+  }
+
+  if (msg.length === 0) {
+    return true;
+  } else {
+    console.error(msg);
+    return false;
   }
 }
