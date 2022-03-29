@@ -6,7 +6,7 @@ import {
 import { readFileSync } from "fs";
 import { ethers } from "ethers";
 import { genABI } from "../src/genABI";
-import { PriorityRegistryV5 } from "../typechain";
+import { PriorityRegistryV6 } from "../typechain";
 
 const NAME1 = "Yamato";
 const NAME2 = "PriorityRegistry";
@@ -24,10 +24,10 @@ async function main() {
     genABI(NAME1),
     getFoundation()
   );
-  let PriorityRegistry: PriorityRegistryV5 = <PriorityRegistryV5>(
+  let PriorityRegistry: PriorityRegistryV6 = <PriorityRegistryV6>(
     new ethers.Contract(
       PriorityRegistryERC1967Proxy,
-      genABI(NAME2 + "V5"),
+      genABI(NAME2 + "V6"),
       getFoundation()
     )
   );
@@ -45,13 +45,24 @@ async function main() {
 
   console.log(`pledges.length:${pledges.length}`);
 
-  console.log(`pledgeLength: ${await PriorityRegistry.pledgeLength()}`);
+  console.log(`r-cap-before:${await PriorityRegistry.getRedeemablesCap()}`);
+  console.log(`s-cap-before:${await PriorityRegistry.getSweepablesCap()}`);
 
+  await (
+    await PriorityRegistry.resetQueue(0, pledges, { gasLimit: 14000000 })
+  ).wait();
+  await (
+    await PriorityRegistry.resetQueue(0, pledges, { gasLimit: 14000000 })
+  ).wait();
+  await (
+    await PriorityRegistry.resetQueue(0, pledges, { gasLimit: 14000000 })
+  ).wait();
   await (
     await PriorityRegistry.syncRankedQueue(pledges, { gasLimit: 14000000 })
   ).wait();
 
-  console.log(`pledgeLength: ${await PriorityRegistry.pledgeLength()}`);
+  console.log(`r-cap-after:${await PriorityRegistry.getRedeemablesCap()}`);
+  console.log(`s-cap-after:${await PriorityRegistry.getSweepablesCap()}`);
 }
 
 main().catch((e) => console.log(e));

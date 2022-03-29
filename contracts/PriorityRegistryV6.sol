@@ -27,11 +27,12 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
     mapping(uint256 => address[]) private levelIndice; // ICR => owner[]
     uint256 public override pledgeLength; // Note: Deprecated in V6
     uint256 public override LICR; // Note: Lowest ICR in percent
-    mapping(uint256 => FifoQueue) rankedQueue;
+    mapping(uint256 => FifoQueue) deplecatedRankedQueue; // Mar 28, 2020 - 0xMotoko -  Renamed from rankedQueue to deplecatedRankedQueue but storage layout is kept
     uint256 public constant override MAX_PRIORITY =
         1157920892373161954235709850086879078532699846656405640394575840079131296399; // (2**256 - 1) / 100
     uint256 public nextResetRank;
     mapping(address => DeleteDictItem) deleteDict;
+    mapping(uint256 => FifoQueue) rankedQueue;
 
     function initialize(address _yamato) public initializer {
         __YamatoStore_init(_yamato);
@@ -242,7 +243,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         deleteDict[_pledgeAddr] = DeleteDictItem(
             true,
             uint248(pledgeAddrs.length)
-        );
+        ); // Note: Fill it when you pushed, reset it when you deleted.
         pledgeAddrs.push(_pledgeAddr);
     }
 
@@ -326,7 +327,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         - _traverseToNextLICR
     */
     /*
-        @dev delete of "address[] storage" causes gap in the list.
+        @dev delete of "address[] storage" (rankedQueueSearchAndDestroy) causes gap in the list.
              deleteDict knows which pledge is in which index.
         @param _pledge the delete target
     */
@@ -448,15 +449,14 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         ====================
             Upgrade Helpers
         ====================
-        - resetNextResetRank
         - resetQueue
         - syncRankedQueue
     */
-    function resetNextResetRank() public onlyGovernance {
-        nextResetRank = 0;
-    }
 
-    function resetQueue(uint256 _defaultRank) public onlyGovernance {
+    function resetQueue(uint256 _defaultRank, IYamato.Pledge[] calldata pledges)
+        public
+        onlyGovernance
+    {
         if (_defaultRank != 0) {
             nextResetRank = _defaultRank;
         }
@@ -465,11 +465,13 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         */
         while (rankedQueue[0].pledges.length > 0) {
             rankedQueue[0].pledges.pop();
+            rankedQueue[0].nextout = 0;
         }
-        while (rankedQueue[floor(2**256 - 1)].pledges.length > 0) {
-            rankedQueue[floor(2**256 - 1)].pledges.pop();
+        while (rankedQueue[MAX_PRIORITY].pledges.length > 0) {
+            rankedQueue[MAX_PRIORITY].pledges.pop();
+            rankedQueue[MAX_PRIORITY].nextout = 0;
         }
-        for (uint256 i = nextResetRank; i <= floor(2**256 - 1); i++) {
+        for (uint256 i = nextResetRank; i <= MAX_PRIORITY; i++) {
             if (i > nextResetRank && i % 500 == 0) {
                 nextResetRank = i;
                 return;
@@ -479,6 +481,11 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
             }
 
             rankedQueue[i].nextout = 0;
+        }
+
+        DeleteDictItem memory nullItem;
+        for (uint256 i = 0; i < pledges.length; i++) {
+            deleteDict[pledges[i].owner] = nullItem;
         }
     }
 
