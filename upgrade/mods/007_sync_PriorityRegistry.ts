@@ -64,4 +64,3 @@ export default async function main() {
   console.log(`r-cap-after:${await PriorityRegistry.getRedeemablesCap()}`);
   console.log(`s-cap-after:${await PriorityRegistry.getSweepablesCap()}`);
 }
-
