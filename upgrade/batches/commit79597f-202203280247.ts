@@ -13,20 +13,34 @@
 */
 
 // delete PledgeLib rinkeby cache file
+import { setNetwork } from "../../src/deployUtil";
 
-import "../012_check_integrity.ts";
+async function main() {
+  setNetwork("rinkeby");
 
-import "../008_upgrade_Yamato";
-import "../010_upgrade_YamatoDepositor";
-import "../003_upgrade_YamatoWithdrawer";
-import "../002_upgrade_YamatoRedeemer";
-import "../009_upgrade_YamatoSweeper";
-import "../006_upgrade_Pool";
-import "../005_upgrade_PriorityRegistry";
-import "../011_upgrade_PriceFeed";
+  await _import("../mods/012_check_integrity");
+  // await _import("../mods/013_toggle_Yamato");
 
-import "../012_check_integrity.ts";
+  // await _import( "../mods/008_upgrade_Yamato");
+  // await _import( "../mods/010_upgrade_YamatoDepositor");
+  // await _import( "../mods/003_upgrade_YamatoWithdrawer");
+  // await _import( "../mods/002_upgrade_YamatoRedeemer");
+  // await _import( "../mods/009_upgrade_YamatoSweeper");
+  // await _import( "../mods/006_upgrade_Pool");
+  // await _import( "../mods/005_upgrade_PriorityRegistry");
+  // await _import( "../mods/011_upgrade_PriceFeed");
 
-import "../007_sync_PriorityRegistry";
+  // await _import( "../mods/012_check_integrity");
 
-import "../012_check_integrity.ts";
+  // await _import( "../mods/007_sync_PriorityRegistry");
+
+  // await _import( "../mods/012_check_integrity");
+
+  // await _import( "../mods/013_toggle_Yamato");
+}
+
+main().then();
+
+async function _import(path: string) {
+  return await (await import(path)).default();
+}
