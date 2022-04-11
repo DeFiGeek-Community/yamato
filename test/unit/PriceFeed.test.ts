@@ -5,8 +5,8 @@ import { solidity } from "ethereum-waffle";
 import { Signer, BigNumber } from "ethers";
 import {
   ChainLinkMock,
-  PriceFeed,
-  PriceFeed__factory,
+  PriceFeedV2,
+  PriceFeedV2__factory,
   TellorCallerMock,
 } from "../../typechain";
 import { getProxy } from "../../src/testUtil";
@@ -17,7 +17,7 @@ import { setProvider } from "../../src/deployUtil";
 chai.use(smock.matchers);
 chai.use(solidity);
 
-let feed: PriceFeed;
+let feed: PriceFeedV2;
 let accounts: Signer[];
 let ownerAddress: string;
 let mockAggregatorV3EthUsd: FakeContract<ChainLinkMock>;
@@ -204,7 +204,7 @@ describe("PriceFeed", function () {
     lastMockInput.resetFlag = false;
     await setMocks(lastMockInput);
 
-    feed = await getProxy<PriceFeed, PriceFeed__factory>("PriceFeed", [
+    feed = await getProxy<PriceFeedV2, PriceFeedV2__factory>("PriceFeed", [
       mockAggregatorV3EthUsd.address,
       mockAggregatorV3JpyUsd.address,
       mockTellorCaller.address,

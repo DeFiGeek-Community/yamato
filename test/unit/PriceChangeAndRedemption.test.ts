@@ -7,7 +7,7 @@ import { toERC20 } from "../param/helper";
 import {
   ChainLinkMock,
   TellorCallerMock,
-  PriceFeed,
+  PriceFeedV2,
   FeePool,
   CurrencyOS,
   CJPY,
@@ -23,7 +23,7 @@ import {
   Pool,
   ChainLinkMock__factory,
   TellorCallerMock__factory,
-  PriceFeed__factory,
+  PriceFeedV2__factory,
   CurrencyOS__factory,
   CJPY__factory,
   Yamato__factory,
@@ -52,7 +52,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
   let ChainLinkEthUsd: ChainLinkMock;
   let ChainLinkUsdJpy: ChainLinkMock;
   let Tellor: TellorCallerMock;
-  let PriceFeed: PriceFeed;
+  let PriceFeed: PriceFeedV2;
   let CJPY: CJPY;
   let FeePool: FeePool;
   let CurrencyOS: CurrencyOS;
@@ -110,7 +110,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
     await (await ChainLinkUsdJpy.setLastPrice(877000)).wait();
     await (await Tellor.setLastPrice(Math.ceil(400000000000 * 1.14))).wait(); //dec8
 
-    PriceFeed = await getProxy<PriceFeed, PriceFeed__factory>("PriceFeed", [
+    PriceFeed = await getProxy<PriceFeedV2, PriceFeedV2__factory>("PriceFeed", [
       ChainLinkEthUsd.address,
       ChainLinkUsdJpy.address,
       Tellor.address,

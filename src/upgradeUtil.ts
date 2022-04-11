@@ -51,6 +51,53 @@ export async function upgradeLinkedProxy<
   return newerInstance;
 }
 
+export async function runDowngrade(
+  implNameBase: string,
+  versionStr: string,
+  linkings = []
+) {
+  setNetwork("rinkeby");
+  const filepath = getDeploymentAddressPathWithTag(
+    implNameBase,
+    "ERC1967Proxy"
+  );
+  if (!existsSync(filepath)) throw new Error(`${filepath} is not exist`);
+  const ERC1967Proxy: string = readFileSync(filepath).toString();
+
+  const implName = implNameBase + versionStr;
+  if (implName.length == 0) {
+    console.log(
+      `./contracts/${implNameBase} only found. Set ./contracts/${implNameBase}V2 to start upgrading.`
+    );
+  } else {
+    // console.log(`${implName} is going to be deployed to ERC1967Proxy...`);
+
+    const inst =
+      linkings.length > 0
+        ? await upgradeLinkedProxy(ERC1967Proxy, implName, linkings)
+        : await upgradeProxy(ERC1967Proxy, implName);
+    console.log(
+      chalk.gray(
+        `        [success] ${implName}=${inst.address} is upgraded to ERC1967Proxy`
+      )
+    );
+
+    const implAddr = await (<any>inst).getImplementation();
+    const implPath = getDeploymentAddressPathWithTag(implNameBase, "UUPSImpl");
+
+    writeFileSync(implPath, implAddr);
+    // console.log(`Saved ${implAddr} to ${implPath}`);
+
+    try {
+      execSync(
+        `npm run verify:rinkeby -- --contract contracts/${implName}.sol:${implName} ${implAddr}`
+      );
+      console.log(`Verified ${implAddr}`);
+    } catch (e) {
+      console.error(e.message);
+    }
+  }
+}
 export async function runUpgrade(implNameBase, linkings = []) {
   setNetwork("rinkeby");
 

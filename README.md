@@ -31,7 +31,7 @@ As of this writing, the following library versions have been confirmed working f
 
 Please note, using a different version might result in commands like "npm i" and test to fail.
 
-## Dev first steps
+## dev: Getting Started
 
 1. Install node & npm.
 1. Clone the latest code from yamato repos.
@@ -59,12 +59,9 @@ If not, please check that the npm dependencies are installed as expected referri
 
 ### Running upgrade
 
-- `npm run upgrade:repayer`
-- `npm run upgrade:redeemer`
-- `npm run upgrade:withdrawer`
-  - For other upgradeable contracts, add scripts to `./upgrades`
-- `npm run test:integration`
-  - Run this after upgrade succeeded
+- `npx hardhat run upgrade/batches/commit79597f-202203280247.ts --network rinkeby`
+  - You can read what's going on in the script file.
+  - We recommend to comment-in the only-using line of script, and check if the tx suceeded property one-by-one.
 
 #### For only etherscan verification
 
