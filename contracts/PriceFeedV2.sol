@@ -99,10 +99,10 @@ contract PriceFeedV2 is IPriceFeed, UUPSBase, BaseMath {
     */
     // The last good price seen from an oracle by Liquity
     uint256 public override lastGoodPrice;
-    uint256 lastSeen;
+    uint256 public lastSeen;
     // The current status of the PricFeed, which determines the conditions for the next price fetch attempt
     Status public status;
-    uint256 lastAdjusted;
+    uint256 public lastAdjusted;
     /*
         =========================
         --- END DANGER ZONE ---
@@ -750,6 +750,7 @@ contract PriceFeedV2 is IPriceFeed, UUPSBase, BaseMath {
     {
         if (
             _tellorAndLastGoodPriceSimilarPrice(_tellorResponse) == false &&
+            /* CL is broken and Tellor is far away! Danger zone! */
             (lastAdjusted == 0 ||
                 lastAdjusted + ADJUSTMENT_COOLTIME < block.number)
         ) {

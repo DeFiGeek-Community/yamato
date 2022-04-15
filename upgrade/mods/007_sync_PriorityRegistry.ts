@@ -1,6 +1,7 @@
 import {
   getDeploymentAddressPathWithTag,
   getFoundation,
+  setNetwork,
   setProvider,
 } from "../../src/deployUtil";
 import { readFileSync } from "fs";
@@ -18,6 +19,7 @@ let PriorityRegistryERC1967Proxy = readFileSync(
 ).toString();
 
 export default async function main() {
+  setNetwork("rinkeby");
   await setProvider();
   let Yamato = new ethers.Contract(
     YamatoERC1967Proxy,
@@ -45,20 +47,20 @@ export default async function main() {
 
   console.log(`pledges.length:${pledges.length}`);
 
-  console.log(`r-cap-before:${await PriorityRegistry.getRedeemablesCap()}`);
-  console.log(`s-cap-before:${await PriorityRegistry.getSweepablesCap()}`);
+  // console.log(`r-cap-before:${await PriorityRegistry.getRedeemablesCap()}`);
+  // console.log(`s-cap-before:${await PriorityRegistry.getSweepablesCap()}`);
 
+  // await (
+  //   await PriorityRegistry.resetQueue(0, pledges, { gasLimit: 14000000 })
+  // ).wait();
+  // await (
+  //   await PriorityRegistry.resetQueue(0, pledges, { gasLimit: 14000000 })
+  // ).wait();
+  // await (
+  //   await PriorityRegistry.resetQueue(0, pledges, { gasLimit: 14000000 })
+  // ).wait();
   await (
-    await PriorityRegistry.resetQueue(0, pledges, { gasLimit: 14000000 })
-  ).wait();
-  await (
-    await PriorityRegistry.resetQueue(0, pledges, { gasLimit: 14000000 })
-  ).wait();
-  await (
-    await PriorityRegistry.resetQueue(0, pledges, { gasLimit: 14000000 })
-  ).wait();
-  await (
-    await PriorityRegistry.syncRankedQueue(pledges, { gasLimit: 14000000 })
+    await PriorityRegistry.syncRankedQueue(pledges, { gasLimit: 24000000 })
   ).wait();
 
   console.log(`r-cap-after:${await PriorityRegistry.getRedeemablesCap()}`);

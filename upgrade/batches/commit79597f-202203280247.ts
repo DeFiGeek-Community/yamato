@@ -18,31 +18,52 @@ import { setNetwork } from "../../src/deployUtil";
 async function main() {
   setNetwork("rinkeby");
 
-  //   await _import("../mods/012_check_integrity");
-  //   await _import("../mods/013_toggle_Yamato");
+  /*
+    ======================
+    Usage: Comment-in the only-needed line.  
+    ======================
+  */
 
-  await _import("../mods/011_upgrade_PriceFeed");
-  //   await _import( "../mods/008_upgrade_Yamato");
-  //   await _import( "../mods/010_upgrade_YamatoDepositor");
-  //   await _import( "../mods/003_upgrade_YamatoWithdrawer");
-  //   await _import( "../mods/002_upgrade_YamatoRedeemer");
-  //   await _import( "../mods/009_upgrade_YamatoSweeper");
-  //   await _import( "../mods/006_upgrade_Pool");
-  //   await _import( "../mods/005_upgrade_PriorityRegistry");
+  // await _import("../mods/012_check_integrity");
+  // await _import("../mods/013_toggle_Yamato");
 
-  //   await _import( "../mods/012_check_integrity");
+  // await _import("../mods/011_upgrade_PriceFeed");
+  // await _import( "../mods/008_upgrade_Yamato");
+  // await _import( "../mods/010_upgrade_YamatoDepositor");
+  // await _import( "../mods/003_upgrade_YamatoWithdrawer");
+  // await _import( "../mods/002_upgrade_YamatoRedeemer");
+  // await _import( "../mods/014_upgrade_YamatoSweeper");
+  // await _import( "../mods/006_upgrade_Pool");
+  // await _import( "../mods/005_upgrade_PriorityRegistry");
 
-  //   await _import( "../mods/007_sync_PriorityRegistry");
+  await _import("../mods/012_check_integrity");
 
-  //   await _import( "../mods/012_check_integrity");
+  // await _import( "../mods/007_sync_PriorityRegistry");
 
-  //   await _import( "../mods/013_toggle_Yamato");
+  // await _import( "../mods/012_check_integrity");
+
+  // await _import( "../mods/015_adjustIntegrity");
+
+  // await _import( "../mods/012_check_integrity");
+
+  // await _import( "../mods/013_toggle_Yamato");
 }
 
 async function downgrade() {
   const runDowngrade = (await import("../../src/upgradeUtil")).runDowngrade;
 
-  await runDowngrade("PriceFeed", "");
+  /*
+    ====================
+    !!! Downgrading MUST be upgrading !!!
+      - Going back to the older version implies storage conflict by the newly added slot.
+      - Hence you can back to the older one by adding new slot to older contract.
+      - But it would be complicated.
+      - Maybe hotfixing to halt the upgrade-caused-bugs to mitigate damage and then re-upgrading to the next-next version of patched contract would be better.
+      - It means downgrading isn't exist and uponly.
+    ====================
+  */
+
+  // await runDowngrade("PriceFeed", "");
   // await runDowngrade("Yamato", "V2", ["PledgeLib"]);
   // await runDowngrade("YamatoDepositor", "", ["PledgeLib"]);
   // await runDowngrade("YamatoWithdrawer", "", ["PledgeLib"]);
@@ -52,8 +73,13 @@ async function downgrade() {
   // await runDowngrade("Pool", "");
 }
 
-main().then();
-// downgrade().then();
+if (process.env.YMT_CLI_MODE == "upgrade") {
+  main().then();
+} else if (process.env.YMT_CLI_MODE == "downgrade") {
+  downgrade().then();
+} else {
+  throw new Error("Use YMT_CLI_MODE env var.");
+}
 
 async function _import(path: string) {
   return await (await import(path)).default();
