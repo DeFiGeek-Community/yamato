@@ -36,7 +36,7 @@ async function main() {
   // await _import( "../mods/006_upgrade_Pool");
   // await _import( "../mods/005_upgrade_PriorityRegistry");
 
-  await _import("../mods/012_check_integrity");
+  // await _import("../mods/012_check_integrity");
 
   // await _import( "../mods/007_sync_PriorityRegistry");
 
