@@ -10,6 +10,7 @@ pragma solidity 0.8.4;
 //solhint-disable no-inline-assembly
 
 import "./Interfaces/IPriceFeed.sol";
+import "./Interfaces/IPriceFeedV2.sol";
 import "./Interfaces/ITellorCaller.sol";
 import "./Dependencies/AggregatorV3Interface.sol";
 import "./Dependencies/BaseMath.sol";
@@ -26,7 +27,7 @@ import "hardhat/console.sol";
  * switching oracles based on oracle failures, timeouts, and conditions for returning to the primary
  * Chainlink oracle.
  */
-contract PriceFeedV2 is IPriceFeed, UUPSBase, BaseMath {
+contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
     struct ChainlinkResponse {
         uint80 roundId;
         int256 answer;
@@ -42,14 +43,6 @@ contract PriceFeedV2 is IPriceFeed, UUPSBase, BaseMath {
         uint256 value;
         uint256 timestamp;
         bool success;
-    }
-
-    enum Status {
-        chainlinkWorking,
-        usingTellorChainlinkUntrusted,
-        bothOraclesUntrusted,
-        usingTellorChainlinkFrozen,
-        usingChainlinkTellorUntrusted
     }
 
     /*
@@ -539,19 +532,19 @@ contract PriceFeedV2 is IPriceFeed, UUPSBase, BaseMath {
         return _price;
     }
 
-    function getPrice() external view returns (uint256) {
+    function getPrice() external view override returns (uint256) {
         (uint256 _price, Status _status, bool _isAdjusted) = _simulatePrice();
 
         return _price;
     }
 
-    function getStatus() external view returns (Status) {
+    function getStatus() external view override returns (Status) {
         (uint256 _price, Status _status, bool _isAdjusted) = _simulatePrice();
 
         return _status;
     }
 
-    function getIsAdjusted() external view returns (bool) {
+    function getIsAdjusted() external view override returns (bool) {
         (uint256 _price, Status _status, bool _isAdjusted) = _simulatePrice();
 
         return _isAdjusted;

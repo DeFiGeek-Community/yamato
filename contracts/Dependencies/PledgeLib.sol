@@ -29,7 +29,7 @@ library PledgeLib {
         require(_feed != address(0), "Feed is null address.");
         IPriceFeed feed = IPriceFeed(_feed);
 
-        uint256 _ethPriceInCurrency = feed.lastGoodPrice(); // dec18
+        uint256 _ethPriceInCurrency = feed.lastGoodPrice(); // dec18 // All Yamato funcs uses fetchPrice before hand and so you can use lastGoodPrice here.
         uint256 _coll = _pledge.coll; // dec18
         uint256 _debt = _pledge.debt; // dec18
         uint256 _collInCurrency = (_coll * _ethPriceInCurrency) / 1e18; // dec18 * dec18 / dec18 = dec18

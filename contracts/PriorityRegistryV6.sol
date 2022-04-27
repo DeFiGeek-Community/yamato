@@ -11,6 +11,7 @@ pragma solidity 0.8.4;
 import "./Yamato.sol";
 import "./Interfaces/IYamatoV3.sol";
 import "./Interfaces/IPriceFeed.sol";
+import "./Interfaces/IPriceFeedV2.sol";
 import "./Interfaces/IPriorityRegistryV6.sol";
 import "./Interfaces/IPriorityRegistryV4.sol";
 import "./Dependencies/PledgeLib.sol";
@@ -76,7 +77,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         onlyYamato
         returns (uint256[] memory)
     {
-        uint256 _ethPriceInCurrency = IPriceFeed(feed()).lastGoodPrice();
+        uint256 _ethPriceInCurrency = IPriceFeed(feed()).lastGoodPrice(); // Note: can use lastGoodPrice cuz redeemer uses fetchPrice
         uint256[] memory _newPriorities = new uint256[](_pledges.length);
         for (uint256 i; i < _pledges.length; i++) {
             IYamato.Pledge memory _pledge = _pledges[i];
@@ -388,7 +389,8 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         uint256 _mcrPercent = uint256(IYamato(yamato()).MCR());
         uint256 _checkpoint = _mcrPercent +
             IYamatoV3(yamato()).CHECKPOINT_BUFFER();
-        uint256 ethPriceInCurrency = IPriceFeed(feed()).lastGoodPrice();
+        // uint256 ethPriceInCurrency = IPriceFeedV2(feed()).lastGoodPrice();
+        uint256 ethPriceInCurrency = IPriceFeedV2(feed()).getPrice();
 
         uint256 _rank = 1;
         uint256 _nextout = rankedQueueNextout(_rank);

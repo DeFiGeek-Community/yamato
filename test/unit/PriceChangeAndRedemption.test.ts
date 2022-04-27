@@ -299,6 +299,24 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         expect(redeemedPledgeAfter.priority).to.be.eq(0);
         expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true;
       });
+
+      it(`should redeem even if wantToRedeemAmount is smaller than the first toBeRedeemed.`, async function () {
+        await (await PriceFeed.fetchPrice()).wait();
+        const dumpedEffectivePrice = await PriceFeed.getPrice();
+
+        toBorrow = dumpedEffectivePrice
+          .mul(toCollateralize)
+          .mul(100)
+          .div(MCR)
+          .div(1e18 + "")
+          .sub(9 + "");
+
+        await expect(
+          Yamato.connect(redeemer).redeem(toERC20(toBorrow.div(2) + ""), false)
+        ).not.to.be.reverted;
+
+        expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true;
+      });
     });
     describe("Context - with 1% dump", function () {
       let dumpedPriceBase = 397000000000;

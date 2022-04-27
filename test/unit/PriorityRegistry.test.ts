@@ -7,7 +7,7 @@ import {
   CurrencyOS,
   FeePool,
   PledgeLib__factory,
-  PriceFeed,
+  PriceFeedV2,
   Yamato,
   YamatoDummy,
   YamatoDummy__factory,
@@ -27,7 +27,7 @@ describe("contract PriorityRegistry", function () {
   let mockYamato: FakeContract<Yamato>;
   let mockCurrencyOS: FakeContract<CurrencyOS>;
   let mockFeePool: FakeContract<FeePool>;
-  let mockFeed: FakeContract<PriceFeed>;
+  let mockFeed: FakeContract<PriceFeedV2>;
   let mockCJPY: FakeContract<CJPY>;
   let yamatoDummy: YamatoDummy;
   let priorityRegistryWithYamatoMock: PriorityRegistryV6;
@@ -40,9 +40,9 @@ describe("contract PriorityRegistry", function () {
     accounts = await ethers.getSigners();
     address0 = await accounts[0].getAddress();
 
-    mockFeed = await getFakeProxy<PriceFeed>("PriceFeed");
+    mockFeed = await getFakeProxy<PriceFeedV2>("PriceFeedV2");
     mockFeePool = await getFakeProxy<FeePool>("FeePool");
-    mockCurrencyOS = await getFakeProxy<CurrencyOS>("CurrencyOS");
+    mockCurrencyOS = await getFakeProxy<CurrencyOS>("CurrencyOSV2");
     const PledgeLib = (
       await (<PledgeLib__factory>(
         await ethers.getContractFactory("PledgeLib")
@@ -60,6 +60,7 @@ describe("contract PriorityRegistry", function () {
 
     mockCJPY.balanceOf.returns(PRICE.mul(1).mul(100).div(130));
     mockFeed.fetchPrice.returns(PRICE);
+    mockFeed.getPrice.returns(PRICE);
     mockFeed.lastGoodPrice.returns(PRICE);
     mockCurrencyOS.feed.returns(mockFeed.address);
     mockCurrencyOS.feePool.returns(mockFeePool.address);
