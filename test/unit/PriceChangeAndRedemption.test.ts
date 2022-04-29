@@ -722,6 +722,9 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
         const redeemablePledge = await Yamato.getPledge(coreRedeemeeAddr);
         const cjpyBalanceBefore = await CJPY.balanceOf(redeemerAddr);
+        const redeemerETHBefore = await Yamato.provider.getBalance(
+          redeemerAddr
+        );
         const feePoolBalanceBefore = await Yamato.provider.getBalance(
           FeePool.address
         );
@@ -734,11 +737,17 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         ).wait();
         const redeemedPledge = await Yamato.getPledge(coreRedeemeeAddr);
         const cjpyBalanceAfter = await CJPY.balanceOf(redeemerAddr);
+        const redeemerETHAfter = await Yamato.provider.getBalance(redeemerAddr);
         const feePoolBalanceAfter = await Yamato.provider.getBalance(
           FeePool.address
         );
 
         expect(cjpyBalanceAfter).to.equal(cjpyBalanceBefore);
+        expect(
+          redeemerETHAfter.add(
+            txReceipt.gasUsed.mul(txReceipt.effectiveGasPrice)
+          )
+        ).to.be.gt(redeemerETHBefore);
         expect(redeemedPledge.coll).to.be.lt(redeemablePledge.coll);
         expect(feePoolBalanceAfter).to.be.gt(feePoolBalanceBefore);
         expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true;

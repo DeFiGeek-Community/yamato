@@ -240,8 +240,8 @@ contract YamatoRedeemerV4 is IYamatoRedeemerV4, YamatoAction {
         /*
             4. Gas compensation
         */
-        uint256 gasCompensationInETH = vars._toBeRedeemedInEth *
-            (vars._GRR / 100);
+        uint256 gasCompensationInETH = (vars._toBeRedeemedInEth * vars._GRR) /
+            100;
         IPool(pool()).sendETH(_args.sender, gasCompensationInETH);
 
         return
