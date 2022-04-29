@@ -520,9 +520,9 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
         /* Get redemption budget by her own */
         await Yamato.connect(redeemer).deposit({
-          value: toERC20(toCollateralize * 70.1 + ""),
+          value: toERC20(toCollateralize * 110.1 + ""),
         });
-        await Yamato.connect(redeemer).borrow(toERC20(toBorrow.mul(70) + ""));
+        await Yamato.connect(redeemer).borrow(toERC20(toBorrow.mul(100) + ""));
 
         /* Set the only and to-be-lowest ICR */
         await Yamato.connect(redeemee).deposit({
@@ -573,9 +573,14 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         ).wait(); //dec8
       });
 
-      it(`should redeem w/o making LICR broken and w/ reasonable gas`, async function () {
+      it.only(`should redeem w/o making LICR broken and w/ reasonable gas`, async function () {
         const redeemerAddr = await redeemer.getAddress();
         const redeemeeAddr = await redeemee.getAddress();
+        const licr = await PriorityRegistry.LICR();
+        const nextRedeemeeAddr = await PriorityRegistry.getRankedQueue(
+          licr,
+          await PriorityRegistry.rankedQueueNextout(licr)
+        );
         const dumpedEffectivePrice = await PriceFeed.getPrice();
 
         toBorrow = dumpedEffectivePrice
@@ -596,12 +601,12 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
         const txReceipt = await (
           await Yamato.connect(redeemer).redeem(
-            toERC20(toBorrow.mul(20) + ""),
+            toERC20(toBorrow.mul(95) + ""),
             false
           )
         ).wait();
 
-        const redeemedPledgeAfter = await Yamato.getPledge(redeemeeAddr);
+        const redeemedPledgeAfter = await Yamato.getPledge(nextRedeemeeAddr);
 
         const totalSupplyAfter = await CJPY.totalSupply();
         const redeemerCJPYBalanceAfter = await CJPY.balanceOf(redeemerAddr);
