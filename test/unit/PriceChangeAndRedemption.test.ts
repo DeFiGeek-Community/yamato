@@ -573,7 +573,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         ).wait(); //dec8
       });
 
-      it.only(`should redeem w/o making LICR broken and w/ reasonable gas`, async function () {
+      it(`should redeem w/o making LICR broken and w/ reasonable gas`, async function () {
         const redeemerAddr = await redeemer.getAddress();
         const redeemeeAddr = await redeemee.getAddress();
         const licr = await PriorityRegistry.LICR();
