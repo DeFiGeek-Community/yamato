@@ -77,7 +77,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         onlyYamato
         returns (uint256[] memory)
     {
-        uint256 _ethPriceInCurrency = IPriceFeed(feed()).lastGoodPrice(); // Note: can use lastGoodPrice cuz redeemer uses fetchPrice
+        uint256 _ethPriceInCurrency = IPriceFeedV2(feed()).getPrice(); // Note: can't use lastGoodPrice cuz bulkUpsert can also be called be syncer which does not use fetchPrice
         uint256[] memory _newPriorities = new uint256[](_pledges.length);
         for (uint256 i; i < _pledges.length; i++) {
             IYamato.Pledge memory _pledge = _pledges[i];
@@ -129,18 +129,30 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         */
         // Note: All deletions could cause traverse.
         // Note: Traversing to the ICR=MAX_UINT256 pledges are checked, don't worry about gas cost explosion.
+        // Note: 2022-04-29 pledges must be sorted by those real ICR. Also, the last element can be MAXINT if you do sync.
         /*
             LICR determination algo for bulkUpsert
                 - The first pledge is ICR-lowest pledge
                 - Check the len of the rank
                 - If empty, start traversing from that rank.
         */
+        // Bug: Is the last pledge must be the target???
+        Yamato.Pledge memory _detectionTargetPledge = _pledges[
+            _pledges.length - 1
+        ];
+        uint256 _detectionTargetICR = _detectionTargetPledge.getICRWithPrice(
+            _ethPriceInCurrency
+        );
         uint256 _licrCandidate = _detectLowestICR(
-            _pledges[_pledges.length - 1].getICRWithPrice(_ethPriceInCurrency),
-            floor(_pledges[_pledges.length - 1].priority),
+            floor(_detectionTargetICR),
+            floor(_detectionTargetPledge.priority),
             LICR
         );
-        if (_licrCandidate < LICR || LICR == 0) {
+        if (LICR == 0 && _licrCandidate == MAX_PRIORITY) {
+            // Note: For sync scenarip
+            _traverseToNextLICR(1);
+        } else if (_licrCandidate < LICR || LICR == 0) {
+            // Note: For yamato actions scenario
             if (_licrCandidate > 0) {
                 if (rankedQueueLen(_licrCandidate) > 0) {
                     LICR = _licrCandidate;
@@ -160,6 +172,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         uint256 _oldICRpercent,
         uint256 _licr
     ) internal pure returns (uint256 _newLowestICR) {
+        _newLowestICR = _licr;
         if (_oldICRpercent > 0 && _newICRpercent > 0) {
             _newLowestICR = LiquityMath._min(_oldICRpercent, _newICRpercent);
         } else if (_oldICRpercent > 0) {
@@ -338,7 +351,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         uint256 _icr = floor(_pledge.priority);
         DeleteDictItem memory _item = deleteDict[_pledge.owner];
         if (
-            _item.isCreated /* To distinguish isCreated=true and index=0 */
+            _item.isCreated && uint256(_item.index) < rankedQueueTotalLen(_icr) /* To distinguish isCreated=true and index=0 */
         ) {
             rankedQueueSearchAndDestroy(_icr, uint256(_item.index));
         }
@@ -461,6 +474,8 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         public
         onlyGovernance
     {
+        LICR = 0;
+
         if (_defaultRank != 0) {
             nextResetRank = _defaultRank;
         }
@@ -475,6 +490,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
             rankedQueueV2[MAX_PRIORITY].pledges.pop();
             rankedQueueV2[MAX_PRIORITY].nextout = 0;
         }
+
         for (uint256 i = nextResetRank; i <= MAX_PRIORITY; i++) {
             if (i > nextResetRank && i % 500 == 0) {
                 nextResetRank = i;

@@ -34,11 +34,12 @@ async function main() {
   // await _import( "../mods/002_upgrade_YamatoRedeemer");
   // await _import( "../mods/014_upgrade_YamatoSweeper");
   // await _import( "../mods/006_upgrade_Pool");
-  // await _import( "../mods/005_upgrade_PriorityRegistry");
+  await _import("../mods/005_upgrade_PriorityRegistry");
 
   // await _import("../mods/012_check_integrity");
+  await new Promise((resolve) => setTimeout(resolve, 20000));
 
-  // await _import( "../mods/007_sync_PriorityRegistry");
+  await _import("../mods/007_sync_PriorityRegistry");
 
   // await _import( "../mods/012_check_integrity");
 
@@ -59,7 +60,7 @@ async function downgrade() {
       - Hence you can back to the older one by adding new slot to older contract.
       - But it would be complicated.
       - Maybe hotfixing to halt the upgrade-caused-bugs to mitigate damage and then re-upgrading to the next-next version of patched contract would be better.
-      - It means downgrading isn't exist and uponly.
+      - It means downgrading isn't exist and WE ARE UPONLY.
     ====================
   */
 
