@@ -162,6 +162,8 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
             } else {
                 _traverseToNextLICR(1); /* If _licrCandidate=0 (just after full-redemption) and current LICR will be obsoleted. Then search next. */
             }
+        } else {
+            _traverseToNextLICR(1);
         }
 
         return _newPriorities;

@@ -520,9 +520,9 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
         /* Get redemption budget by her own */
         await Yamato.connect(redeemer).deposit({
-          value: toERC20(toCollateralize * 7.1 + ""),
+          value: toERC20(toCollateralize * 70.1 + ""),
         });
-        await Yamato.connect(redeemer).borrow(toERC20(toBorrow.mul(7) + ""));
+        await Yamato.connect(redeemer).borrow(toERC20(toBorrow.mul(70) + ""));
 
         /* Set the only and to-be-lowest ICR */
         await Yamato.connect(redeemee).deposit({
@@ -596,7 +596,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
         const txReceipt = await (
           await Yamato.connect(redeemer).redeem(
-            toERC20(toBorrow.mul(2) + ""),
+            toERC20(toBorrow.mul(20) + ""),
             false
           )
         ).wait();
@@ -664,14 +664,14 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         );
 
         await Yamato.connect(yetAnotherRedeemee).deposit({
-          value: toERC20(toCollateralize * 20 + ""),
+          value: toERC20(toCollateralize * 20.05 + ""),
         });
         await Yamato.connect(yetAnotherRedeemee).borrow(
           toERC20(toBorrow.mul(20) + "")
         );
 
         await Yamato.connect(accounts[4]).deposit({
-          value: toERC20(toCollateralize * 20 + ""),
+          value: toERC20(toCollateralize * 20.05 + ""),
         });
         await Yamato.connect(accounts[4]).borrow(
           toERC20(toBorrow.mul(20) + "")
@@ -709,8 +709,13 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       it(`should run core redemption`, async function () {
         const redeemerAddr = await redeemer.getAddress();
         const redeemeeAddr = await redeemee.getAddress();
+        const licr = await PriorityRegistry.LICR();
+        const coreRedeemeeAddr = await PriorityRegistry.getRankedQueue(
+          licr,
+          await PriorityRegistry.rankedQueueNextout(licr)
+        );
 
-        const redeemablePledge = await Yamato.getPledge(redeemeeAddr);
+        const redeemablePledge = await Yamato.getPledge(coreRedeemeeAddr);
         const cjpyBalanceBefore = await CJPY.balanceOf(redeemerAddr);
         const feePoolBalanceBefore = await Yamato.provider.getBalance(
           FeePool.address
@@ -722,7 +727,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
             true
           )
         ).wait();
-        const redeemedPledge = await Yamato.getPledge(redeemeeAddr);
+        const redeemedPledge = await Yamato.getPledge(coreRedeemeeAddr);
         const cjpyBalanceAfter = await CJPY.balanceOf(redeemerAddr);
         const feePoolBalanceAfter = await Yamato.provider.getBalance(
           FeePool.address
