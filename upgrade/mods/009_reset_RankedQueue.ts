@@ -6,7 +6,7 @@ import {
 import { readFileSync } from "fs";
 import { ethers } from "ethers";
 import { genABI } from "../../src/genABI";
-import { PriorityRegistryV5 } from "../../typechain";
+import { PriorityRegistryV6 } from "../../typechain";
 
 const NAME2 = "PriorityRegistry";
 let PriorityRegistryERC1967Proxy = readFileSync(
@@ -15,10 +15,10 @@ let PriorityRegistryERC1967Proxy = readFileSync(
 
 export default async function main() {
   await setProvider();
-  let PriorityRegistry: PriorityRegistryV5 = <PriorityRegistryV5>(
+  let PriorityRegistry: PriorityRegistryV6 = <PriorityRegistryV6>(
     new ethers.Contract(
       PriorityRegistryERC1967Proxy,
-      genABI(NAME2 + "V5"),
+      genABI(NAME2 + "V6"),
       getFoundation()
     )
   );

@@ -29,7 +29,7 @@ import "hardhat/console.sol";
 /// @title Yamato Redeemer Contract
 /// @author 0xMotoko
 
-contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
+contract YamatoRedeemerV4 is IYamatoRedeemerV4, YamatoAction {
     using PledgeLib for IYamato.Pledge;
     using PledgeLib for uint256;
 
@@ -37,11 +37,11 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
         __YamatoAction_init(_yamato);
     }
 
-    function runRedeem(RunRedeemArgs memory _args)
+    function runRedeem(IYamatoRedeemer.RunRedeemArgs memory _args)
         public
         override
         onlyYamato
-        returns (RedeemedArgs memory)
+        returns (IYamatoRedeemer.RedeemedArgs memory)
     {
         IYamatoRedeemerV4.RunRedeemVars memory vars;
         IPriorityRegistryV6 _prv6 = IPriorityRegistryV6(priorityRegistry());
@@ -112,44 +112,48 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
                 vars._nextin = _prv6.rankedQueueTotalLen(vars._nextICR);
                 continue; /* To avoid "just-on-MCR" pledges */
             } else {
-                vars._redeemingAmount = _pledge.toBeRedeemed(
+                vars._toBeRedeemedFragment = _pledge.toBeRedeemed(
                     vars._mcrPertenk,
                     _ICRpertenk,
                     vars.ethPriceInCurrency
                 );
 
                 if (
-                    vars._redeemingAmount == 0 &&
+                    vars._toBeRedeemedFragment == 0 &&
                     _ICRpertenk >= vars._mcrPertenk
                 ) {
                     vars._skippedPledges[vars._skipCount] = _pledge;
                     vars._skipCount++;
                     continue; /* To skip until next poppables. */
                 }
+
                 if (
-                    vars._toBeRedeemed + vars._redeemingAmount >
+                    vars._toBeRedeemed + vars._toBeRedeemedFragment >
                     _args.wantToRedeemCurrencyAmount
                 ) {
-                    vars._redeemingAmount =
+                    vars._toBeRedeemedFragment =
                         _args.wantToRedeemCurrencyAmount -
                         vars._toBeRedeemed; /* Limiting redeeming amount within the amount sender has. */
                 }
-                vars._redeemingAmountInEth =
-                    (vars._redeemingAmount * 1e18) /
+
+                vars._toBeRedeemedFragmentInEth =
+                    (vars._toBeRedeemedFragment * 1e18) /
                     vars.ethPriceInCurrency;
                 /* state update for redeemed pledge */
 
-                if (_pledge.coll == vars._redeemingAmountInEth + 1) {
+                if (_pledge.coll == vars._toBeRedeemedFragmentInEth + 1) {
                     /* Rounding a dusty collateral */
-                    vars._redeemingAmountInEth += 1;
-                    vars._redeemingAmount += vars.ethPriceInCurrency / 1e18;
+                    vars._toBeRedeemedFragmentInEth += 1;
+                    vars._toBeRedeemedFragment +=
+                        vars.ethPriceInCurrency /
+                        1e18;
                 }
 
-                _pledge.debt -= vars._redeemingAmount;
-                _pledge.coll -= vars._redeemingAmountInEth;
+                _pledge.debt -= vars._toBeRedeemedFragment;
+                _pledge.coll -= vars._toBeRedeemedFragmentInEth;
 
-                vars._toBeRedeemed += vars._redeemingAmount;
-                vars._toBeRedeemedInEth += vars._redeemingAmountInEth;
+                vars._toBeRedeemed += vars._toBeRedeemedFragment;
+                vars._toBeRedeemedInEth += vars._toBeRedeemedFragmentInEth;
                 vars._pledgesOwner[vars._count] = _pledge.owner;
                 vars._bulkedPledges[vars._count] = _pledge;
                 vars._count++;
@@ -174,15 +178,14 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
         for (uint256 i; i < vars._maxCount; ) {
             vars._bulkedPledges[vars._maxCount + i] = vars._skippedPledges[i];
             unchecked {
-                ++i;
+                ++i; // Note: gas saving
             }
         }
 
         /*
             External tx: bulkUpsert and LICR update
         */
-        uint256[] memory _priorities = IPriorityRegistryV6(priorityRegistry())
-            .bulkUpsert(vars._bulkedPledges);
+        uint256[] memory _priorities = _prv6.bulkUpsert(vars._bulkedPledges);
 
         /*
             On memory update: priority
@@ -237,33 +240,17 @@ contract YamatoRedeemerV4 is IYamatoRedeemer, YamatoAction {
         /*
             4. Gas compensation
         */
-        uint256 gasCompensationInETH = vars._toBeRedeemedInEth *
-            (vars._GRR / 100);
+        uint256 gasCompensationInETH = (vars._toBeRedeemedInEth * vars._GRR) /
+            100;
         IPool(pool()).sendETH(_args.sender, gasCompensationInETH);
 
         return
-            RedeemedArgs(
+            IYamatoRedeemer.RedeemedArgs(
                 vars._toBeRedeemed,
                 vars._toBeRedeemedInEth,
                 vars._pledgesOwner,
                 vars.ethPriceInCurrency,
                 gasCompensationInETH
             );
-    }
-
-    /*****************************************************
-        !!! Deprecated but in the IYamatoRedeemer.sol !!!
-    *****************************************************/
-
-    /// @dev Deprecated in V4. It was used older runRedeem() that only redeems one pledge.
-    /// @notice Use when redemption
-    function redeemPledge(
-        IYamato.Pledge memory sPledge,
-        uint256 currencyAmount,
-        uint256 ethPriceInCurrency
-    ) public override onlyYamato returns (IYamato.Pledge memory, uint256) {
-        IYamato.Pledge memory sPledge;
-        uint256 reminder;
-        return (sPledge, reminder);
     }
 }

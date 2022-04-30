@@ -10,6 +10,7 @@ pragma solidity 0.8.4;
 //solhint-disable no-inline-assembly
 
 import "./IYamato.sol";
+import "./IYamatoRedeemer.sol";
 
 interface IYamatoRedeemerV4 {
     // To avoid stack too deep error in the functions
@@ -30,8 +31,8 @@ interface IYamatoRedeemerV4 {
         uint256 _toBeRedeemed;
         uint256 _toBeRedeemedInEth;
         uint256 _count;
-        uint256 _redeemingAmount;
-        uint256 _redeemingAmountInEth;
+        uint256 _toBeRedeemedFragment;
+        uint256 _toBeRedeemedFragmentInEth;
         uint256 _maxCount;
         uint256 _skipCount;
         uint256 _pledgeLength;
@@ -40,4 +41,8 @@ interface IYamatoRedeemerV4 {
         IYamato.Pledge[] _bulkedPledges;
         IYamato.Pledge[] _skippedPledges;
     }
+
+    function runRedeem(IYamatoRedeemer.RunRedeemArgs memory)
+        external
+        returns (IYamatoRedeemer.RedeemedArgs memory);
 }

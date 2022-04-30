@@ -299,6 +299,24 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         expect(redeemedPledgeAfter.priority).to.be.eq(0);
         expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true;
       });
+
+      it(`should redeem even if wantToRedeemAmount is smaller than the first toBeRedeemed.`, async function () {
+        await (await PriceFeed.fetchPrice()).wait();
+        const dumpedEffectivePrice = await PriceFeed.getPrice();
+
+        toBorrow = dumpedEffectivePrice
+          .mul(toCollateralize)
+          .mul(100)
+          .div(MCR)
+          .div(1e18 + "")
+          .sub(9 + "");
+
+        await expect(
+          Yamato.connect(redeemer).redeem(toERC20(toBorrow.div(2) + ""), false)
+        ).not.to.be.reverted;
+
+        expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true;
+      });
     });
     describe("Context - with 1% dump", function () {
       let dumpedPriceBase = 397000000000;
@@ -502,9 +520,9 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
         /* Get redemption budget by her own */
         await Yamato.connect(redeemer).deposit({
-          value: toERC20(toCollateralize * 7.1 + ""),
+          value: toERC20(toCollateralize * 110.1 + ""),
         });
-        await Yamato.connect(redeemer).borrow(toERC20(toBorrow.mul(7) + ""));
+        await Yamato.connect(redeemer).borrow(toERC20(toBorrow.mul(100) + ""));
 
         /* Set the only and to-be-lowest ICR */
         await Yamato.connect(redeemee).deposit({
@@ -558,6 +576,11 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       it(`should redeem w/o making LICR broken and w/ reasonable gas`, async function () {
         const redeemerAddr = await redeemer.getAddress();
         const redeemeeAddr = await redeemee.getAddress();
+        const licr = await PriorityRegistry.LICR();
+        const nextRedeemeeAddr = await PriorityRegistry.getRankedQueue(
+          licr,
+          await PriorityRegistry.rankedQueueNextout(licr)
+        );
         const dumpedEffectivePrice = await PriceFeed.getPrice();
 
         toBorrow = dumpedEffectivePrice
@@ -578,12 +601,12 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
         const txReceipt = await (
           await Yamato.connect(redeemer).redeem(
-            toERC20(toBorrow.mul(2) + ""),
+            toERC20(toBorrow.mul(95) + ""),
             false
           )
         ).wait();
 
-        const redeemedPledgeAfter = await Yamato.getPledge(redeemeeAddr);
+        const redeemedPledgeAfter = await Yamato.getPledge(nextRedeemeeAddr);
 
         const totalSupplyAfter = await CJPY.totalSupply();
         const redeemerCJPYBalanceAfter = await CJPY.balanceOf(redeemerAddr);
@@ -646,14 +669,14 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         );
 
         await Yamato.connect(yetAnotherRedeemee).deposit({
-          value: toERC20(toCollateralize * 20 + ""),
+          value: toERC20(toCollateralize * 20.05 + ""),
         });
         await Yamato.connect(yetAnotherRedeemee).borrow(
           toERC20(toBorrow.mul(20) + "")
         );
 
         await Yamato.connect(accounts[4]).deposit({
-          value: toERC20(toCollateralize * 20 + ""),
+          value: toERC20(toCollateralize * 20.05 + ""),
         });
         await Yamato.connect(accounts[4]).borrow(
           toERC20(toBorrow.mul(20) + "")
@@ -691,9 +714,17 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       it(`should run core redemption`, async function () {
         const redeemerAddr = await redeemer.getAddress();
         const redeemeeAddr = await redeemee.getAddress();
+        const licr = await PriorityRegistry.LICR();
+        const coreRedeemeeAddr = await PriorityRegistry.getRankedQueue(
+          licr,
+          await PriorityRegistry.rankedQueueNextout(licr)
+        );
 
-        const redeemablePledge = await Yamato.getPledge(redeemeeAddr);
+        const redeemablePledge = await Yamato.getPledge(coreRedeemeeAddr);
         const cjpyBalanceBefore = await CJPY.balanceOf(redeemerAddr);
+        const redeemerETHBefore = await Yamato.provider.getBalance(
+          redeemerAddr
+        );
         const feePoolBalanceBefore = await Yamato.provider.getBalance(
           FeePool.address
         );
@@ -704,13 +735,19 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
             true
           )
         ).wait();
-        const redeemedPledge = await Yamato.getPledge(redeemeeAddr);
+        const redeemedPledge = await Yamato.getPledge(coreRedeemeeAddr);
         const cjpyBalanceAfter = await CJPY.balanceOf(redeemerAddr);
+        const redeemerETHAfter = await Yamato.provider.getBalance(redeemerAddr);
         const feePoolBalanceAfter = await Yamato.provider.getBalance(
           FeePool.address
         );
 
         expect(cjpyBalanceAfter).to.equal(cjpyBalanceBefore);
+        expect(
+          redeemerETHAfter.add(
+            txReceipt.gasUsed.mul(txReceipt.effectiveGasPrice)
+          )
+        ).to.be.gt(redeemerETHBefore);
         expect(redeemedPledge.coll).to.be.lt(redeemablePledge.coll);
         expect(feePoolBalanceAfter).to.be.gt(feePoolBalanceBefore);
         expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true;
@@ -1229,7 +1266,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         let ethBalanceAfter = await Yamato.provider.getBalance(redeemerAddr);
         let redemptionReturn = ethBalanceAfter.sub(ethBalanceBefore);
         let txcost = txReceipt1.gasUsed.mul(txReceipt1.effectiveGasPrice);
-        expect(redemptionReturn.add(txcost)).to.eq(BigNumber.from(5e18 + ""));
+        expect(redemptionReturn.add(txcost)).to.eq(BigNumber.from(505e16 + ""));
 
         let gas2 = await Yamato.estimateGas.sweep();
         expect(gas2).to.be.lt(30000000);
@@ -1282,7 +1319,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         let ethBalanceAfter = await Yamato.provider.getBalance(redeemerAddr);
         let redemptionReturn = ethBalanceAfter.sub(ethBalanceBefore);
         let txcost = txReceipt1.gasUsed.mul(txReceipt1.effectiveGasPrice);
-        expect(redemptionReturn.add(txcost)).to.eq(BigNumber.from(5e18 + ""));
+        expect(redemptionReturn.add(txcost)).to.eq(BigNumber.from(505e16 + ""));
 
         let gas2 = await Yamato.estimateGas.sweep();
         expect(gas2).to.be.lt(30000000);

@@ -12954,33 +12954,33 @@
             "contract": "PriceFeedV2",
             "label": "lastGoodPrice",
             "type": "t_uint256",
-            "src": "contracts/PriceFeedV2.sol:101"
+            "src": "contracts/PriceFeedV2.sol:94"
           },
           {
             "contract": "PriceFeedV2",
             "label": "lastSeen",
             "type": "t_uint256",
-            "src": "contracts/PriceFeedV2.sol:102"
+            "src": "contracts/PriceFeedV2.sol:95"
           },
           {
             "contract": "PriceFeedV2",
             "label": "status",
-            "type": "t_enum(Status)1655",
-            "src": "contracts/PriceFeedV2.sol:104"
+            "type": "t_enum(Status)1596",
+            "src": "contracts/PriceFeedV2.sol:97"
           },
           {
             "contract": "PriceFeedV2",
             "label": "lastAdjusted",
             "type": "t_uint256",
-            "src": "contracts/PriceFeedV2.sol:105"
+            "src": "contracts/PriceFeedV2.sol:98"
           }
         ],
         "types": {
           "t_uint256": {
             "label": "uint256"
           },
-          "t_enum(Status)1655": {
-            "label": "enum PriceFeedV2.Status",
+          "t_enum(Status)1596": {
+            "label": "enum IPriceFeedV2.Status",
             "members": [
               "chainlinkWorking",
               "usingTellorChainlinkUntrusted",
@@ -12994,6 +12994,3496 @@
           },
           "t_array(t_uint256)50_storage": {
             "label": "uint256[50]"
+          },
+          "t_bool": {
+            "label": "bool"
+          }
+        }
+      }
+    },
+    "2625e68f353e76e20d9fc0bfaccb293056922e56e9036525460deb0d5000fda0": {
+      "address": "0x736F179cAD545137ae488101B3dCe52D05712a83",
+      "txHash": "0x4ee1e8be9da6fa60924070e1ee74f7be261e1cc030073bb7a8e866c649698fdf",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:21"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:26"
+          },
+          {
+            "contract": "ERC1967UpgradeUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:214"
+          },
+          {
+            "contract": "UUPSUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:80"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "governance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:20"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "pendingGovernance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:21"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "tester",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:22"
+          },
+          {
+            "contract": "YamatoBase",
+            "label": "YAMATO_SLOT_ID",
+            "type": "t_string_storage",
+            "src": "contracts/Dependencies/YamatoBase.sol:20"
+          }
+        ],
+        "types": {
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_bool": {
+            "label": "bool"
+          }
+        }
+      }
+    },
+    "fb52f600c97e58eea7f199be882c0c5aeddf3e926a1034ff9d8dfd6e6a0af7c2": {
+      "address": "0x1A2Ab8C548d05F88cf0fF96104bA3De941CF605F",
+      "txHash": "0x01b1ba55ff47c7c3c6589ef56470713e3ce0c8c85f0f7419bcf9c0095663ba8c",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:21"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:26"
+          },
+          {
+            "contract": "ERC1967UpgradeUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:214"
+          },
+          {
+            "contract": "UUPSUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:80"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "governance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:20"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "pendingGovernance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:21"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "tester",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:22"
+          },
+          {
+            "contract": "YamatoBase",
+            "label": "YAMATO_SLOT_ID",
+            "type": "t_string_storage",
+            "src": "contracts/Dependencies/YamatoBase.sol:20"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "leveledPledges",
+            "type": "t_mapping(t_uint256,t_mapping(t_address,t_struct(Pledge)4424_storage))",
+            "src": "contracts/PriorityRegistryV6.sol:28"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "levelIndice",
+            "type": "t_mapping(t_uint256,t_array(t_address)dyn_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:29"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "pledgeLength",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:30"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "LICR",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:31"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "rankedQueue",
+            "type": "t_mapping(t_uint256,t_struct(FifoQueue)4192_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:32"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "nextResetRank",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:35"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "deleteDict",
+            "type": "t_mapping(t_address,t_struct(DeleteDictItem)4276_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:36"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "rankedQueueV2",
+            "type": "t_mapping(t_uint256,t_struct(FifoQueue)4271_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:37"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "nextUpsertPledgeIndex",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:38"
+          }
+        ],
+        "types": {
+          "t_mapping(t_uint256,t_mapping(t_address,t_struct(Pledge)4424_storage))": {
+            "label": "mapping(uint256 => mapping(address => struct IYamato.Pledge))"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_mapping(t_address,t_struct(Pledge)4424_storage)": {
+            "label": "mapping(address => struct IYamato.Pledge)"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_struct(Pledge)4424_storage": {
+            "label": "struct IYamato.Pledge",
+            "members": [
+              {
+                "label": "coll",
+                "type": "t_uint256"
+              },
+              {
+                "label": "debt",
+                "type": "t_uint256"
+              },
+              {
+                "label": "isCreated",
+                "type": "t_bool"
+              },
+              {
+                "label": "owner",
+                "type": "t_address"
+              },
+              {
+                "label": "priority",
+                "type": "t_uint256"
+              }
+            ]
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_mapping(t_uint256,t_array(t_address)dyn_storage)": {
+            "label": "mapping(uint256 => address[])"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]"
+          },
+          "t_mapping(t_uint256,t_struct(FifoQueue)4192_storage)": {
+            "label": "mapping(uint256 => struct IPriorityRegistryV4.FifoQueue)"
+          },
+          "t_struct(FifoQueue)4192_storage": {
+            "label": "struct IPriorityRegistryV4.FifoQueue",
+            "members": [
+              {
+                "label": "nextout",
+                "type": "t_uint256"
+              },
+              {
+                "label": "pledges",
+                "type": "t_array(t_struct(Pledge)4424_storage)dyn_storage"
+              }
+            ]
+          },
+          "t_array(t_struct(Pledge)4424_storage)dyn_storage": {
+            "label": "struct IYamato.Pledge[]"
+          },
+          "t_mapping(t_address,t_struct(DeleteDictItem)4276_storage)": {
+            "label": "mapping(address => struct IPriorityRegistryV6.DeleteDictItem)"
+          },
+          "t_struct(DeleteDictItem)4276_storage": {
+            "label": "struct IPriorityRegistryV6.DeleteDictItem",
+            "members": [
+              {
+                "label": "isCreated",
+                "type": "t_bool"
+              },
+              {
+                "label": "index",
+                "type": "t_uint248"
+              }
+            ]
+          },
+          "t_uint248": {
+            "label": "uint248"
+          },
+          "t_mapping(t_uint256,t_struct(FifoQueue)4271_storage)": {
+            "label": "mapping(uint256 => struct IPriorityRegistryV6.FifoQueue)"
+          },
+          "t_struct(FifoQueue)4271_storage": {
+            "label": "struct IPriorityRegistryV6.FifoQueue",
+            "members": [
+              {
+                "label": "nextout",
+                "type": "t_uint256"
+              },
+              {
+                "label": "pledges",
+                "type": "t_array(t_address)dyn_storage"
+              }
+            ]
+          },
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          }
+        }
+      }
+    },
+    "35207cc50f2909cc04d36d0e0f59c8f7c45bc2b9c1bc2d9e52cf0d93755d45c9": {
+      "address": "0x798E59eB78d2aeDB07cf3175021eE0b2256F1Ae6",
+      "txHash": "0x27941b11d6c754a01049e556b7d050a18bf25457f75ff2d9043a9c705a57cf82",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:21"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:26"
+          },
+          {
+            "contract": "ERC1967UpgradeUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:214"
+          },
+          {
+            "contract": "UUPSUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:80"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "governance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:20"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "pendingGovernance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:21"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "tester",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:22"
+          },
+          {
+            "contract": "YamatoBase",
+            "label": "YAMATO_SLOT_ID",
+            "type": "t_string_storage",
+            "src": "contracts/Dependencies/YamatoBase.sol:20"
+          }
+        ],
+        "types": {
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_bool": {
+            "label": "bool"
+          }
+        }
+      }
+    },
+    "7438068ae439972767ff17b8700aa9a88e231ce74e5dc3c13ae3e7e21a44c748": {
+      "address": "0xFdBE50De820153F2BB7471b0621931a670226D9b",
+      "txHash": "0x49555943b9d8501b324c43eacecfec8001a8752ad1fae7e31be2f19521f9449a",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:21"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:26"
+          },
+          {
+            "contract": "ERC1967UpgradeUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:214"
+          },
+          {
+            "contract": "UUPSUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:80"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "governance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:20"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "pendingGovernance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:21"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "tester",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:22"
+          },
+          {
+            "contract": "YamatoBase",
+            "label": "YAMATO_SLOT_ID",
+            "type": "t_string_storage",
+            "src": "contracts/Dependencies/YamatoBase.sol:20"
+          }
+        ],
+        "types": {
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_bool": {
+            "label": "bool"
+          }
+        }
+      }
+    },
+    "6519b2d71c8dfa306b5fb96992a3d296d99e1f7a50be8a64ece56b3ce6f6f28e": {
+      "address": "0x421917801F81A0274c99A7661f01a6a81eeb77f7",
+      "txHash": "0xc8671808b2da04e11f035af65f6dfca22348abc4d7322b3f16f6af9029d9ca75",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:21"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:26"
+          },
+          {
+            "contract": "ERC1967UpgradeUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:214"
+          },
+          {
+            "contract": "UUPSUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:80"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "governance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:20"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "pendingGovernance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:21"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "tester",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:22"
+          },
+          {
+            "contract": "YamatoBase",
+            "label": "YAMATO_SLOT_ID",
+            "type": "t_string_storage",
+            "src": "contracts/Dependencies/YamatoBase.sol:20"
+          }
+        ],
+        "types": {
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_bool": {
+            "label": "bool"
+          }
+        }
+      }
+    },
+    "2d7770736f97ce443470f206dc625986ac735a92a59f8fe4073f9fb379f25bae": {
+      "address": "0x96A60A717211ff5C28cbEf8d4f23Cb7A8CE7164d",
+      "txHash": "0xfdb8755bff906b28171673d5af33d2d04b3c44e060daa79bc2846de72398f2fe",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:21"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:26"
+          },
+          {
+            "contract": "ERC1967UpgradeUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:214"
+          },
+          {
+            "contract": "UUPSUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:80"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "governance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:20"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "pendingGovernance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:21"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "tester",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:22"
+          },
+          {
+            "contract": "YamatoBase",
+            "label": "YAMATO_SLOT_ID",
+            "type": "t_string_storage",
+            "src": "contracts/Dependencies/YamatoBase.sol:20"
+          }
+        ],
+        "types": {
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_bool": {
+            "label": "bool"
+          }
+        }
+      }
+    },
+    "5b93a25b3b35a964a62b7821ff0464836d964138bd53f76bc395e2002b44b73b": {
+      "address": "0x5C76eC23269Ba87CdC8B5683FD659584751352bc",
+      "txHash": "0xddd973ad6311269f128b52d2ef278bf0286333629541d83b4d859f7ef12d1cf2",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:21"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:26"
+          },
+          {
+            "contract": "ERC1967UpgradeUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:214"
+          },
+          {
+            "contract": "UUPSUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:80"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "governance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:20"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "pendingGovernance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:21"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "tester",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:22"
+          },
+          {
+            "contract": "YamatoBase",
+            "label": "YAMATO_SLOT_ID",
+            "type": "t_string_storage",
+            "src": "contracts/Dependencies/YamatoBase.sol:20"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "leveledPledges",
+            "type": "t_mapping(t_uint256,t_mapping(t_address,t_struct(Pledge)4424_storage))",
+            "src": "contracts/PriorityRegistryV6.sol:28"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "levelIndice",
+            "type": "t_mapping(t_uint256,t_array(t_address)dyn_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:29"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "pledgeLength",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:30"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "LICR",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:31"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "rankedQueue",
+            "type": "t_mapping(t_uint256,t_struct(FifoQueue)4192_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:32"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "nextResetRank",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:35"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "deleteDict",
+            "type": "t_mapping(t_address,t_struct(DeleteDictItem)4276_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:36"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "rankedQueueV2",
+            "type": "t_mapping(t_uint256,t_struct(FifoQueue)4271_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:37"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "nextUpsertPledgeIndex",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:38"
+          }
+        ],
+        "types": {
+          "t_mapping(t_uint256,t_mapping(t_address,t_struct(Pledge)4424_storage))": {
+            "label": "mapping(uint256 => mapping(address => struct IYamato.Pledge))"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_mapping(t_address,t_struct(Pledge)4424_storage)": {
+            "label": "mapping(address => struct IYamato.Pledge)"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_struct(Pledge)4424_storage": {
+            "label": "struct IYamato.Pledge",
+            "members": [
+              {
+                "label": "coll",
+                "type": "t_uint256"
+              },
+              {
+                "label": "debt",
+                "type": "t_uint256"
+              },
+              {
+                "label": "isCreated",
+                "type": "t_bool"
+              },
+              {
+                "label": "owner",
+                "type": "t_address"
+              },
+              {
+                "label": "priority",
+                "type": "t_uint256"
+              }
+            ]
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_mapping(t_uint256,t_array(t_address)dyn_storage)": {
+            "label": "mapping(uint256 => address[])"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]"
+          },
+          "t_mapping(t_uint256,t_struct(FifoQueue)4192_storage)": {
+            "label": "mapping(uint256 => struct IPriorityRegistryV4.FifoQueue)"
+          },
+          "t_struct(FifoQueue)4192_storage": {
+            "label": "struct IPriorityRegistryV4.FifoQueue",
+            "members": [
+              {
+                "label": "nextout",
+                "type": "t_uint256"
+              },
+              {
+                "label": "pledges",
+                "type": "t_array(t_struct(Pledge)4424_storage)dyn_storage"
+              }
+            ]
+          },
+          "t_array(t_struct(Pledge)4424_storage)dyn_storage": {
+            "label": "struct IYamato.Pledge[]"
+          },
+          "t_mapping(t_address,t_struct(DeleteDictItem)4276_storage)": {
+            "label": "mapping(address => struct IPriorityRegistryV6.DeleteDictItem)"
+          },
+          "t_struct(DeleteDictItem)4276_storage": {
+            "label": "struct IPriorityRegistryV6.DeleteDictItem",
+            "members": [
+              {
+                "label": "isCreated",
+                "type": "t_bool"
+              },
+              {
+                "label": "index",
+                "type": "t_uint248"
+              }
+            ]
+          },
+          "t_uint248": {
+            "label": "uint248"
+          },
+          "t_mapping(t_uint256,t_struct(FifoQueue)4271_storage)": {
+            "label": "mapping(uint256 => struct IPriorityRegistryV6.FifoQueue)"
+          },
+          "t_struct(FifoQueue)4271_storage": {
+            "label": "struct IPriorityRegistryV6.FifoQueue",
+            "members": [
+              {
+                "label": "nextout",
+                "type": "t_uint256"
+              },
+              {
+                "label": "pledges",
+                "type": "t_array(t_address)dyn_storage"
+              }
+            ]
+          },
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          }
+        }
+      }
+    },
+    "de6cac31cb2ddc6b4e6bd03a446cc6515cd787431df564b38884cb0a6ee40a29": {
+      "address": "0x4ac5DB5223391ca3Ec7f6668b03B7679762eA7Ce",
+      "txHash": "0x713092b66d5be73f774dc4340fd9b01c27f0fdb6cf29200cd08886639f18ec58",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:21"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:26"
+          },
+          {
+            "contract": "ERC1967UpgradeUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:214"
+          },
+          {
+            "contract": "UUPSUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:80"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "governance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:20"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "pendingGovernance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:21"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "tester",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:22"
+          },
+          {
+            "contract": "YamatoBase",
+            "label": "YAMATO_SLOT_ID",
+            "type": "t_string_storage",
+            "src": "contracts/Dependencies/YamatoBase.sol:20"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "leveledPledges",
+            "type": "t_mapping(t_uint256,t_mapping(t_address,t_struct(Pledge)4424_storage))",
+            "src": "contracts/PriorityRegistryV6.sol:28"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "levelIndice",
+            "type": "t_mapping(t_uint256,t_array(t_address)dyn_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:29"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "pledgeLength",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:30"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "LICR",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:31"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "rankedQueue",
+            "type": "t_mapping(t_uint256,t_struct(FifoQueue)4192_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:32"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "nextResetRank",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:35"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "deleteDict",
+            "type": "t_mapping(t_address,t_struct(DeleteDictItem)4276_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:36"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "rankedQueueV2",
+            "type": "t_mapping(t_uint256,t_struct(FifoQueue)4271_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:37"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "nextUpsertPledgeIndex",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:38"
+          }
+        ],
+        "types": {
+          "t_mapping(t_uint256,t_mapping(t_address,t_struct(Pledge)4424_storage))": {
+            "label": "mapping(uint256 => mapping(address => struct IYamato.Pledge))"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_mapping(t_address,t_struct(Pledge)4424_storage)": {
+            "label": "mapping(address => struct IYamato.Pledge)"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_struct(Pledge)4424_storage": {
+            "label": "struct IYamato.Pledge",
+            "members": [
+              {
+                "label": "coll",
+                "type": "t_uint256"
+              },
+              {
+                "label": "debt",
+                "type": "t_uint256"
+              },
+              {
+                "label": "isCreated",
+                "type": "t_bool"
+              },
+              {
+                "label": "owner",
+                "type": "t_address"
+              },
+              {
+                "label": "priority",
+                "type": "t_uint256"
+              }
+            ]
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_mapping(t_uint256,t_array(t_address)dyn_storage)": {
+            "label": "mapping(uint256 => address[])"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]"
+          },
+          "t_mapping(t_uint256,t_struct(FifoQueue)4192_storage)": {
+            "label": "mapping(uint256 => struct IPriorityRegistryV4.FifoQueue)"
+          },
+          "t_struct(FifoQueue)4192_storage": {
+            "label": "struct IPriorityRegistryV4.FifoQueue",
+            "members": [
+              {
+                "label": "nextout",
+                "type": "t_uint256"
+              },
+              {
+                "label": "pledges",
+                "type": "t_array(t_struct(Pledge)4424_storage)dyn_storage"
+              }
+            ]
+          },
+          "t_array(t_struct(Pledge)4424_storage)dyn_storage": {
+            "label": "struct IYamato.Pledge[]"
+          },
+          "t_mapping(t_address,t_struct(DeleteDictItem)4276_storage)": {
+            "label": "mapping(address => struct IPriorityRegistryV6.DeleteDictItem)"
+          },
+          "t_struct(DeleteDictItem)4276_storage": {
+            "label": "struct IPriorityRegistryV6.DeleteDictItem",
+            "members": [
+              {
+                "label": "isCreated",
+                "type": "t_bool"
+              },
+              {
+                "label": "index",
+                "type": "t_uint248"
+              }
+            ]
+          },
+          "t_uint248": {
+            "label": "uint248"
+          },
+          "t_mapping(t_uint256,t_struct(FifoQueue)4271_storage)": {
+            "label": "mapping(uint256 => struct IPriorityRegistryV6.FifoQueue)"
+          },
+          "t_struct(FifoQueue)4271_storage": {
+            "label": "struct IPriorityRegistryV6.FifoQueue",
+            "members": [
+              {
+                "label": "nextout",
+                "type": "t_uint256"
+              },
+              {
+                "label": "pledges",
+                "type": "t_array(t_address)dyn_storage"
+              }
+            ]
+          },
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          }
+        }
+      }
+    },
+    "2e16483a0760bd53831802ead67237148692401bb1257ca553a97ba6cf2ce014": {
+      "address": "0x066D63562865c32f9EB79640C051E8F24Ae1f17F",
+      "txHash": "0x3d8fdcf13124ca287de316db3f6138529af4b0fe767e5bc49fbbb25654169238",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:21"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:26"
+          },
+          {
+            "contract": "ERC1967UpgradeUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:214"
+          },
+          {
+            "contract": "UUPSUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:80"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "governance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:20"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "pendingGovernance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:21"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "tester",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:22"
+          },
+          {
+            "contract": "YamatoBase",
+            "label": "YAMATO_SLOT_ID",
+            "type": "t_string_storage",
+            "src": "contracts/Dependencies/YamatoBase.sol:20"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "leveledPledges",
+            "type": "t_mapping(t_uint256,t_mapping(t_address,t_struct(Pledge)4424_storage))",
+            "src": "contracts/PriorityRegistryV6.sol:28"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "levelIndice",
+            "type": "t_mapping(t_uint256,t_array(t_address)dyn_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:29"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "pledgeLength",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:30"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "LICR",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:31"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "rankedQueue",
+            "type": "t_mapping(t_uint256,t_struct(FifoQueue)4192_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:32"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "nextResetRank",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:35"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "deleteDict",
+            "type": "t_mapping(t_address,t_struct(DeleteDictItem)4276_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:36"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "rankedQueueV2",
+            "type": "t_mapping(t_uint256,t_struct(FifoQueue)4271_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:37"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "nextUpsertPledgeIndex",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:38"
+          }
+        ],
+        "types": {
+          "t_mapping(t_uint256,t_mapping(t_address,t_struct(Pledge)4424_storage))": {
+            "label": "mapping(uint256 => mapping(address => struct IYamato.Pledge))"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_mapping(t_address,t_struct(Pledge)4424_storage)": {
+            "label": "mapping(address => struct IYamato.Pledge)"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_struct(Pledge)4424_storage": {
+            "label": "struct IYamato.Pledge",
+            "members": [
+              {
+                "label": "coll",
+                "type": "t_uint256"
+              },
+              {
+                "label": "debt",
+                "type": "t_uint256"
+              },
+              {
+                "label": "isCreated",
+                "type": "t_bool"
+              },
+              {
+                "label": "owner",
+                "type": "t_address"
+              },
+              {
+                "label": "priority",
+                "type": "t_uint256"
+              }
+            ]
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_mapping(t_uint256,t_array(t_address)dyn_storage)": {
+            "label": "mapping(uint256 => address[])"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]"
+          },
+          "t_mapping(t_uint256,t_struct(FifoQueue)4192_storage)": {
+            "label": "mapping(uint256 => struct IPriorityRegistryV4.FifoQueue)"
+          },
+          "t_struct(FifoQueue)4192_storage": {
+            "label": "struct IPriorityRegistryV4.FifoQueue",
+            "members": [
+              {
+                "label": "nextout",
+                "type": "t_uint256"
+              },
+              {
+                "label": "pledges",
+                "type": "t_array(t_struct(Pledge)4424_storage)dyn_storage"
+              }
+            ]
+          },
+          "t_array(t_struct(Pledge)4424_storage)dyn_storage": {
+            "label": "struct IYamato.Pledge[]"
+          },
+          "t_mapping(t_address,t_struct(DeleteDictItem)4276_storage)": {
+            "label": "mapping(address => struct IPriorityRegistryV6.DeleteDictItem)"
+          },
+          "t_struct(DeleteDictItem)4276_storage": {
+            "label": "struct IPriorityRegistryV6.DeleteDictItem",
+            "members": [
+              {
+                "label": "isCreated",
+                "type": "t_bool"
+              },
+              {
+                "label": "index",
+                "type": "t_uint248"
+              }
+            ]
+          },
+          "t_uint248": {
+            "label": "uint248"
+          },
+          "t_mapping(t_uint256,t_struct(FifoQueue)4271_storage)": {
+            "label": "mapping(uint256 => struct IPriorityRegistryV6.FifoQueue)"
+          },
+          "t_struct(FifoQueue)4271_storage": {
+            "label": "struct IPriorityRegistryV6.FifoQueue",
+            "members": [
+              {
+                "label": "nextout",
+                "type": "t_uint256"
+              },
+              {
+                "label": "pledges",
+                "type": "t_array(t_address)dyn_storage"
+              }
+            ]
+          },
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          }
+        }
+      }
+    },
+    "f8e8f36bb1a2e4dde6b45638338a5dfae60d1d9995728bf8b5eaef3be70a8727": {
+      "address": "0xab5808c94ed8CDfd9BA4935B97a0Cd17Be9C3791",
+      "txHash": "0x3a52ac0e567eb99c6cc7cfe73e4c28f3f6efedcc8a2569bdb3fc56cc776363e2",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:21"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:26"
+          },
+          {
+            "contract": "ERC1967UpgradeUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:214"
+          },
+          {
+            "contract": "UUPSUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:80"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "governance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:20"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "pendingGovernance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:21"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "tester",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:22"
+          },
+          {
+            "contract": "YamatoBase",
+            "label": "YAMATO_SLOT_ID",
+            "type": "t_string_storage",
+            "src": "contracts/Dependencies/YamatoBase.sol:20"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "leveledPledges",
+            "type": "t_mapping(t_uint256,t_mapping(t_address,t_struct(Pledge)4424_storage))",
+            "src": "contracts/PriorityRegistryV6.sol:28"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "levelIndice",
+            "type": "t_mapping(t_uint256,t_array(t_address)dyn_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:29"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "pledgeLength",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:30"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "LICR",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:31"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "rankedQueue",
+            "type": "t_mapping(t_uint256,t_struct(FifoQueue)4192_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:32"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "nextResetRank",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:35"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "deleteDict",
+            "type": "t_mapping(t_address,t_struct(DeleteDictItem)4276_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:36"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "rankedQueueV2",
+            "type": "t_mapping(t_uint256,t_struct(FifoQueue)4271_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:37"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "nextUpsertPledgeIndex",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:38"
+          }
+        ],
+        "types": {
+          "t_mapping(t_uint256,t_mapping(t_address,t_struct(Pledge)4424_storage))": {
+            "label": "mapping(uint256 => mapping(address => struct IYamato.Pledge))"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_mapping(t_address,t_struct(Pledge)4424_storage)": {
+            "label": "mapping(address => struct IYamato.Pledge)"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_struct(Pledge)4424_storage": {
+            "label": "struct IYamato.Pledge",
+            "members": [
+              {
+                "label": "coll",
+                "type": "t_uint256"
+              },
+              {
+                "label": "debt",
+                "type": "t_uint256"
+              },
+              {
+                "label": "isCreated",
+                "type": "t_bool"
+              },
+              {
+                "label": "owner",
+                "type": "t_address"
+              },
+              {
+                "label": "priority",
+                "type": "t_uint256"
+              }
+            ]
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_mapping(t_uint256,t_array(t_address)dyn_storage)": {
+            "label": "mapping(uint256 => address[])"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]"
+          },
+          "t_mapping(t_uint256,t_struct(FifoQueue)4192_storage)": {
+            "label": "mapping(uint256 => struct IPriorityRegistryV4.FifoQueue)"
+          },
+          "t_struct(FifoQueue)4192_storage": {
+            "label": "struct IPriorityRegistryV4.FifoQueue",
+            "members": [
+              {
+                "label": "nextout",
+                "type": "t_uint256"
+              },
+              {
+                "label": "pledges",
+                "type": "t_array(t_struct(Pledge)4424_storage)dyn_storage"
+              }
+            ]
+          },
+          "t_array(t_struct(Pledge)4424_storage)dyn_storage": {
+            "label": "struct IYamato.Pledge[]"
+          },
+          "t_mapping(t_address,t_struct(DeleteDictItem)4276_storage)": {
+            "label": "mapping(address => struct IPriorityRegistryV6.DeleteDictItem)"
+          },
+          "t_struct(DeleteDictItem)4276_storage": {
+            "label": "struct IPriorityRegistryV6.DeleteDictItem",
+            "members": [
+              {
+                "label": "isCreated",
+                "type": "t_bool"
+              },
+              {
+                "label": "index",
+                "type": "t_uint248"
+              }
+            ]
+          },
+          "t_uint248": {
+            "label": "uint248"
+          },
+          "t_mapping(t_uint256,t_struct(FifoQueue)4271_storage)": {
+            "label": "mapping(uint256 => struct IPriorityRegistryV6.FifoQueue)"
+          },
+          "t_struct(FifoQueue)4271_storage": {
+            "label": "struct IPriorityRegistryV6.FifoQueue",
+            "members": [
+              {
+                "label": "nextout",
+                "type": "t_uint256"
+              },
+              {
+                "label": "pledges",
+                "type": "t_array(t_address)dyn_storage"
+              }
+            ]
+          },
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          }
+        }
+      }
+    },
+    "48ffc6b229a85c8f0d0bcc9797f3c894a7b7aafe88cf7999940e5d8e415f05e8": {
+      "address": "0xc0a59eFF867dFdCbDD0384D9fDAf6A7A1a1B5e08",
+      "txHash": "0xd15a96b5b7c72ddc1be4f7005f5ae98bc0f1f50c5554914b51dd03a1b9d82801",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:21"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:26"
+          },
+          {
+            "contract": "ERC1967UpgradeUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:214"
+          },
+          {
+            "contract": "UUPSUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:80"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "governance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:20"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "pendingGovernance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:21"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "tester",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:22"
+          },
+          {
+            "contract": "YamatoBase",
+            "label": "YAMATO_SLOT_ID",
+            "type": "t_string_storage",
+            "src": "contracts/Dependencies/YamatoBase.sol:20"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "leveledPledges",
+            "type": "t_mapping(t_uint256,t_mapping(t_address,t_struct(Pledge)4424_storage))",
+            "src": "contracts/PriorityRegistryV6.sol:28"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "levelIndice",
+            "type": "t_mapping(t_uint256,t_array(t_address)dyn_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:29"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "pledgeLength",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:30"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "LICR",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:31"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "rankedQueue",
+            "type": "t_mapping(t_uint256,t_struct(FifoQueue)4192_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:32"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "nextResetRank",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:35"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "deleteDict",
+            "type": "t_mapping(t_address,t_struct(DeleteDictItem)4276_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:36"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "rankedQueueV2",
+            "type": "t_mapping(t_uint256,t_struct(FifoQueue)4271_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:37"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "nextUpsertPledgeIndex",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:38"
+          }
+        ],
+        "types": {
+          "t_mapping(t_uint256,t_mapping(t_address,t_struct(Pledge)4424_storage))": {
+            "label": "mapping(uint256 => mapping(address => struct IYamato.Pledge))"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_mapping(t_address,t_struct(Pledge)4424_storage)": {
+            "label": "mapping(address => struct IYamato.Pledge)"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_struct(Pledge)4424_storage": {
+            "label": "struct IYamato.Pledge",
+            "members": [
+              {
+                "label": "coll",
+                "type": "t_uint256"
+              },
+              {
+                "label": "debt",
+                "type": "t_uint256"
+              },
+              {
+                "label": "isCreated",
+                "type": "t_bool"
+              },
+              {
+                "label": "owner",
+                "type": "t_address"
+              },
+              {
+                "label": "priority",
+                "type": "t_uint256"
+              }
+            ]
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_mapping(t_uint256,t_array(t_address)dyn_storage)": {
+            "label": "mapping(uint256 => address[])"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]"
+          },
+          "t_mapping(t_uint256,t_struct(FifoQueue)4192_storage)": {
+            "label": "mapping(uint256 => struct IPriorityRegistryV4.FifoQueue)"
+          },
+          "t_struct(FifoQueue)4192_storage": {
+            "label": "struct IPriorityRegistryV4.FifoQueue",
+            "members": [
+              {
+                "label": "nextout",
+                "type": "t_uint256"
+              },
+              {
+                "label": "pledges",
+                "type": "t_array(t_struct(Pledge)4424_storage)dyn_storage"
+              }
+            ]
+          },
+          "t_array(t_struct(Pledge)4424_storage)dyn_storage": {
+            "label": "struct IYamato.Pledge[]"
+          },
+          "t_mapping(t_address,t_struct(DeleteDictItem)4276_storage)": {
+            "label": "mapping(address => struct IPriorityRegistryV6.DeleteDictItem)"
+          },
+          "t_struct(DeleteDictItem)4276_storage": {
+            "label": "struct IPriorityRegistryV6.DeleteDictItem",
+            "members": [
+              {
+                "label": "isCreated",
+                "type": "t_bool"
+              },
+              {
+                "label": "index",
+                "type": "t_uint248"
+              }
+            ]
+          },
+          "t_uint248": {
+            "label": "uint248"
+          },
+          "t_mapping(t_uint256,t_struct(FifoQueue)4271_storage)": {
+            "label": "mapping(uint256 => struct IPriorityRegistryV6.FifoQueue)"
+          },
+          "t_struct(FifoQueue)4271_storage": {
+            "label": "struct IPriorityRegistryV6.FifoQueue",
+            "members": [
+              {
+                "label": "nextout",
+                "type": "t_uint256"
+              },
+              {
+                "label": "pledges",
+                "type": "t_array(t_address)dyn_storage"
+              }
+            ]
+          },
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          }
+        }
+      }
+    },
+    "744b58182d543ca4655ba0981a6348130b767464b49726ad126f5f0f661049e7": {
+      "address": "0xc2c337eCa363635743818EBc4A80da33F37f25AE",
+      "txHash": "0x327462e52edd9fca13185cc6c305f8b8f26d03941d114ecc1c816651151db030",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:21"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:26"
+          },
+          {
+            "contract": "ERC1967UpgradeUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:214"
+          },
+          {
+            "contract": "UUPSUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:80"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "governance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:20"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "pendingGovernance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:21"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "tester",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:22"
+          },
+          {
+            "contract": "YamatoBase",
+            "label": "YAMATO_SLOT_ID",
+            "type": "t_string_storage",
+            "src": "contracts/Dependencies/YamatoBase.sol:20"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "leveledPledges",
+            "type": "t_mapping(t_uint256,t_mapping(t_address,t_struct(Pledge)4424_storage))",
+            "src": "contracts/PriorityRegistryV6.sol:28"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "levelIndice",
+            "type": "t_mapping(t_uint256,t_array(t_address)dyn_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:29"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "pledgeLength",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:30"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "LICR",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:31"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "rankedQueue",
+            "type": "t_mapping(t_uint256,t_struct(FifoQueue)4192_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:32"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "nextResetRank",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:35"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "deleteDict",
+            "type": "t_mapping(t_address,t_struct(DeleteDictItem)4276_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:36"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "rankedQueueV2",
+            "type": "t_mapping(t_uint256,t_struct(FifoQueue)4271_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:37"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "nextUpsertPledgeIndex",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:38"
+          }
+        ],
+        "types": {
+          "t_mapping(t_uint256,t_mapping(t_address,t_struct(Pledge)4424_storage))": {
+            "label": "mapping(uint256 => mapping(address => struct IYamato.Pledge))"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_mapping(t_address,t_struct(Pledge)4424_storage)": {
+            "label": "mapping(address => struct IYamato.Pledge)"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_struct(Pledge)4424_storage": {
+            "label": "struct IYamato.Pledge",
+            "members": [
+              {
+                "label": "coll",
+                "type": "t_uint256"
+              },
+              {
+                "label": "debt",
+                "type": "t_uint256"
+              },
+              {
+                "label": "isCreated",
+                "type": "t_bool"
+              },
+              {
+                "label": "owner",
+                "type": "t_address"
+              },
+              {
+                "label": "priority",
+                "type": "t_uint256"
+              }
+            ]
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_mapping(t_uint256,t_array(t_address)dyn_storage)": {
+            "label": "mapping(uint256 => address[])"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]"
+          },
+          "t_mapping(t_uint256,t_struct(FifoQueue)4192_storage)": {
+            "label": "mapping(uint256 => struct IPriorityRegistryV4.FifoQueue)"
+          },
+          "t_struct(FifoQueue)4192_storage": {
+            "label": "struct IPriorityRegistryV4.FifoQueue",
+            "members": [
+              {
+                "label": "nextout",
+                "type": "t_uint256"
+              },
+              {
+                "label": "pledges",
+                "type": "t_array(t_struct(Pledge)4424_storage)dyn_storage"
+              }
+            ]
+          },
+          "t_array(t_struct(Pledge)4424_storage)dyn_storage": {
+            "label": "struct IYamato.Pledge[]"
+          },
+          "t_mapping(t_address,t_struct(DeleteDictItem)4276_storage)": {
+            "label": "mapping(address => struct IPriorityRegistryV6.DeleteDictItem)"
+          },
+          "t_struct(DeleteDictItem)4276_storage": {
+            "label": "struct IPriorityRegistryV6.DeleteDictItem",
+            "members": [
+              {
+                "label": "isCreated",
+                "type": "t_bool"
+              },
+              {
+                "label": "index",
+                "type": "t_uint248"
+              }
+            ]
+          },
+          "t_uint248": {
+            "label": "uint248"
+          },
+          "t_mapping(t_uint256,t_struct(FifoQueue)4271_storage)": {
+            "label": "mapping(uint256 => struct IPriorityRegistryV6.FifoQueue)"
+          },
+          "t_struct(FifoQueue)4271_storage": {
+            "label": "struct IPriorityRegistryV6.FifoQueue",
+            "members": [
+              {
+                "label": "nextout",
+                "type": "t_uint256"
+              },
+              {
+                "label": "pledges",
+                "type": "t_array(t_address)dyn_storage"
+              }
+            ]
+          },
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          }
+        }
+      }
+    },
+    "f6accbd8843b0416703a33da5f3d24575957518cbc7af7dbc2fb40feafdaac5a": {
+      "address": "0xbd96f8Ec6B45F4A8f9aF377920791dca25b1BeCa",
+      "txHash": "0x66ee9e1db24b6cbecff6bddca57d619510d2f4537d7bb9392a0e30831c7892db",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:21"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:26"
+          },
+          {
+            "contract": "ERC1967UpgradeUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:214"
+          },
+          {
+            "contract": "UUPSUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:80"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "governance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:20"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "pendingGovernance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:21"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "tester",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:22"
+          },
+          {
+            "contract": "YamatoBase",
+            "label": "YAMATO_SLOT_ID",
+            "type": "t_string_storage",
+            "src": "contracts/Dependencies/YamatoBase.sol:20"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "leveledPledges",
+            "type": "t_mapping(t_uint256,t_mapping(t_address,t_struct(Pledge)4424_storage))",
+            "src": "contracts/PriorityRegistryV6.sol:28"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "levelIndice",
+            "type": "t_mapping(t_uint256,t_array(t_address)dyn_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:29"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "pledgeLength",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:30"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "LICR",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:31"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "rankedQueue",
+            "type": "t_mapping(t_uint256,t_struct(FifoQueue)4192_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:32"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "nextResetRank",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:35"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "deleteDict",
+            "type": "t_mapping(t_address,t_struct(DeleteDictItem)4276_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:36"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "rankedQueueV2",
+            "type": "t_mapping(t_uint256,t_struct(FifoQueue)4271_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:37"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "nextUpsertPledgeIndex",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:38"
+          }
+        ],
+        "types": {
+          "t_mapping(t_uint256,t_mapping(t_address,t_struct(Pledge)4424_storage))": {
+            "label": "mapping(uint256 => mapping(address => struct IYamato.Pledge))"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_mapping(t_address,t_struct(Pledge)4424_storage)": {
+            "label": "mapping(address => struct IYamato.Pledge)"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_struct(Pledge)4424_storage": {
+            "label": "struct IYamato.Pledge",
+            "members": [
+              {
+                "label": "coll",
+                "type": "t_uint256"
+              },
+              {
+                "label": "debt",
+                "type": "t_uint256"
+              },
+              {
+                "label": "isCreated",
+                "type": "t_bool"
+              },
+              {
+                "label": "owner",
+                "type": "t_address"
+              },
+              {
+                "label": "priority",
+                "type": "t_uint256"
+              }
+            ]
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_mapping(t_uint256,t_array(t_address)dyn_storage)": {
+            "label": "mapping(uint256 => address[])"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]"
+          },
+          "t_mapping(t_uint256,t_struct(FifoQueue)4192_storage)": {
+            "label": "mapping(uint256 => struct IPriorityRegistryV4.FifoQueue)"
+          },
+          "t_struct(FifoQueue)4192_storage": {
+            "label": "struct IPriorityRegistryV4.FifoQueue",
+            "members": [
+              {
+                "label": "nextout",
+                "type": "t_uint256"
+              },
+              {
+                "label": "pledges",
+                "type": "t_array(t_struct(Pledge)4424_storage)dyn_storage"
+              }
+            ]
+          },
+          "t_array(t_struct(Pledge)4424_storage)dyn_storage": {
+            "label": "struct IYamato.Pledge[]"
+          },
+          "t_mapping(t_address,t_struct(DeleteDictItem)4276_storage)": {
+            "label": "mapping(address => struct IPriorityRegistryV6.DeleteDictItem)"
+          },
+          "t_struct(DeleteDictItem)4276_storage": {
+            "label": "struct IPriorityRegistryV6.DeleteDictItem",
+            "members": [
+              {
+                "label": "isCreated",
+                "type": "t_bool"
+              },
+              {
+                "label": "index",
+                "type": "t_uint248"
+              }
+            ]
+          },
+          "t_uint248": {
+            "label": "uint248"
+          },
+          "t_mapping(t_uint256,t_struct(FifoQueue)4271_storage)": {
+            "label": "mapping(uint256 => struct IPriorityRegistryV6.FifoQueue)"
+          },
+          "t_struct(FifoQueue)4271_storage": {
+            "label": "struct IPriorityRegistryV6.FifoQueue",
+            "members": [
+              {
+                "label": "nextout",
+                "type": "t_uint256"
+              },
+              {
+                "label": "pledges",
+                "type": "t_array(t_address)dyn_storage"
+              }
+            ]
+          },
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          }
+        }
+      }
+    },
+    "776bb0ff2cb52bcedab014af945eae2fc6be18a25e75448ab6fa3811b2d23c10": {
+      "address": "0x73fe6B8Da943477DF8fcCE84501a925Fef311a05",
+      "txHash": "0x12ad4f4e41ebebab3be7a512c8e41b4afa7a23fccc548c584ba212c02278950c",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:21"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:26"
+          },
+          {
+            "contract": "ERC1967UpgradeUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:214"
+          },
+          {
+            "contract": "UUPSUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:80"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "governance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:20"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "pendingGovernance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:21"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "tester",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:22"
+          },
+          {
+            "contract": "YamatoBase",
+            "label": "YAMATO_SLOT_ID",
+            "type": "t_string_storage",
+            "src": "contracts/Dependencies/YamatoBase.sol:20"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "leveledPledges",
+            "type": "t_mapping(t_uint256,t_mapping(t_address,t_struct(Pledge)4424_storage))",
+            "src": "contracts/PriorityRegistryV6.sol:28"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "levelIndice",
+            "type": "t_mapping(t_uint256,t_array(t_address)dyn_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:29"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "pledgeLength",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:30"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "LICR",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:31"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "rankedQueue",
+            "type": "t_mapping(t_uint256,t_struct(FifoQueue)4192_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:32"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "nextResetRank",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:35"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "deleteDict",
+            "type": "t_mapping(t_address,t_struct(DeleteDictItem)4276_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:36"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "rankedQueueV2",
+            "type": "t_mapping(t_uint256,t_struct(FifoQueue)4271_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:37"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "nextUpsertPledgeIndex",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:38"
+          }
+        ],
+        "types": {
+          "t_mapping(t_uint256,t_mapping(t_address,t_struct(Pledge)4424_storage))": {
+            "label": "mapping(uint256 => mapping(address => struct IYamato.Pledge))"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_mapping(t_address,t_struct(Pledge)4424_storage)": {
+            "label": "mapping(address => struct IYamato.Pledge)"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_struct(Pledge)4424_storage": {
+            "label": "struct IYamato.Pledge",
+            "members": [
+              {
+                "label": "coll",
+                "type": "t_uint256"
+              },
+              {
+                "label": "debt",
+                "type": "t_uint256"
+              },
+              {
+                "label": "isCreated",
+                "type": "t_bool"
+              },
+              {
+                "label": "owner",
+                "type": "t_address"
+              },
+              {
+                "label": "priority",
+                "type": "t_uint256"
+              }
+            ]
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_mapping(t_uint256,t_array(t_address)dyn_storage)": {
+            "label": "mapping(uint256 => address[])"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]"
+          },
+          "t_mapping(t_uint256,t_struct(FifoQueue)4192_storage)": {
+            "label": "mapping(uint256 => struct IPriorityRegistryV4.FifoQueue)"
+          },
+          "t_struct(FifoQueue)4192_storage": {
+            "label": "struct IPriorityRegistryV4.FifoQueue",
+            "members": [
+              {
+                "label": "nextout",
+                "type": "t_uint256"
+              },
+              {
+                "label": "pledges",
+                "type": "t_array(t_struct(Pledge)4424_storage)dyn_storage"
+              }
+            ]
+          },
+          "t_array(t_struct(Pledge)4424_storage)dyn_storage": {
+            "label": "struct IYamato.Pledge[]"
+          },
+          "t_mapping(t_address,t_struct(DeleteDictItem)4276_storage)": {
+            "label": "mapping(address => struct IPriorityRegistryV6.DeleteDictItem)"
+          },
+          "t_struct(DeleteDictItem)4276_storage": {
+            "label": "struct IPriorityRegistryV6.DeleteDictItem",
+            "members": [
+              {
+                "label": "isCreated",
+                "type": "t_bool"
+              },
+              {
+                "label": "index",
+                "type": "t_uint248"
+              }
+            ]
+          },
+          "t_uint248": {
+            "label": "uint248"
+          },
+          "t_mapping(t_uint256,t_struct(FifoQueue)4271_storage)": {
+            "label": "mapping(uint256 => struct IPriorityRegistryV6.FifoQueue)"
+          },
+          "t_struct(FifoQueue)4271_storage": {
+            "label": "struct IPriorityRegistryV6.FifoQueue",
+            "members": [
+              {
+                "label": "nextout",
+                "type": "t_uint256"
+              },
+              {
+                "label": "pledges",
+                "type": "t_array(t_address)dyn_storage"
+              }
+            ]
+          },
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          }
+        }
+      }
+    },
+    "8914ce0878fa06ed28f32a4390d41dd2bf86fd56fdcf8810c6a5709c7b911588": {
+      "address": "0xCb9a027F39719673D43c2C55bd55D2CaADB05C0e",
+      "txHash": "0x181a4f79a4cc484d06788369c296228fae013058090dffe3cad1fdc13b6d22fb",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:21"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:26"
+          },
+          {
+            "contract": "ERC1967UpgradeUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:214"
+          },
+          {
+            "contract": "UUPSUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:80"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "governance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:20"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "pendingGovernance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:21"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "tester",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:22"
+          },
+          {
+            "contract": "YamatoBase",
+            "label": "YAMATO_SLOT_ID",
+            "type": "t_string_storage",
+            "src": "contracts/Dependencies/YamatoBase.sol:20"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "leveledPledges",
+            "type": "t_mapping(t_uint256,t_mapping(t_address,t_struct(Pledge)4424_storage))",
+            "src": "contracts/PriorityRegistryV6.sol:28"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "levelIndice",
+            "type": "t_mapping(t_uint256,t_array(t_address)dyn_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:29"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "pledgeLength",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:30"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "LICR",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:31"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "rankedQueue",
+            "type": "t_mapping(t_uint256,t_struct(FifoQueue)4192_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:32"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "nextResetRank",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:35"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "deleteDict",
+            "type": "t_mapping(t_address,t_struct(DeleteDictItem)4276_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:36"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "rankedQueueV2",
+            "type": "t_mapping(t_uint256,t_struct(FifoQueue)4271_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:37"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "nextUpsertPledgeIndex",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:38"
+          }
+        ],
+        "types": {
+          "t_mapping(t_uint256,t_mapping(t_address,t_struct(Pledge)4424_storage))": {
+            "label": "mapping(uint256 => mapping(address => struct IYamato.Pledge))"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_mapping(t_address,t_struct(Pledge)4424_storage)": {
+            "label": "mapping(address => struct IYamato.Pledge)"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_struct(Pledge)4424_storage": {
+            "label": "struct IYamato.Pledge",
+            "members": [
+              {
+                "label": "coll",
+                "type": "t_uint256"
+              },
+              {
+                "label": "debt",
+                "type": "t_uint256"
+              },
+              {
+                "label": "isCreated",
+                "type": "t_bool"
+              },
+              {
+                "label": "owner",
+                "type": "t_address"
+              },
+              {
+                "label": "priority",
+                "type": "t_uint256"
+              }
+            ]
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_mapping(t_uint256,t_array(t_address)dyn_storage)": {
+            "label": "mapping(uint256 => address[])"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]"
+          },
+          "t_mapping(t_uint256,t_struct(FifoQueue)4192_storage)": {
+            "label": "mapping(uint256 => struct IPriorityRegistryV4.FifoQueue)"
+          },
+          "t_struct(FifoQueue)4192_storage": {
+            "label": "struct IPriorityRegistryV4.FifoQueue",
+            "members": [
+              {
+                "label": "nextout",
+                "type": "t_uint256"
+              },
+              {
+                "label": "pledges",
+                "type": "t_array(t_struct(Pledge)4424_storage)dyn_storage"
+              }
+            ]
+          },
+          "t_array(t_struct(Pledge)4424_storage)dyn_storage": {
+            "label": "struct IYamato.Pledge[]"
+          },
+          "t_mapping(t_address,t_struct(DeleteDictItem)4276_storage)": {
+            "label": "mapping(address => struct IPriorityRegistryV6.DeleteDictItem)"
+          },
+          "t_struct(DeleteDictItem)4276_storage": {
+            "label": "struct IPriorityRegistryV6.DeleteDictItem",
+            "members": [
+              {
+                "label": "isCreated",
+                "type": "t_bool"
+              },
+              {
+                "label": "index",
+                "type": "t_uint248"
+              }
+            ]
+          },
+          "t_uint248": {
+            "label": "uint248"
+          },
+          "t_mapping(t_uint256,t_struct(FifoQueue)4271_storage)": {
+            "label": "mapping(uint256 => struct IPriorityRegistryV6.FifoQueue)"
+          },
+          "t_struct(FifoQueue)4271_storage": {
+            "label": "struct IPriorityRegistryV6.FifoQueue",
+            "members": [
+              {
+                "label": "nextout",
+                "type": "t_uint256"
+              },
+              {
+                "label": "pledges",
+                "type": "t_array(t_address)dyn_storage"
+              }
+            ]
+          },
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          }
+        }
+      }
+    },
+    "0191249dc84887042c1730c5c1fec4aa44747364706964d895eb7928d113f41f": {
+      "address": "0x79eCe08CAf0B7760148B00fe19aEE2D9a7D3074B",
+      "txHash": "0x3a142a06070d7458f0924a67635a6bd4e14501971407b70f3463acf8d9158484",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:21"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:26"
+          },
+          {
+            "contract": "ERC1967UpgradeUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:214"
+          },
+          {
+            "contract": "UUPSUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:80"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "governance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:20"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "pendingGovernance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:21"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "tester",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:22"
+          },
+          {
+            "contract": "YamatoBase",
+            "label": "YAMATO_SLOT_ID",
+            "type": "t_string_storage",
+            "src": "contracts/Dependencies/YamatoBase.sol:20"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "leveledPledges",
+            "type": "t_mapping(t_uint256,t_mapping(t_address,t_struct(Pledge)4424_storage))",
+            "src": "contracts/PriorityRegistryV6.sol:28"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "levelIndice",
+            "type": "t_mapping(t_uint256,t_array(t_address)dyn_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:29"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "pledgeLength",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:30"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "LICR",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:31"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "rankedQueue",
+            "type": "t_mapping(t_uint256,t_struct(FifoQueue)4192_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:32"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "nextResetRank",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:35"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "deleteDict",
+            "type": "t_mapping(t_address,t_struct(DeleteDictItem)4276_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:36"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "rankedQueueV2",
+            "type": "t_mapping(t_uint256,t_struct(FifoQueue)4271_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:37"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "nextUpsertPledgeIndex",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:38"
+          }
+        ],
+        "types": {
+          "t_mapping(t_uint256,t_mapping(t_address,t_struct(Pledge)4424_storage))": {
+            "label": "mapping(uint256 => mapping(address => struct IYamato.Pledge))"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_mapping(t_address,t_struct(Pledge)4424_storage)": {
+            "label": "mapping(address => struct IYamato.Pledge)"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_struct(Pledge)4424_storage": {
+            "label": "struct IYamato.Pledge",
+            "members": [
+              {
+                "label": "coll",
+                "type": "t_uint256"
+              },
+              {
+                "label": "debt",
+                "type": "t_uint256"
+              },
+              {
+                "label": "isCreated",
+                "type": "t_bool"
+              },
+              {
+                "label": "owner",
+                "type": "t_address"
+              },
+              {
+                "label": "priority",
+                "type": "t_uint256"
+              }
+            ]
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_mapping(t_uint256,t_array(t_address)dyn_storage)": {
+            "label": "mapping(uint256 => address[])"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]"
+          },
+          "t_mapping(t_uint256,t_struct(FifoQueue)4192_storage)": {
+            "label": "mapping(uint256 => struct IPriorityRegistryV4.FifoQueue)"
+          },
+          "t_struct(FifoQueue)4192_storage": {
+            "label": "struct IPriorityRegistryV4.FifoQueue",
+            "members": [
+              {
+                "label": "nextout",
+                "type": "t_uint256"
+              },
+              {
+                "label": "pledges",
+                "type": "t_array(t_struct(Pledge)4424_storage)dyn_storage"
+              }
+            ]
+          },
+          "t_array(t_struct(Pledge)4424_storage)dyn_storage": {
+            "label": "struct IYamato.Pledge[]"
+          },
+          "t_mapping(t_address,t_struct(DeleteDictItem)4276_storage)": {
+            "label": "mapping(address => struct IPriorityRegistryV6.DeleteDictItem)"
+          },
+          "t_struct(DeleteDictItem)4276_storage": {
+            "label": "struct IPriorityRegistryV6.DeleteDictItem",
+            "members": [
+              {
+                "label": "isCreated",
+                "type": "t_bool"
+              },
+              {
+                "label": "index",
+                "type": "t_uint248"
+              }
+            ]
+          },
+          "t_uint248": {
+            "label": "uint248"
+          },
+          "t_mapping(t_uint256,t_struct(FifoQueue)4271_storage)": {
+            "label": "mapping(uint256 => struct IPriorityRegistryV6.FifoQueue)"
+          },
+          "t_struct(FifoQueue)4271_storage": {
+            "label": "struct IPriorityRegistryV6.FifoQueue",
+            "members": [
+              {
+                "label": "nextout",
+                "type": "t_uint256"
+              },
+              {
+                "label": "pledges",
+                "type": "t_array(t_address)dyn_storage"
+              }
+            ]
+          },
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          }
+        }
+      }
+    },
+    "4816d058442c6a537753f55c36027955458e67c85d7af84571c2e88d0b9e8cdc": {
+      "address": "0x89C9d0F4617b65eDb5e9948d17dd91a480bd173B",
+      "txHash": "0xa0723a4cfc3600e5cb330347778961cadef921a30a79132669496be23a58c581",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:21"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:26"
+          },
+          {
+            "contract": "ERC1967UpgradeUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:214"
+          },
+          {
+            "contract": "UUPSUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:80"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "governance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:20"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "pendingGovernance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:21"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "tester",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:22"
+          },
+          {
+            "contract": "YamatoBase",
+            "label": "YAMATO_SLOT_ID",
+            "type": "t_string_storage",
+            "src": "contracts/Dependencies/YamatoBase.sol:20"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "leveledPledges",
+            "type": "t_mapping(t_uint256,t_mapping(t_address,t_struct(Pledge)4424_storage))",
+            "src": "contracts/PriorityRegistryV6.sol:28"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "levelIndice",
+            "type": "t_mapping(t_uint256,t_array(t_address)dyn_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:29"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "pledgeLength",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:30"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "LICR",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:31"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "rankedQueue",
+            "type": "t_mapping(t_uint256,t_struct(FifoQueue)4192_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:32"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "nextResetRank",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:35"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "deleteDict",
+            "type": "t_mapping(t_address,t_struct(DeleteDictItem)4276_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:36"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "rankedQueueV2",
+            "type": "t_mapping(t_uint256,t_struct(FifoQueue)4271_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:37"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "nextUpsertPledgeIndex",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:38"
+          }
+        ],
+        "types": {
+          "t_mapping(t_uint256,t_mapping(t_address,t_struct(Pledge)4424_storage))": {
+            "label": "mapping(uint256 => mapping(address => struct IYamato.Pledge))"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_mapping(t_address,t_struct(Pledge)4424_storage)": {
+            "label": "mapping(address => struct IYamato.Pledge)"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_struct(Pledge)4424_storage": {
+            "label": "struct IYamato.Pledge",
+            "members": [
+              {
+                "label": "coll",
+                "type": "t_uint256"
+              },
+              {
+                "label": "debt",
+                "type": "t_uint256"
+              },
+              {
+                "label": "isCreated",
+                "type": "t_bool"
+              },
+              {
+                "label": "owner",
+                "type": "t_address"
+              },
+              {
+                "label": "priority",
+                "type": "t_uint256"
+              }
+            ]
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_mapping(t_uint256,t_array(t_address)dyn_storage)": {
+            "label": "mapping(uint256 => address[])"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]"
+          },
+          "t_mapping(t_uint256,t_struct(FifoQueue)4192_storage)": {
+            "label": "mapping(uint256 => struct IPriorityRegistryV4.FifoQueue)"
+          },
+          "t_struct(FifoQueue)4192_storage": {
+            "label": "struct IPriorityRegistryV4.FifoQueue",
+            "members": [
+              {
+                "label": "nextout",
+                "type": "t_uint256"
+              },
+              {
+                "label": "pledges",
+                "type": "t_array(t_struct(Pledge)4424_storage)dyn_storage"
+              }
+            ]
+          },
+          "t_array(t_struct(Pledge)4424_storage)dyn_storage": {
+            "label": "struct IYamato.Pledge[]"
+          },
+          "t_mapping(t_address,t_struct(DeleteDictItem)4276_storage)": {
+            "label": "mapping(address => struct IPriorityRegistryV6.DeleteDictItem)"
+          },
+          "t_struct(DeleteDictItem)4276_storage": {
+            "label": "struct IPriorityRegistryV6.DeleteDictItem",
+            "members": [
+              {
+                "label": "isCreated",
+                "type": "t_bool"
+              },
+              {
+                "label": "index",
+                "type": "t_uint248"
+              }
+            ]
+          },
+          "t_uint248": {
+            "label": "uint248"
+          },
+          "t_mapping(t_uint256,t_struct(FifoQueue)4271_storage)": {
+            "label": "mapping(uint256 => struct IPriorityRegistryV6.FifoQueue)"
+          },
+          "t_struct(FifoQueue)4271_storage": {
+            "label": "struct IPriorityRegistryV6.FifoQueue",
+            "members": [
+              {
+                "label": "nextout",
+                "type": "t_uint256"
+              },
+              {
+                "label": "pledges",
+                "type": "t_array(t_address)dyn_storage"
+              }
+            ]
+          },
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          }
+        }
+      }
+    },
+    "f387fc99d4d480e5e30b68b6d42b3121baf77756f6b800903870b31a30ad21cf": {
+      "address": "0x7301Bb4AA05872b67b3715F2cEd98Df9bAd68Bf3",
+      "txHash": "0x91094a6c92090b75652358fcd8bd8578a1b06dd299bdaffc15c831f06fb136bc",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:21"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:26"
+          },
+          {
+            "contract": "ERC1967UpgradeUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:214"
+          },
+          {
+            "contract": "UUPSUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:80"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "governance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:20"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "pendingGovernance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:21"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "tester",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:22"
+          },
+          {
+            "contract": "YamatoBase",
+            "label": "YAMATO_SLOT_ID",
+            "type": "t_string_storage",
+            "src": "contracts/Dependencies/YamatoBase.sol:20"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "leveledPledges",
+            "type": "t_mapping(t_uint256,t_mapping(t_address,t_struct(Pledge)4424_storage))",
+            "src": "contracts/PriorityRegistryV6.sol:28"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "levelIndice",
+            "type": "t_mapping(t_uint256,t_array(t_address)dyn_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:29"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "pledgeLength",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:30"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "LICR",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:31"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "rankedQueue",
+            "type": "t_mapping(t_uint256,t_struct(FifoQueue)4192_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:32"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "nextResetRank",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:35"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "deleteDict",
+            "type": "t_mapping(t_address,t_struct(DeleteDictItem)4276_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:36"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "rankedQueueV2",
+            "type": "t_mapping(t_uint256,t_struct(FifoQueue)4271_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:37"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "nextUpsertPledgeIndex",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:38"
+          }
+        ],
+        "types": {
+          "t_mapping(t_uint256,t_mapping(t_address,t_struct(Pledge)4424_storage))": {
+            "label": "mapping(uint256 => mapping(address => struct IYamato.Pledge))"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_mapping(t_address,t_struct(Pledge)4424_storage)": {
+            "label": "mapping(address => struct IYamato.Pledge)"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_struct(Pledge)4424_storage": {
+            "label": "struct IYamato.Pledge",
+            "members": [
+              {
+                "label": "coll",
+                "type": "t_uint256"
+              },
+              {
+                "label": "debt",
+                "type": "t_uint256"
+              },
+              {
+                "label": "isCreated",
+                "type": "t_bool"
+              },
+              {
+                "label": "owner",
+                "type": "t_address"
+              },
+              {
+                "label": "priority",
+                "type": "t_uint256"
+              }
+            ]
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_mapping(t_uint256,t_array(t_address)dyn_storage)": {
+            "label": "mapping(uint256 => address[])"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]"
+          },
+          "t_mapping(t_uint256,t_struct(FifoQueue)4192_storage)": {
+            "label": "mapping(uint256 => struct IPriorityRegistryV4.FifoQueue)"
+          },
+          "t_struct(FifoQueue)4192_storage": {
+            "label": "struct IPriorityRegistryV4.FifoQueue",
+            "members": [
+              {
+                "label": "nextout",
+                "type": "t_uint256"
+              },
+              {
+                "label": "pledges",
+                "type": "t_array(t_struct(Pledge)4424_storage)dyn_storage"
+              }
+            ]
+          },
+          "t_array(t_struct(Pledge)4424_storage)dyn_storage": {
+            "label": "struct IYamato.Pledge[]"
+          },
+          "t_mapping(t_address,t_struct(DeleteDictItem)4276_storage)": {
+            "label": "mapping(address => struct IPriorityRegistryV6.DeleteDictItem)"
+          },
+          "t_struct(DeleteDictItem)4276_storage": {
+            "label": "struct IPriorityRegistryV6.DeleteDictItem",
+            "members": [
+              {
+                "label": "isCreated",
+                "type": "t_bool"
+              },
+              {
+                "label": "index",
+                "type": "t_uint248"
+              }
+            ]
+          },
+          "t_uint248": {
+            "label": "uint248"
+          },
+          "t_mapping(t_uint256,t_struct(FifoQueue)4271_storage)": {
+            "label": "mapping(uint256 => struct IPriorityRegistryV6.FifoQueue)"
+          },
+          "t_struct(FifoQueue)4271_storage": {
+            "label": "struct IPriorityRegistryV6.FifoQueue",
+            "members": [
+              {
+                "label": "nextout",
+                "type": "t_uint256"
+              },
+              {
+                "label": "pledges",
+                "type": "t_array(t_address)dyn_storage"
+              }
+            ]
+          },
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          }
+        }
+      }
+    },
+    "ad65cc13d9bdb8a412fdd2ce66051a42ac36e05bc23db54aec584d4350235135": {
+      "address": "0x4A417e6616Cb34f31d998b33829850b0230AdFF2",
+      "txHash": "0xb4555eea2fb222bb37b5657963b8476725638cc71e796dc0ff81c5a1483922b9",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:21"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:26"
+          },
+          {
+            "contract": "ERC1967UpgradeUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:214"
+          },
+          {
+            "contract": "UUPSUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:80"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "governance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:20"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "pendingGovernance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:21"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "tester",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:22"
+          },
+          {
+            "contract": "YamatoBase",
+            "label": "YAMATO_SLOT_ID",
+            "type": "t_string_storage",
+            "src": "contracts/Dependencies/YamatoBase.sol:20"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "leveledPledges",
+            "type": "t_mapping(t_uint256,t_mapping(t_address,t_struct(Pledge)4424_storage))",
+            "src": "contracts/PriorityRegistryV6.sol:28"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "levelIndice",
+            "type": "t_mapping(t_uint256,t_array(t_address)dyn_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:29"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "pledgeLength",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:30"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "LICR",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:31"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "rankedQueue",
+            "type": "t_mapping(t_uint256,t_struct(FifoQueue)4192_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:32"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "nextResetRank",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:35"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "deleteDict",
+            "type": "t_mapping(t_address,t_struct(DeleteDictItem)4276_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:36"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "rankedQueueV2",
+            "type": "t_mapping(t_uint256,t_struct(FifoQueue)4271_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:37"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "nextUpsertPledgeIndex",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:38"
+          }
+        ],
+        "types": {
+          "t_mapping(t_uint256,t_mapping(t_address,t_struct(Pledge)4424_storage))": {
+            "label": "mapping(uint256 => mapping(address => struct IYamato.Pledge))"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_mapping(t_address,t_struct(Pledge)4424_storage)": {
+            "label": "mapping(address => struct IYamato.Pledge)"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_struct(Pledge)4424_storage": {
+            "label": "struct IYamato.Pledge",
+            "members": [
+              {
+                "label": "coll",
+                "type": "t_uint256"
+              },
+              {
+                "label": "debt",
+                "type": "t_uint256"
+              },
+              {
+                "label": "isCreated",
+                "type": "t_bool"
+              },
+              {
+                "label": "owner",
+                "type": "t_address"
+              },
+              {
+                "label": "priority",
+                "type": "t_uint256"
+              }
+            ]
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_mapping(t_uint256,t_array(t_address)dyn_storage)": {
+            "label": "mapping(uint256 => address[])"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]"
+          },
+          "t_mapping(t_uint256,t_struct(FifoQueue)4192_storage)": {
+            "label": "mapping(uint256 => struct IPriorityRegistryV4.FifoQueue)"
+          },
+          "t_struct(FifoQueue)4192_storage": {
+            "label": "struct IPriorityRegistryV4.FifoQueue",
+            "members": [
+              {
+                "label": "nextout",
+                "type": "t_uint256"
+              },
+              {
+                "label": "pledges",
+                "type": "t_array(t_struct(Pledge)4424_storage)dyn_storage"
+              }
+            ]
+          },
+          "t_array(t_struct(Pledge)4424_storage)dyn_storage": {
+            "label": "struct IYamato.Pledge[]"
+          },
+          "t_mapping(t_address,t_struct(DeleteDictItem)4276_storage)": {
+            "label": "mapping(address => struct IPriorityRegistryV6.DeleteDictItem)"
+          },
+          "t_struct(DeleteDictItem)4276_storage": {
+            "label": "struct IPriorityRegistryV6.DeleteDictItem",
+            "members": [
+              {
+                "label": "isCreated",
+                "type": "t_bool"
+              },
+              {
+                "label": "index",
+                "type": "t_uint248"
+              }
+            ]
+          },
+          "t_uint248": {
+            "label": "uint248"
+          },
+          "t_mapping(t_uint256,t_struct(FifoQueue)4271_storage)": {
+            "label": "mapping(uint256 => struct IPriorityRegistryV6.FifoQueue)"
+          },
+          "t_struct(FifoQueue)4271_storage": {
+            "label": "struct IPriorityRegistryV6.FifoQueue",
+            "members": [
+              {
+                "label": "nextout",
+                "type": "t_uint256"
+              },
+              {
+                "label": "pledges",
+                "type": "t_array(t_address)dyn_storage"
+              }
+            ]
+          },
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          }
+        }
+      }
+    },
+    "cc2d65824616a843439348573d3af7bdebd9dbb31611dbdb6ac2a7a5bd1a4320": {
+      "address": "0x54B0185F2B95aAC3AC150e7e948fA8c91014A17C",
+      "txHash": "0x2374b7e79766039a8f68846e37aec91e1ff1ce4c061e1d28dfca28e16ca45958",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:21"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:26"
+          },
+          {
+            "contract": "ERC1967UpgradeUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:214"
+          },
+          {
+            "contract": "UUPSUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:80"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "governance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:20"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "pendingGovernance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:21"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "tester",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:22"
+          },
+          {
+            "contract": "YamatoBase",
+            "label": "YAMATO_SLOT_ID",
+            "type": "t_string_storage",
+            "src": "contracts/Dependencies/YamatoBase.sol:20"
+          }
+        ],
+        "types": {
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_uint256": {
+            "label": "uint256"
           },
           "t_bool": {
             "label": "bool"
