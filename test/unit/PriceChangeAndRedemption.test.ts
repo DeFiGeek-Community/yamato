@@ -895,7 +895,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       it(`should redeem all pledges to ICR 130% and LICR is 130`, async function () {
         await (
           await Yamato.connect(redeemer).redeem(
-            toERC20(toBorrow.mul(9) + ""),
+            toERC20(toBorrow.mul(9) + ""), // Note: full
             false,
             { gasLimit: 30000000 }
           )
@@ -904,6 +904,39 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         expect(await PriorityRegistry.rankedQueueLen(130)).to.be.gt(0);
         expect(await PriorityRegistry.getRedeemablesCap()).to.eq(0);
         expect(await PriorityRegistry.LICR()).to.eq(130);
+        expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true;
+      });
+      it(`should redeem all pledges to ICR 130% and LICR is less than 130`, async function () {
+        const licr1 = await PriorityRegistry.LICR();
+        await (
+          await Yamato.connect(redeemer).redeem(
+            toERC20(toBorrow.div(10) + ""), // Note: partial
+            false,
+            { gasLimit: 30000000 }
+          )
+        ).wait();
+        const licr2 = await PriorityRegistry.LICR();
+        expect(await PriorityRegistry.rankedQueueLen(0)).to.eq(0);
+        expect(await PriorityRegistry.rankedQueueLen(130)).to.be.gt(0);
+        expect(await PriorityRegistry.getRedeemablesCap()).to.be.gt(0);
+        expect(licr2).to.be.lt(130);
+
+        await (
+          await Yamato.connect(redeemer).redeem(
+            toERC20(toBorrow.mul(9) + ""), // Note: full
+            false,
+            { gasLimit: 30000000 }
+          )
+        ).wait();
+
+        const licr3 = await PriorityRegistry.LICR();
+
+        expect(await PriorityRegistry.rankedQueueLen(0)).to.eq(0);
+        expect(await PriorityRegistry.rankedQueueLen(130)).to.be.gt(0);
+        expect(await PriorityRegistry.getRedeemablesCap()).to.eq(0);
+        expect(licr3).to.eq(130);
+        expect(licr3).to.be.gt(licr2);
+
         expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true;
       });
     });

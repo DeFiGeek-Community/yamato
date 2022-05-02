@@ -202,7 +202,6 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         uint256 _postStateLowerBoundRank,
         uint256 _postStateUpperBoundRank
     ) internal pure returns (uint256 _newLowestICR) {
-        _newLowestICR = 1; // Note: fallback by default
         if (
             _preStateLowerBoundRank == 0 ||
             _postStateLowerBoundRank == 0 ||
@@ -257,6 +256,8 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
                 _postStateUpperBoundRank
             );
         }
+
+        // Note: If _newLowestICR is less than 1, then _findFloor will be recursively called to search new LICR
     }
 
     /*
