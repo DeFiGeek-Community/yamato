@@ -130,60 +130,132 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         // Note: All deletions could cause traverse.
         // Note: Traversing to the ICR=MAX_UINT256 pledges are checked, don't worry about gas cost explosion.
         // Note: 2022-04-29 pledges must be sorted by those real ICR. Also, the last element can be MAXINT if you do sync.
+        // Note: 2022-04-30 YamatoActions have pre-state and post-state of its pledges. pre-state pledge ICR boundary can be alternated by LICR and it can be used as hint of effective upsert.
         /*
             LICR determination algo for bulkUpsert
                 - The first pledge is ICR-lowest pledge
                 - Check the len of the rank
                 - If empty, start traversing from that rank.
         */
-        // Bug: Is the last pledge must be the target???
-        Yamato.Pledge memory _detectionTargetPledge = _pledges[
-            _pledges.length - 1
-        ];
-        uint256 _detectionTargetICR = _detectionTargetPledge.getICRWithPrice(
-            _ethPriceInCurrency
+
+        uint256 _maxCount = IYamatoV3(yamato()).maxRedeemableCount();
+        uint256 _lastIndex = (_pledges.length >= _maxCount)
+            ? _maxCount - 1
+            : _pledges.length - 1;
+        uint256 _preStateLowerBoundRank = LICR;
+        Yamato.Pledge memory _postStateLowerBoundPledge = _pledges[0];
+        Yamato.Pledge memory _postStateUpperBoundPledge = _pledges[_lastIndex];
+        uint256 _postStateLowerBoundRank = floor(
+            _postStateLowerBoundPledge.getICRWithPrice(_ethPriceInCurrency)
         );
-        uint256 _licrCandidate = _detectLowestICR(
-            floor(_detectionTargetICR),
-            floor(_detectionTargetPledge.priority),
-            LICR
+        uint256 _postStateUpperBoundRank = floor(
+            _postStateUpperBoundPledge.getICRWithPrice(_ethPriceInCurrency)
         );
-        if (LICR == 0 && _licrCandidate == MAX_PRIORITY) {
-            // Note: For sync scenarip
-            _traverseToNextLICR(1);
-        } else if (_licrCandidate < LICR || LICR == 0) {
-            // Note: For yamato actions scenario
-            if (_licrCandidate > 0) {
-                if (rankedQueueLen(_licrCandidate) > 0) {
-                    LICR = _licrCandidate;
-                } else {
-                    _traverseToNextLICR(_licrCandidate);
+        _postStateLowerBoundRank = LiquityMath._min(
+            _postStateLowerBoundRank,
+            _postStateUpperBoundRank
+        );
+        _postStateUpperBoundRank = LiquityMath._max(
+            _postStateLowerBoundRank,
+            _postStateUpperBoundRank
+        );
+
+        uint256 _licrCandidate = _assumeCandidateByHint(
+            _preStateLowerBoundRank,
+            _postStateLowerBoundRank,
+            _postStateUpperBoundRank
+        );
+
+        uint256 _mcrPercent = uint256(IYamato(yamato()).MCR());
+        uint256 _checkpoint = _mcrPercent +
+            IYamatoV3(yamato()).CHECKPOINT_BUFFER(); // 185*0.7=130 ... priority=18400 pledge can be redeemable if 30% dump happens
+        if (_licrCandidate <= 1) {
+            // Note: Gas saving logic
+
+            uint256 i = 1;
+            uint256 _lastFromICR = _checkpoint;
+            while (true) {
+                _licrCandidate = _mcrPercent / i - 1;
+                _findFloor(_licrCandidate, _lastFromICR);
+                if (_licrCandidate > 1 && LICR > 0) {
+                    break;
                 }
-            } else {
-                _traverseToNextLICR(1); /* If _licrCandidate=0 (just after full-redemption) and current LICR will be obsoleted. Then search next. */
+                i++;
+                _lastFromICR = _licrCandidate;
             }
         } else {
-            _traverseToNextLICR(1);
+            // Note: Naive logic
+            if (rankedQueueLen(_licrCandidate) > 0) {
+                // Note: No need to scan ranks if the candidate is filled with pledges
+                LICR = _licrCandidate;
+            } else {
+                _findFloor(_licrCandidate, _checkpoint);
+            }
         }
 
         return _newPriorities;
     }
 
-    function _detectLowestICR(
-        uint256 _newICRpercent,
-        uint256 _oldICRpercent,
-        uint256 _licr
+    /// @dev Gas saving function by elaborating the start rank of _findFloor().
+    function _assumeCandidateByHint(
+        uint256 _preStateLowerBoundRank,
+        uint256 _postStateLowerBoundRank,
+        uint256 _postStateUpperBoundRank
     ) internal pure returns (uint256 _newLowestICR) {
-        _newLowestICR = _licr;
-        if (_oldICRpercent > 0 && _newICRpercent > 0) {
-            _newLowestICR = LiquityMath._min(_oldICRpercent, _newICRpercent);
-        } else if (_oldICRpercent > 0) {
-            _newLowestICR = _oldICRpercent;
-        } else if (_newICRpercent > 0) {
-            _newLowestICR = _newICRpercent;
+        _newLowestICR = 1; // Note: fallback by default
+        if (
+            _preStateLowerBoundRank == 0 ||
+            _postStateLowerBoundRank == 0 ||
+            _postStateUpperBoundRank == 0
+        ) {
+            return 1;
         }
-        if (_licr > 0) {
-            _newLowestICR = LiquityMath._min(_newLowestICR, _licr);
+
+        if (
+            _preStateLowerBoundRank < 100 &&
+            _postStateLowerBoundRank < 100 &&
+            _postStateUpperBoundRank < 100
+        ) {
+            // Note: Optimise gas if possible
+            if (_preStateLowerBoundRank > _postStateUpperBoundRank) {
+                /*
+                    postLower <<< postUpper <<< pre <<< 100 (redeem)
+                */
+                _newLowestICR = _postStateLowerBoundRank;
+            } else {
+                /*
+                    pre <<< postLower <<< postUpper <<< 100 (repay/deposit)
+                */
+                _newLowestICR = _preStateLowerBoundRank;
+            }
+        } else if (
+            _preStateLowerBoundRank >= 100 &&
+            _postStateLowerBoundRank >= 100 &&
+            _postStateUpperBoundRank >= 100
+        ) {
+            // Note: Optimise gas if possible
+            if (_preStateLowerBoundRank < _postStateLowerBoundRank) {
+                /*
+                    100 <<< pre <<< postLower <<< postUpper (redeem/repay/deposit)
+                */
+                _newLowestICR = _preStateLowerBoundRank;
+            } else {
+                /*
+                    100 <<< postLower <<< postUpper <<< pre (borrow/withdraw)
+                */
+                _newLowestICR = _postStateLowerBoundRank;
+            }
+        } else {
+            // Note: Fallback case
+            _newLowestICR = _postStateLowerBoundRank;
+            _newLowestICR = LiquityMath._min(
+                _newLowestICR,
+                _preStateLowerBoundRank
+            );
+            _newLowestICR = LiquityMath._min(
+                _newLowestICR,
+                _postStateUpperBoundRank
+            );
         }
     }
 
@@ -342,7 +414,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         Internal Function
     ==============================
         - _deletePledge
-        - _traverseToNextLICR
+        - _findFloor
     */
     /*
         @dev delete of "address[] storage" (rankedQueueSearchAndDestroy) causes gap in the list.
@@ -359,24 +431,25 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         }
     }
 
-    function _traverseToNextLICR(uint256 _icr) internal {
+    function _findFloor(uint256 _fromICR, uint256 _toICR) internal {
         uint256 _mcrPercent = uint256(IYamato(yamato()).MCR());
-        uint256 _checkpoint = _mcrPercent +
-            IYamatoV3(yamato()).CHECKPOINT_BUFFER(); // 185*0.7=130 ... It's possible to be "priority=184 but deficit" with 30% dump, but "priority=20000 but deficit" is impossible.
-        uint256 _next = _icr;
+        uint256 _next = _fromICR;
+        uint256 _checkpoint = _toICR;
         while (true) {
-            if (rankedQueueLen(_next) != 0) {
-                if (LICR == _mcrPercent && _icr == _mcrPercent) {
+            if (_next < _checkpoint && rankedQueueLen(_next) > 0) {
+                if (LICR == _mcrPercent && _next == _mcrPercent) {
                     _next++; // skip just-to-MCR redemption
                 } else {
                     LICR = _next; // the first filled rankedQueue
+                    break;
                 }
-                break;
+            } else if (_next < _checkpoint && rankedQueueLen(_next) == 0) {
+                _next++;
             } else if (_next >= _checkpoint) {
                 LICR = _checkpoint - 1; // default LICR
                 break;
             } else {
-                _next++;
+                // Note: void
             }
         }
     }
