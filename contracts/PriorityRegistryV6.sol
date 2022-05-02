@@ -170,18 +170,23 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         uint256 _checkpoint = _mcrPercent +
             IYamatoV3(yamato()).CHECKPOINT_BUFFER(); // 185*0.7=130 ... priority=18400 pledge can be redeemable if 30% dump happens
         if (_licrCandidate <= 1) {
-            // Note: Gas saving logic
+            if (LICR == 0 && _pledges.length > 1) {
+                // Note: For sync scenario. redeem can come here becuase redeem do come with LICR > 0
+                _findFloor(1, _checkpoint);
+            } else {
+                // Note: Gas saving logic for single pledge YamatoActions (deposit,borrow,withdraw,repay)
 
-            uint256 i = 1;
-            uint256 _lastFromICR = _checkpoint;
-            while (true) {
-                _licrCandidate = _mcrPercent / i - 1;
-                _findFloor(_licrCandidate, _lastFromICR);
-                if (_licrCandidate > 1 && LICR > 0) {
-                    break;
+                uint256 i = 1;
+                uint256 _lastFromICR = _checkpoint;
+                while (true) {
+                    _licrCandidate = _mcrPercent / i - 1;
+                    _findFloor(_licrCandidate, _lastFromICR);
+                    if (_licrCandidate > 1 && LICR > 0) {
+                        break;
+                    }
+                    i++;
+                    _lastFromICR = _licrCandidate;
                 }
-                i++;
-                _lastFromICR = _licrCandidate;
             }
         } else {
             // Note: Naive logic

@@ -1447,6 +1447,68 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true;
         await expect(Yamato.sweep()).to.be.revertedWith("No sweepables.");
       });
+      it("should accept reset and sync.", async () => {
+        function icr(pledge, price) {
+          if (pledge.debt.isZero()) {
+            return BigNumber.from(2).pow(256);
+          } else {
+            return pledge.coll
+              .mul(price)
+              .div(pledge.debt)
+              .div(1e14 + "");
+          }
+        }
+
+        /*
+          Dummy upsert to refrect price change to LICR
+        */
+        for (var i = 1; i < 51; i++) {
+          await (
+            await Yamato.connect(accounts[i]).deposit({ value: 1 })
+          ).wait();
+        }
+
+        /*
+          Get pledges for reset
+        */
+        let filter = Yamato.filters.Deposited(null, null);
+        let logs = await Yamato.queryFilter(filter);
+
+        let pledgeOwners = logs
+          .map((log) => log.args.sender)
+          .filter((value, index, self) => self.indexOf(value) === index);
+        let pledges = await Promise.all(
+          pledgeOwners.map(async (owner) => await Yamato.getPledge(owner))
+        );
+        pledges = pledges.filter((p) => p.isCreated);
+        let price = await PriceFeed.getPrice();
+        pledges = pledges.sort((a, b) => {
+          return icr(a, price).gte(icr(b, price)) ? 1 : -1;
+        });
+
+        expect(await PriorityRegistry.getRedeemablesCap()).to.be.gt(0);
+        expect(await PriorityRegistry.LICR()).to.be.eq(119);
+
+        /*
+          reset
+        */
+        await PriorityRegistry.resetQueue(1, pledges);
+
+        expect(await PriorityRegistry.getRedeemablesCap()).to.be.eq(0);
+        expect(await PriorityRegistry.LICR()).to.be.eq(0);
+
+        /*
+          sync
+        */
+        await (
+          await PriorityRegistry.syncRankedQueue(pledges, {
+            gasLimit: 24000000,
+          })
+        ).wait();
+
+        expect(await PriorityRegistry.getRedeemablesCap()).to.be.gt(0);
+        expect(await PriorityRegistry.LICR()).to.be.eq(119);
+      });
     });
   });
 });
