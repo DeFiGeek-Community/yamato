@@ -16,13 +16,11 @@ import "./Interfaces/IPriorityRegistryV6.sol";
 import "./Interfaces/IPriorityRegistryV4.sol";
 import "./Dependencies/PledgeLib.sol";
 import "./Dependencies/YamatoStore.sol";
-import "./Dependencies/SafeMath.sol";
 import "./Dependencies/LiquityMath.sol";
 import "hardhat/console.sol";
 
 // @dev For gas saving reason, we use percent denominated ICR only in this contract.
 contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
-    using SafeMath for uint256;
     using PledgeLib for IYamato.Pledge;
 
     mapping(uint256 => mapping(address => IYamato.Pledge)) leveledPledges; // ICR => owner => Pledge
@@ -77,20 +75,21 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         onlyYamato
         returns (uint256[] memory)
     {
-        uint256 _ethPriceInCurrency = IPriceFeedV2(feed()).getPrice(); // Note: can't use lastGoodPrice cuz bulkUpsert can also be called be syncer which does not use fetchPrice
-        uint256[] memory _newPriorities = new uint256[](_pledges.length);
+        BulkUpsertVar memory vars;
+        vars._ethPriceInCurrency = IPriceFeedV2(feed()).getPrice(); // Note: can't use lastGoodPrice cuz bulkUpsert can also be called be syncer which does not use fetchPrice
+        vars._newPriorities = new uint256[](_pledges.length);
         for (uint256 i; i < _pledges.length; i++) {
-            IYamato.Pledge memory _pledge = _pledges[i];
-            if (_pledge.isCreated == false) {
+            vars._pledge = _pledges[i];
+            if (vars._pledge.isCreated == false) {
                 continue;
             }
 
-            uint256 _oldICRpercent = floor(_pledge.priority);
+            vars._oldICRpercent = floor(vars._pledge.priority);
 
             require(
-                !(_pledge.coll == 0 &&
-                    _pledge.debt == 0 &&
-                    _oldICRpercent != 0),
+                !(vars._pledge.coll == 0 &&
+                    vars._pledge.debt == 0 &&
+                    vars._oldICRpercent != 0),
                 "Upsert Error: The logless zero pledge cannot be upserted. It should be removed."
             );
 
@@ -98,171 +97,268 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
                 1. delete current pledge from sorted pledge and update LICR
             */
             if (
-                !(_pledge.debt == 0 && _oldICRpercent == 0) /* Exclude "new pledge" */
+                !(vars._pledge.debt == 0 && vars._oldICRpercent == 0) /* Exclude "new pledge" */
             ) {
-                _deletePledge(_pledge);
+                _deletePledge(vars._pledge);
             }
 
             /* 
                 2. insert new pledge
             */
 
-            uint256 _newICRPertenk = _pledge.getICRWithPrice(
-                _ethPriceInCurrency
+            vars._newICRPertenk = vars._pledge.getICRWithPrice(
+                vars._ethPriceInCurrency
             );
-            uint256 _newICRpercent = floor(_newICRPertenk);
+            vars._newICRpercent = floor(vars._newICRPertenk);
 
             require(
-                _newICRpercent <= MAX_PRIORITY,
+                vars._newICRpercent <= MAX_PRIORITY,
                 "priority can't be that big."
             );
 
-            _pledge.priority = _newICRPertenk;
+            vars._pledge.priority = vars._newICRPertenk;
 
-            rankedQueuePush(_newICRpercent, _pledge.owner);
+            rankedQueuePush(vars._newICRpercent, vars._pledge.owner);
 
-            _newPriorities[i] = _newICRPertenk;
+            vars._newPriorities[i] = vars._newICRPertenk;
         }
 
         /*
             LICR update or traverse
         */
-        // Note: All deletions could cause traverse.
         // Note: Traversing to the ICR=MAX_UINT256 pledges are checked, don't worry about gas cost explosion.
         // Note: 2022-04-29 pledges must be sorted by those real ICR. Also, the last element can be MAXINT if you do sync.
         // Note: 2022-04-30 YamatoActions have pre-state and post-state of its pledges. pre-state pledge ICR boundary can be alternated by LICR and it can be used as hint of effective upsert.
-        /*
-            LICR determination algo for bulkUpsert
-                - The first pledge is ICR-lowest pledge
-                - Check the len of the rank
-                - If empty, start traversing from that rank.
-        */
 
-        uint256 _maxCount = IYamatoV3(yamato()).maxRedeemableCount();
-        uint256 _lastIndex = (_pledges.length >= _maxCount)
-            ? _maxCount - 1
-            : _pledges.length - 1;
-        uint256 _preStateLowerBoundRank = LICR;
-        Yamato.Pledge memory _postStateLowerBoundPledge = _pledges[0];
-        Yamato.Pledge memory _postStateUpperBoundPledge = _pledges[_lastIndex];
-        uint256 _postStateLowerBoundRank = floor(
-            _postStateLowerBoundPledge.getICRWithPrice(_ethPriceInCurrency)
-        );
-        uint256 _postStateUpperBoundRank = floor(
-            _postStateUpperBoundPledge.getICRWithPrice(_ethPriceInCurrency)
-        );
-        _postStateLowerBoundRank = LiquityMath._min(
-            _postStateLowerBoundRank,
-            _postStateUpperBoundRank
-        );
-        _postStateUpperBoundRank = LiquityMath._max(
-            _postStateLowerBoundRank,
-            _postStateUpperBoundRank
-        );
-
-        uint256 _licrCandidate = _assumeCandidateByHint(
-            _preStateLowerBoundRank,
-            _postStateLowerBoundRank,
-            _postStateUpperBoundRank
-        );
-
-        uint256 _mcrPercent = uint256(IYamato(yamato()).MCR());
-        uint256 _checkpoint = _mcrPercent +
+        vars._mcrPercent = uint256(IYamato(yamato()).MCR());
+        vars._checkpoint =
+            vars._mcrPercent +
             IYamatoV3(yamato()).CHECKPOINT_BUFFER(); // 185*0.7=130 ... priority=18400 pledge can be redeemable if 30% dump happens
-        if (_licrCandidate <= 1) {
-            if (LICR == 0 && _pledges.length > 1) {
-                // Note: For sync scenario. redeem can come here becuase redeem do come with LICR > 0
-                _findFloor(1, _checkpoint);
-            } else {
-                // Note: Gas saving logic for single pledge YamatoActions (deposit,borrow,withdraw,repay)
+        vars._isSyncAction = LICR == 0 && _pledges.length > 1;
+        vars._isFullAction =
+            vars._postStateLowerBoundRank == 0 &&
+            vars._postStateUpperBoundRank == 0;
 
-                uint256 i = 1;
-                uint256 _lastFromICR = _checkpoint;
-                while (true) {
-                    _licrCandidate = _mcrPercent / i - 1;
-                    _findFloor(_licrCandidate, _lastFromICR);
-                    if (_licrCandidate > 1 && LICR > 0) {
-                        break;
+        if (vars._isSyncAction) {
+            _findFloor(1, vars._checkpoint);
+        } else {
+            vars._lenAtLICR = rankedQueueLen(LICR);
+            vars._maxCount = IYamatoV3(yamato()).maxRedeemableCount();
+            vars._lastIndex = (_pledges.length >= vars._maxCount)
+                ? vars._maxCount - 1
+                : _pledges.length - 1;
+            vars._preStateLowerBoundRank = LICR;
+            vars._postStateLowerBoundRank = floor(
+                _pledges[0].getICRWithPrice(vars._ethPriceInCurrency)
+            );
+            vars._postStateUpperBoundRank = floor(
+                _pledges[vars._lastIndex].getICRWithPrice(
+                    vars._ethPriceInCurrency
+                )
+            );
+            vars._postStateLowerBoundRank = LiquityMath._min(
+                vars._postStateLowerBoundRank,
+                vars._postStateUpperBoundRank
+            );
+            vars._postStateUpperBoundRank = LiquityMath._max(
+                vars._postStateLowerBoundRank,
+                vars._postStateUpperBoundRank
+            );
+
+            if (LICR > vars._mcrPercent) {
+                if (
+                    _checkUnderminingAction(
+                        vars._preStateLowerBoundRank,
+                        vars._postStateLowerBoundRank,
+                        vars._postStateUpperBoundRank
+                    )
+                ) {
+                    /*
+                        borrow, withdraw, no redeem
+                    */
+                    if (vars._lenAtLICR == 0) {
+                        /*
+                             zero -- MCR -- postLower -- postUpper -- preLICR -- LICR+1 -- checkpoint
+                              |                 |                        |          |
+                              |                 |                   [no pledges]    |
+                              |                 |                                   |
+                              |         [normally find this]                        |
+                              |                                         [if full withdraw and len=0, find this]
+                [full withdraw can come here]
+                        */
+                        if (vars._isFullAction) {
+                            _findFloor(LICR + 1, vars._checkpoint);
+                        } else {
+                            _findFloor(
+                                vars._postStateLowerBoundRank,
+                                vars._checkpoint
+                            );
+                        }
+                    } else {
+                        /*
+                             zero -- MCR -- postLower -- postUpper -- preLICR 
+                              |                 |                        |
+                              |                 |                   [with pledges] 
+                              |                 |                        |
+                              |        [normally find this]              |
+                              |                                          |
+                [full withdraw can come here]               [if full withdraw and len>0, find this]
+                        */
+                        if (vars._isFullAction) {
+                            _findFloor(LICR, vars._checkpoint);
+                        } else {
+                            _findFloor(
+                                vars._postStateLowerBoundRank,
+                                vars._preStateLowerBoundRank
+                            );
+                        }
                     }
-                    i++;
-                    _lastFromICR = _licrCandidate;
+                } else {
+                    /*
+                        deposit, repay, sweep
+                    */
+                    if (vars._lenAtLICR == 0) {
+                        /*
+                             MCR -- preLICR -- [LICR+1] -- postLower -- postUpper
+                                        |          |
+                                [no pledges]       |
+                                                   |
+                                            [find this]
+                        */
+                        _findFloor(
+                            vars._preStateLowerBoundRank + 1,
+                            vars._postStateLowerBoundRank
+                        );
+                    } else {
+                        /*
+                             MCR -- preLICR -- [LICR+1] -- postLower -- postUpper
+                                        |
+                                  [with pledges]
+                                        |
+                                    [keep LICR]
+                        */
+                        // Note: !!! Do nothing for LICR here !!!
+                    }
+                }
+            } else if (LICR >= 100) {
+                if (
+                    _checkUnderminingAction(
+                        vars._preStateLowerBoundRank,
+                        vars._postStateLowerBoundRank,
+                        vars._postStateUpperBoundRank
+                    )
+                ) {
+                    /*
+                        no borrow, no withdraw, redeem upwards
+                    */
+                    revert("_bulkUpsert(LICR update): impossible case.");
+                } else {
+                    /*
+                        deposit, repay, redeem upwards, sweep
+                    */
+                    if (vars._lenAtLICR == 0) {
+                        /*
+                            100 -- preLICR -- [LICR+1]  -- postLower -- postUpper
+                                      |           |
+                                [no pledges]      |
+                                                  |
+                                              [find this]
+                        */
+                        _findFloor(
+                            vars._preStateLowerBoundRank + 1,
+                            vars._postStateLowerBoundRank
+                        );
+                    } else {
+                        /*
+                             100 -- preLICR -- [LICR+1]  -- postLower -- postUpper
+                                        |          |
+                                  [with pledges]   |
+                                                   |
+                                              [find this]
+                        */
+                        // Note: !!! Do nothing for LICR here !!!
+                    }
+                }
+            } else {
+                if (
+                    _checkUnderminingAction(
+                        vars._preStateLowerBoundRank,
+                        vars._postStateLowerBoundRank,
+                        vars._postStateUpperBoundRank
+                    )
+                ) {
+                    /*
+                        no borrow, no withdraw, redeem
+                    */
+                    if (vars._lenAtLICR == 0) {
+                        /*
+                            zero -- postLower -- postUpper -- preLICR -- 100
+                              |         |                        |
+                              |      [find this]              [no pledges]
+                        [full redeem]   |
+                                [this can be zero]
+                                        |
+                                [if zero, find(upper | 1)]
+                        */
+
+                        if (vars._isFullAction) {
+                            _findFloor(1, vars._checkpoint);
+                        } else {
+                            _findFloor(
+                                vars._postStateLowerBoundRank,
+                                vars._preStateLowerBoundRank
+                            );
+                        }
+                    } else {
+                        /*
+                            zero -- postLower -- postUpper -- preLICR -- 100
+                              |         |                        |
+                              |     [find this]            [with pledges]
+                        [full redeem]   |
+                                [this can be zero]
+                                        |
+                                [if zero, find(upper | 1)]
+                        */
+                        if (vars._isFullAction) {
+                            _findFloor(1, vars._checkpoint);
+                        } else {
+                            _findFloor(
+                                vars._postStateLowerBoundRank,
+                                vars._preStateLowerBoundRank
+                            );
+                        }
+                    }
+                } else {
+                    /*
+                        deposit, repay, sweep
+                    */
+                    if (vars._lenAtLICR == 0) {
+                        /*
+                             preLICR -- [LICR+1] -- 100  -- postLower -- postUpper
+                                |           |
+                          [no pledges]      |
+                                            |
+                                        [find this]
+                        */
+                        _findFloor(
+                            vars._preStateLowerBoundRank + 1,
+                            vars._postStateLowerBoundRank
+                        );
+                    } else {
+                        /*
+                             preLICR -- [LICR+1] -- 100  -- postLower -- postUpper
+                                |
+                          [with pledges]
+                                |
+                            [keep LICR]
+                        */
+                        // Note: !!! Do nothing for LICR here !!!
+                    }
                 }
             }
-        } else {
-            // Note: Naive logic
-            if (rankedQueueLen(_licrCandidate) > 0) {
-                // Note: No need to scan ranks if the candidate is filled with pledges
-                LICR = _licrCandidate;
-            } else {
-                _findFloor(_licrCandidate, _checkpoint);
-            }
         }
 
-        return _newPriorities;
-    }
-
-    /// @dev Gas saving function by elaborating the start rank of _findFloor().
-    function _assumeCandidateByHint(
-        uint256 _preStateLowerBoundRank,
-        uint256 _postStateLowerBoundRank,
-        uint256 _postStateUpperBoundRank
-    ) internal pure returns (uint256 _newLowestICR) {
-        if (
-            _preStateLowerBoundRank == 0 ||
-            _postStateLowerBoundRank == 0 ||
-            _postStateUpperBoundRank == 0
-        ) {
-            return 1;
-        }
-
-        if (
-            _preStateLowerBoundRank < 100 &&
-            _postStateLowerBoundRank < 100 &&
-            _postStateUpperBoundRank < 100
-        ) {
-            // Note: Optimise gas if possible
-            if (_preStateLowerBoundRank > _postStateUpperBoundRank) {
-                /*
-                    postLower <<< postUpper <<< pre <<< 100 (redeem)
-                */
-                _newLowestICR = _postStateLowerBoundRank;
-            } else {
-                /*
-                    pre <<< postLower <<< postUpper <<< 100 (repay/deposit)
-                */
-                _newLowestICR = _preStateLowerBoundRank;
-            }
-        } else if (
-            _preStateLowerBoundRank >= 100 &&
-            _postStateLowerBoundRank >= 100 &&
-            _postStateUpperBoundRank >= 100
-        ) {
-            // Note: Optimise gas if possible
-            if (_preStateLowerBoundRank < _postStateLowerBoundRank) {
-                /*
-                    100 <<< pre <<< postLower <<< postUpper (redeem/repay/deposit)
-                */
-                _newLowestICR = _preStateLowerBoundRank;
-            } else {
-                /*
-                    100 <<< postLower <<< postUpper <<< pre (borrow/withdraw)
-                */
-                _newLowestICR = _postStateLowerBoundRank;
-            }
-        } else {
-            // Note: Fallback case
-            _newLowestICR = _postStateLowerBoundRank;
-            _newLowestICR = LiquityMath._min(
-                _newLowestICR,
-                _preStateLowerBoundRank
-            );
-            _newLowestICR = LiquityMath._min(
-                _newLowestICR,
-                _postStateUpperBoundRank
-            );
-        }
-
-        // Note: If _newLowestICR is less than 1, then _findFloor will be recursively called to search new LICR
+        return vars._newPriorities;
     }
 
     /*
@@ -296,28 +392,6 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         */
         DeleteDictItem memory _d;
         deleteDict[_pledge.owner] = _d;
-    }
-
-    /*
-    ==============================
-        Mutable Getters
-    ==============================
-        - popSweepable
-    */
-
-    /*
-        @notice zero ICR pledge getter
-        @dev It doesn't change pledgeLength until remove runs.
-        @return A pledge
-    */
-    function popSweepable()
-        public
-        override
-        onlyYamato
-        returns (address _poppedPledgeAddr)
-    {
-        require(rankedQueueLen(0) > 0, "Pop must not be done for empty queue");
-        _poppedPledgeAddr = rankedQueuePop(0);
     }
 
     /*
@@ -421,6 +495,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
     ==============================
         - _deletePledge
         - _findFloor
+        - _checkUnderminingAction
     */
     /*
         @dev delete of "address[] storage" (rankedQueueSearchAndDestroy) causes gap in the list.
@@ -457,6 +532,31 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
             } else {
                 // Note: void
             }
+        }
+    }
+
+    /// @dev Comparison function between LICR and post state
+    function _checkUnderminingAction(
+        uint256 _preStateLowerBoundRank,
+        uint256 _postStateLowerBoundRank,
+        uint256 _postStateUpperBoundRank
+    ) internal pure returns (bool) {
+        if (_preStateLowerBoundRank < _postStateLowerBoundRank) {
+            /*
+                            post state
+                                |
+                LICR -- [lower -- upper]
+            */
+            return false;
+        } else if (_postStateUpperBoundRank < _preStateLowerBoundRank) {
+            /*
+                    post state
+                        |
+                [lower -- upper] -- LICR
+            */
+            return true;
+        } else {
+            revert("_checkUnderminingAction: impossible case.");
         }
     }
 
@@ -595,17 +695,5 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         onlyGovernance
     {
         this.bulkUpsert(pledges);
-    }
-
-    /******************************
-        !!! Deprecated !!!
-    ******************************/
-    /*
-        @notice LICR-based lowest ICR pledge getter
-        @dev Mutable read function. It doesn't change pledgeLength until upsert runs.
-        @return A pledge
-    */
-    function popRedeemable() public override onlyYamato returns (address) {
-        return rankedQueuePop(LICR);
     }
 }

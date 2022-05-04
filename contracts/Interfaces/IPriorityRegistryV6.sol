@@ -19,6 +19,24 @@ interface IPriorityRegistryV6 {
         bool isCreated;
         uint248 index;
     }
+    struct BulkUpsertVar {
+        uint256 _ethPriceInCurrency;
+        uint256[] _newPriorities;
+        IYamato.Pledge _pledge;
+        uint256 _oldICRpercent;
+        uint256 _newICRPertenk;
+        uint256 _newICRpercent;
+        uint256 _mcrPercent;
+        uint256 _checkpoint;
+        bool _isSyncAction;
+        uint256 _lenAtLICR;
+        uint256 _maxCount;
+        uint256 _lastIndex;
+        uint256 _preStateLowerBoundRank;
+        uint256 _postStateLowerBoundRank;
+        uint256 _postStateUpperBoundRank;
+        bool _isFullAction;
+    }
 
     function upsert(IYamato.Pledge memory _pledge) external returns (uint256);
 
@@ -27,10 +45,6 @@ interface IPriorityRegistryV6 {
         returns (uint256[] memory);
 
     function remove(IYamato.Pledge memory _pledge) external;
-
-    function popRedeemable() external returns (address _poppedPledgeAddr);
-
-    function popSweepable() external returns (address _poppedPledgeAddr);
 
     function LICR() external view returns (uint256);
 

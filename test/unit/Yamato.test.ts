@@ -175,30 +175,6 @@ describe("contract Yamato - pure func quickier tests", function () {
     mockPriorityRegistry.yamato.returns(yamato.address);
     mockPriorityRegistry.upsert.returns(0);
     mockPriorityRegistry.remove.returns(0);
-    mockPriorityRegistry.popRedeemable.returns(
-      encode(
-        ["uint256", "uint256", "bool", "address", "uint256"],
-        [
-          BigNumber.from("1000000000000000"),
-          BigNumber.from("300001000000000000000"),
-          true,
-          await yamato.signer.getAddress(),
-          0,
-        ]
-      )
-    );
-    mockPriorityRegistry.popSweepable.returns(
-      encode(
-        ["uint256", "uint256", "bool", "address", "uint256"],
-        [
-          BigNumber.from(0),
-          BigNumber.from("300001000000000000000"),
-          true,
-          await yamato.signer.getAddress(),
-          0,
-        ]
-      )
-    );
   });
 
   describe("FR()", function () {
@@ -396,30 +372,6 @@ describe("contract Yamato", function () {
     mockPriorityRegistry.yamato.returns(yamato.address);
     mockPriorityRegistry.upsert.returns(0);
     mockPriorityRegistry.remove.returns(0);
-    mockPriorityRegistry.popRedeemable.returns(
-      encode(
-        ["uint256", "uint256", "bool", "address", "uint256"],
-        [
-          BigNumber.from("1000000000000000"),
-          BigNumber.from("300001000000000000000"),
-          true,
-          await yamato.signer.getAddress(),
-          0,
-        ]
-      )
-    );
-    mockPriorityRegistry.popSweepable.returns(
-      encode(
-        ["uint256", "uint256", "bool", "address", "uint256"],
-        [
-          BigNumber.from(0),
-          BigNumber.from("300001000000000000000"),
-          true,
-          await yamato.signer.getAddress(),
-          0,
-        ]
-      )
-    );
   });
   describe("setPledge()", function () {
     beforeEach(async () => {

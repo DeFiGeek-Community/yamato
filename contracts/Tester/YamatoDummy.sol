@@ -89,14 +89,6 @@ contract YamatoDummy {
         priorityRegistry.remove(_pledge);
     }
 
-    function bypassPopRedeemable() external onlyTester {
-        priorityRegistry.popRedeemable();
-    }
-
-    function bypassPopSweepable() external onlyTester {
-        priorityRegistry.popSweepable();
-    }
-
     function bypassRankedQueuePush(
         uint256 _icr,
         IYamato.Pledge calldata _pledge
