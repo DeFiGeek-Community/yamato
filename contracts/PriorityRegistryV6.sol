@@ -170,9 +170,15 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         } else {
             vars._lenAtLICR = rankedQueueLen(LICR);
             vars._maxCount = IYamatoV3(yamato()).maxRedeemableCount();
-            vars._lastIndex = (_pledges.length >= vars._maxCount)
-                ? vars._maxCount - 1
-                : _pledges.length - 1;
+            uint256 _len = (_pledges.length < vars._maxCount)
+                ? _pledges.length
+                : vars._maxCount;
+            for (uint256 i; i < _len; i++) {
+                if (_pledges[i].isCreated) {
+                    vars._lastIndex++;
+                }
+            }
+            vars._lastIndex = vars._lastIndex > 0 ? vars._lastIndex - 1 : 0;
             vars._preStateLowerBoundRank = LICR;
             vars._postStateLowerBoundRank = floor(
                 _pledges[0].getICRWithPrice(vars._ethPriceInCurrency)
@@ -182,14 +188,12 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
                     vars._ethPriceInCurrency
                 )
             );
-            vars._postStateLowerBoundRank = LiquityMath._min(
-                vars._postStateLowerBoundRank,
-                vars._postStateUpperBoundRank
-            );
-            vars._postStateUpperBoundRank = LiquityMath._max(
-                vars._postStateLowerBoundRank,
-                vars._postStateUpperBoundRank
-            );
+
+            uint256 _tmp = vars._postStateUpperBoundRank;
+            if (_tmp < vars._postStateLowerBoundRank) {
+                vars._postStateUpperBoundRank = vars._postStateLowerBoundRank;
+                vars._postStateLowerBoundRank = _tmp;
+            }
 
             (Direction _direction, uint256 _hint) = _checkDirection(
                 vars._preStateLowerBoundRank,
@@ -418,10 +422,11 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
                 LICR -- [lower -- upper]
             */
             return (Direction.UP, 0);
-        } else if (_postStateUpperBoundRank < _preStateLowerBoundRank) {
+        } else if (_postStateUpperBoundRank <= _preStateLowerBoundRank) {
             uint256 watermark = _postStateLowerBoundRank > 0
                 ? _postStateLowerBoundRank
                 : _postStateUpperBoundRank;
+
             /*
                     post state
                         |
