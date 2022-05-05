@@ -37,6 +37,11 @@ interface IPriorityRegistryV6 {
         uint256 _postStateUpperBoundRank;
         bool _isFullAction;
     }
+    enum Direction {
+        UP,
+        DOWN,
+        ZERO
+    }
 
     function upsert(IYamato.Pledge memory _pledge) external returns (uint256);
 

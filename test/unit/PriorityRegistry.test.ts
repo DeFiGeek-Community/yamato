@@ -23,7 +23,7 @@ import { describe } from "mocha";
 chai.use(smock.matchers);
 chai.use(solidity);
 
-describe.only("contract PriorityRegistry", function () {
+describe("contract PriorityRegistry", function () {
   let mockYamato: FakeContract<Yamato>;
   let mockCurrencyOS: FakeContract<CurrencyOS>;
   let mockFeePool: FakeContract<FeePool>;
@@ -222,7 +222,6 @@ describe.only("contract PriorityRegistry", function () {
       expect(pledgeLength2_After).to.equal(pledgeLength2.sub(1));
     });
     it(`succeeds to upsert coll=0 debt/=0 pledge`, async function () {
-      console.log(await priorityRegistry.LICR()+"");
       const pledgeLengthBefore = await priorityRegistry.rankedQueueLen(0);
 
       const _pledge = [

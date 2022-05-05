@@ -124,20 +124,46 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         }
 
         /*
-            LICR update or traverse
-        */
-        // Note: Traversing to the ICR=MAX_UINT256 pledges are checked, don't worry about gas cost explosion.
-        // Note: 2022-04-29 pledges must be sorted by those real ICR. Also, the last element can be MAXINT if you do sync.
-        // Note: 2022-04-30 YamatoActions have pre-state and post-state of its pledges. pre-state pledge ICR boundary can be alternated by LICR and it can be used as hint of effective upsert.
+            [LICR update]
+                      
+            checkSync ==[yes]=> findFloor(1, checkpoint)
+                |
+                no
+                |
+                V
+            checkDirection
+                |
+                |
+                |===[up]==>  rankedQueueLen(LICR) ===[ =0 ]==> findFloor(LICR+1, checkpoint)
+                |                     |
+                |                     >0
+                |                     |
+                |                     V
+                |                    keep
+                |
+                |
+                |==[down]=>  rankedQueueLen(LICR) ===[ =0 ]==> findFloor(watermark, checkpoint)
+                |                     |
+                |                     >0
+                |                     |
+                |                     V
+                |          findFloor(watermark, LICR)
+                |
+                |
+                |==[zero]=>  rankedQueueLen(LICR) ===[ =0 ]==> findFloor(LICR+1, checkpoint)
+                                      |
+                                      >0
+                                      |
+                                      V
+                               findFloor(1, LICR)
 
+
+        */
         vars._mcrPercent = uint256(IYamato(yamato()).MCR());
         vars._checkpoint =
             vars._mcrPercent +
             IYamatoV3(yamato()).CHECKPOINT_BUFFER(); // 185*0.7=130 ... priority=18400 pledge can be redeemable if 30% dump happens
         vars._isSyncAction = LICR == 0 && _pledges.length > 1;
-        vars._isFullAction =
-            vars._postStateLowerBoundRank == 0 &&
-            vars._postStateUpperBoundRank == 0;
 
         if (vars._isSyncAction) {
             _findFloor(1, vars._checkpoint);
@@ -165,195 +191,34 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
                 vars._postStateUpperBoundRank
             );
 
-            if (LICR > vars._mcrPercent) {
-                if (
-                    _checkUnderminingAction(
-                        vars._preStateLowerBoundRank,
-                        vars._postStateLowerBoundRank,
-                        vars._postStateUpperBoundRank
-                    )
-                ) {
-                    /*
-                        borrow, withdraw, no redeem
-                    */
-                    if (vars._lenAtLICR == 0) {
-                        /*
-                             zero -- MCR -- postLower -- postUpper -- preLICR -- LICR+1 -- checkpoint
-                              |                 |                        |          |
-                              |                 |                   [no pledges]    |
-                              |                 |                                   |
-                              |         [normally find this]                        |
-                              |                                         [if full withdraw and len=0, find this]
-                [full withdraw can come here]
-                        */
-                        if (vars._isFullAction) {
-                            _findFloor(LICR + 1, vars._checkpoint);
-                        } else {
-                            _findFloor(
-                                vars._postStateLowerBoundRank,
-                                vars._checkpoint
-                            );
-                        }
-                    } else {
-                        /*
-                             zero -- MCR -- postLower -- postUpper -- preLICR 
-                              |                 |                        |
-                              |                 |                   [with pledges] 
-                              |                 |                        |
-                              |        [normally find this]              |
-                              |                                          |
-                [full withdraw can come here]               [if full withdraw and len>0, find this]
-                        */
-                        if (vars._isFullAction) {
-                            _findFloor(LICR, vars._checkpoint);
-                        } else {
-                            _findFloor(
-                                vars._postStateLowerBoundRank,
-                                vars._preStateLowerBoundRank
-                            );
-                        }
-                    }
+            (Direction _direction, uint256 _hint) = _checkDirection(
+                vars._preStateLowerBoundRank,
+                vars._postStateLowerBoundRank,
+                vars._postStateUpperBoundRank
+            );
+            if (_direction == Direction.UP) {
+                if (vars._lenAtLICR > 0) {
+                    // Note: keep
                 } else {
-                    /*
-                        deposit, repay, sweep
-                    */
-                    if (vars._lenAtLICR == 0) {
-                        /*
-                             MCR -- preLICR -- [LICR+1] -- postLower -- postUpper
-                                        |          |
-                                [no pledges]       |
-                                                   |
-                                            [find this]
-                        */
-                        _findFloor(
-                            vars._preStateLowerBoundRank + 1,
-                            vars._postStateLowerBoundRank
-                        );
-                    } else {
-                        /*
-                             MCR -- preLICR -- [LICR+1] -- postLower -- postUpper
-                                        |
-                                  [with pledges]
-                                        |
-                                    [keep LICR]
-                        */
-                        // Note: !!! Do nothing for LICR here !!!
-                    }
+                    _findFloor(
+                        vars._preStateLowerBoundRank + 1,
+                        vars._checkpoint
+                    );
                 }
-            } else if (LICR >= 100) {
-                if (
-                    _checkUnderminingAction(
-                        vars._preStateLowerBoundRank,
-                        vars._postStateLowerBoundRank,
-                        vars._postStateUpperBoundRank
-                    )
-                ) {
-                    /*
-                        no borrow, no withdraw, redeem upwards
-                    */
-                    revert("_bulkUpsert(LICR update): impossible case.");
+            } else if (_direction == Direction.DOWN) {
+                if (vars._lenAtLICR > 0) {
+                    _findFloor(_hint, vars._preStateLowerBoundRank);
                 } else {
-                    /*
-                        deposit, repay, redeem upwards, sweep
-                    */
-                    if (vars._lenAtLICR == 0) {
-                        /*
-                            100 -- preLICR -- [LICR+1]  -- postLower -- postUpper
-                                      |           |
-                                [no pledges]      |
-                                                  |
-                                              [find this]
-                        */
-                        _findFloor(
-                            vars._preStateLowerBoundRank + 1,
-                            vars._postStateLowerBoundRank
-                        );
-                    } else {
-                        /*
-                             100 -- preLICR -- [LICR+1]  -- postLower -- postUpper
-                                        |          |
-                                  [with pledges]   |
-                                                   |
-                                              [find this]
-                        */
-                        // Note: !!! Do nothing for LICR here !!!
-                    }
+                    _findFloor(_hint, vars._checkpoint);
                 }
-            } else {
-                if (
-                    _checkUnderminingAction(
-                        vars._preStateLowerBoundRank,
-                        vars._postStateLowerBoundRank,
-                        vars._postStateUpperBoundRank
-                    )
-                ) {
-                    /*
-                        no borrow, no withdraw, redeem
-                    */
-                    if (vars._lenAtLICR == 0) {
-                        /*
-                            zero -- postLower -- postUpper -- preLICR -- 100
-                              |         |                        |
-                              |      [find this]              [no pledges]
-                        [full redeem]   |
-                                [this can be zero]
-                                        |
-                                [if zero, find(upper | 1)]
-                        */
-
-                        if (vars._isFullAction) {
-                            _findFloor(1, vars._checkpoint);
-                        } else {
-                            _findFloor(
-                                vars._postStateLowerBoundRank,
-                                vars._preStateLowerBoundRank
-                            );
-                        }
-                    } else {
-                        /*
-                            zero -- postLower -- postUpper -- preLICR -- 100
-                              |         |                        |
-                              |     [find this]            [with pledges]
-                        [full redeem]   |
-                                [this can be zero]
-                                        |
-                                [if zero, find(upper | 1)]
-                        */
-                        if (vars._isFullAction) {
-                            _findFloor(1, vars._checkpoint);
-                        } else {
-                            _findFloor(
-                                vars._postStateLowerBoundRank,
-                                vars._preStateLowerBoundRank
-                            );
-                        }
-                    }
+            } else if (_direction == Direction.ZERO) {
+                if (vars._lenAtLICR > 0) {
+                    // Note: keep
                 } else {
-                    /*
-                        deposit, repay, sweep
-                    */
-                    if (vars._lenAtLICR == 0) {
-                        /*
-                             preLICR -- [LICR+1] -- 100  -- postLower -- postUpper
-                                |           |
-                          [no pledges]      |
-                                            |
-                                        [find this]
-                        */
-                        _findFloor(
-                            vars._preStateLowerBoundRank + 1,
-                            vars._postStateLowerBoundRank
-                        );
-                    } else {
-                        /*
-                             preLICR -- [LICR+1] -- 100  -- postLower -- postUpper
-                                |
-                          [with pledges]
-                                |
-                            [keep LICR]
-                        */
-                        // Note: !!! Do nothing for LICR here !!!
-                    }
+                    _findFloor(
+                        vars._preStateLowerBoundRank + 1,
+                        vars._checkpoint
+                    );
                 }
             }
         }
@@ -495,7 +360,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
     ==============================
         - _deletePledge
         - _findFloor
-        - _checkUnderminingAction
+        - _checkDirection
     */
     /*
         @dev delete of "address[] storage" (rankedQueueSearchAndDestroy) causes gap in the list.
@@ -516,6 +381,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         uint256 _mcrPercent = uint256(IYamato(yamato()).MCR());
         uint256 _next = _fromICR;
         uint256 _checkpoint = _toICR;
+
         while (true) {
             if (_next < _checkpoint && rankedQueueLen(_next) > 0) {
                 if (LICR == _mcrPercent && _next == _mcrPercent) {
@@ -536,27 +402,34 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
     }
 
     /// @dev Comparison function between LICR and post state
-    function _checkUnderminingAction(
+    function _checkDirection(
         uint256 _preStateLowerBoundRank,
         uint256 _postStateLowerBoundRank,
         uint256 _postStateUpperBoundRank
-    ) internal pure returns (bool) {
-        if (_preStateLowerBoundRank < _postStateLowerBoundRank) {
+    ) internal pure returns (Direction _direction, uint256 _hint) {
+        if (_postStateLowerBoundRank == 0 && _postStateUpperBoundRank == 0) {
+            return (Direction.ZERO, 0);
+        }
+
+        if (_preStateLowerBoundRank <= _postStateLowerBoundRank) {
             /*
                             post state
                                 |
                 LICR -- [lower -- upper]
             */
-            return false;
+            return (Direction.UP, 0);
         } else if (_postStateUpperBoundRank < _preStateLowerBoundRank) {
+            uint256 watermark = _postStateLowerBoundRank > 0
+                ? _postStateLowerBoundRank
+                : _postStateUpperBoundRank;
             /*
                     post state
                         |
                 [lower -- upper] -- LICR
             */
-            return true;
+            return (Direction.DOWN, watermark);
         } else {
-            revert("_checkUnderminingAction: impossible case.");
+            revert("_checkDirection: impossible case.");
         }
     }
 
