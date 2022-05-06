@@ -124,7 +124,7 @@ contract YamatoRedeemerV4 is IYamatoRedeemerV4, YamatoAction {
                 ) {
                     vars._skippedPledges[vars._skipCount] = _pledge;
                     vars._skipCount++;
-                    continue; /* To skip until next poppables. */
+                    continue; /* To skip until next poppables. This must be upserted below to refresh obsoleted priority. */
                 }
 
                 if (

@@ -159,9 +159,6 @@ describe("story Events", function () {
       mockPriorityRegistry.rankedQueueTotalLen.returns(0);
       mockPriorityRegistry.getRankedQueue.returns(ethers.constants.AddressZero);
       mockPriorityRegistry.bulkUpsert.returns(Array(100).fill(0));
-      mockPriorityRegistry.popSweepable.returns(
-        await yamato.signer.getAddress()
-      );
 
       toCollateralize = 1;
       toBorrow = PRICE.mul(toCollateralize)

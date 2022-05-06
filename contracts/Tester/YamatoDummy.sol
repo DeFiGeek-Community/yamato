@@ -29,6 +29,8 @@ contract YamatoDummy {
     address governance;
     address tester;
     uint8 public MCR = 130; // MinimumCollateralizationRatio in pertenk
+    uint256 public collFloor = 1e17;
+    uint256 public constant maxRedeemableCount = 50;
     uint256 public constant CHECKPOINT_BUFFER = 55;
     mapping(address => IYamato.Pledge) pledges;
 
@@ -85,14 +87,6 @@ contract YamatoDummy {
 
     function bypassRemove(IYamato.Pledge calldata _pledge) external onlyTester {
         priorityRegistry.remove(_pledge);
-    }
-
-    function bypassPopRedeemable() external onlyTester {
-        priorityRegistry.popRedeemable();
-    }
-
-    function bypassPopSweepable() external onlyTester {
-        priorityRegistry.popSweepable();
     }
 
     function bypassRankedQueuePush(

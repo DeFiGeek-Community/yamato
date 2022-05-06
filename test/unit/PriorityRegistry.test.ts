@@ -448,41 +448,6 @@ describe("contract PriorityRegistry", function () {
     });
   });
 
-  describe("popSweepable()", function () {
-    it(`fails to call it from EOA`, async function () {
-      await expect(priorityRegistry.popSweepable()).to.be.revertedWith(
-        "You are not Yamato contract."
-      );
-    });
-
-    it(`fails to run if there're no sludge pledge`, async function () {
-      await expect(yamatoDummy.bypassPopSweepable()).to.be.revertedWith(
-        "Pop must not be done for empty queue"
-      );
-    });
-
-    it(`fails to fetch the zero pledge`, async function () {
-      const _owner1 = address0;
-      const _coll1 = BigNumber.from("0");
-      const _debt1 = BigNumber.from("410001000000000000000000");
-      const _inputPledge1 = [_coll1, _debt1, true, _owner1, 0];
-      await (await yamatoDummy.bypassUpsert(toTyped(_inputPledge1))).wait();
-
-      const nextSweepableBeforeAddr = await priorityRegistry.getRankedQueue(
-        0,
-        await priorityRegistry.rankedQueueNextout(0)
-      );
-      await (await yamatoDummy.bypassPopSweepable()).wait();
-      const nextSweepableAfterAddr = await priorityRegistry.getRankedQueue(
-        0,
-        await priorityRegistry.rankedQueueNextout(0)
-      );
-
-      expect(nextSweepableBeforeAddr).to.eq(_owner1);
-      expect(nextSweepableAfterAddr).to.eq(ethers.constants.AddressZero);
-    });
-  });
-
   /*
     - rankedQueuePush
     - rankedQueuePop

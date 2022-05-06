@@ -16,13 +16,11 @@ import "./Interfaces/IPriorityRegistryV6.sol";
 import "./Interfaces/IPriorityRegistryV4.sol";
 import "./Dependencies/PledgeLib.sol";
 import "./Dependencies/YamatoStore.sol";
-import "./Dependencies/SafeMath.sol";
 import "./Dependencies/LiquityMath.sol";
 import "hardhat/console.sol";
 
 // @dev For gas saving reason, we use percent denominated ICR only in this contract.
 contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
-    using SafeMath for uint256;
     using PledgeLib for IYamato.Pledge;
 
     mapping(uint256 => mapping(address => IYamato.Pledge)) leveledPledges; // ICR => owner => Pledge
@@ -77,20 +75,21 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         onlyYamato
         returns (uint256[] memory)
     {
-        uint256 _ethPriceInCurrency = IPriceFeedV2(feed()).getPrice(); // Note: can't use lastGoodPrice cuz bulkUpsert can also be called be syncer which does not use fetchPrice
-        uint256[] memory _newPriorities = new uint256[](_pledges.length);
+        BulkUpsertVar memory vars;
+        vars._ethPriceInCurrency = IPriceFeedV2(feed()).getPrice(); // Note: can't use lastGoodPrice cuz bulkUpsert can also be called be syncer which does not use fetchPrice
+        vars._newPriorities = new uint256[](_pledges.length);
         for (uint256 i; i < _pledges.length; i++) {
-            IYamato.Pledge memory _pledge = _pledges[i];
-            if (_pledge.isCreated == false) {
+            vars._pledge = _pledges[i];
+            if (vars._pledge.isCreated == false) {
                 continue;
             }
 
-            uint256 _oldICRpercent = floor(_pledge.priority);
+            vars._oldICRpercent = floor(vars._pledge.priority);
 
             require(
-                !(_pledge.coll == 0 &&
-                    _pledge.debt == 0 &&
-                    _oldICRpercent != 0),
+                !(vars._pledge.coll == 0 &&
+                    vars._pledge.debt == 0 &&
+                    vars._oldICRpercent != 0),
                 "Upsert Error: The logless zero pledge cannot be upserted. It should be removed."
             );
 
@@ -98,93 +97,137 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
                 1. delete current pledge from sorted pledge and update LICR
             */
             if (
-                !(_pledge.debt == 0 && _oldICRpercent == 0) /* Exclude "new pledge" */
+                !(vars._pledge.debt == 0 && vars._oldICRpercent == 0) /* Exclude "new pledge" */
             ) {
-                _deletePledge(_pledge);
+                _deletePledge(vars._pledge);
             }
 
             /* 
                 2. insert new pledge
             */
 
-            uint256 _newICRPertenk = _pledge.getICRWithPrice(
-                _ethPriceInCurrency
+            vars._newICRPertenk = vars._pledge.getICRWithPrice(
+                vars._ethPriceInCurrency
             );
-            uint256 _newICRpercent = floor(_newICRPertenk);
+            vars._newICRpercent = floor(vars._newICRPertenk);
 
             require(
-                _newICRpercent <= MAX_PRIORITY,
+                vars._newICRpercent <= MAX_PRIORITY,
                 "priority can't be that big."
             );
 
-            _pledge.priority = _newICRPertenk;
+            vars._pledge.priority = vars._newICRPertenk;
 
-            rankedQueuePush(_newICRpercent, _pledge.owner);
+            rankedQueuePush(vars._newICRpercent, vars._pledge.owner);
 
-            _newPriorities[i] = _newICRPertenk;
+            vars._newPriorities[i] = vars._newICRPertenk;
         }
 
         /*
-            LICR update or traverse
+            [LICR update]
+                      
+            checkSync ==[yes]=> findFloor(1, checkpoint)
+                |
+                no
+                |
+                V
+            checkDirection
+                |
+                |
+                |===[up]==>  rankedQueueLen(LICR) ===[ =0 ]==> findFloor(LICR+1, checkpoint)
+                |                     |
+                |                     >0
+                |                     |
+                |                     V
+                |                    keep
+                |
+                |
+                |==[down]=>  rankedQueueLen(LICR) ===[ =0 ]==> findFloor(watermark, checkpoint)
+                |                     |
+                |                     >0
+                |                     |
+                |                     V
+                |          findFloor(watermark, LICR)
+                |
+                |
+                |==[zero]=>  rankedQueueLen(LICR) ===[ =0 ]==> findFloor(LICR+1, checkpoint)
+                                      |
+                                      >0
+                                      |
+                                      V
+                               findFloor(1, LICR)
+
+
         */
-        // Note: All deletions could cause traverse.
-        // Note: Traversing to the ICR=MAX_UINT256 pledges are checked, don't worry about gas cost explosion.
-        // Note: 2022-04-29 pledges must be sorted by those real ICR. Also, the last element can be MAXINT if you do sync.
-        /*
-            LICR determination algo for bulkUpsert
-                - The first pledge is ICR-lowest pledge
-                - Check the len of the rank
-                - If empty, start traversing from that rank.
-        */
-        // Bug: Is the last pledge must be the target???
-        Yamato.Pledge memory _detectionTargetPledge = _pledges[
-            _pledges.length - 1
-        ];
-        uint256 _detectionTargetICR = _detectionTargetPledge.getICRWithPrice(
-            _ethPriceInCurrency
-        );
-        uint256 _licrCandidate = _detectLowestICR(
-            floor(_detectionTargetICR),
-            floor(_detectionTargetPledge.priority),
-            LICR
-        );
-        if (LICR == 0 && _licrCandidate == MAX_PRIORITY) {
-            // Note: For sync scenarip
-            _traverseToNextLICR(1);
-        } else if (_licrCandidate < LICR || LICR == 0) {
-            // Note: For yamato actions scenario
-            if (_licrCandidate > 0) {
-                if (rankedQueueLen(_licrCandidate) > 0) {
-                    LICR = _licrCandidate;
-                } else {
-                    _traverseToNextLICR(_licrCandidate);
-                }
-            } else {
-                _traverseToNextLICR(1); /* If _licrCandidate=0 (just after full-redemption) and current LICR will be obsoleted. Then search next. */
-            }
+        vars._mcrPercent = uint256(IYamato(yamato()).MCR());
+        vars._checkpoint =
+            vars._mcrPercent +
+            IYamatoV3(yamato()).CHECKPOINT_BUFFER(); // 185*0.7=130 ... priority=18400 pledge can be redeemable if 30% dump happens
+        vars._isSyncAction = LICR == 0 && _pledges.length > 1;
+
+        if (vars._isSyncAction) {
+            _findFloor(1, vars._checkpoint);
         } else {
-            _traverseToNextLICR(1);
+            vars._lenAtLICR = rankedQueueLen(LICR);
+            vars._maxCount = IYamatoV3(yamato()).maxRedeemableCount();
+            uint256 _len = (_pledges.length < vars._maxCount)
+                ? _pledges.length
+                : vars._maxCount;
+            for (uint256 i; i < _len; i++) {
+                if (_pledges[i].isCreated) {
+                    vars._lastIndex++;
+                }
+            }
+            vars._lastIndex = vars._lastIndex > 0 ? vars._lastIndex - 1 : 0;
+            vars._preStateLowerBoundRank = LICR;
+            vars._postStateLowerBoundRank = floor(
+                _pledges[0].getICRWithPrice(vars._ethPriceInCurrency)
+            );
+            vars._postStateUpperBoundRank = floor(
+                _pledges[vars._lastIndex].getICRWithPrice(
+                    vars._ethPriceInCurrency
+                )
+            );
+
+            uint256 _tmp = vars._postStateUpperBoundRank;
+            if (_tmp < vars._postStateLowerBoundRank) {
+                vars._postStateUpperBoundRank = vars._postStateLowerBoundRank;
+                vars._postStateLowerBoundRank = _tmp;
+            }
+
+            (Direction _direction, uint256 _hint) = _checkDirection(
+                vars._preStateLowerBoundRank,
+                vars._postStateLowerBoundRank,
+                vars._postStateUpperBoundRank
+            );
+            if (_direction == Direction.UP) {
+                if (vars._lenAtLICR > 0) {
+                    // Note: keep
+                } else {
+                    _findFloor(
+                        vars._preStateLowerBoundRank + 1,
+                        vars._checkpoint
+                    );
+                }
+            } else if (_direction == Direction.DOWN) {
+                if (vars._lenAtLICR > 0) {
+                    _findFloor(_hint, vars._preStateLowerBoundRank);
+                } else {
+                    _findFloor(_hint, vars._checkpoint);
+                }
+            } else if (_direction == Direction.ZERO) {
+                if (vars._lenAtLICR > 0) {
+                    // Note: keep
+                } else {
+                    _findFloor(
+                        vars._preStateLowerBoundRank + 1,
+                        vars._checkpoint
+                    );
+                }
+            }
         }
 
-        return _newPriorities;
-    }
-
-    function _detectLowestICR(
-        uint256 _newICRpercent,
-        uint256 _oldICRpercent,
-        uint256 _licr
-    ) internal pure returns (uint256 _newLowestICR) {
-        _newLowestICR = _licr;
-        if (_oldICRpercent > 0 && _newICRpercent > 0) {
-            _newLowestICR = LiquityMath._min(_oldICRpercent, _newICRpercent);
-        } else if (_oldICRpercent > 0) {
-            _newLowestICR = _oldICRpercent;
-        } else if (_newICRpercent > 0) {
-            _newLowestICR = _newICRpercent;
-        }
-        if (_licr > 0) {
-            _newLowestICR = LiquityMath._min(_newLowestICR, _licr);
-        }
+        return vars._newPriorities;
     }
 
     /*
@@ -218,28 +261,6 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         */
         DeleteDictItem memory _d;
         deleteDict[_pledge.owner] = _d;
-    }
-
-    /*
-    ==============================
-        Mutable Getters
-    ==============================
-        - popSweepable
-    */
-
-    /*
-        @notice zero ICR pledge getter
-        @dev It doesn't change pledgeLength until remove runs.
-        @return A pledge
-    */
-    function popSweepable()
-        public
-        override
-        onlyYamato
-        returns (address _poppedPledgeAddr)
-    {
-        require(rankedQueueLen(0) > 0, "Pop must not be done for empty queue");
-        _poppedPledgeAddr = rankedQueuePop(0);
     }
 
     /*
@@ -342,7 +363,8 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         Internal Function
     ==============================
         - _deletePledge
-        - _traverseToNextLICR
+        - _findFloor
+        - _checkDirection
     */
     /*
         @dev delete of "address[] storage" (rankedQueueSearchAndDestroy) causes gap in the list.
@@ -359,25 +381,60 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         }
     }
 
-    function _traverseToNextLICR(uint256 _icr) internal {
+    function _findFloor(uint256 _fromICR, uint256 _toICR) internal {
         uint256 _mcrPercent = uint256(IYamato(yamato()).MCR());
-        uint256 _checkpoint = _mcrPercent +
-            IYamatoV3(yamato()).CHECKPOINT_BUFFER(); // 185*0.7=130 ... It's possible to be "priority=184 but deficit" with 30% dump, but "priority=20000 but deficit" is impossible.
-        uint256 _next = _icr;
+        uint256 _next = _fromICR;
+        uint256 _checkpoint = _toICR;
+
         while (true) {
-            if (rankedQueueLen(_next) != 0) {
-                if (LICR == _mcrPercent && _icr == _mcrPercent) {
+            if (_next < _checkpoint && rankedQueueLen(_next) > 0) {
+                if (LICR == _mcrPercent && _next == _mcrPercent) {
                     _next++; // skip just-to-MCR redemption
                 } else {
                     LICR = _next; // the first filled rankedQueue
+                    break;
                 }
-                break;
+            } else if (_next < _checkpoint && rankedQueueLen(_next) == 0) {
+                _next++;
             } else if (_next >= _checkpoint) {
                 LICR = _checkpoint - 1; // default LICR
                 break;
             } else {
-                _next++;
+                // Note: void
             }
+        }
+    }
+
+    /// @dev Comparison function between LICR and post state
+    function _checkDirection(
+        uint256 _preStateLowerBoundRank,
+        uint256 _postStateLowerBoundRank,
+        uint256 _postStateUpperBoundRank
+    ) internal pure returns (Direction _direction, uint256 _hint) {
+        if (_postStateLowerBoundRank == 0 && _postStateUpperBoundRank == 0) {
+            return (Direction.ZERO, 0);
+        }
+
+        if (_preStateLowerBoundRank <= _postStateLowerBoundRank) {
+            /*
+                            post state
+                                |
+                LICR -- [lower -- upper]
+            */
+            return (Direction.UP, 0);
+        } else if (_postStateUpperBoundRank <= _preStateLowerBoundRank) {
+            uint256 watermark = _postStateLowerBoundRank > 0
+                ? _postStateLowerBoundRank
+                : _postStateUpperBoundRank;
+
+            /*
+                    post state
+                        |
+                [lower -- upper] -- LICR
+            */
+            return (Direction.DOWN, watermark);
+        } else {
+            revert("_checkDirection: impossible case.");
         }
     }
 
@@ -516,17 +573,5 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         onlyGovernance
     {
         this.bulkUpsert(pledges);
-    }
-
-    /******************************
-        !!! Deprecated !!!
-    ******************************/
-    /*
-        @notice LICR-based lowest ICR pledge getter
-        @dev Mutable read function. It doesn't change pledgeLength until upsert runs.
-        @return A pledge
-    */
-    function popRedeemable() public override onlyYamato returns (address) {
-        return rankedQueuePop(LICR);
     }
 }
