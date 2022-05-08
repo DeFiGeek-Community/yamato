@@ -445,7 +445,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
                     |                 |
                     zero            find this
             */
-            return (Direction.DOWN, _postStateUpperBoundRank);
+            return (Direction.UP, _postStateUpperBoundRank);
         } else {
             revert("_checkDirection: impossible case");
         }
