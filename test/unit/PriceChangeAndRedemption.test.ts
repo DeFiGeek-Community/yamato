@@ -1006,6 +1006,25 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         expect(await PriorityRegistry.LICR()).to.eq(184);
         expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true;
       });
+      it(`should make 'LICR-corssing' redemption and must not cause a revert`, async function () {
+        await (
+          await Yamato.connect(redeemer).redeem(
+            toERC20(toBorrow.mul(4).div(100) + ""),
+            false,
+            { gasLimit: 30000000 }
+          )
+        ).wait();
+
+        expect(await PriorityRegistry.LICR()).to.eq(5);
+
+        await expect(
+          Yamato.connect(redeemer).redeem(
+            toERC20(toBorrow.mul(1).div(100) + ""),
+            false,
+            { gasLimit: 30000000 }
+          )
+        ).not.to.be.revertedWith("_checkDirection: impossible case");
+      });
     });
   });
   describe("sweep()", function () {
@@ -1086,15 +1105,26 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
             await PriorityRegistry.rankedQueueNextout(0)
           )
         );
+        const redeemerETHBalanceBefore = await Yamato.provider.getBalance(
+          redeemerAddr
+        );
         const redeemerCjpyBalanceBefore = await CJPY.balanceOf(redeemerAddr);
         const poolCjpyBalanceBefore = await CJPY.balanceOf(Pool.address);
 
-        await (await Yamato.connect(redeemer).sweep()).wait();
+        let receipt = await (await Yamato.connect(redeemer).sweep()).wait();
+
         const sweptPledge = await Yamato.getPledge(sweepablePledge.owner);
+        const redeemerETHBalanceAfter = await Yamato.provider.getBalance(
+          redeemerAddr
+        );
         const redeemerCjpyBalanceAfter = await CJPY.balanceOf(redeemerAddr);
         const poolCjpyBalanceAfter = await CJPY.balanceOf(Pool.address);
 
-        expect(redeemerCjpyBalanceAfter).to.equal(redeemerCjpyBalanceBefore);
+        let txcost = receipt.gasUsed.mul(receipt.effectiveGasPrice);
+        expect(redeemerETHBalanceAfter.add(txcost)).to.eq(
+          redeemerETHBalanceBefore
+        );
+        expect(redeemerCjpyBalanceAfter).to.be.gt(redeemerCjpyBalanceBefore);
         expect(poolCjpyBalanceAfter).to.be.lt(poolCjpyBalanceBefore);
         expect(sweptPledge.debt).to.be.lt(sweepablePledge.debt);
         expect(sweptPledge.isCreated).to.be.true;

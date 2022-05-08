@@ -133,17 +133,23 @@ contract YamatoSweeperV2 is IYamatoSweeper, YamatoAction {
         /*
             Reserve reduction and burn CJPY
         */
-        IPool(pool()).useSweepReserve(vars._toBeSwept);
+        uint256 _effectiveSweepAmount = (vars._toBeSwept * (100 - vars._GRR)) /
+            100;
         ICurrencyOS(currencyOS()).burnCurrency(pool(), vars._toBeSwept);
+        IPool(pool()).useSweepReserve(_effectiveSweepAmount);
 
         /*
             Gas compensation
         */
-        uint256 gasCompensationInCurrency = vars._toBeSwept * (vars._GRR / 100);
-        IPool(pool()).sendCurrency(msg.sender, gasCompensationInCurrency); // Not sendETH. But redemption returns in ETH and so it's a bit weird.
+        uint256 gasCompensationInCurrency = (vars._toBeSwept * vars._GRR) / 100;
+        IPool(pool()).sendCurrency(_sender, gasCompensationInCurrency); // Not sendETH. But redemption returns in ETH and so it's a bit weird.
         IPool(pool()).useSweepReserve(gasCompensationInCurrency);
 
-        return (vars._toBeSwept, gasCompensationInCurrency, vars._pledgesOwner);
+        return (
+            _effectiveSweepAmount,
+            gasCompensationInCurrency,
+            vars._pledgesOwner
+        );
     }
 
     /*

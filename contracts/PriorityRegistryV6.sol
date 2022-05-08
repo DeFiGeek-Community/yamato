@@ -433,8 +433,21 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
                 [lower -- upper] -- LICR
             */
             return (Direction.DOWN, watermark);
+        } else if (
+            _postStateLowerBoundRank < _preStateLowerBoundRank &&
+            _preStateLowerBoundRank < _postStateUpperBoundRank
+        ) {
+            /*
+                # Happens when sweepables are born
+                lower -- LICR -- upper
+                    |        |        |
+                    |      empty      |
+                    |                 |
+                    zero            find this
+            */
+            return (Direction.DOWN, _postStateUpperBoundRank);
         } else {
-            revert("_checkDirection: impossible case.");
+            revert("_checkDirection: impossible case");
         }
     }
 
