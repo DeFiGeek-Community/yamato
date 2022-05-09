@@ -16926,6 +16926,297 @@
           }
         }
       }
+    },
+    "64e920fdd2bdbc21668ba1b9fccba92fc5c7619c18adc14af531d377850e0c76": {
+      "address": "0x9272FF2A61dBFbfc81DD372845c4316C931A341c",
+      "txHash": "0xe702fa145bd009ec27f07ad0fd5e6f1d6a2193822d9be3985e28ba46afee15c2",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:21"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:26"
+          },
+          {
+            "contract": "ERC1967UpgradeUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:214"
+          },
+          {
+            "contract": "UUPSUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:80"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "governance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:20"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "pendingGovernance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:21"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "tester",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:22"
+          },
+          {
+            "contract": "YamatoBase",
+            "label": "YAMATO_SLOT_ID",
+            "type": "t_string_storage",
+            "src": "contracts/Dependencies/YamatoBase.sol:20"
+          }
+        ],
+        "types": {
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_bool": {
+            "label": "bool"
+          }
+        }
+      }
+    },
+    "b0d7c2cf7ee3007fa6b11645a488446375d081c09b4fd729a349d4997d891df7": {
+      "address": "0xf6962AFCda75B06eC5C7b9519bB6Cb54BF6a929f",
+      "txHash": "0xb11b927199040ca0cd61e6f49bd3d37e048cf0246e5e255a2fc0d97c4f5e310a",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:21"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:26"
+          },
+          {
+            "contract": "ERC1967UpgradeUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:214"
+          },
+          {
+            "contract": "UUPSUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:80"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "governance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:20"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "pendingGovernance",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:21"
+          },
+          {
+            "contract": "UUPSBase",
+            "label": "tester",
+            "type": "t_address",
+            "src": "contracts/Dependencies/UUPSBase.sol:22"
+          },
+          {
+            "contract": "YamatoBase",
+            "label": "YAMATO_SLOT_ID",
+            "type": "t_string_storage",
+            "src": "contracts/Dependencies/YamatoBase.sol:20"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "leveledPledges",
+            "type": "t_mapping(t_uint256,t_mapping(t_address,t_struct(Pledge)4453_storage))",
+            "src": "contracts/PriorityRegistryV6.sol:26"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "levelIndice",
+            "type": "t_mapping(t_uint256,t_array(t_address)dyn_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:27"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "pledgeLength",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:28"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "LICR",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:29"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "rankedQueue",
+            "type": "t_mapping(t_uint256,t_struct(FifoQueue)4192_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:30"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "nextResetRank",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:33"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "deleteDict",
+            "type": "t_mapping(t_address,t_struct(DeleteDictItem)4276_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:34"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "rankedQueueV2",
+            "type": "t_mapping(t_uint256,t_struct(FifoQueue)4271_storage)",
+            "src": "contracts/PriorityRegistryV6.sol:35"
+          },
+          {
+            "contract": "PriorityRegistryV6",
+            "label": "nextUpsertPledgeIndex",
+            "type": "t_uint256",
+            "src": "contracts/PriorityRegistryV6.sol:36"
+          }
+        ],
+        "types": {
+          "t_mapping(t_uint256,t_mapping(t_address,t_struct(Pledge)4453_storage))": {
+            "label": "mapping(uint256 => mapping(address => struct IYamato.Pledge))"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_mapping(t_address,t_struct(Pledge)4453_storage)": {
+            "label": "mapping(address => struct IYamato.Pledge)"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_struct(Pledge)4453_storage": {
+            "label": "struct IYamato.Pledge",
+            "members": [
+              {
+                "label": "coll",
+                "type": "t_uint256"
+              },
+              {
+                "label": "debt",
+                "type": "t_uint256"
+              },
+              {
+                "label": "isCreated",
+                "type": "t_bool"
+              },
+              {
+                "label": "owner",
+                "type": "t_address"
+              },
+              {
+                "label": "priority",
+                "type": "t_uint256"
+              }
+            ]
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_mapping(t_uint256,t_array(t_address)dyn_storage)": {
+            "label": "mapping(uint256 => address[])"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]"
+          },
+          "t_mapping(t_uint256,t_struct(FifoQueue)4192_storage)": {
+            "label": "mapping(uint256 => struct IPriorityRegistryV4.FifoQueue)"
+          },
+          "t_struct(FifoQueue)4192_storage": {
+            "label": "struct IPriorityRegistryV4.FifoQueue",
+            "members": [
+              {
+                "label": "nextout",
+                "type": "t_uint256"
+              },
+              {
+                "label": "pledges",
+                "type": "t_array(t_struct(Pledge)4453_storage)dyn_storage"
+              }
+            ]
+          },
+          "t_array(t_struct(Pledge)4453_storage)dyn_storage": {
+            "label": "struct IYamato.Pledge[]"
+          },
+          "t_mapping(t_address,t_struct(DeleteDictItem)4276_storage)": {
+            "label": "mapping(address => struct IPriorityRegistryV6.DeleteDictItem)"
+          },
+          "t_struct(DeleteDictItem)4276_storage": {
+            "label": "struct IPriorityRegistryV6.DeleteDictItem",
+            "members": [
+              {
+                "label": "isCreated",
+                "type": "t_bool"
+              },
+              {
+                "label": "index",
+                "type": "t_uint248"
+              }
+            ]
+          },
+          "t_uint248": {
+            "label": "uint248"
+          },
+          "t_mapping(t_uint256,t_struct(FifoQueue)4271_storage)": {
+            "label": "mapping(uint256 => struct IPriorityRegistryV6.FifoQueue)"
+          },
+          "t_struct(FifoQueue)4271_storage": {
+            "label": "struct IPriorityRegistryV6.FifoQueue",
+            "members": [
+              {
+                "label": "nextout",
+                "type": "t_uint256"
+              },
+              {
+                "label": "pledges",
+                "type": "t_array(t_address)dyn_storage"
+              }
+            ]
+          },
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          }
+        }
+      }
     }
   }
 }
