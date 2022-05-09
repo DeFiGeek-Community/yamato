@@ -951,7 +951,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         await (
           await Tellor.setLastPrice(Math.ceil(dumpedPriceBase * 3 * 1.14))
         ).wait(); //dec8
-        (<any>Yamato.provider).send("evm_increaseTime", [3200]);
+        (<any>Yamato.provider).send("evm_increaseTime", [1200]);
         (<any>Yamato.provider).send("evm_mine");
 
         redeemer = accounts[0];
@@ -989,7 +989,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         await (
           await Tellor.setLastPrice(Math.ceil(dumpedPriceBase * 1.14))
         ).wait(); //dec8
-        (<any>Yamato.provider).send("evm_increaseTime", [3200]);
+        (<any>Yamato.provider).send("evm_increaseTime", [1200]);
         (<any>Yamato.provider).send("evm_mine");
       });
 

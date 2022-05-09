@@ -195,12 +195,26 @@ describe("PriceFeed", function () {
       },
       resetFlag: true,
     };
+    // lastMockInput = {
+    //   price: {
+    //     chainlink: { ethInUsd: 3200, jpyInUsd: 0.0091 },
+    //     tellor: 351650,
+    //   },
+    //   silentFor: {
+    //     chainlink: { ethInUsd: 200, jpyInUsd: 200 },
+    //     tellor: 200,
+    //   },
+    //   resetFlag: true,
+    // };
     await setMocks(lastMockInput);
+    // (<any>accounts[0].provider).send("evm_increaseTime", [150]);
     (<any>accounts[0].provider).send("evm_increaseTime", [1200]);
     (<any>accounts[0].provider).send("evm_mine");
 
     lastMockInput.silentFor.chainlink.ethInUsd = 1000; // Note: To avoid frozen response due to other depending specs
     lastMockInput.silentFor.chainlink.jpyInUsd = 1000;
+    // lastMockInput.silentFor.chainlink.ethInUsd = 100; // Note: To avoid frozen response due to other depending specs
+    // lastMockInput.silentFor.chainlink.jpyInUsd = 100;
     lastMockInput.resetFlag = false;
     await setMocks(lastMockInput);
 
