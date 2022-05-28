@@ -143,4 +143,11 @@ contract PoolV2 is IPool, YamatoStore, ReentrancyGuardUpgradeable {
             address(this).balance
         );
     }
+
+    function refreshPool() public onlyGovernance {
+        IERC20 _currency = IERC20(ICurrencyOS(currencyOS()).currency());
+        uint256 _poolBalance = _currency.balanceOf(address(this));
+        redemptionReserve = 0;
+        sweepReserve = _poolBalance;
+    }
 }
