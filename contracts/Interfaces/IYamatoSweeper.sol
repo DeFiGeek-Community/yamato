@@ -10,14 +10,18 @@ pragma solidity 0.8.4;
 //solhint-disable no-inline-assembly
 
 import "./IYamato.sol";
+import "./ICurrencyOS.sol";
 
 interface IYamatoSweeper {
     struct Vars {
+        ICurrencyOS _currencyOS;
         uint256 sweepReserve;
+        uint256 _poolBalance;
+        uint256 _sweepingAmountTmp;
+        uint256 _sweepingAmount;
+        uint256 _gasCompensationInCurrency;
         uint256 _GRR;
-        uint256 maxGasCompensation;
         uint256 _reminder;
-        uint256 _gasReductedSweepCapacity;
         uint256 _maxCount;
         uint256 _loopCount;
         uint256 _toBeSwept;

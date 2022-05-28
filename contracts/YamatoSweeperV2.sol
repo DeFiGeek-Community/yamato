@@ -15,6 +15,7 @@ import "./PriceFeed.sol";
 import "./Dependencies/YamatoAction.sol";
 import "./Dependencies/PledgeLib.sol";
 import "./Dependencies/SafeMath.sol";
+import "./Dependencies/LiquityMath.sol";
 import "./Interfaces/IYamato.sol";
 import "./Interfaces/IYamatoV3.sol";
 import "./Interfaces/IFeePool.sol";
@@ -50,15 +51,28 @@ contract YamatoSweeperV2 is IYamatoSweeper, YamatoAction {
 
         IYamatoSweeper.Vars memory vars;
 
+        vars._GRR = IYamato(yamato()).GRR();
+        vars._currencyOS = ICurrencyOS(currencyOS());
         vars.sweepReserve = IPool(pool()).sweepReserve();
+        vars._poolBalance = IERC20(vars._currencyOS.currency()).balanceOf(
+            pool()
+        );
+        vars._sweepingAmountTmp = LiquityMath._min(
+            vars.sweepReserve,
+            vars._poolBalance
+        );
+        vars._sweepingAmount =
+            (vars._sweepingAmountTmp * (100 - vars._GRR)) /
+            100;
+        vars._gasCompensationInCurrency =
+            (vars._sweepingAmountTmp * vars._GRR) /
+            100;
+
         require(
-            vars.sweepReserve > 0,
+            vars._sweepingAmount > 0,
             "Sweep failure: sweep reserve is empty."
         );
-        vars._GRR = IYamato(yamato()).GRR();
-        vars.maxGasCompensation = vars.sweepReserve * (vars._GRR / 100);
-        vars._reminder = vars.sweepReserve - vars.maxGasCompensation; //Note: Secure gas compensation
-        vars._gasReductedSweepCapacity = vars._reminder;
+        vars._reminder = vars._sweepingAmount;
         vars._maxCount = IYamatoV3(yamato()).maxRedeemableCount();
         vars._pledgesOwner = new address[](vars._maxCount);
         vars._bulkedPledges = new IYamato.Pledge[](vars._maxCount);
@@ -97,7 +111,7 @@ contract YamatoSweeperV2 is IYamatoSweeper, YamatoAction {
 
             vars._loopCount++;
 
-            if (vars._toBeSwept >= vars._gasReductedSweepCapacity) {
+            if (vars._toBeSwept >= vars._sweepingAmount) {
                 break; /* redeeming amount reached to the target */
             }
             if (vars._loopCount >= vars._maxCount) {
@@ -105,10 +119,7 @@ contract YamatoSweeperV2 is IYamatoSweeper, YamatoAction {
             }
         }
         require(vars._toBeSwept > 0, "At least a pledge should be swept.");
-        require(
-            vars.sweepReserve - vars.maxGasCompensation >= vars._toBeSwept,
-            "Too much sweeping."
-        );
+        require(vars._sweepingAmount >= vars._toBeSwept, "Too much sweeping.");
 
         /*
             Update pledges
@@ -125,29 +136,26 @@ contract YamatoSweeperV2 is IYamatoSweeper, YamatoAction {
         }
 
         /*
-            Update global state
+            Update global state for 99%
         */
         (, uint256 totalDebt, , , , ) = _yamato.getStates();
         _yamato.setTotalDebt(totalDebt - vars._toBeSwept);
 
         /*
-            Reserve reduction and burn CJPY
+            Reserve reduction for 99%
         */
-        uint256 _effectiveSweepAmount = (vars._toBeSwept * (100 - vars._GRR)) /
-            100;
-        ICurrencyOS(currencyOS()).burnCurrency(pool(), vars._toBeSwept);
-        IPool(pool()).useSweepReserve(_effectiveSweepAmount);
+        IPool(pool()).useSweepReserve(vars._toBeSwept);
+        vars._currencyOS.burnCurrency(pool(), vars._toBeSwept);
 
         /*
-            Gas compensation
+            Gas compensation for 1%
         */
-        uint256 gasCompensationInCurrency = (vars._toBeSwept * vars._GRR) / 100;
-        IPool(pool()).sendCurrency(_sender, gasCompensationInCurrency); // Not sendETH. But redemption returns in ETH and so it's a bit weird.
-        IPool(pool()).useSweepReserve(gasCompensationInCurrency);
+        IPool(pool()).sendCurrency(_sender, vars._gasCompensationInCurrency); // Not sendETH. But redemption returns in ETH and so it's a bit weird.
+        IPool(pool()).useSweepReserve(vars._gasCompensationInCurrency);
 
         return (
-            _effectiveSweepAmount,
-            gasCompensationInCurrency,
+            vars._toBeSwept,
+            vars._gasCompensationInCurrency,
             vars._pledgesOwner
         );
     }
