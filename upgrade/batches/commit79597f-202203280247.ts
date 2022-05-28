@@ -32,8 +32,8 @@ async function main() {
   // await _import( "../mods/010_upgrade_YamatoDepositor");
   // await _import( "../mods/003_upgrade_YamatoWithdrawer");
   // await _import("../mods/002_upgrade_YamatoRedeemer");
-  await _import("../mods/014_upgrade_YamatoSweeper");
-  // await _import( "../mods/006_upgrade_Pool");
+  // await _import("../mods/014_upgrade_YamatoSweeper");
+  await _import("../mods/006_upgrade_Pool");
   // await _import("../mods/005_upgrade_PriorityRegistry");
 
   // await _import("../mods/012_check_integrity");

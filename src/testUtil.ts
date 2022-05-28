@@ -199,6 +199,24 @@ export function getTCR(
   }
 }
 
+export async function assertPoolIntegrity(Pool, CJPY) {
+  let poolBalance = await CJPY.balanceOf(Pool.address);
+  let redemptionReserve = await Pool.redemptionReserve();
+  let sweepReserve = await Pool.sweepReserve();
+
+  let msg = "";
+  if (poolBalance.eq(redemptionReserve.add(sweepReserve)) === false) {
+    msg += ` / Pool inconsistent (poolBalance, redemptionReserve, sweepReserve) = (${poolBalance}, ${redemptionReserve}, ${sweepReserve})`;
+  }
+
+  if (msg.length === 0) {
+    return true;
+  } else {
+    console.error(msg);
+    return false;
+  }
+}
+
 export async function assertDebtIntegrity(Yamato, CJPY) {
   await setProvider();
 
