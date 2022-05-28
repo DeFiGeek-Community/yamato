@@ -1329,7 +1329,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         let ethBalanceAfter = await Yamato.provider.getBalance(redeemerAddr);
         let redemptionReturn = ethBalanceAfter.sub(ethBalanceBefore);
         let txcost = txReceipt1.gasUsed.mul(txReceipt1.effectiveGasPrice);
-        expect(redemptionReturn.add(txcost)).to.eq(BigNumber.from(505e16 + ""));
+        expect(redemptionReturn.add(txcost)).to.eq(BigNumber.from(500e16 + ""));
 
         let gas2 = await Yamato.estimateGas.sweep();
         expect(gas2).to.be.lt(30000000);
@@ -1382,7 +1382,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         let ethBalanceAfter = await Yamato.provider.getBalance(redeemerAddr);
         let redemptionReturn = ethBalanceAfter.sub(ethBalanceBefore);
         let txcost = txReceipt1.gasUsed.mul(txReceipt1.effectiveGasPrice);
-        expect(redemptionReturn.add(txcost)).to.eq(BigNumber.from(505e16 + ""));
+        expect(redemptionReturn.add(txcost)).to.eq(BigNumber.from(500e16 + ""));
 
         let gas2 = await Yamato.estimateGas.sweep();
         expect(gas2).to.be.lt(30000000);

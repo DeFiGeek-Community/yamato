@@ -234,11 +234,20 @@ contract YamatoRedeemerV4 is IYamatoRedeemerV4, YamatoAction {
             _redemptionBearer = _args.sender;
             _returningDestination = _args.sender;
         }
-        IPool(pool()).sendETH(_returningDestination, vars._toBeRedeemedInEth);
+
+        // Burn 100%
         _currencyOS.burnCurrency(_redemptionBearer, vars._toBeRedeemed);
 
+        // Pay 99% in ETH
+        uint256 _effectiveRedemptionAmount = (vars._toBeRedeemedInEth *
+            (100 - vars._GRR)) / 100;
+        IPool(pool()).sendETH(
+            _returningDestination,
+            _effectiveRedemptionAmount
+        );
+
         /*
-            4. Gas compensation
+            4. Pay 1% gas compensation in ETH
         */
         uint256 gasCompensationInETH = (vars._toBeRedeemedInEth * vars._GRR) /
             100;
