@@ -1196,6 +1196,73 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true;
       });
     });
+
+    describe("Context - sweep just after core redemption", function () {
+      beforeEach(async () => {
+        let reserve = await Pool.redemptionReserve();
+        await (
+          await Yamato.connect(redeemer).redeem(
+            toERC20(toBorrow.mul(50) + "").sub(reserve),
+            false
+          )
+        ).wait();
+        await (await Yamato.connect(redeemer).redeem(reserve, true)).wait();
+      });
+      it(`should run full sweep`, async function () {
+        const redeemerAddr = await redeemer.getAddress();
+
+        const sweepablePledge = await Yamato.getPledge(
+          await PriorityRegistry.getRankedQueue(
+            0,
+            await PriorityRegistry.rankedQueueNextout(0)
+          )
+        );
+        const poolCjpyBalanceBefore = await CJPY.balanceOf(Pool.address);
+
+        await (
+          await CJPY.connect(redeemer).transfer(
+            sweepablePledge.owner,
+            await CJPY.balanceOf(redeemerAddr)
+          )
+        ).wait();
+        await (
+          await CJPY.connect(anotherRedeemee).transfer(
+            sweepablePledge.owner,
+            await CJPY.balanceOf(await anotherRedeemee.getAddress())
+          )
+        ).wait();
+        await (
+          await CJPY.connect(yetAnotherRedeemee).transfer(
+            sweepablePledge.owner,
+            await CJPY.balanceOf(await yetAnotherRedeemee.getAddress())
+          )
+        ).wait();
+
+        let matched = await Promise.all(
+          accounts.map(async (acc) =>
+            (await acc.getAddress()) == sweepablePledge.owner ? acc : null
+          )
+        );
+        matched = matched.filter((el) => !!el);
+        await (
+          await Yamato.connect(matched[0]).repay(
+            sweepablePledge.debt
+              .mul(100000000000 - 1 + "")
+              .div(100000000000 + "")
+          )
+        ).wait();
+
+        await (await Yamato.connect(redeemer).sweep()).wait();
+        const sweptPledge = await Yamato.getPledge(sweepablePledge.owner);
+        const poolCjpyBalanceAfter = await CJPY.balanceOf(Pool.address);
+
+        expect(poolCjpyBalanceAfter).to.be.lt(poolCjpyBalanceBefore);
+        expect(sweptPledge.debt).to.equal(0);
+        expect(sweptPledge.isCreated).to.be.false;
+
+        expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true;
+      });
+    });
   });
 
   describe("Context - gas estimation for max redeemees headcount (= 50 by default)", async function () {
