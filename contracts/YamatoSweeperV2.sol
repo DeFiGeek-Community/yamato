@@ -65,9 +65,12 @@ contract YamatoSweeperV2 is IYamatoSweeper, YamatoAction {
             (vars._sweepingAmountTmp * (100 - vars._GRR)) /
             100;
         vars._gasCompensationInCurrency =
-            (vars._sweepingAmountTmp * vars._GRR) /
-            100;
+            vars._sweepingAmountTmp -
+            vars._sweepingAmount;
 
+        if (vars._sweepingAmountTmp > 0 && vars._sweepingAmount == 0) {
+            revert("Sweep budget is too small to pay gas reward.");
+        }
         require(
             vars._sweepingAmount > 0,
             "Sweep failure: sweep reserve is empty."

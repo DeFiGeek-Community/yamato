@@ -43,6 +43,7 @@ import {
   getLinkedProxy,
   assertDebtIntegrity,
   assertPoolIntegrity,
+  assertCollIntegrity,
 } from "../../src/testUtil";
 import { isToken } from "typescript";
 
@@ -300,6 +301,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         expect(redeemedPledgeAfter.priority).to.be.eq(0);
         expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true;
         expect(await assertPoolIntegrity(Pool, CJPY)).to.be.true;
+        expect(await assertCollIntegrity(Pool, Yamato)).to.be.true;
       });
 
       it(`should redeem even if wantToRedeemAmount is smaller than the first toBeRedeemed.`, async function () {
@@ -318,6 +320,8 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         ).not.to.be.reverted;
 
         expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true;
+        expect(await assertPoolIntegrity(Pool, CJPY)).to.be.true;
+        expect(await assertCollIntegrity(Pool, Yamato)).to.be.true;
       });
     });
     describe("Context - with 1% dump", function () {
@@ -469,6 +473,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         expect(redeemedPledge4After.priority).to.eq(13000); // WallBeforeLastPledge = 7 units * (130-129)/129 + 1 unit * (130-129)/129 * 4 pledges
         expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true;
         expect(await assertPoolIntegrity(Pool, CJPY)).to.be.true;
+        expect(await assertCollIntegrity(Pool, Yamato)).to.be.true;
       });
     });
 
@@ -632,6 +637,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         expect(feePoolBalanceAfter).to.be.eq(feePoolBalanceBefore);
         expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true;
         expect(await assertPoolIntegrity(Pool, CJPY)).to.be.true;
+        expect(await assertCollIntegrity(Pool, Yamato)).to.be.true;
       });
     });
 
@@ -756,6 +762,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         expect(feePoolBalanceAfter).to.be.gt(feePoolBalanceBefore);
         expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true;
         expect(await assertPoolIntegrity(Pool, CJPY)).to.be.true;
+        expect(await assertCollIntegrity(Pool, Yamato)).to.be.true;
       });
     });
 
@@ -847,6 +854,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         expect(redeemeePledgeAfter.debt).to.be.lt(redeemeePledgeBefore.debt);
         expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true;
         expect(await assertPoolIntegrity(Pool, CJPY)).to.be.true;
+        expect(await assertCollIntegrity(Pool, Yamato)).to.be.true;
       });
     });
     describe("Context - A large traversing and no gas exhaustion with 1% dump", function () {
@@ -912,6 +920,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         expect(await PriorityRegistry.LICR()).to.eq(130);
         expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true;
         expect(await assertPoolIntegrity(Pool, CJPY)).to.be.true;
+        expect(await assertCollIntegrity(Pool, Yamato)).to.be.true;
       });
       it(`should redeem all pledges to ICR 130% and LICR is less than 130`, async function () {
         const licr1 = await PriorityRegistry.LICR();
@@ -946,6 +955,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
         expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true;
         expect(await assertPoolIntegrity(Pool, CJPY)).to.be.true;
+        expect(await assertCollIntegrity(Pool, Yamato)).to.be.true;
       });
     });
 
@@ -1014,6 +1024,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         expect(await PriorityRegistry.LICR()).to.eq(184);
         expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true;
         expect(await assertPoolIntegrity(Pool, CJPY)).to.be.true;
+        expect(await assertCollIntegrity(Pool, Yamato)).to.be.true;
       });
       it(`should make 'LICR-corssing' redemption and must not cause a revert`, async function () {
         await (
@@ -1139,6 +1150,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         expect(sweptPledge.isCreated).to.be.true;
         expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true;
         expect(await assertPoolIntegrity(Pool, CJPY)).to.be.true;
+        expect(await assertCollIntegrity(Pool, Yamato)).to.be.true;
       });
     });
 
@@ -1205,6 +1217,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
         expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true;
         expect(await assertPoolIntegrity(Pool, CJPY)).to.be.true;
+        expect(await assertCollIntegrity(Pool, Yamato)).to.be.true;
       });
     });
 
@@ -1273,6 +1286,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
         expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true;
         expect(await assertPoolIntegrity(Pool, CJPY)).to.be.true;
+        expect(await assertCollIntegrity(Pool, Yamato)).to.be.true;
       });
     });
   });
@@ -1419,6 +1433,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
         expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true;
         expect(await assertPoolIntegrity(Pool, CJPY)).to.be.true;
+        expect(await assertCollIntegrity(Pool, Yamato)).to.be.true;
       });
     });
 
@@ -1473,6 +1488,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
         expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true;
         expect(await assertPoolIntegrity(Pool, CJPY)).to.be.true;
+        expect(await assertCollIntegrity(Pool, Yamato)).to.be.true;
       });
     });
 
@@ -1515,6 +1531,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
         expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true;
         expect(await assertPoolIntegrity(Pool, CJPY)).to.be.true;
+        expect(await assertCollIntegrity(Pool, Yamato)).to.be.true;
         await expect(Yamato.sweep()).to.be.revertedWith("No sweepables.");
       });
     });
@@ -1558,6 +1575,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
         expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true;
         expect(await assertPoolIntegrity(Pool, CJPY)).to.be.true;
+        expect(await assertCollIntegrity(Pool, Yamato)).to.be.true;
         await expect(Yamato.sweep()).to.be.revertedWith("No sweepables.");
       });
       it("should accept reset and sync.", async () => {

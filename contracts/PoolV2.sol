@@ -144,10 +144,29 @@ contract PoolV2 is IPool, YamatoStore, ReentrancyGuardUpgradeable {
         );
     }
 
-    function refreshPool() public onlyGovernance {
+    function refreshReserve() public onlyGovernance {
         IERC20 _currency = IERC20(ICurrencyOS(currencyOS()).currency());
         uint256 _poolBalance = _currency.balanceOf(address(this));
         redemptionReserve = 0;
         sweepReserve = _poolBalance;
+    }
+
+    function refreshColl(uint256 _acmTotalColl) public onlyGovernance {
+        IYamato _yamato = IYamato(yamato());
+
+        uint256 _poolBalance = address(this).balance;
+        require(_poolBalance < _acmTotalColl, "Pool is enough rich.");
+        _yamato.setTotalColl(_poolBalance);
+
+        uint256 _inconsistentETHAmount = _acmTotalColl - _poolBalance;
+
+        IYamato.Pledge memory _pledge = _yamato.getPledge(msg.sender);
+        require(
+            _pledge.coll > _inconsistentETHAmount,
+            "Fixer must have enough coll."
+        );
+        _pledge.coll -= _inconsistentETHAmount;
+
+        _yamato.setPledge(msg.sender, _pledge);
     }
 }
