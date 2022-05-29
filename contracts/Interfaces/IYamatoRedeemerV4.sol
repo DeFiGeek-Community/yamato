@@ -30,6 +30,9 @@ interface IYamatoRedeemerV4 {
         uint256 _nextin;
         uint256 _toBeRedeemed;
         uint256 _toBeRedeemedInEth;
+        uint256 _effectiveRedemptionAmountInCurrency;
+        uint256 _effectiveRedemptionAmount;
+        uint256 _gasCompensationInETH;
         uint256 _count;
         uint256 _toBeRedeemedFragment;
         uint256 _toBeRedeemedFragmentInEth;
