@@ -141,12 +141,32 @@ contract YamatoRedeemerV4 is IYamatoRedeemerV4, YamatoAction {
                     vars.ethPriceInCurrency;
                 /* state update for redeemed pledge */
 
-                if (_pledge.coll == vars._toBeRedeemedFragmentInEth + 1) {
+                require(
+                    vars._toBeRedeemedFragmentInEth <= _pledge.coll,
+                    "redemption fragment can't be bigger than coll."
+                );
+                uint256 _dustyDiff = _pledge.coll -
+                    vars._toBeRedeemedFragmentInEth;
+                uint256 _debtAfter = _pledge.debt - vars._toBeRedeemedFragment;
+                bool _isSweepableWithColl = (_dustyDiff > 0) &&
+                    ((_dustyDiff * vars.ethPriceInCurrency) / 1e18 <
+                        _debtAfter);
+                uint256 _increasedToBeRedeemedFragment = vars
+                    ._toBeRedeemedFragment +
+                    (_dustyDiff * vars.ethPriceInCurrency) /
+                    1e18;
+                bool _hasRoundingBudget = vars._toBeRedeemed +
+                    _increasedToBeRedeemedFragment <=
+                    _args.wantToRedeemCurrencyAmount;
+
+                if (_isSweepableWithColl && _hasRoundingBudget) {
                     /* Rounding a dusty collateral */
-                    vars._toBeRedeemedFragmentInEth += 1;
-                    vars._toBeRedeemedFragment +=
-                        vars.ethPriceInCurrency /
-                        1e18;
+                    vars._toBeRedeemedFragmentInEth += _dustyDiff;
+                    require(
+                        vars._toBeRedeemedFragmentInEth == _pledge.coll,
+                        "For ICR=0% pledge, coll must be zero."
+                    );
+                    vars._toBeRedeemedFragment = _increasedToBeRedeemedFragment;
                 }
 
                 _pledge.debt -= vars._toBeRedeemedFragment;
@@ -249,8 +269,8 @@ contract YamatoRedeemerV4 is IYamatoRedeemerV4, YamatoAction {
         /*
             4. Pay 1% gas compensation in ETH
         */
-        uint256 gasCompensationInETH = (vars._toBeRedeemedInEth * vars._GRR) /
-            100;
+        uint256 gasCompensationInETH = vars._toBeRedeemedInEth -
+            _effectiveRedemptionAmount;
         IPool(pool()).sendETH(_args.sender, gasCompensationInETH);
 
         return

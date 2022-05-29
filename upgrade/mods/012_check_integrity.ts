@@ -1,4 +1,8 @@
-import { assertDebtIntegrity } from "../../src/testUtil";
+import {
+  assertDebtIntegrity,
+  assertPoolIntegrity,
+  assertCollIntegrity,
+} from "../../src/testUtil";
 import {
   setNetwork,
   getDeploymentAddressPathWithTag,
@@ -21,6 +25,10 @@ export default async function main() {
     getDeploymentAddressPathWithTag("CurrencyOS", "ERC1967Proxy")
   ).toString();
 
+  let PoolERC1967Proxy = readFileSync(
+    getDeploymentAddressPathWithTag("Pool", "ERC1967Proxy")
+  ).toString();
+
   let CurrencyOS = new ethers.Contract(
     CurrencyOSERC1967Proxy,
     genABI("CurrencyOS"),
@@ -37,6 +45,18 @@ export default async function main() {
     genABI("CJPY"),
     getFoundation()
   );
+  let Pool = new ethers.Contract(
+    PoolERC1967Proxy,
+    genABI("Pool"),
+    getFoundation()
+  );
 
-  await assertDebtIntegrity(Yamato, CJPY);
+  let debtOk = await assertDebtIntegrity(Yamato, CJPY);
+  let poolOk = await assertPoolIntegrity(Pool, CJPY);
+  let collOk = await assertCollIntegrity(Pool, Yamato);
+  console.log(`
+  debtOk:${debtOk}
+  poolOk:${poolOk}
+  collOk:${collOk}
+  `);
 }

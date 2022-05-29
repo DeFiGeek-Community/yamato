@@ -217,12 +217,28 @@ export async function assertPoolIntegrity(Pool, CJPY) {
   }
 }
 
-export async function assertDebtIntegrity(Yamato, CJPY) {
-  await setProvider();
+export async function assertCollIntegrity(Pool, Yamato) {
+  let provider = await setProvider();
+  let balance = await Pool.provider.getBalance(Pool.address);
 
-  /*
-    1. Get all users and the pool
-  */
+  let states = await Yamato.getStates();
+  let totalColl = states[0];
+
+  let msg = "";
+
+  if (balance.eq(totalColl) === false) {
+    msg += ` / Balance-TotalColl inconsistent (${balance}, ${totalColl})`;
+  }
+
+  if (msg.length === 0) {
+    return true;
+  } else {
+    console.error(msg);
+    return false;
+  }
+}
+
+export async function getPledges(Yamato) {
   let filter = Yamato.filters.Deposited(null, null);
   let logs = await Yamato.queryFilter(filter);
 
@@ -233,6 +249,16 @@ export async function assertDebtIntegrity(Yamato, CJPY) {
     pledgeOwners.map(async (owner) => await Yamato.getPledge(owner))
   );
   pledges = pledges.filter((p) => p.isCreated);
+  return pledges;
+}
+
+export async function assertDebtIntegrity(Yamato, CJPY) {
+  await setProvider();
+
+  /*
+    1. Get all users and the pool
+  */
+  let pledges: any = await getPledges(Yamato);
 
   /*
     2. Sum up all coll, debt, and CJPY balance 
