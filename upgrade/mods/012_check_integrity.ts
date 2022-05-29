@@ -51,7 +51,12 @@ export default async function main() {
     getFoundation()
   );
 
-  await assertDebtIntegrity(Yamato, CJPY);
-  await assertPoolIntegrity(Pool, CJPY);
-  await assertCollIntegrity(Pool, Yamato);
+  let debtOk = await assertDebtIntegrity(Yamato, CJPY);
+  let poolOk = await assertPoolIntegrity(Pool, CJPY);
+  let collOk = await assertCollIntegrity(Pool, Yamato);
+  console.log(`
+  debtOk:${debtOk}
+  poolOk:${poolOk}
+  collOk:${collOk}
+  `);
 }

@@ -21,6 +21,9 @@ let PoolERC1967Proxy = readFileSync(
 ).toString();
 
 export default async function main() {
+  setNetwork("rinkeby");
+  await setProvider();
+
   let Yamato = new ethers.Contract(
     YamatoERC1967Proxy,
     genABI("Yamato"),
@@ -28,7 +31,7 @@ export default async function main() {
   );
   let Pool = new ethers.Contract(
     PoolERC1967Proxy,
-    genABI("Pool"),
+    genABI("PoolV2"),
     getFoundation()
   );
 
@@ -38,5 +41,8 @@ export default async function main() {
     acmTotalColl = acmTotalColl.add(pledges[i].coll);
   }
 
-  await Pool.refreshColl(acmTotalColl);
+  await Pool.refreshColl(
+    acmTotalColl,
+    "0xD2dd063B77cdB7b2823297a305195128eF2C300c"
+  );
 }
