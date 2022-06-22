@@ -31,7 +31,12 @@ import "hardhat/console.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 
-/// @title Yamato Pledge Manager Contract
+/// @title The facade contract with some global state variables.
+/// @notice This contract has some single-pledge-targeting functions such as `deposit()`, `borrow()`, `repay()`, and `withdrawal()`.
+/// @notice It also has some multi-pledge-targeting functions such as `redeem()`, and `sweep()`.
+/// @dev This contract has some pseudo-internal functions such as `setPledge()`, `setTotalColl()`, and `setTotalDebt()`. Those are only permitted to contracts in the `getDeps()` function.
+/// @dev This contract has YamatoAction contracts to modularize complex logics. This design is forced from UUPS upgradeability pattern. All upgradeable contracts inherit `UUPSBase` contract to support UUPS, but it takes ~15KB contract size.
+/// @dev This contract has `pledges` state variable to manage debt position of all users. All YamatoAction contracts refer that state.
 /// @author 0xMotoko
 contract YamatoV3 is
     IYamato,
@@ -50,7 +55,7 @@ contract YamatoV3 is
 
     /*
         ===========================
-        ~~~ SAFE HAVEN ~~~
+        ~~~ SAFE HAVEN BEGINS ~~~
         ===========================
         - Constants don't take slots
         - You can add or remove them in upgrade timing
@@ -82,6 +87,8 @@ contract YamatoV3 is
         ~~~ SAFE HAVEN ENDED ~~~
         ===========================
     */
+
+
 
     /*
         ===========================

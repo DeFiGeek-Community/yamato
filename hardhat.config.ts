@@ -18,6 +18,7 @@ import "hardhat-abi-exporter";
 import "hardhat-contract-sizer";
 import "hardhat-gas-reporter";
 import "@openzeppelin/hardhat-upgrades";
+import "hardhat-docgen";
 
 if (!process.env.ALCHEMY_URL) throw Error("Get your .env");
 
@@ -106,5 +107,10 @@ module.exports = {
   gasReporter: {
     currency: "USD",
     gasPrice: 100,
+  },
+  docgen: {
+    path: "./docs",
+    clear: true,
+    runOnCompile: true,
   },
 };
