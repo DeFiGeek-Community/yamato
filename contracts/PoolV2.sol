@@ -144,7 +144,6 @@ contract PoolV2 is IPool, YamatoStore, ReentrancyGuardUpgradeable {
         );
     }
 
-
     /**************************
         Dev Ops Functions (Use it only when a tiny internal-state inconsistency.)
     **************************/
