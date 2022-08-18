@@ -144,6 +144,12 @@ contract PoolV2 is IPool, YamatoStore, ReentrancyGuardUpgradeable {
         );
     }
 
+
+    /**************************
+        Dev Ops Functions (Use it only when a tiny internal-state inconsistency.)
+    **************************/
+
+    /// @dev Make all pool reserves consistent.
     function refreshReserve() public onlyGovernance {
         IERC20 _currency = IERC20(ICurrencyOS(currencyOS()).currency());
         uint256 _poolBalance = _currency.balanceOf(address(this));
@@ -151,6 +157,7 @@ contract PoolV2 is IPool, YamatoStore, ReentrancyGuardUpgradeable {
         sweepReserve = _poolBalance;
     }
 
+    /// @dev Make totalColl consistent
     function refreshColl(uint256 _acmTotalColl, address _fixer)
         public
         onlyGovernance
@@ -169,6 +176,8 @@ contract PoolV2 is IPool, YamatoStore, ReentrancyGuardUpgradeable {
             "Fixer must have enough coll."
         );
         _pledge.coll -= _inconsistentETHAmount;
+
+        // Bug: upsert here and update priority
 
         _yamato.setPledge(_fixer, _pledge);
     }
