@@ -192,19 +192,19 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
     }
 
     function getPrice() external view override returns (uint256) {
-        (uint256 _price,,) = _simulatePrice();
+        (uint256 _price, , ) = _simulatePrice();
 
         return _price;
     }
 
     function getStatus() external view override returns (Status) {
-        (, Status _status,) = _simulatePrice();
+        (, Status _status, ) = _simulatePrice();
 
         return _status;
     }
 
     function getIsAdjusted() external view override returns (bool) {
-        (,, bool _isAdjusted) = _simulatePrice();
+        (, , bool _isAdjusted) = _simulatePrice();
 
         return _isAdjusted;
     }

@@ -23,7 +23,8 @@ import "hardhat/console.sol";
 contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
     using PledgeLib for IYamato.Pledge;
 
-    mapping(uint256 => mapping(address => IYamato.Pledge)) private leveledPledges; // ICR => owner => Pledge
+    mapping(uint256 => mapping(address => IYamato.Pledge))
+        private leveledPledges; // ICR => owner => Pledge
     mapping(uint256 => address[]) private levelIndice; // ICR => owner[]
     uint256 public override pledgeLength; // Note: Deprecated in V6
     uint256 public override LICR; // Note: Lowest ICR in percent

@@ -98,7 +98,8 @@ contract YamatoWithdrawerV2 is IYamatoWithdrawer, YamatoAction {
                 "Deposit or Withdraw can't make pledge less than floor size."
             );
             require(
-                pledge.getICR(priceFeed()) >= uint256(IYamato(yamato()).MCR()) * 100,
+                pledge.getICR(priceFeed()) >=
+                    uint256(IYamato(yamato()).MCR()) * 100,
                 "Withdrawal failure: ICR can't be less than MCR after withdrawal."
             );
             pledge.priority = IPriorityRegistry(priorityRegistry()).upsert(

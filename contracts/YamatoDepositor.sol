@@ -77,9 +77,7 @@ contract YamatoDepositor is IYamatoDepositor, YamatoAction {
         /*
             6. Set FlashLock
         */
-        IYamato(yamato()).setFlashLock(
-            _sender
-        );
+        IYamato(yamato()).setFlashLock(_sender);
 
         /*
             7. Send ETH to pool

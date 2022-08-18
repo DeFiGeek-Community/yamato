@@ -226,17 +226,9 @@ contract YamatoV2 is
         override
         onlyYamato
         returns (bool _isLocked)
-    {
-    }
+    {}
 
-
-    function setFlashLock(address _owner)
-        public
-        override
-        onlyYamato
-    {
-
-    }
+    function setFlashLock(address _owner) public override onlyYamato {}
 
     modifier onlyYamato() override {
         require(permitDeps(msg.sender), "You are not Yamato contract.");

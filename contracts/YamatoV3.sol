@@ -269,11 +269,7 @@ contract YamatoV3 is
         }
     }
 
-    function setFlashLock(address _owner)
-        public
-        override
-        onlyYamato
-    {
+    function setFlashLock(address _owner) public override onlyYamato {
         FlashLockData storage lock = flashlocks[_owner];
         require(
             lock.lockedBlockHeight <= block.number,

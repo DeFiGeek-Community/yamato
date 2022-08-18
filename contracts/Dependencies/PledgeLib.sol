@@ -149,10 +149,7 @@ library PledgeLib {
     }
 
     /// @notice Overwrite the memory Pledge with 0, false, and zero-address
-    function nil(IYamato.Pledge memory)
-        public
-        returns (IYamato.Pledge memory)
-    {
+    function nil(IYamato.Pledge memory) public returns (IYamato.Pledge memory) {
         return IYamato.Pledge(0, 0, false, address(0), 0);
     }
 

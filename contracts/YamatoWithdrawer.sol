@@ -61,16 +61,15 @@ contract YamatoWithdrawer is IYamatoWithdrawer, YamatoAction {
             "Those can't be called in the same block."
         );
         require(
-            pledge.getICR(priceFeed()) >= uint256(IYamato(yamato()).MCR()) * 100,
+            pledge.getICR(priceFeed()) >=
+                uint256(IYamato(yamato()).MCR()) * 100,
             "Withdrawal failure: ICR is not more than MCR."
         );
 
         /*
             3. Set flashlock
         */
-        IYamato(yamato()).setFlashLock(
-            _sender
-        );
+        IYamato(yamato()).setFlashLock(_sender);
 
         /*
             4. Update pledge
@@ -94,7 +93,8 @@ contract YamatoWithdrawer is IYamatoWithdrawer, YamatoAction {
                 5-b. Reasonable partial withdrawal
             */
             require(
-                pledge.getICR(priceFeed()) >= uint256(IYamato(yamato()).MCR()) * 100,
+                pledge.getICR(priceFeed()) >=
+                    uint256(IYamato(yamato()).MCR()) * 100,
                 "Withdrawal failure: ICR can't be less than MCR after withdrawal."
             );
             pledge.priority = IPriorityRegistry(priorityRegistry()).upsert(

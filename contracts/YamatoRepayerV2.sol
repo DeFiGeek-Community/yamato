@@ -85,9 +85,6 @@ contract YamatoRepayerV2 is IYamatoRepayer, YamatoAction {
             6-1. Charge Currency
             6-2. Return coll to the repayer
         */
-        ICurrencyOS(currencyOS()).burnCurrency(
-            _sender,
-            _repayAmountInCurrency
-        );
+        ICurrencyOS(currencyOS()).burnCurrency(_sender, _repayAmountInCurrency);
     }
 }

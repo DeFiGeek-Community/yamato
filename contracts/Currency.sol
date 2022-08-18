@@ -65,7 +65,10 @@ contract Currency is ERC20Permit, ICurrency {
     }
 
     function setCurrencyOS(address _currencyOSAddr) public onlyGovernance {
-        require(_currencyOSAddr != address(0), "CurrencyOS address is null address.");
+        require(
+            _currencyOSAddr != address(0),
+            "CurrencyOS address is null address."
+        );
         currencyOS = _currencyOSAddr;
         emit CurrencyOSSet(currencyOS);
     }
