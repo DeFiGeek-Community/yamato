@@ -19,7 +19,7 @@ import "./Interfaces/IYamato.sol";
 import "./Interfaces/IFeePool.sol";
 import "./Interfaces/ICurrencyOS.sol";
 import "./Interfaces/IYamatoBorrower.sol";
-import "./Interfaces/IPriorityRegistry.sol";
+import "./Interfaces/IPriorityRegistryV6.sol";
 import "hardhat/console.sol";
 
 /// @title Yamato Borrower Contract
@@ -82,7 +82,9 @@ contract YamatoBorrower is IYamatoBorrower, YamatoAction {
         /*
             5. Add PriorityRegistry change
         */
-        pledge.priority = IPriorityRegistry(priorityRegistry()).upsert(pledge);
+        pledge.priority = IPriorityRegistryV6(priorityRegistry()).upsert(
+            pledge
+        );
 
         /*
             6. Commit to pledge

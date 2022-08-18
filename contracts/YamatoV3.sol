@@ -10,7 +10,6 @@ pragma solidity 0.8.4;
 //solhint-disable no-inline-assembly
 
 import "./Pool.sol";
-import "./Interfaces/IPriorityRegistry.sol";
 import "./YMT.sol";
 import "./PriceFeed.sol";
 import "./Interfaces/IYamatoDepositor.sol";

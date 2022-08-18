@@ -9,7 +9,7 @@ pragma solidity 0.8.4;
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 
-import "./Pool.sol";
+import "./PoolV2.sol";
 import "./YMT.sol";
 import "./PriceFeedV2.sol";
 import "./Dependencies/YamatoAction.sol";
@@ -20,7 +20,7 @@ import "./Interfaces/IYamatoV3.sol";
 import "./Interfaces/IFeePool.sol";
 import "./Interfaces/ICurrencyOS.sol";
 import "./Interfaces/IYamatoDepositor.sol";
-import "./Interfaces/IPriorityRegistry.sol";
+import "./Interfaces/IPriorityRegistryV6.sol";
 import "hardhat/console.sol";
 
 /// @title Yamato Depositor Contract
@@ -67,7 +67,9 @@ contract YamatoDepositorV2 is IYamatoDepositor, YamatoAction {
         /*
             3. Update PriorityRegistry
         */
-        pledge.priority = IPriorityRegistry(priorityRegistry()).upsert(pledge);
+        pledge.priority = IPriorityRegistryV6(priorityRegistry()).upsert(
+            pledge
+        );
 
         /*
             4. Commit pledge modifications

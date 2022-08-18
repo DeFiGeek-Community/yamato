@@ -20,7 +20,7 @@ import "./Interfaces/IFeePool.sol";
 import "./Interfaces/ICurrencyOS.sol";
 import "./Interfaces/ICurrency.sol";
 import "./Interfaces/IYamatoRepayer.sol";
-import "./Interfaces/IPriorityRegistry.sol";
+import "./Interfaces/IPriorityRegistryV6.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "hardhat/console.sol";
@@ -69,7 +69,9 @@ contract YamatoRepayerV2 is IYamatoRepayer, YamatoAction {
         /*
             3. Add PriorityRegistry update result to a pledge in memory
         */
-        pledge.priority = IPriorityRegistry(priorityRegistry()).upsert(pledge);
+        pledge.priority = IPriorityRegistryV6(priorityRegistry()).upsert(
+            pledge
+        );
 
         /*
             4. Commit a pledge in memory to YamatoStore

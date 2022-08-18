@@ -19,7 +19,7 @@ import "./Interfaces/IYamato.sol";
 import "./Interfaces/IFeePool.sol";
 import "./Interfaces/ICurrencyOS.sol";
 import "./Interfaces/IYamatoWithdrawer.sol";
-import "./Interfaces/IPriorityRegistry.sol";
+import "./Interfaces/IPriorityRegistryV6.sol";
 import "hardhat/console.sol";
 
 /// @title Yamato Withdrawer Contract
@@ -87,7 +87,7 @@ contract YamatoWithdrawer is IYamatoWithdrawer, YamatoAction {
             /*
                 5-a. Clean full withdrawal
             */
-            IPriorityRegistry(priorityRegistry()).remove(pledge);
+            IPriorityRegistryV6(priorityRegistry()).remove(pledge);
         } else {
             /*
                 5-b. Reasonable partial withdrawal
@@ -97,7 +97,7 @@ contract YamatoWithdrawer is IYamatoWithdrawer, YamatoAction {
                     uint256(IYamato(yamato()).MCR()) * 100,
                 "Withdrawal failure: ICR can't be less than MCR after withdrawal."
             );
-            pledge.priority = IPriorityRegistry(priorityRegistry()).upsert(
+            pledge.priority = IPriorityRegistryV6(priorityRegistry()).upsert(
                 pledge
             );
         }

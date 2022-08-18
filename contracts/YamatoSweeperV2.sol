@@ -21,7 +21,6 @@ import "./Interfaces/IYamatoV3.sol";
 import "./Interfaces/IFeePool.sol";
 import "./Interfaces/ICurrencyOS.sol";
 import "./Interfaces/IYamatoSweeper.sol";
-import "./Interfaces/IPriorityRegistry.sol";
 import "./Interfaces/IPriorityRegistryV6.sol";
 import "hardhat/console.sol";
 

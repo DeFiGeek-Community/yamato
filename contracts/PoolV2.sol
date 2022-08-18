@@ -11,6 +11,7 @@ pragma solidity 0.8.4;
 import "./Interfaces/IYamato.sol";
 import "./Interfaces/IFeePool.sol";
 import "./Interfaces/ICurrencyOS.sol";
+import "./Interfaces/IPriorityRegistryV6.sol";
 import "./Dependencies/YamatoStore.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
@@ -176,8 +177,10 @@ contract PoolV2 is IPool, YamatoStore, ReentrancyGuardUpgradeable {
         );
         _pledge.coll -= _inconsistentETHAmount;
 
-        // Bug: upsert here and update priority
+        _pledge.priority = IPriorityRegistryV6(_yamato.priorityRegistry())
+            .upsert(_pledge);
 
+        _yamato.setPledge(_fixer, _pledge);
         _yamato.setPledge(_fixer, _pledge);
     }
 }
