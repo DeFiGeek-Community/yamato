@@ -81,7 +81,7 @@ describe("contract Yamato - pure func quickier tests", function () {
     ).address;
 
     // Note: Yamato's constructor needs this mock and so the line below has to be called here.
-    mockCurrencyOS.feed.returns(mockFeed.address);
+    mockCurrencyOS.priceFeed.returns(mockFeed.address);
     mockCurrencyOS.feePool.returns(mockFeePool.address);
     mockCurrencyOS.currency.returns(mockCJPY.address);
 
@@ -278,7 +278,7 @@ describe("contract Yamato", function () {
     ).address;
 
     // Note: Yamato's constructor needs this mock and so the line below has to be called here.
-    mockCurrencyOS.feed.returns(mockFeed.address);
+    mockCurrencyOS.priceFeed.returns(mockFeed.address);
     mockCurrencyOS.feePool.returns(mockFeePool.address);
     mockCurrencyOS.currency.returns(mockCJPY.address);
 
@@ -970,7 +970,7 @@ describe("contract Yamato", function () {
         yamato.withdraw(toERC20(toCollateralize / 10 + ""))
       ).to.revertedWith("Withdrawal failure: ICR is not more than MCR.");
     });
-    it(`can't make ICR < MCR by this withdrawal`, async function () {
+    it(`can't run withdrawal because ICR=130%`, async function () {
       const MCR = BigNumber.from(130);
       mockFeed.fetchPrice.returns(PRICE);
       mockFeed.getPrice.returns(PRICE);
@@ -990,6 +990,34 @@ describe("contract Yamato", function () {
 
       expect(pledgeBefore.coll.toString()).to.eq("1000000000000000000");
       expect(pledgeBefore.debt.toString()).to.eq("200000000000000000000000");
+
+      (<any>yamato.provider).send("evm_increaseTime", [60 * 60 * 24 * 3 + 1]);
+      (<any>yamato.provider).send("evm_mine");
+
+      await expect(
+        yamato.withdraw(toERC20(toCollateralize * 0.9 + ""))
+      ).to.revertedWith("Withdrawal failure: ICR is not more than MCR.");
+    });
+    it(`can't make ICR < MCR by this withdrawal`, async function () {
+      const MCR = BigNumber.from(130);
+      mockFeed.fetchPrice.returns(PRICE);
+      mockFeed.getPrice.returns(PRICE);
+      mockFeed.lastGoodPrice.returns(PRICE);
+      mockPool.sendETH.returns(0);
+
+      const toCollateralize = 1;
+      const toBorrow = PRICE.mul(toCollateralize)
+        .mul(100)
+        .div(MCR.add(1))
+        .div(1e18 + "");
+      await yamato.deposit({ value: toERC20(toCollateralize + "") });
+      await yamato.borrow(toERC20(toBorrow + ""));
+      const pledgeBefore = await yamato.getPledge(
+        await yamato.signer.getAddress()
+      );
+
+      expect(pledgeBefore.coll.toString()).to.eq("1000000000000000000");
+      expect(pledgeBefore.debt.toString()).to.eq("198473000000000000000000");
 
       (<any>yamato.provider).send("evm_increaseTime", [60 * 60 * 24 * 3 + 1]);
       (<any>yamato.provider).send("evm_mine");
@@ -1447,7 +1475,7 @@ describe("contract Yamato", function () {
     });
   });
 
-  describe("getIndivisualStates()", () => {
+  describe("getIndividualStates()", () => {
     let accounts;
 
     beforeEach(async () => {
@@ -1457,7 +1485,7 @@ describe("contract Yamato", function () {
     it("should return correct values", async () => {
       const owner = await accounts[0].getAddress();
 
-      const beforeValues = await yamato.getIndivisualStates(owner);
+      const beforeValues = await yamato.getIndividualStates(owner);
 
       expect(beforeValues[0]).to.eq(0);
       expect(beforeValues[1]).to.eq(0);
@@ -1471,7 +1499,7 @@ describe("contract Yamato", function () {
         .connect(accounts[0])
         .deposit({ value: toERC20(toCollateralize + "") });
       await yamato.connect(accounts[0]).borrow(toERC20(toBorrow + ""));
-      const afterValues = await yamato.getIndivisualStates(owner);
+      const afterValues = await yamato.getIndividualStates(owner);
 
       expect(afterValues[0]).to.eq("1000000000000000000");
       expect(afterValues[1]).to.eq("200000000000000000000000");

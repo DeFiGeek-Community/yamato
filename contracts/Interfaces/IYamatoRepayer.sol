@@ -10,6 +10,6 @@ pragma solidity 0.8.4;
 //solhint-disable no-inline-assembly
 
 interface IYamatoRepayer {
-    function runRepay(address _sender, uint256 _wantToRepayCurrencyAmount)
+    function runRepay(address _sender, uint256 _repayAmountInCurrency)
         external;
 }

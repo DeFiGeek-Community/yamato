@@ -13,8 +13,7 @@ import "./Interfaces/ICurrency.sol";
 import "./Interfaces/ICurrencyOS.sol";
 import "./Interfaces/IYMT.sol";
 import "./veYMT.sol";
-import "./PriceFeed.sol";
-import "./Interfaces/IYamato.sol";
+import "./Interfaces/IYamatoV3.sol";
 import "./YmtOS.sol";
 import "./Dependencies/UUPSBase.sol";
 import "hardhat/console.sol";
@@ -38,6 +37,8 @@ contract CurrencyOSV2 is ICurrencyOS, UUPSBase {
         ===========================
     */
 
+    event YamatoAdded(address _yamatoAddr);
+
     function initialize(
         address currencyAddr,
         address feedAddr,
@@ -57,7 +58,7 @@ contract CurrencyOSV2 is ICurrencyOS, UUPSBase {
         }
     }
 
-    function setPriceFeed(address feedAddr) public onlyGovernance {
+    function setPriceFeed(address feedAddr) external onlyGovernance {
         bytes32 PRICEFEED_KEY = bytes32(
             keccak256(abi.encode(PRICEFEED_SLOT_ID))
         );
@@ -66,7 +67,7 @@ contract CurrencyOSV2 is ICurrencyOS, UUPSBase {
         }
     }
 
-    function setDeps(address _ymtOS) public onlyGovernance {
+    function setDeps(address _ymtOS) external onlyGovernance {
         bytes32 YMTOS_KEY = bytes32(keccak256(abi.encode(YMTOS_SLOT_ID)));
         assembly {
             sstore(YMTOS_KEY, _ymtOS)
@@ -93,6 +94,7 @@ contract CurrencyOSV2 is ICurrencyOS, UUPSBase {
         if (ymtOS() != address(0)) {
             IYmtOS(ymtOS()).addYamatoOfCurrencyOS(_yamatoAddr);
         }
+        emit YamatoAdded(_yamatoAddr);
     }
 
     function mintCurrency(address to, uint256 amount)
@@ -123,7 +125,7 @@ contract CurrencyOSV2 is ICurrencyOS, UUPSBase {
         }
     }
 
-    function feed() public view override returns (address _feed) {
+    function priceFeed() public view override returns (address _feed) {
         bytes32 PRICEFEED_KEY = bytes32(
             keccak256(abi.encode(PRICEFEED_SLOT_ID))
         );
@@ -161,7 +163,7 @@ contract CurrencyOSV2 is ICurrencyOS, UUPSBase {
         return false;
     }
 
-    function _permitMe() internal returns (bool) {
+    function _permitMe() internal view returns (bool) {
         for (uint256 i = 0; i < yamatoes.length; i++) {
             if (IYamato(yamatoes[i]).permitDeps(msg.sender)) return true;
         }

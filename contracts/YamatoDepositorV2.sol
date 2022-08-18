@@ -11,7 +11,7 @@ pragma solidity 0.8.4;
 
 import "./Pool.sol";
 import "./YMT.sol";
-import "./PriceFeed.sol";
+import "./PriceFeedV2.sol";
 import "./Dependencies/YamatoAction.sol";
 import "./Dependencies/PledgeLib.sol";
 import "./Dependencies/SafeMath.sol";
@@ -36,33 +36,33 @@ contract YamatoDepositorV2 is IYamatoDepositor, YamatoAction {
 
     // @dev no reentrancy guard because action funcs are protected by permitDeps()
     function runDeposit(address _sender) public payable override onlyYamato {
-        IPriceFeed(feed()).fetchPrice();
+        IPriceFeedV2(priceFeed()).fetchPrice();
         uint256 _ethAmount = msg.value;
 
         /*
-            1. Compose a pledge in memory
-        */
-        IYamato.Pledge memory pledge = IYamato(yamato()).getPledge(_sender);
-        (uint256 totalColl, , , , , ) = IYamato(yamato()).getStates();
-
-        pledge.coll += _ethAmount;
-        if (!pledge.isCreated) {
-            // new pledge
-            pledge.isCreated = true;
-            pledge.owner = _sender;
-        }
-
-        /*
-            2. Validate lock
+            1. Validate lock
+            2. Compose a pledge in memory
         */
         require(
             !IYamato(yamato()).checkFlashLock(_sender),
             "Those can't be called in the same block."
         );
+
+        IYamato.Pledge memory pledge = IYamato(yamato()).getPledge(_sender);
+        (uint256 totalColl, , , , , ) = IYamato(yamato()).getStates();
+
+        pledge.coll += _ethAmount;
+
         require(
             pledge.coll >= IYamatoV3(yamato()).collFloor(),
             "Deposit or Withdraw can't make pledge less than floor size."
         );
+
+        if (!pledge.isCreated) {
+            // new pledge
+            pledge.isCreated = true;
+            pledge.owner = _sender;
+        }
 
         /*
             3. Update PriorityRegistry
@@ -82,10 +82,7 @@ contract YamatoDepositorV2 is IYamatoDepositor, YamatoAction {
         /*
             6. Set FlashLock
         */
-        IYamato(yamato()).setFlashLock(
-            _sender,
-            IYamato.FlashLockTypes.DEPOSIT_LOCK
-        );
+        IYamato(yamato()).setFlashLock(_sender);
 
         /*
             7. Send ETH to pool

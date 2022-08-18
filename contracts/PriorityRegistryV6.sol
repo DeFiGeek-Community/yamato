@@ -23,16 +23,16 @@ import "hardhat/console.sol";
 contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
     using PledgeLib for IYamato.Pledge;
 
-    mapping(uint256 => mapping(address => IYamato.Pledge)) leveledPledges; // ICR => owner => Pledge
+    mapping(uint256 => mapping(address => IYamato.Pledge)) private leveledPledges; // ICR => owner => Pledge
     mapping(uint256 => address[]) private levelIndice; // ICR => owner[]
     uint256 public override pledgeLength; // Note: Deprecated in V6
     uint256 public override LICR; // Note: Lowest ICR in percent
-    mapping(uint256 => IPriorityRegistryV4.FifoQueue) rankedQueue; // Deprecated. Mar 28, 2020 - 0xMotoko
+    mapping(uint256 => IPriorityRegistryV4.FifoQueue) private rankedQueue; // Deprecated. Mar 28, 2020 - 0xMotoko
     uint256 public constant override MAX_PRIORITY =
         1157920892373161954235709850086879078532699846656405640394575840079131296399; // (2**256 - 1) / 100
     uint256 public nextResetRank;
-    mapping(address => DeleteDictItem) deleteDict;
-    mapping(uint256 => FifoQueue) rankedQueueV2;
+    mapping(address => DeleteDictItem) private deleteDict;
+    mapping(uint256 => FifoQueue) private rankedQueueV2;
     uint256 public nextUpsertPledgeIndex;
 
     function initialize(address _yamato) public initializer {
@@ -76,7 +76,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         returns (uint256[] memory)
     {
         BulkUpsertVar memory vars;
-        vars._ethPriceInCurrency = IPriceFeedV2(feed()).getPrice(); // Note: can't use lastGoodPrice cuz bulkUpsert can also be called be syncer which does not use fetchPrice
+        vars._ethPriceInCurrency = IPriceFeedV2(priceFeed()).getPrice(); // Note: can't use lastGoodPrice cuz bulkUpsert can also be called be syncer which does not use fetchPrice
         vars._newPriorities = new uint256[](_pledges.length);
         for (uint256 i; i < _pledges.length; i++) {
             vars._pledge = _pledges[i];
@@ -475,7 +475,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         uint256 _checkpoint = _mcrPercent +
             IYamatoV3(yamato()).CHECKPOINT_BUFFER();
         // uint256 ethPriceInCurrency = IPriceFeedV2(feed()).lastGoodPrice();
-        uint256 ethPriceInCurrency = IPriceFeedV2(feed()).getPrice();
+        uint256 ethPriceInCurrency = IPriceFeedV2(priceFeed()).getPrice();
 
         uint256 _rank = 1;
         uint256 _nextout = rankedQueueNextout(_rank);

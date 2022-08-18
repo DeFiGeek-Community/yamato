@@ -30,7 +30,7 @@ export async function smokeTest() {
   const toCollateralize = 0.001;
   const MCR = BigNumber.from(130);
   const PriceFeed = new ethers.Contract(
-    await Yamato.feed(),
+    await Yamato.priceFeed(),
     genABI("PriceFeed"),
     p
   );

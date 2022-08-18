@@ -11,7 +11,7 @@ pragma solidity 0.8.4;
 
 import "./Pool.sol";
 import "./YMT.sol";
-import "./PriceFeed.sol";
+import "./PriceFeedV2.sol";
 import "./Dependencies/YamatoAction.sol";
 import "./Dependencies/PledgeLib.sol";
 import "./Dependencies/SafeMath.sol";
@@ -42,7 +42,7 @@ contract YamatoWithdrawerV2 is IYamatoWithdrawer, YamatoAction {
         /*
             1. Get feed and pledge
         */
-        IPriceFeed(feed()).fetchPrice();
+        IPriceFeedV2(priceFeed()).fetchPrice();
         IYamato.Pledge memory pledge = IYamato(yamato()).getPledge(_sender);
         (uint256 totalColl, , , , , ) = IYamato(yamato()).getStates();
 
@@ -62,23 +62,20 @@ contract YamatoWithdrawerV2 is IYamatoWithdrawer, YamatoAction {
             "Those can't be called in the same block."
         );
         require(
-            pledge.getICR(feed()) >= uint256(IYamato(yamato()).MCR()) * 100,
+            pledge.getICR(priceFeed()) > uint256(IYamato(yamato()).MCR()) * 100,
             "Withdrawal failure: ICR is not more than MCR."
         );
 
         /*
             3. Set flashlock
         */
-        IYamato(yamato()).setFlashLock(
-            _sender,
-            IYamato.FlashLockTypes.WITHDRAW_LOCK
-        );
+        IYamato(yamato()).setFlashLock(_sender);
 
         /*
             4. Update pledge
         */
         // Note: SafeMath unintentionally checks full withdrawal
-        pledge.coll = pledge.coll - _ethAmount;
+        pledge.coll -= _ethAmount;
 
         IYamato(yamato()).setPledge(pledge.owner, pledge);
 
@@ -101,7 +98,7 @@ contract YamatoWithdrawerV2 is IYamatoWithdrawer, YamatoAction {
                 "Deposit or Withdraw can't make pledge less than floor size."
             );
             require(
-                pledge.getICR(feed()) >= uint256(IYamato(yamato()).MCR()) * 100,
+                pledge.getICR(priceFeed()) >= uint256(IYamato(yamato()).MCR()) * 100,
                 "Withdrawal failure: ICR can't be less than MCR after withdrawal."
             );
             pledge.priority = IPriorityRegistry(priorityRegistry()).upsert(

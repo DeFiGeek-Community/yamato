@@ -11,7 +11,7 @@ pragma solidity 0.8.4;
 
 import "./Pool.sol";
 import "./YMT.sol";
-import "./PriceFeed.sol";
+import "./PriceFeedV2.sol";
 import "./Dependencies/YamatoAction.sol";
 import "./Dependencies/PledgeLib.sol";
 import "./Dependencies/SafeMath.sol";
@@ -42,13 +42,13 @@ contract YamatoBorrower is IYamatoBorrower, YamatoAction {
         /*
             1. Ready
         */
-        IPriceFeed(feed()).fetchPrice();
+        IPriceFeedV2(priceFeed()).fetchPrice();
         IYamato.Pledge memory pledge = IYamato(yamato()).getPledge(_sender);
         (, uint256 totalDebt, , , , ) = IYamato(yamato()).getStates();
         uint256 _ICRAfter = pledge.addDebt(_borrowAmountInCurrency).getICR(
-            feed()
+            priceFeed()
         );
-        uint256 fee = (_borrowAmountInCurrency * _ICRAfter.FR()) / 10000;
+        fee = (_borrowAmountInCurrency * _ICRAfter.FR()) / 10000;
         uint256 returnableCurrency = _borrowAmountInCurrency - fee;
 
         /*
@@ -72,10 +72,7 @@ contract YamatoBorrower is IYamatoBorrower, YamatoAction {
         /*
             3. Set FlashLock
         */
-        IYamato(yamato()).setFlashLock(
-            _sender,
-            IYamato.FlashLockTypes.BORROW_LOCK
-        );
+        IYamato(yamato()).setFlashLock(_sender);
 
         /*
             4. Add debt to a pledge in memory

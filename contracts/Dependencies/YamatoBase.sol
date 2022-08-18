@@ -17,7 +17,7 @@ import "hardhat/console.sol";
 /// @title Yamato Action and Yamato Store Base Contract
 /// @author 0xMotoko
 contract YamatoBase is UUPSBase {
-    string YAMATO_SLOT_ID;
+    string internal YAMATO_SLOT_ID;
 
     function __YamatoBase_init(address _yamato) internal initializer {
         __UUPSBase_init();
@@ -51,8 +51,8 @@ contract YamatoBase is UUPSBase {
     }
 
     // @dev All YamatoStores and YamatoActions except Yamato.sol are NOT needed to modify these funcs. Just write the same signature and don't fill inside. Yamato.sol must override it with correct logic.
-    function feed() public view virtual returns (address) {
-        return ICurrencyOS(currencyOS()).feed();
+    function priceFeed() public view virtual returns (address) {
+        return ICurrencyOS(currencyOS()).priceFeed();
     }
 
     // @dev All YamatoStores and YamatoActions except Yamato.sol are NOT needed to modify these funcs. Just write the same signature and don't fill inside. Yamato.sol must override it with correct logic.

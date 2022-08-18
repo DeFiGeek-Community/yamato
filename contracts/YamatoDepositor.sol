@@ -35,7 +35,7 @@ contract YamatoDepositor is IYamatoDepositor, YamatoAction {
 
     // @dev no reentrancy guard because action funcs are protected by permitDeps()
     function runDeposit(address _sender) public payable override onlyYamato {
-        IPriceFeed(feed()).fetchPrice();
+        IPriceFeed(priceFeed()).fetchPrice();
         uint256 _ethAmount = msg.value;
 
         /*
@@ -78,8 +78,7 @@ contract YamatoDepositor is IYamatoDepositor, YamatoAction {
             6. Set FlashLock
         */
         IYamato(yamato()).setFlashLock(
-            _sender,
-            IYamato.FlashLockTypes.DEPOSIT_LOCK
+            _sender
         );
 
         /*

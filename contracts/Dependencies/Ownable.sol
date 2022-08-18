@@ -51,19 +51,4 @@ contract Ownable {
     function isOwner() public view returns (bool) {
         return msg.sender == _owner;
     }
-
-    /**
-     * @dev Leaves the contract without owner. It will not be possible to call
-     * `onlyOwner` functions anymore.
-     *
-     * NOTE: Renouncing ownership will leave the contract without an owner,
-     * thereby removing any functionality that is only available to the owner.
-     *
-     * NOTE: This function is not safe, as it doesn’t check owner is calling it.
-     * Make sure you check it before calling it.
-     */
-    function _renounceOwnership() internal {
-        emit OwnershipTransferred(_owner, address(0));
-        _owner = address(0);
-    }
 }

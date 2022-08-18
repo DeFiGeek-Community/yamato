@@ -28,8 +28,16 @@ contract Currency is ERC20Permit, ICurrency {
         governance = msg.sender;
     }
 
+    event CurrencyOSSet(address currencyOSAddr);
+    event RevokeGovernance(address _sender);
+
     modifier onlyCurrencyOS() {
         require(msg.sender == currencyOS, "You are not CurrencyOS contract.");
+        _;
+    }
+
+    modifier onlyGovernance() {
+        require(msg.sender == governance, "You are not the governer.");
         _;
     }
 
@@ -57,15 +65,13 @@ contract Currency is ERC20Permit, ICurrency {
     }
 
     function setCurrencyOS(address _currencyOSAddr) public onlyGovernance {
+        require(_currencyOSAddr != address(0), "CurrencyOS address is null address.");
         currencyOS = _currencyOSAddr;
+        emit CurrencyOSSet(currencyOS);
     }
 
     function revokeGovernance() public onlyGovernance {
         governance = address(0);
-    }
-
-    modifier onlyGovernance() {
-        require(msg.sender == governance, "You are not the governer.");
-        _;
+        emit RevokeGovernance(msg.sender);
     }
 }

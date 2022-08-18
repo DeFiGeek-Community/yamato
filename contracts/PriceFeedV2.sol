@@ -28,23 +28,6 @@ import "hardhat/console.sol";
  * Chainlink oracle.
  */
 contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
-    struct ChainlinkResponse {
-        uint80 roundId;
-        int256 answer;
-        uint256 timestamp;
-        bool success;
-        uint8 decimals;
-        int256 subAnswer;
-        uint8 subDecimal;
-    }
-
-    struct TellorResponse {
-        bool ifRetrieve;
-        uint256 value;
-        uint256 timestamp;
-        bool success;
-    }
-
     /*
         =========================
         ~~~ SAFE HAVEN ~~~
@@ -151,6 +134,80 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
     }
 
     // --- Functions ---
+
+    function ethPriceAggregatorInUSD()
+        public
+        view
+        override
+        returns (address _ethPriceAggregatorInUSD)
+    {
+        bytes32 EthPriceAggregatorInUSD_KEY = bytes32(
+            keccak256(abi.encode(EthPriceAggregatorInUSD_SLOT_ID))
+        );
+        assembly {
+            _ethPriceAggregatorInUSD := sload(EthPriceAggregatorInUSD_KEY)
+        }
+    }
+
+    function jpyPriceAggregatorInUSD()
+        public
+        view
+        override
+        returns (address _jpyPriceAggregatorInUSD)
+    {
+        bytes32 JpyPriceAggregatorInUSD_KEY = bytes32(
+            keccak256(abi.encode(JpyPriceAggregatorInUSD_SLOT_ID))
+        );
+        assembly {
+            _jpyPriceAggregatorInUSD := sload(JpyPriceAggregatorInUSD_KEY)
+        }
+    }
+
+    function tellorCaller()
+        public
+        view
+        override
+        returns (address _tellorCaller)
+    {
+        bytes32 TellorCaller_KEY = bytes32(
+            keccak256(abi.encode(TellorCaller_SLOT_ID))
+        );
+        assembly {
+            _tellorCaller := sload(TellorCaller_KEY)
+        }
+    }
+
+    function fetchPrice() external override returns (uint256) {
+        (uint256 _price, Status _status, bool _isAdjusted) = _simulatePrice();
+
+        _changeStatus(_status);
+
+        _storePrice(_price);
+
+        if (_isAdjusted) {
+            lastAdjusted = block.number;
+        }
+
+        return _price;
+    }
+
+    function getPrice() external view override returns (uint256) {
+        (uint256 _price,,) = _simulatePrice();
+
+        return _price;
+    }
+
+    function getStatus() external view override returns (Status) {
+        (, Status _status,) = _simulatePrice();
+
+        return _status;
+    }
+
+    function getIsAdjusted() external view override returns (bool) {
+        (,, bool _isAdjusted) = _simulatePrice();
+
+        return _isAdjusted;
+    }
 
     /// @dev An internal function to dry run oracle usage determination logic. Can use it for view func or write func. ChainLink is the main oracle.
     function _simulatePrice()
@@ -518,38 +575,6 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
         }
     }
 
-    function fetchPrice() external override returns (uint256) {
-        (uint256 _price, Status _status, bool _isAdjusted) = _simulatePrice();
-
-        _changeStatus(_status);
-
-        _storePrice(_price);
-
-        if (_isAdjusted) {
-            lastAdjusted = block.number;
-        }
-
-        return _price;
-    }
-
-    function getPrice() external view override returns (uint256) {
-        (uint256 _price, Status _status, bool _isAdjusted) = _simulatePrice();
-
-        return _price;
-    }
-
-    function getStatus() external view override returns (Status) {
-        (uint256 _price, Status _status, bool _isAdjusted) = _simulatePrice();
-
-        return _status;
-    }
-
-    function getIsAdjusted() external view override returns (bool) {
-        (uint256 _price, Status _status, bool _isAdjusted) = _simulatePrice();
-
-        return _isAdjusted;
-    }
-
     // --- Helper functions ---
 
     /* Chainlink is considered broken if its current or previous round data is in any way bad. We check the previous round
@@ -763,7 +788,7 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
     function _scaleChainlinkPriceByDigits(uint256 _price, uint256 _answerDigits)
         internal
         pure
-        returns (uint256)
+        returns (uint256 price)
     {
         /*
          * Convert the price returned by the Chainlink oracle to an 18-digit decimal for use by Liquity.
@@ -771,11 +796,10 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
          * future changes.
          *
          */
-        uint256 price;
         if (_answerDigits >= TARGET_DIGITS) {
             // Scale the returned price value down to Liquity's target precision
             price = _price / (10**(_answerDigits - TARGET_DIGITS));
-        } else if (_answerDigits < TARGET_DIGITS) {
+        } else {
             // Scale the returned price value up to Liquity's target precision
             price = _price * (10**(TARGET_DIGITS - _answerDigits));
         }
@@ -785,9 +809,9 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
     function _scaleTellorPriceByDigits(uint256 _price)
         internal
         pure
-        returns (uint256)
+        returns (uint256 price)
     {
-        return _price * (10**(TARGET_DIGITS - TELLOR_DIGITS));
+        return price = _price * (10**(TARGET_DIGITS - TELLOR_DIGITS));
     }
 
     function _changeStatus(Status _status) internal {
@@ -974,48 +998,6 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
         } catch {
             // If call to Chainlink aggregator reverts, return a zero response with success = false
             return prevChainlinkResponse;
-        }
-    }
-
-    function ethPriceAggregatorInUSD()
-        public
-        view
-        override
-        returns (address _ethPriceAggregatorInUSD)
-    {
-        bytes32 EthPriceAggregatorInUSD_KEY = bytes32(
-            keccak256(abi.encode(EthPriceAggregatorInUSD_SLOT_ID))
-        );
-        assembly {
-            _ethPriceAggregatorInUSD := sload(EthPriceAggregatorInUSD_KEY)
-        }
-    }
-
-    function jpyPriceAggregatorInUSD()
-        public
-        view
-        override
-        returns (address _jpyPriceAggregatorInUSD)
-    {
-        bytes32 JpyPriceAggregatorInUSD_KEY = bytes32(
-            keccak256(abi.encode(JpyPriceAggregatorInUSD_SLOT_ID))
-        );
-        assembly {
-            _jpyPriceAggregatorInUSD := sload(JpyPriceAggregatorInUSD_KEY)
-        }
-    }
-
-    function tellorCaller()
-        public
-        view
-        override
-        returns (address _tellorCaller)
-    {
-        bytes32 TellorCaller_KEY = bytes32(
-            keccak256(abi.encode(TellorCaller_SLOT_ID))
-        );
-        assembly {
-            _tellorCaller := sload(TellorCaller_KEY)
         }
     }
 }

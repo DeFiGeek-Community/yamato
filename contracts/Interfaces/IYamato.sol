@@ -18,15 +18,7 @@ interface IYamato {
         uint256 priority;
     }
     struct FlashLockData {
-        uint256 blockHeight;
-        bool depositLock;
-        bool borrowLock;
-        bool withdrawLock;
-    }
-    enum FlashLockTypes {
-        DEPOSIT_LOCK,
-        BORROW_LOCK,
-        WITHDRAW_LOCK
+        uint256 lockedBlockHeight;
     }
 
     event Deposited(address indexed sender, uint256 ethAmount);
@@ -56,12 +48,9 @@ interface IYamato {
 
     function getPledge(address _owner) external view returns (Pledge memory);
 
-    function checkFlashLock(address _owner)
-        external
-        view
-        returns (bool _isLocked);
+    function checkFlashLock(address _owner) external view returns (bool _isLocked);
 
-    function setFlashLock(address _owner, FlashLockTypes _types) external;
+    function setFlashLock(address _owner) external;
 
     function getStates()
         external
@@ -75,7 +64,7 @@ interface IYamato {
             uint8
         );
 
-    function feed() external view returns (address);
+    function priceFeed() external view returns (address);
 
     function currencyOS() external view returns (address);
 

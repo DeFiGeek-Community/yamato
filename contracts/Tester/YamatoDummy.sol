@@ -39,7 +39,7 @@ contract YamatoDummy {
         governance = msg.sender;
         tester = msg.sender;
         feePool = ICurrencyOS(currencyOS).feePool();
-        feed = ICurrencyOS(currencyOS).feed();
+        feed = ICurrencyOS(currencyOS).priceFeed();
     }
 
     function setPriorityRegistry(address _priorityRegistry)

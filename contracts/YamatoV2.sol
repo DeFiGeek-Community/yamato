@@ -227,56 +227,15 @@ contract YamatoV2 is
         onlyYamato
         returns (bool _isLocked)
     {
-        FlashLockData storage lock = flashlocks[_owner];
-        if (lock.blockHeight == block.number) {
-            _isLocked =
-                lock.depositLock ||
-                lock.borrowLock ||
-                lock.withdrawLock;
-        }
     }
 
-    function setFlashLock(address _owner, FlashLockTypes _types)
+
+    function setFlashLock(address _owner)
         public
         override
         onlyYamato
     {
-        FlashLockData storage lock = flashlocks[_owner];
-        require(
-            lock.blockHeight <= block.number,
-            "FlashLock.blockHeight can't be more than currenct blockheight."
-        );
 
-        if (_types == FlashLockTypes.DEPOSIT_LOCK) {
-            if (lock.blockHeight < block.number) {
-                // Initialize if first lock attempt.
-                lock.blockHeight = block.number;
-                lock.borrowLock = false;
-                lock.withdrawLock = false;
-            }
-            // Just add a flag if consequential lock attempt.
-            lock.depositLock = true;
-        } else if (_types == FlashLockTypes.BORROW_LOCK) {
-            if (lock.blockHeight < block.number) {
-                // Initialize if first lock attempt.
-                lock.blockHeight = block.number;
-                lock.depositLock = false;
-                lock.withdrawLock = false;
-            }
-            // Just add a flag if consequential lock attempt.
-            lock.borrowLock = true;
-        } else if (_types == FlashLockTypes.WITHDRAW_LOCK) {
-            if (lock.blockHeight < block.number) {
-                // Initialize if first lock attempt.
-                lock.blockHeight = block.number;
-                lock.depositLock = false;
-                lock.borrowLock = false;
-            }
-            // Just add a flag if consequential lock attempt.
-            lock.withdrawLock = true;
-        } else {
-            revert("Invalid FlashLockTypes given.");
-        }
     }
 
     modifier onlyYamato() override {
@@ -406,7 +365,7 @@ contract YamatoV2 is
     ==============================
         - getPledge
         - getStates
-        - getIndivisualStates
+        - getIndividualStates
     */
 
     /// @notice To give pledge access to YmtOS
@@ -437,8 +396,8 @@ contract YamatoV2 is
         return (totalColl, totalDebt, MCR, RRR, SRR, GRR);
     }
 
-    /// @notice Provide the data of indivisual pledge.
-    function getIndivisualStates(address owner)
+    /// @notice Provide the data of individual pledge.
+    function getIndividualStates(address owner)
         public
         view
         returns (
@@ -553,13 +512,13 @@ contract YamatoV2 is
     }
 
     // @dev Yamato.sol must override it with correct logic.
-    function feed()
+    function priceFeed()
         public
         view
         override(IYamato, YamatoBase)
         returns (address)
     {
-        return ICurrencyOS(currencyOS()).feed();
+        return ICurrencyOS(currencyOS()).priceFeed();
     }
 
     // @dev All YamatoStores and YamatoActions except Yamato.sol are NOT needed to modify these funcs. Just write the same signature and don't fill inside. Yamato.sol must override it with correct logic.

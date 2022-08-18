@@ -72,7 +72,7 @@ contract PriorityRegistry is IPriorityRegistry, YamatoStore {
         /* 
             2. insert new pledge
         */
-        uint256 _newICRpercent = floor(_pledge.getICR(feed()));
+        uint256 _newICRpercent = floor(_pledge.getICR(priceFeed()));
         require(
             _newICRpercent <= floor(2**256 - 1),
             "priority can't be that big."
@@ -191,7 +191,7 @@ contract PriorityRegistry is IPriorityRegistry, YamatoStore {
 
         // Note: Don't check LICR, real ICR is the matter.
         require(
-            floor(poppedPledge.getICR(feed())) <
+            floor(poppedPledge.getICR(priceFeed())) <
                 uint256(IYamato(yamato()).MCR()),
             "You can't redeem if redeemable candidate is more than MCR."
         );
@@ -354,7 +354,7 @@ contract PriorityRegistry is IPriorityRegistry, YamatoStore {
             for (uint256 j = 0; j < levelIndice[i].length; j++) {
                 _cap +=
                     (leveledPledges[i][levelIndice[i][j]].coll *
-                        IPriceFeed(feed()).lastGoodPrice()) /
+                        IPriceFeed(priceFeed()).lastGoodPrice()) /
                     1e18;
             }
         }
