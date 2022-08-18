@@ -33,7 +33,7 @@ contract YamatoWithdrawerV2 is IYamatoWithdrawer, YamatoAction {
         __YamatoAction_init(_yamato);
     }
 
-    // @dev no reentrancy guard because action funcs are protected by permitDeps()
+    /// @dev no reentrancy guard because action funcs are protected by permitDeps()
     function runWithdraw(address _sender, uint256 _ethAmount)
         public
         override

@@ -52,10 +52,14 @@ contract PoolV2 is IPool, YamatoStore, ReentrancyGuardUpgradeable {
         __YamatoStore_init(_yamato);
     }
 
+    /// @notice Store ETH for new deposit.
+    /// @dev selfdestruct(address) can increase balance. Be sure that totalColl and balance can be different.
     receive() external payable onlyYamato {
         emit ETHLocked(msg.sender, msg.value, address(this).balance);
     }
 
+    /// @notice Mint new currency and save it to this pool.
+    /// @dev This only be used by YamatoBorrower and reserve is always minted, not transfered.
     function depositRedemptionReserve(uint256 amount)
         public
         override
@@ -70,6 +74,8 @@ contract PoolV2 is IPool, YamatoStore, ReentrancyGuardUpgradeable {
         emit RedemptionReserveDeposited(msg.sender, amount, redemptionReserve);
     }
 
+    /// @notice Reduce redemption budget.
+    /// @dev Please be careful that this is not atomic with sendCurrency.
     function useRedemptionReserve(uint256 amount) public override onlyYamato {
         require(
             redemptionReserve >= amount,
@@ -81,6 +87,8 @@ contract PoolV2 is IPool, YamatoStore, ReentrancyGuardUpgradeable {
         emit RedemptionReserveUsed(msg.sender, amount, redemptionReserve);
     }
 
+    /// @notice Mint new currency and save it to this pool.
+    /// @dev This only be used by YamatoBorrower and reserve is always minted, not transfered.
     function depositSweepReserve(uint256 amount) public override onlyYamato {
         ICurrencyOS(IYamato(yamato()).currencyOS()).mintCurrency(
             address(this),
@@ -90,6 +98,8 @@ contract PoolV2 is IPool, YamatoStore, ReentrancyGuardUpgradeable {
         emit SweepReserveDeposited(msg.sender, amount, sweepReserve);
     }
 
+    /// @notice Reduce sweep budget.
+    /// @dev Please be careful that this is not atomic with sendCurrency.
     function useSweepReserve(uint256 amount) public override onlyYamato {
         require(
             sweepReserve >= amount,
@@ -101,6 +111,8 @@ contract PoolV2 is IPool, YamatoStore, ReentrancyGuardUpgradeable {
         emit SweepReserveUsed(msg.sender, amount, sweepReserve);
     }
 
+    /// @notice Transfer ETH from Pool to recipient.
+    /// @dev Assume balance is greater than equal totalColl due to consistent logic and selfdestruct(address)
     function sendETH(address recipient, uint256 amount)
         public
         override
@@ -116,6 +128,7 @@ contract PoolV2 is IPool, YamatoStore, ReentrancyGuardUpgradeable {
         emit ETHSent(msg.sender, recipient, amount, address(this).balance);
     }
 
+    /// @notice Send currency from Pool to recipient
     function sendCurrency(address recipient, uint256 amount)
         public
         override

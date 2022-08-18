@@ -135,6 +135,7 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
 
     // --- Functions ---
 
+    /// @notice ChainLink ETH-USD oracle contract
     function ethPriceAggregatorInUSD()
         public
         view
@@ -149,6 +150,7 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
         }
     }
 
+    /// @notice ChainLink JPY-USD oracle contract
     function jpyPriceAggregatorInUSD()
         public
         view
@@ -163,6 +165,7 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
         }
     }
 
+    /// @notice Tellor ETH-JPY oracle contract
     function tellorCaller()
         public
         view
@@ -177,6 +180,7 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
         }
     }
 
+    /// @notice Mutable price getter.
     function fetchPrice() external override returns (uint256) {
         (uint256 _price, Status _status, bool _isAdjusted) = _simulatePrice();
 
@@ -191,18 +195,21 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
         return _price;
     }
 
+    /// @notice Immutable price getter.
     function getPrice() external view override returns (uint256) {
         (uint256 _price, , ) = _simulatePrice();
 
         return _price;
     }
 
+    /// @notice Immutable status getter.
     function getStatus() external view override returns (Status) {
         (, Status _status, ) = _simulatePrice();
 
         return _status;
     }
 
+    /// @notice Immutable drastic-change adjusting flag getter.
     function getIsAdjusted() external view override returns (bool) {
         (, , bool _isAdjusted) = _simulatePrice();
 
@@ -661,6 +668,7 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
         return percentDeviation > MAX_PRICE_DEVIATION_FROM_PREVIOUS_ROUND;
     }
 
+    /// @notice internal logic of tellor mulfunctioning flag
     function _tellorIsBroken(TellorResponse memory _response)
         internal
         view
@@ -682,6 +690,7 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
         return false;
     }
 
+    /// @notice internal logic of tellor stopping flag
     function _tellorIsFrozen(TellorResponse memory _tellorResponse)
         internal
         view
@@ -690,6 +699,7 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
         return block.timestamp - _tellorResponse.timestamp > TIMEOUT;
     }
 
+    /// @notice Recovery logic of malfunctioning oracles
     function _bothOraclesLiveAndUnbrokenAndSimilarPrice(
         ChainlinkResponse memory _chainlinkResponse,
         ChainlinkResponse memory _prevChainlinkResponse,
@@ -708,6 +718,7 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
         return _bothOraclesSimilarPrice(_chainlinkResponse, _tellorResponse);
     }
 
+    /// @notice Price comparison logic of the two oracles.
     function _bothOraclesSimilarPrice(
         ChainlinkResponse memory _chainlinkResponse,
         TellorResponse memory _tellorResponse
@@ -739,6 +750,7 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
         return percentPriceDifference <= MAX_PRICE_DIFFERENCE_BETWEEN_ORACLES;
     }
 
+    /// @notice Price comparison between currenct latest price and tellor
     function _tellorAndLastGoodPriceSimilarPrice(
         TellorResponse memory _tellorResponse
     ) internal view returns (bool) {
@@ -754,6 +766,7 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
             MAX_PRICE_DIFFERENCE_FOR_TELLOR_ADJUSTMENT;
     }
 
+    /// @notice A drastic change mitigator which is not implemented in Liquity's PriceFeed
     function _safeUsingTellorOrGracefulAdjustment(
         TellorResponse memory _tellorResponse,
         Status _inheritedStatus
@@ -778,6 +791,17 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
                 1e18;
             _status = Status.bothOraclesUntrusted;
             _isAdjusted = true;
+        } else if (
+            _tellorAndLastGoodPriceSimilarPrice(_tellorResponse) == false &&
+            /* CL is broken and Tellor is far away! Danger zone! */
+            (lastAdjusted == 0 ||
+                lastAdjusted + ADJUSTMENT_COOLTIME >= block.number)
+        ) {
+            // Note: It means, adjusted once, and tried "fetchPrice" again.
+            //       Must use lastGoodPrice, not Tellor's potentially-fructuated price.
+            _price = lastGoodPrice;
+            _status = _inheritedStatus;
+            _isAdjusted = false; // Note: Don't update "lastAdjusted".
         } else {
             _price = _scaleTellorPriceByDigits(_tellorResponse.value);
             _status = _inheritedStatus;
@@ -785,6 +809,7 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
         }
     }
 
+    /// @notice Internal calculator of ChainLink digits padding.
     function _scaleChainlinkPriceByDigits(uint256 _price, uint256 _answerDigits)
         internal
         pure
@@ -806,6 +831,7 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
         return price;
     }
 
+    /// @notice Internal calculator of Tellor digits padding.
     function _scaleTellorPriceByDigits(uint256 _price)
         internal
         pure
@@ -814,17 +840,20 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
         return price = _price * (10**(TARGET_DIGITS - TELLOR_DIGITS));
     }
 
+    /// @notice Internal status changer.
     function _changeStatus(Status _status) internal {
         status = _status;
         emit PriceFeedStatusChanged(_status);
     }
 
+    /// @notice Internal price changer.
     function _storePrice(uint256 _currentPrice) internal {
         lastGoodPrice = _currentPrice;
         lastSeen = block.number;
         emit LastGoodPriceUpdated(_currentPrice);
     }
 
+    /// @notice Internal price changer with digits calc.
     function _storeTellorPrice(TellorResponse memory _tellorResponse)
         internal
         returns (uint256)
@@ -837,6 +866,7 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
         return scaledTellorPrice;
     }
 
+    /// @notice Internal price changer with digits calc.
     function _storeChainlinkPrice(ChainlinkResponse memory _chainlinkResponse)
         internal
         returns (uint256)
@@ -852,6 +882,7 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
 
     // --- Oracle response wrapper functions ---
 
+    /// @notice Tellor oracle response wrapper
     function _getCurrentTellorResponse()
         internal
         view
@@ -875,6 +906,7 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
         }
     }
 
+    /// @notice ChainLink oracle response wrapper
     function _getCurrentChainlinkResponse()
         internal
         view
@@ -958,6 +990,7 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
         return chainlinkResponse;
     }
 
+    /// @notice ChainLink's older oracle response wrapper
     function _getPrevChainlinkResponse(
         uint80 _currentRoundId,
         uint8 _currentDecimals,

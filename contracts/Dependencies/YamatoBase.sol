@@ -32,7 +32,7 @@ contract YamatoBase is UUPSBase {
         }
     }
 
-    // @dev All YamatoStores and YamatoActions except Yamato.sol are NOT needed to modify these funcs. Just write the same signature and don't fill inside. Yamato.sol must override it with correct logic.
+    /// @dev All YamatoStores and YamatoActions except Yamato.sol are NOT needed to modify these funcs. Just write the same signature and don't fill inside. Yamato.sol must override it with correct logic.
     function yamato() public view virtual returns (address _yamato) {
         bytes32 YAMATO_KEY = bytes32(keccak256(abi.encode(YAMATO_SLOT_ID)));
         assembly {
@@ -40,22 +40,22 @@ contract YamatoBase is UUPSBase {
         }
     }
 
-    // @dev All YamatoStores and YamatoActions except Yamato.sol are NOT needed to modify these funcs. Just write the same signature and don't fill inside. Yamato.sol must override it with correct logic.
+    /// @dev All YamatoStores and YamatoActions except Yamato.sol are NOT needed to modify these funcs. Just write the same signature and don't fill inside. Yamato.sol must override it with correct logic.
     function currencyOS() public view virtual returns (address) {
         return IYamato(yamato()).currencyOS();
     }
 
-    // @dev All YamatoStores and YamatoActions except Yamato.sol are NOT needed to modify these funcs. Just write the same signature and don't fill inside. Yamato.sol must override it with correct logic.
+    /// @dev All YamatoStores and YamatoActions except Yamato.sol are NOT needed to modify these funcs. Just write the same signature and don't fill inside. Yamato.sol must override it with correct logic.
     function feePool() public view virtual returns (address) {
         return ICurrencyOS(currencyOS()).feePool();
     }
 
-    // @dev All YamatoStores and YamatoActions except Yamato.sol are NOT needed to modify these funcs. Just write the same signature and don't fill inside. Yamato.sol must override it with correct logic.
+    /// @dev All YamatoStores and YamatoActions except Yamato.sol are NOT needed to modify these funcs. Just write the same signature and don't fill inside. Yamato.sol must override it with correct logic.
     function priceFeed() public view virtual returns (address) {
         return ICurrencyOS(currencyOS()).priceFeed();
     }
 
-    // @dev All YamatoStores and YamatoActions except Yamato.sol are NOT needed to modify these funcs. Just write the same signature and don't fill inside. Yamato.sol must override it with correct logic.
+    /// @dev All YamatoStores and YamatoActions except Yamato.sol are NOT needed to modify these funcs. Just write the same signature and don't fill inside. Yamato.sol must override it with correct logic.
     function permitDeps(address _sender) public view virtual returns (bool) {
         return IYamato(yamato()).permitDeps(_sender);
     }

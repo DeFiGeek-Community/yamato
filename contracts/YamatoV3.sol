@@ -134,6 +134,7 @@ contract YamatoV3 is
         __YamatoStore_init(address(this));
     }
 
+    /// @dev UUPS enforces you to modularise your contract into many because UUPS takes ~15KB/24.576KB of contract size limitation.
     function setDeps(
         address _yamatoDepositor,
         address _yamatoBorrower,
@@ -205,6 +206,7 @@ contract YamatoV3 is
         - setDepositAndBorrowLocks
         - setWithdrawLocks
     */
+    /// @dev Only-yamato-package state mutation func
     function setPledge(address _owner, Pledge memory _p)
         public
         override
@@ -233,6 +235,7 @@ contract YamatoV3 is
         }
     }
 
+    /// @dev Only-yamato-package state mutation func
     function setPledges(Pledge[] memory _pledges)
         public
         override(IYamatoV3)
@@ -247,14 +250,20 @@ contract YamatoV3 is
         }
     }
 
+    /// @dev Only-yamato-package state mutation func
+    /// @dev totalColl is theoretically as same as all pledges.coll - but it can be differ from Pool.balance due to selfdestruct(address)
     function setTotalColl(uint256 _totalColl) public override onlyYamato {
         totalColl = _totalColl;
     }
 
+    /// @dev Only-yamato-package state mutation func
+    /// @dev totalDebt is theoretically as same as Currency.totalSupply()
     function setTotalDebt(uint256 _totalDebt) public override onlyYamato {
         totalDebt = _totalDebt;
     }
 
+    /// @dev Only-yamato-package state mutation func
+    /// @dev deposit-borrow-withdraw should not be in the same block to avoid flashloan attack.
     function checkFlashLock(address _owner)
         public
         view
@@ -268,6 +277,7 @@ contract YamatoV3 is
         }
     }
 
+    /// @dev Only-yamato-package state mutation func
     function setFlashLock(address _owner) public override onlyYamato {
         FlashLockData storage lock = flashlocks[_owner];
         require(
@@ -386,6 +396,7 @@ contract YamatoV3 is
         - toggle
     */
 
+    /// @dev Pausable
     function toggle() external onlyGovernance {
         if (paused()) {
             _unpause();
@@ -451,6 +462,7 @@ contract YamatoV3 is
         return address(this);
     }
 
+    /// @dev Get pool UUPS proxy address from slot
     function pool() public view override returns (address _pool) {
         bytes32 POOL_KEY = bytes32(keccak256(abi.encode(POOL_SLOT_ID)));
         assembly {
@@ -458,6 +470,7 @@ contract YamatoV3 is
         }
     }
 
+    /// @dev Get priorityRegistry UUPS proxy address from slot
     function priorityRegistry()
         public
         view
@@ -472,6 +485,7 @@ contract YamatoV3 is
         }
     }
 
+    /// @dev Get depositor UUPS proxy address from slot
     function depositor() public view override returns (address _depositor) {
         bytes32 YAMATO_DEPOSITOR_KEY = bytes32(
             keccak256(abi.encode(YAMATO_DEPOSITOR_SLOT_ID))
@@ -481,6 +495,7 @@ contract YamatoV3 is
         }
     }
 
+    /// @dev Get borrower UUPS proxy address from slot
     function borrower() public view override returns (address _borrower) {
         bytes32 YAMATO_BORROWER_KEY = bytes32(
             keccak256(abi.encode(YAMATO_BORROWER_SLOT_ID))
@@ -490,6 +505,7 @@ contract YamatoV3 is
         }
     }
 
+    /// @dev Get repayer UUPS proxy address from slot
     function repayer() public view override returns (address _repayer) {
         bytes32 YAMATO_REPAYER_KEY = bytes32(
             keccak256(abi.encode(YAMATO_REPAYER_SLOT_ID))
@@ -499,6 +515,7 @@ contract YamatoV3 is
         }
     }
 
+    /// @dev Get withdrawer UUPS proxy address from slot
     function withdrawer() public view override returns (address _withdrawer) {
         bytes32 YAMATO_WITHDRAWER_KEY = bytes32(
             keccak256(abi.encode(YAMATO_WITHDRAWER_SLOT_ID))
@@ -508,6 +525,7 @@ contract YamatoV3 is
         }
     }
 
+    /// @dev Get redeemer UUPS proxy address from slot
     function redeemer() public view override returns (address _redeemer) {
         bytes32 YAMATO_REDEEMER_KEY = bytes32(
             keccak256(abi.encode(YAMATO_REDEEMER_SLOT_ID))
@@ -517,6 +535,7 @@ contract YamatoV3 is
         }
     }
 
+    /// @dev Get sweeper UUPS proxy address from slot
     function sweeper() public view override returns (address _sweeper) {
         bytes32 YAMATO_SWEEPER_KEY = bytes32(
             keccak256(abi.encode(YAMATO_SWEEPER_SLOT_ID))
@@ -526,7 +545,7 @@ contract YamatoV3 is
         }
     }
 
-    // @dev Yamato.sol must override it with correct logic.
+    /// @dev Yamato.sol must override it with correct logic.
     function currencyOS()
         public
         view
@@ -541,12 +560,12 @@ contract YamatoV3 is
         }
     }
 
-    // @dev Yamato.sol must override it with correct logic.
+    /// @dev Yamato.sol must override it with correct logic.
     function feePool() public view override returns (address) {
         return ICurrencyOS(currencyOS()).feePool();
     }
 
-    // @dev Yamato.sol must override it with correct logic.
+    /// @dev Yamato.sol must override it with correct logic.
     function priceFeed()
         public
         view
@@ -556,7 +575,7 @@ contract YamatoV3 is
         return ICurrencyOS(currencyOS()).priceFeed();
     }
 
-    // @dev All YamatoStores and YamatoActions except Yamato.sol are NOT needed to modify these funcs. Just write the same signature and don't fill inside. Yamato.sol must override it with correct logic.
+    /// @dev All YamatoStores and YamatoActions except Yamato.sol are NOT needed to modify these funcs. Just write the same signature and don't fill inside. Yamato.sol must override it with correct logic.
     function permitDeps(address _sender)
         public
         view
@@ -571,6 +590,7 @@ contract YamatoV3 is
         return permit;
     }
 
+    /// @dev Get package-deps to check onlyYamato-permitDeps logic
     function getDeps() public view returns (address[9] memory) {
         return [
             address(this),
@@ -585,6 +605,11 @@ contract YamatoV3 is
         ];
     }
 
+    /*
+     * Only for test
+     */
+
+    /// @dev For test
     function setPriorityRegistry(address _priorityRegistry)
         external
         onlyGovernance

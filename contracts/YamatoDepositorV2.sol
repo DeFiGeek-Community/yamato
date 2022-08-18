@@ -34,7 +34,7 @@ contract YamatoDepositorV2 is IYamatoDepositor, YamatoAction {
         __YamatoAction_init(_yamato);
     }
 
-    // @dev no reentrancy guard because action funcs are protected by permitDeps()
+    /// @dev no reentrancy guard because action funcs are protected by permitDeps()
     function runDeposit(address _sender) public payable override onlyYamato {
         IPriceFeedV2(priceFeed()).fetchPrice();
         uint256 _ethAmount = msg.value;

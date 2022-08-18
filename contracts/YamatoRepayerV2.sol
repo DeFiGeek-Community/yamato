@@ -33,6 +33,7 @@ contract YamatoRepayerV2 is IYamatoRepayer, YamatoAction {
         __YamatoAction_init(_yamato);
     }
 
+    /// @dev Package-separated repay function which only be called by YamatoV(n).sol
     function runRepay(address _sender, uint256 _repayAmountInCurrency)
         public
         override
