@@ -13,7 +13,7 @@ interface ICurrencyOS {
 
     function burnCurrency(address to, uint256 amount) external;
 
-    function feed() external view returns (address);
+    function priceFeed() external view returns (address);
 
     function feePool() external view returns (address);
 

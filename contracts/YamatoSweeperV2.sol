@@ -11,7 +11,7 @@ pragma solidity 0.8.4;
 
 import "./Pool.sol";
 import "./YMT.sol";
-import "./PriceFeed.sol";
+import "./PriceFeedV2.sol";
 import "./Dependencies/YamatoAction.sol";
 import "./Dependencies/PledgeLib.sol";
 import "./Dependencies/SafeMath.sol";
@@ -21,7 +21,6 @@ import "./Interfaces/IYamatoV3.sol";
 import "./Interfaces/IFeePool.sol";
 import "./Interfaces/ICurrencyOS.sol";
 import "./Interfaces/IYamatoSweeper.sol";
-import "./Interfaces/IPriorityRegistry.sol";
 import "./Interfaces/IPriorityRegistryV6.sol";
 import "hardhat/console.sol";
 
@@ -36,7 +35,7 @@ contract YamatoSweeperV2 is IYamatoSweeper, YamatoAction {
         __YamatoAction_init(_yamato);
     }
 
-    // @dev no reentrancy guard because action funcs are protected by permitDeps()
+    /// @dev no reentrancy guard because action funcs are protected by permitDeps()
     function runSweep(address _sender)
         public
         override
@@ -47,7 +46,7 @@ contract YamatoSweeperV2 is IYamatoSweeper, YamatoAction {
             address[] memory _pledgesOwner
         )
     {
-        IPriceFeed(feed()).fetchPrice();
+        IPriceFeedV2(priceFeed()).fetchPrice();
 
         IYamatoSweeper.Vars memory vars;
 
@@ -163,9 +162,7 @@ contract YamatoSweeperV2 is IYamatoSweeper, YamatoAction {
         );
     }
 
-    /*
-        @dev Deprecated in V2.
-    */
+    /// @dev Deprecated in V2.
     function sweepDebt(IYamato.Pledge memory sPledge, uint256 maxSweeplable)
         public
         override

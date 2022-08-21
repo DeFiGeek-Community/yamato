@@ -74,7 +74,7 @@ contract PriorityRegistryV5 is IPriorityRegistryV4, YamatoStore {
             2. insert new pledge
         */
 
-        uint256 _newICRpercent = floor(_pledge.getICR(feed()));
+        uint256 _newICRpercent = floor(_pledge.getICR(priceFeed()));
 
         require(
             _newICRpercent <= floor(2**256 - 1),
@@ -188,7 +188,7 @@ contract PriorityRegistryV5 is IPriorityRegistryV4, YamatoStore {
             rankedQueueNextout(LICR)
         );
         IYamato.Pledge memory poppedPledge;
-        uint256 _icr = poppablePledge.getICR(feed());
+        uint256 _icr = poppablePledge.getICR(priceFeed());
 
         /*
             Overrun redemption; otherwise, naive redemption
@@ -211,7 +211,7 @@ contract PriorityRegistryV5 is IPriorityRegistryV4, YamatoStore {
 
         // Note: priority can be more than MCR, real ICR is the matter. ICR13000 pledge breaks here.
         require(
-            poppedPledge.getICR(feed()) < _mcr,
+            poppedPledge.getICR(priceFeed()) < _mcr,
             "You can't redeem if redeemable candidate is more than MCR."
         );
 
@@ -421,14 +421,14 @@ contract PriorityRegistryV5 is IPriorityRegistryV4, YamatoStore {
     function getRedeemablesCap() external view returns (uint256 _cap) {
         uint256 _mcrPercent = uint256(IYamato(yamato()).MCR());
         uint256 _checkpoint = _mcrPercent + CHECKPOINT_BUFFER;
-        uint256 ethPriceInCurrency = IPriceFeed(feed()).lastGoodPrice();
+        uint256 ethPriceInCurrency = IPriceFeed(priceFeed()).lastGoodPrice();
 
         uint256 _rank = 1;
         uint256 _nextout = rankedQueueNextout(_rank);
         uint256 _count = pledgeLength -
             (rankedQueueLen(0) + rankedQueueLen(floor(2**256 - 1)));
         IYamato.Pledge memory _pledge = getRankedQueue(_rank, _nextout);
-        uint256 _icr = _pledge.getICR(feed());
+        uint256 _icr = _pledge.getICR(priceFeed());
         while (true) {
             if (
                 _icr > _mcrPercent * 100 || _count == 0 || _rank >= _checkpoint
@@ -464,7 +464,7 @@ contract PriorityRegistryV5 is IPriorityRegistryV4, YamatoStore {
                 }
             }
             _pledge = getRankedQueue(_rank, _nextout);
-            _icr = _pledge.getICR(feed());
+            _icr = _pledge.getICR(priceFeed());
         }
     }
 

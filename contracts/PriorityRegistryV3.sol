@@ -75,7 +75,7 @@ contract PriorityRegistryV3 is IPriorityRegistryV3, YamatoStore {
             2. insert new pledge
         */
 
-        uint256 _newICRpercent = floor(_pledge.getICR(feed()));
+        uint256 _newICRpercent = floor(_pledge.getICR(priceFeed()));
 
         require(
             _newICRpercent <= floor(2**256 - 1),
@@ -182,7 +182,7 @@ contract PriorityRegistryV3 is IPriorityRegistryV3, YamatoStore {
 
         // Note: Don't check priority, real ICR is the matter. ICR13000 pledge breaks here.
         require(
-            poppedPledge.getICR(feed()) <
+            poppedPledge.getICR(priceFeed()) <
                 uint256(IYamato(yamato()).MCR()) * 100,
             "You can't redeem if redeemable candidate is more than MCR."
         );
@@ -427,7 +427,7 @@ contract PriorityRegistryV3 is IPriorityRegistryV3, YamatoStore {
 
     function getRedeemablesCap() external view returns (uint256 _cap) {
         uint256 mcrPercent = uint256(IYamato(yamato()).MCR());
-        uint256 ethPriceInCurrency = IPriceFeed(feed()).lastGoodPrice();
+        uint256 ethPriceInCurrency = IPriceFeed(priceFeed()).lastGoodPrice();
 
         uint256 _rank = 1;
         uint256 _nextout = rankedQueueNextout(_rank);
@@ -435,7 +435,7 @@ contract PriorityRegistryV3 is IPriorityRegistryV3, YamatoStore {
         while (true) {
             if (rankedQueueLen(_rank) > 0) {
                 _pledge = getRankedQueue(_rank, _nextout);
-                uint256 _icr = _pledge.getICR(feed());
+                uint256 _icr = _pledge.getICR(priceFeed());
                 if (_icr > 13000) {
                     return _cap; // end
                 } else {

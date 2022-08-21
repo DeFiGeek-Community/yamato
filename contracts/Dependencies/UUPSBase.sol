@@ -35,7 +35,7 @@ contract UUPSBase is IUUPSEtherscanVerifiable, Initializable, UUPSUpgradeable {
     }
 
     /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() initializer {}
+    constructor() {}
 
     function _authorizeUpgrade(address) internal override onlyGovernance {}
 
@@ -54,20 +54,16 @@ contract UUPSBase is IUUPSEtherscanVerifiable, Initializable, UUPSUpgradeable {
         );
         _;
     }
-    modifier onlyTester() {
-        require(msg.sender == tester, "You are not the tester.");
-        _;
-    }
 
     /*
         2-phase commit to avoid assigning non-owned address.
     */
-    function setGovernance(address _newGoverner) public onlyGovernance {
+    function setGovernance(address _newGoverner) external onlyGovernance {
         pendingGovernance = _newGoverner;
         emit NewPendingGovernance(_newGoverner);
     }
 
-    function acceptGovernance() public onlyNewGovernance {
+    function acceptGovernance() external onlyNewGovernance {
         governance = pendingGovernance;
         emit UpdateGovernance(governance);
     }
@@ -75,7 +71,7 @@ contract UUPSBase is IUUPSEtherscanVerifiable, Initializable, UUPSUpgradeable {
     /*
         To make the contract immutable.
     */
-    function revokeGovernance() public onlyGovernance {
+    function revokeGovernance() external onlyGovernance {
         governance = address(0);
         emit RevokeGovernance(msg.sender);
     }

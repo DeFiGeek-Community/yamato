@@ -82,7 +82,7 @@ describe("story Events", function () {
       );
 
       // Note: Yamato's constructor needs this mock and so the line below has to be called here.
-      mockCurrencyOS.feed.returns(mockFeed.address);
+      mockCurrencyOS.priceFeed.returns(mockFeed.address);
       mockCurrencyOS.feePool.returns(mockFeePool.address);
       mockCurrencyOS.currency.returns(mockCJPY.address);
 
@@ -336,7 +336,7 @@ describe("story Events", function () {
       mockFeePool = await getFakeProxy<FeePool>("FeePool");
       mockFeed = await getFakeProxy<PriceFeed>("PriceFeed");
       mockCurrencyOS = await smock.fake<CurrencyOS>("CurrencyOS");
-      mockCurrencyOS.feed.returns(mockFeed.address);
+      mockCurrencyOS.priceFeed.returns(mockFeed.address);
       mockCurrencyOS.feePool.returns(mockFeePool.address);
       mockCurrencyOS.currency.returns(mockCJPY.address);
 

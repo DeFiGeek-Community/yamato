@@ -10,7 +10,6 @@ pragma solidity 0.8.4;
 //solhint-disable no-inline-assembly
 
 import "./Pool.sol";
-import "./Interfaces/IPriorityRegistry.sol";
 import "./YMT.sol";
 import "./PriceFeed.sol";
 import "./Interfaces/IYamatoDepositor.sol";
@@ -106,6 +105,17 @@ contract YamatoV3 is
 
     /*
         ==============================
+            Modifier
+        ==============================
+        - onlyYamato
+    */
+    modifier onlyYamato() override {
+        require(permitDeps(msg.sender), "You are not Yamato contract.");
+        _;
+    }
+
+    /*
+        ==============================
             Set-up functions
         ==============================
         - initialize
@@ -124,6 +134,7 @@ contract YamatoV3 is
         __YamatoStore_init(address(this));
     }
 
+    /// @dev UUPS enforces you to modularise your contract into many because UUPS takes ~15KB/24.576KB of contract size limitation.
     function setDeps(
         address _yamatoDepositor,
         address _yamatoBorrower,
@@ -133,7 +144,7 @@ contract YamatoV3 is
         address _yamatoSweeper,
         address _pool,
         address _priorityRegistry
-    ) public onlyGovernance {
+    ) external onlyGovernance {
         /*
             [ Deployment Order ]
             Currency.deploy()
@@ -195,22 +206,23 @@ contract YamatoV3 is
         - setDepositAndBorrowLocks
         - setWithdrawLocks
     */
+    /// @dev Only-yamato-package state mutation func
     function setPledge(address _owner, Pledge memory _p)
         public
         override
         onlyYamato
     {
         Pledge storage p = pledges[_owner];
+        if (_p.debt == 0 && _p.coll == 0) {
+            _p.owner = address(0);
+            _p.isCreated = false;
+            _p.priority = 0;
+        }
         if (p.coll != _p.coll) {
             p.coll = _p.coll;
         }
         if (p.debt != _p.debt) {
             p.debt = _p.debt;
-        }
-        if (_p.debt == 0 && _p.coll == 0) {
-            _p.owner = address(0);
-            _p.isCreated = false;
-            _p.priority = 0;
         }
         if (p.owner != _p.owner) {
             p.owner = _p.owner;
@@ -223,6 +235,7 @@ contract YamatoV3 is
         }
     }
 
+    /// @dev Only-yamato-package state mutation func
     function setPledges(Pledge[] memory _pledges)
         public
         override(IYamatoV3)
@@ -237,14 +250,20 @@ contract YamatoV3 is
         }
     }
 
+    /// @dev Only-yamato-package state mutation func
+    /// @dev totalColl is theoretically as same as all pledges.coll - but it can be differ from Pool.balance due to selfdestruct(address)
     function setTotalColl(uint256 _totalColl) public override onlyYamato {
         totalColl = _totalColl;
     }
 
+    /// @dev Only-yamato-package state mutation func
+    /// @dev totalDebt is theoretically as same as Currency.totalSupply()
     function setTotalDebt(uint256 _totalDebt) public override onlyYamato {
         totalDebt = _totalDebt;
     }
 
+    /// @dev Only-yamato-package state mutation func
+    /// @dev deposit-borrow-withdraw should not be in the same block to avoid flashloan attack.
     function checkFlashLock(address _owner)
         public
         view
@@ -253,60 +272,20 @@ contract YamatoV3 is
         returns (bool _isLocked)
     {
         FlashLockData storage lock = flashlocks[_owner];
-        if (lock.blockHeight == block.number) {
-            _isLocked =
-                lock.depositLock ||
-                lock.borrowLock ||
-                lock.withdrawLock;
+        if (lock.lockedBlockHeight == block.number) {
+            return _isLocked = true;
         }
     }
 
-    function setFlashLock(address _owner, FlashLockTypes _types)
-        public
-        override
-        onlyYamato
-    {
+    /// @dev Only-yamato-package state mutation func
+    function setFlashLock(address _owner) public override onlyYamato {
         FlashLockData storage lock = flashlocks[_owner];
         require(
-            lock.blockHeight <= block.number,
-            "FlashLock.blockHeight can't be more than currenct blockheight."
+            lock.lockedBlockHeight <= block.number,
+            "FlashLock.lockedBlockHeight can't be more than currenct blockheight."
         );
 
-        if (_types == FlashLockTypes.DEPOSIT_LOCK) {
-            if (lock.blockHeight < block.number) {
-                // Initialize if first lock attempt.
-                lock.blockHeight = block.number;
-                lock.borrowLock = false;
-                lock.withdrawLock = false;
-            }
-            // Just add a flag if consequential lock attempt.
-            lock.depositLock = true;
-        } else if (_types == FlashLockTypes.BORROW_LOCK) {
-            if (lock.blockHeight < block.number) {
-                // Initialize if first lock attempt.
-                lock.blockHeight = block.number;
-                lock.depositLock = false;
-                lock.withdrawLock = false;
-            }
-            // Just add a flag if consequential lock attempt.
-            lock.borrowLock = true;
-        } else if (_types == FlashLockTypes.WITHDRAW_LOCK) {
-            if (lock.blockHeight < block.number) {
-                // Initialize if first lock attempt.
-                lock.blockHeight = block.number;
-                lock.depositLock = false;
-                lock.borrowLock = false;
-            }
-            // Just add a flag if consequential lock attempt.
-            lock.withdrawLock = true;
-        } else {
-            revert("Invalid FlashLockTypes given.");
-        }
-    }
-
-    modifier onlyYamato() override {
-        require(permitDeps(msg.sender), "You are not Yamato contract.");
-        _;
+        lock.lockedBlockHeight = block.number;
     }
 
     /*
@@ -346,7 +325,7 @@ contract YamatoV3 is
     }
 
     /// @notice Withdraw collaterals from one's pledge.
-    /// @dev Nood reentrancy guard. TCR will go down.
+    /// @dev Need reentrancy guard. TCR will go down.
     /// @param ethAmount withdrawal amount
     function withdraw(uint256 ethAmount) public nonReentrant {
         IYamatoWithdrawer(withdrawer()).runWithdraw(msg.sender, ethAmount);
@@ -417,7 +396,8 @@ contract YamatoV3 is
         - toggle
     */
 
-    function toggle() public onlyGovernance {
+    /// @dev Pausable
+    function toggle() external onlyGovernance {
         if (paused()) {
             _unpause();
         } else {
@@ -431,7 +411,7 @@ contract YamatoV3 is
     ==============================
         - getPledge
         - getStates
-        - getIndivisualStates
+        - getIndividualStates
     */
 
     /// @notice To give pledge access to YmtOS
@@ -462,8 +442,8 @@ contract YamatoV3 is
         return (totalColl, totalDebt, MCR, RRR, SRR, GRR);
     }
 
-    /// @notice Provide the data of indivisual pledge.
-    function getIndivisualStates(address owner)
+    /// @notice Provide the data of individual pledge.
+    function getIndividualStates(address owner)
         public
         view
         returns (
@@ -482,6 +462,7 @@ contract YamatoV3 is
         return address(this);
     }
 
+    /// @dev Get pool UUPS proxy address from slot
     function pool() public view override returns (address _pool) {
         bytes32 POOL_KEY = bytes32(keccak256(abi.encode(POOL_SLOT_ID)));
         assembly {
@@ -489,6 +470,7 @@ contract YamatoV3 is
         }
     }
 
+    /// @dev Get priorityRegistry UUPS proxy address from slot
     function priorityRegistry()
         public
         view
@@ -503,6 +485,7 @@ contract YamatoV3 is
         }
     }
 
+    /// @dev Get depositor UUPS proxy address from slot
     function depositor() public view override returns (address _depositor) {
         bytes32 YAMATO_DEPOSITOR_KEY = bytes32(
             keccak256(abi.encode(YAMATO_DEPOSITOR_SLOT_ID))
@@ -512,6 +495,7 @@ contract YamatoV3 is
         }
     }
 
+    /// @dev Get borrower UUPS proxy address from slot
     function borrower() public view override returns (address _borrower) {
         bytes32 YAMATO_BORROWER_KEY = bytes32(
             keccak256(abi.encode(YAMATO_BORROWER_SLOT_ID))
@@ -521,6 +505,7 @@ contract YamatoV3 is
         }
     }
 
+    /// @dev Get repayer UUPS proxy address from slot
     function repayer() public view override returns (address _repayer) {
         bytes32 YAMATO_REPAYER_KEY = bytes32(
             keccak256(abi.encode(YAMATO_REPAYER_SLOT_ID))
@@ -530,6 +515,7 @@ contract YamatoV3 is
         }
     }
 
+    /// @dev Get withdrawer UUPS proxy address from slot
     function withdrawer() public view override returns (address _withdrawer) {
         bytes32 YAMATO_WITHDRAWER_KEY = bytes32(
             keccak256(abi.encode(YAMATO_WITHDRAWER_SLOT_ID))
@@ -539,6 +525,7 @@ contract YamatoV3 is
         }
     }
 
+    /// @dev Get redeemer UUPS proxy address from slot
     function redeemer() public view override returns (address _redeemer) {
         bytes32 YAMATO_REDEEMER_KEY = bytes32(
             keccak256(abi.encode(YAMATO_REDEEMER_SLOT_ID))
@@ -548,6 +535,7 @@ contract YamatoV3 is
         }
     }
 
+    /// @dev Get sweeper UUPS proxy address from slot
     function sweeper() public view override returns (address _sweeper) {
         bytes32 YAMATO_SWEEPER_KEY = bytes32(
             keccak256(abi.encode(YAMATO_SWEEPER_SLOT_ID))
@@ -557,7 +545,7 @@ contract YamatoV3 is
         }
     }
 
-    // @dev Yamato.sol must override it with correct logic.
+    /// @dev Yamato.sol must override it with correct logic.
     function currencyOS()
         public
         view
@@ -572,22 +560,22 @@ contract YamatoV3 is
         }
     }
 
-    // @dev Yamato.sol must override it with correct logic.
+    /// @dev Yamato.sol must override it with correct logic.
     function feePool() public view override returns (address) {
         return ICurrencyOS(currencyOS()).feePool();
     }
 
-    // @dev Yamato.sol must override it with correct logic.
-    function feed()
+    /// @dev Yamato.sol must override it with correct logic.
+    function priceFeed()
         public
         view
         override(IYamato, YamatoBase)
         returns (address)
     {
-        return ICurrencyOS(currencyOS()).feed();
+        return ICurrencyOS(currencyOS()).priceFeed();
     }
 
-    // @dev All YamatoStores and YamatoActions except Yamato.sol are NOT needed to modify these funcs. Just write the same signature and don't fill inside. Yamato.sol must override it with correct logic.
+    /// @dev All YamatoStores and YamatoActions except Yamato.sol are NOT needed to modify these funcs. Just write the same signature and don't fill inside. Yamato.sol must override it with correct logic.
     function permitDeps(address _sender)
         public
         view
@@ -602,6 +590,7 @@ contract YamatoV3 is
         return permit;
     }
 
+    /// @dev Get package-deps to check onlyYamato-permitDeps logic
     function getDeps() public view returns (address[9] memory) {
         return [
             address(this),
@@ -616,8 +605,13 @@ contract YamatoV3 is
         ];
     }
 
+    /*
+     * Only for test
+     */
+
+    /// @dev For test
     function setPriorityRegistry(address _priorityRegistry)
-        public
+        external
         onlyGovernance
     {
         bytes32 PRIORITY_REGISTRY_KEY = bytes32(

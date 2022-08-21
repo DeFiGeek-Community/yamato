@@ -11,11 +11,8 @@ pragma solidity 0.8.4;
 
 import "../Interfaces/IYamato.sol";
 import "../PriceFeed.sol";
-import "./SafeMath.sol";
 
 library PledgeLib {
-    using SafeMath for uint256;
-
     /// @notice Calculate ICR for the memory Pledge
     /// @dev (coll*priceInJpy)/debt, if debt==0 then return uint256-max ICR
     /// @param _pledge having coll and debt
@@ -69,6 +66,8 @@ library PledgeLib {
         }
     }
 
+    /// @notice Copy the storage Pledge into memory
+    /// @param _pledge having all Pledge struct params (coll, debt, isCreated, owner, priority)
     function toMem(IYamato.Pledge storage _pledge)
         public
         view
@@ -84,6 +83,8 @@ library PledgeLib {
             );
     }
 
+    /// @notice Clone the memory Pledge into memory
+    /// @param _pledge having all Pledge struct params (coll, debt, isCreated, owner, priority)
     function clone(IYamato.Pledge memory _pledge)
         public
         view
@@ -99,6 +100,9 @@ library PledgeLib {
             );
     }
 
+    /// @notice Add debt for the memory Pledge
+    /// @param _pledge having all Pledge struct params (coll, debt, isCreated, owner, priority)
+    /// @param _adder is how much debt to add
     function addDebt(IYamato.Pledge memory _pledge, uint256 _adder)
         public
         view
@@ -107,13 +111,16 @@ library PledgeLib {
         return
             IYamato.Pledge(
                 _pledge.coll,
-                _pledge.debt.add(_adder),
+                _pledge.debt += _adder,
                 _pledge.isCreated,
                 _pledge.owner,
                 _pledge.priority
             );
     }
 
+    /// @notice Sync the storage Pledge with the memory Pledge
+    /// @param sPledge having all Pledge struct params (coll, debt, isCreated, owner, priority)
+    /// @param _pledge having all Pledge struct params (coll, debt, isCreated, owner, priority)
     function sync(IYamato.Pledge storage sPledge, IYamato.Pledge memory _pledge)
         public
         returns (IYamato.Pledge storage)
@@ -126,6 +133,9 @@ library PledgeLib {
         return sPledge;
     }
 
+    /// @notice Assign one memory Pledge to the other memory Pledge
+    /// @param mPledge is the Pledge that _pledge assigns to, & having all Pledge struct params (coll, debt, isCreated, owner, priority)
+    /// @param _pledge is the Pledge that assigns to mPledge, & having all Pledge struct params (coll, debt, isCreated, owner, priority)
     function assign(
         IYamato.Pledge memory mPledge,
         IYamato.Pledge memory _pledge
@@ -138,10 +148,8 @@ library PledgeLib {
         return mPledge;
     }
 
-    function nil(IYamato.Pledge memory _p)
-        public
-        returns (IYamato.Pledge memory)
-    {
+    /// @notice Overwrite the memory Pledge with 0, false, and zero-address
+    function nil(IYamato.Pledge memory) public returns (IYamato.Pledge memory) {
         return IYamato.Pledge(0, 0, false, address(0), 0);
     }
 
@@ -153,7 +161,7 @@ library PledgeLib {
         // if (11000 <= _ICRpertenk && _ICRpertenk < 13000) {
         //     _FRpertenk = 2000 - ((_ICRpertenk - 11000) * 80) / 100;
         // } else
-        if (13000 <= _ICRpertenk && _ICRpertenk < 15000) {
+        if (_ICRpertenk < 15000) {
             _FRpertenk = 400 - ((_ICRpertenk - 13000) * 10) / 100;
         } else if (15000 <= _ICRpertenk && _ICRpertenk < 20000) {
             _FRpertenk = 200 - ((_ICRpertenk - 15000) * 2) / 100;
@@ -164,13 +172,12 @@ library PledgeLib {
         }
     }
 
-    function cappedRedemptionAmount(
-        IYamato.Pledge memory pledge,
-        uint256 mcr,
-        uint256 icr
-    ) public view returns (uint256) {
-        /*
-            collValuAfter/debtAfter = mcr/10000
+    /**
+     * @notice Calculate the max amount that can redeem from the Pledge with MCR & ICR
+     * @param pledge is the target pledge that you would like to calculate the max amont
+     * @param mcr = Minimum Collateral Ratio
+     * @param icr = Individual Collateral Ratio
+     * @dev collValuAfter/debtAfter = mcr/10000
             debtAfter = debtBefore - diff
             collValuAfter = collValuBefore - diff
             10000 * (diff - collValuBefore) = mcr * (diff - debtBefore)
@@ -183,12 +190,23 @@ library PledgeLib {
             diff = k * debtBefore
 
             Given mcr = 13000, then
-            k = (13000 - icrBefore) / 3000
-              = -0.00033333333icrBefore + 4.33333333333 [10000<icrBefore<13000, 0<k<1]
-        */
+            k   = (13000 - icrBefore) / 3000
+                = -0.00033333333icrBefore + 4.33333333333 [10000<icrBefore<13000, 0<k<1]
+     */
+    function cappedRedemptionAmount(
+        IYamato.Pledge memory pledge,
+        uint256 mcr,
+        uint256 icr
+    ) public view returns (uint256) {
         return (pledge.debt * (mcr - icr)) / (mcr - 10000);
     }
 
+    /**
+     * @notice Calculate the amount of redemption that will be redeemed
+     * @param mcr = Minimum Collateral Ratio
+     * @param icr = Individual Collateral Ratio
+     * @param ethPriceInCurrency is the ETH price fetched from PriceFeed
+     */
     function toBeRedeemed(
         IYamato.Pledge memory pledge,
         uint256 mcr,

@@ -28,23 +28,6 @@ import "hardhat/console.sol";
  * Chainlink oracle.
  */
 contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
-    struct ChainlinkResponse {
-        uint80 roundId;
-        int256 answer;
-        uint256 timestamp;
-        bool success;
-        uint8 decimals;
-        int256 subAnswer;
-        uint8 subDecimal;
-    }
-
-    struct TellorResponse {
-        bool ifRetrieve;
-        uint256 value;
-        uint256 timestamp;
-        bool success;
-    }
-
     /*
         =========================
         ~~~ SAFE HAVEN ~~~
@@ -151,6 +134,87 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
     }
 
     // --- Functions ---
+
+    /// @notice ChainLink ETH-USD oracle contract
+    function ethPriceAggregatorInUSD()
+        public
+        view
+        override
+        returns (address _ethPriceAggregatorInUSD)
+    {
+        bytes32 EthPriceAggregatorInUSD_KEY = bytes32(
+            keccak256(abi.encode(EthPriceAggregatorInUSD_SLOT_ID))
+        );
+        assembly {
+            _ethPriceAggregatorInUSD := sload(EthPriceAggregatorInUSD_KEY)
+        }
+    }
+
+    /// @notice ChainLink JPY-USD oracle contract
+    function jpyPriceAggregatorInUSD()
+        public
+        view
+        override
+        returns (address _jpyPriceAggregatorInUSD)
+    {
+        bytes32 JpyPriceAggregatorInUSD_KEY = bytes32(
+            keccak256(abi.encode(JpyPriceAggregatorInUSD_SLOT_ID))
+        );
+        assembly {
+            _jpyPriceAggregatorInUSD := sload(JpyPriceAggregatorInUSD_KEY)
+        }
+    }
+
+    /// @notice Tellor ETH-JPY oracle contract
+    function tellorCaller()
+        public
+        view
+        override
+        returns (address _tellorCaller)
+    {
+        bytes32 TellorCaller_KEY = bytes32(
+            keccak256(abi.encode(TellorCaller_SLOT_ID))
+        );
+        assembly {
+            _tellorCaller := sload(TellorCaller_KEY)
+        }
+    }
+
+    /// @notice Mutable price getter.
+    function fetchPrice() external override returns (uint256) {
+        (uint256 _price, Status _status, bool _isAdjusted) = _simulatePrice();
+
+        _changeStatus(_status);
+
+        _storePrice(_price);
+
+        if (_isAdjusted) {
+            lastAdjusted = block.number;
+        }
+
+        return _price;
+    }
+
+    /// @notice Immutable price getter.
+    function getPrice() external view override returns (uint256) {
+        (uint256 _price, , ) = _simulatePrice();
+
+        return _price;
+    }
+
+    /// @notice Immutable status getter.
+    function getStatus() external view override returns (Status) {
+        (, Status _status, ) = _simulatePrice();
+
+        return _status;
+    }
+
+    /// @notice Immutable drastic-change adjusting flag getter.
+    function getIsAdjusted() external view override returns (bool) {
+        (, , bool _isAdjusted) = _simulatePrice();
+
+        return _isAdjusted;
+    }
 
     /// @dev An internal function to dry run oracle usage determination logic. Can use it for view func or write func. ChainLink is the main oracle.
     function _simulatePrice()
@@ -518,38 +582,6 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
         }
     }
 
-    function fetchPrice() external override returns (uint256) {
-        (uint256 _price, Status _status, bool _isAdjusted) = _simulatePrice();
-
-        _changeStatus(_status);
-
-        _storePrice(_price);
-
-        if (_isAdjusted) {
-            lastAdjusted = block.number;
-        }
-
-        return _price;
-    }
-
-    function getPrice() external view override returns (uint256) {
-        (uint256 _price, Status _status, bool _isAdjusted) = _simulatePrice();
-
-        return _price;
-    }
-
-    function getStatus() external view override returns (Status) {
-        (uint256 _price, Status _status, bool _isAdjusted) = _simulatePrice();
-
-        return _status;
-    }
-
-    function getIsAdjusted() external view override returns (bool) {
-        (uint256 _price, Status _status, bool _isAdjusted) = _simulatePrice();
-
-        return _isAdjusted;
-    }
-
     // --- Helper functions ---
 
     /* Chainlink is considered broken if its current or previous round data is in any way bad. We check the previous round
@@ -636,6 +668,7 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
         return percentDeviation > MAX_PRICE_DEVIATION_FROM_PREVIOUS_ROUND;
     }
 
+    /// @notice internal logic of tellor mulfunctioning flag
     function _tellorIsBroken(TellorResponse memory _response)
         internal
         view
@@ -657,6 +690,7 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
         return false;
     }
 
+    /// @notice internal logic of tellor stopping flag
     function _tellorIsFrozen(TellorResponse memory _tellorResponse)
         internal
         view
@@ -665,6 +699,7 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
         return block.timestamp - _tellorResponse.timestamp > TIMEOUT;
     }
 
+    /// @notice Recovery logic of malfunctioning oracles
     function _bothOraclesLiveAndUnbrokenAndSimilarPrice(
         ChainlinkResponse memory _chainlinkResponse,
         ChainlinkResponse memory _prevChainlinkResponse,
@@ -683,6 +718,7 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
         return _bothOraclesSimilarPrice(_chainlinkResponse, _tellorResponse);
     }
 
+    /// @notice Price comparison logic of the two oracles.
     function _bothOraclesSimilarPrice(
         ChainlinkResponse memory _chainlinkResponse,
         TellorResponse memory _tellorResponse
@@ -714,6 +750,7 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
         return percentPriceDifference <= MAX_PRICE_DIFFERENCE_BETWEEN_ORACLES;
     }
 
+    /// @notice Price comparison between currenct latest price and tellor
     function _tellorAndLastGoodPriceSimilarPrice(
         TellorResponse memory _tellorResponse
     ) internal view returns (bool) {
@@ -729,6 +766,7 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
             MAX_PRICE_DIFFERENCE_FOR_TELLOR_ADJUSTMENT;
     }
 
+    /// @notice A drastic change mitigator which is not implemented in Liquity's PriceFeed
     function _safeUsingTellorOrGracefulAdjustment(
         TellorResponse memory _tellorResponse,
         Status _inheritedStatus
@@ -753,6 +791,17 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
                 1e18;
             _status = Status.bothOraclesUntrusted;
             _isAdjusted = true;
+        } else if (
+            _tellorAndLastGoodPriceSimilarPrice(_tellorResponse) == false &&
+            /* CL is broken and Tellor is far away! Danger zone! */
+            (lastAdjusted == 0 ||
+                lastAdjusted + ADJUSTMENT_COOLTIME >= block.number)
+        ) {
+            // Note: It means, adjusted once, and tried "fetchPrice" again.
+            //       Must use lastGoodPrice, not Tellor's potentially-fructuated price.
+            _price = lastGoodPrice;
+            _status = _inheritedStatus;
+            _isAdjusted = false; // Note: Don't update "lastAdjusted".
         } else {
             _price = _scaleTellorPriceByDigits(_tellorResponse.value);
             _status = _inheritedStatus;
@@ -760,10 +809,11 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
         }
     }
 
+    /// @notice Internal calculator of ChainLink digits padding.
     function _scaleChainlinkPriceByDigits(uint256 _price, uint256 _answerDigits)
         internal
         pure
-        returns (uint256)
+        returns (uint256 price)
     {
         /*
          * Convert the price returned by the Chainlink oracle to an 18-digit decimal for use by Liquity.
@@ -771,36 +821,39 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
          * future changes.
          *
          */
-        uint256 price;
         if (_answerDigits >= TARGET_DIGITS) {
             // Scale the returned price value down to Liquity's target precision
             price = _price / (10**(_answerDigits - TARGET_DIGITS));
-        } else if (_answerDigits < TARGET_DIGITS) {
+        } else {
             // Scale the returned price value up to Liquity's target precision
             price = _price * (10**(TARGET_DIGITS - _answerDigits));
         }
         return price;
     }
 
+    /// @notice Internal calculator of Tellor digits padding.
     function _scaleTellorPriceByDigits(uint256 _price)
         internal
         pure
-        returns (uint256)
+        returns (uint256 price)
     {
-        return _price * (10**(TARGET_DIGITS - TELLOR_DIGITS));
+        return price = _price * (10**(TARGET_DIGITS - TELLOR_DIGITS));
     }
 
+    /// @notice Internal status changer.
     function _changeStatus(Status _status) internal {
         status = _status;
         emit PriceFeedStatusChanged(_status);
     }
 
+    /// @notice Internal price changer.
     function _storePrice(uint256 _currentPrice) internal {
         lastGoodPrice = _currentPrice;
         lastSeen = block.number;
         emit LastGoodPriceUpdated(_currentPrice);
     }
 
+    /// @notice Internal price changer with digits calc.
     function _storeTellorPrice(TellorResponse memory _tellorResponse)
         internal
         returns (uint256)
@@ -813,6 +866,7 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
         return scaledTellorPrice;
     }
 
+    /// @notice Internal price changer with digits calc.
     function _storeChainlinkPrice(ChainlinkResponse memory _chainlinkResponse)
         internal
         returns (uint256)
@@ -828,6 +882,7 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
 
     // --- Oracle response wrapper functions ---
 
+    /// @notice Tellor oracle response wrapper
     function _getCurrentTellorResponse()
         internal
         view
@@ -851,6 +906,7 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
         }
     }
 
+    /// @notice ChainLink oracle response wrapper
     function _getCurrentChainlinkResponse()
         internal
         view
@@ -934,6 +990,7 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
         return chainlinkResponse;
     }
 
+    /// @notice ChainLink's older oracle response wrapper
     function _getPrevChainlinkResponse(
         uint80 _currentRoundId,
         uint8 _currentDecimals,
@@ -974,48 +1031,6 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
         } catch {
             // If call to Chainlink aggregator reverts, return a zero response with success = false
             return prevChainlinkResponse;
-        }
-    }
-
-    function ethPriceAggregatorInUSD()
-        public
-        view
-        override
-        returns (address _ethPriceAggregatorInUSD)
-    {
-        bytes32 EthPriceAggregatorInUSD_KEY = bytes32(
-            keccak256(abi.encode(EthPriceAggregatorInUSD_SLOT_ID))
-        );
-        assembly {
-            _ethPriceAggregatorInUSD := sload(EthPriceAggregatorInUSD_KEY)
-        }
-    }
-
-    function jpyPriceAggregatorInUSD()
-        public
-        view
-        override
-        returns (address _jpyPriceAggregatorInUSD)
-    {
-        bytes32 JpyPriceAggregatorInUSD_KEY = bytes32(
-            keccak256(abi.encode(JpyPriceAggregatorInUSD_SLOT_ID))
-        );
-        assembly {
-            _jpyPriceAggregatorInUSD := sload(JpyPriceAggregatorInUSD_KEY)
-        }
-    }
-
-    function tellorCaller()
-        public
-        view
-        override
-        returns (address _tellorCaller)
-    {
-        bytes32 TellorCaller_KEY = bytes32(
-            keccak256(abi.encode(TellorCaller_SLOT_ID))
-        );
-        assembly {
-            _tellorCaller := sload(TellorCaller_KEY)
         }
     }
 }

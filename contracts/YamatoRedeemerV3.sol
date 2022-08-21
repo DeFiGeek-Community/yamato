@@ -45,7 +45,7 @@ contract YamatoRedeemerV3 is IYamatoRedeemer, YamatoAction {
             1. Set up
         */
         RunRedeemVars memory vars;
-        vars.ethPriceInCurrency = IPriceFeed(feed()).fetchPrice();
+        vars.ethPriceInCurrency = IPriceFeed(priceFeed()).fetchPrice();
         vars.currencyAmountStart = _args.wantToRedeemCurrencyAmount;
         vars._reminder = _args.wantToRedeemCurrencyAmount;
         vars._pledgesOwner = new address[](
@@ -206,7 +206,7 @@ contract YamatoRedeemerV3 is IYamatoRedeemer, YamatoAction {
         uint256 reminder;
         uint256 ethToBeExpensed;
 
-        uint256 icr = sPledge.getICR(feed());
+        uint256 icr = sPledge.getICR(priceFeed());
         uint256 mcr = uint256(IYamato(yamato()).MCR()) * 100;
 
         if (10000 < icr && icr < mcr) {

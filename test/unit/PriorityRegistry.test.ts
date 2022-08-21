@@ -62,10 +62,10 @@ describe("contract PriorityRegistry", function () {
     mockFeed.fetchPrice.returns(PRICE);
     mockFeed.getPrice.returns(PRICE);
     mockFeed.lastGoodPrice.returns(PRICE);
-    mockCurrencyOS.feed.returns(mockFeed.address);
+    mockCurrencyOS.priceFeed.returns(mockFeed.address);
     mockCurrencyOS.feePool.returns(mockFeePool.address);
     mockCurrencyOS.currency.returns(mockCJPY.address);
-    mockYamato.feed.returns(mockFeed.address);
+    mockYamato.priceFeed.returns(mockFeed.address);
 
     /*
         For unit tests

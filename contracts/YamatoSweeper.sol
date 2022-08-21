@@ -44,7 +44,7 @@ contract YamatoSweeper is IYamatoSweeper, YamatoAction {
             address[] memory _pledgesOwner
         )
     {
-        IPriceFeed(feed()).fetchPrice();
+        IPriceFeed(priceFeed()).fetchPrice();
         uint256 sweepStart = IPool(pool()).sweepReserve();
         require(sweepStart > 0, "Sweep failure: sweep reserve is empty.");
         uint8 _GRR = IYamato(yamato()).GRR();

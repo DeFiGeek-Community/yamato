@@ -114,7 +114,7 @@ contract CurrencyOS is ICurrencyOS, UUPSBase {
         }
     }
 
-    function feed() public view override returns (address _feed) {
+    function priceFeed() public view override returns (address _feed) {
         bytes32 PRICEFEED_KEY = bytes32(
             keccak256(abi.encode(PRICEFEED_SLOT_ID))
         );

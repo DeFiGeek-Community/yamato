@@ -19,7 +19,7 @@ import "./Interfaces/IYamato.sol";
 import "./Interfaces/IFeePool.sol";
 import "./Interfaces/ICurrencyOS.sol";
 import "./Interfaces/IYamatoWithdrawer.sol";
-import "./Interfaces/IPriorityRegistry.sol";
+import "./Interfaces/IPriorityRegistryV6.sol";
 import "hardhat/console.sol";
 
 /// @title Yamato Withdrawer Contract
@@ -41,7 +41,7 @@ contract YamatoWithdrawer is IYamatoWithdrawer, YamatoAction {
         /*
             1. Get feed and pledge
         */
-        IPriceFeed(feed()).fetchPrice();
+        IPriceFeed(priceFeed()).fetchPrice();
         IYamato.Pledge memory pledge = IYamato(yamato()).getPledge(_sender);
         (uint256 totalColl, , , , , ) = IYamato(yamato()).getStates();
 
@@ -61,17 +61,15 @@ contract YamatoWithdrawer is IYamatoWithdrawer, YamatoAction {
             "Those can't be called in the same block."
         );
         require(
-            pledge.getICR(feed()) >= uint256(IYamato(yamato()).MCR()) * 100,
+            pledge.getICR(priceFeed()) >=
+                uint256(IYamato(yamato()).MCR()) * 100,
             "Withdrawal failure: ICR is not more than MCR."
         );
 
         /*
             3. Set flashlock
         */
-        IYamato(yamato()).setFlashLock(
-            _sender,
-            IYamato.FlashLockTypes.WITHDRAW_LOCK
-        );
+        IYamato(yamato()).setFlashLock(_sender);
 
         /*
             4. Update pledge
@@ -89,16 +87,17 @@ contract YamatoWithdrawer is IYamatoWithdrawer, YamatoAction {
             /*
                 5-a. Clean full withdrawal
             */
-            IPriorityRegistry(priorityRegistry()).remove(pledge);
+            IPriorityRegistryV6(priorityRegistry()).remove(pledge);
         } else {
             /*
                 5-b. Reasonable partial withdrawal
             */
             require(
-                pledge.getICR(feed()) >= uint256(IYamato(yamato()).MCR()) * 100,
+                pledge.getICR(priceFeed()) >=
+                    uint256(IYamato(yamato()).MCR()) * 100,
                 "Withdrawal failure: ICR can't be less than MCR after withdrawal."
             );
-            pledge.priority = IPriorityRegistry(priorityRegistry()).upsert(
+            pledge.priority = IPriorityRegistryV6(priorityRegistry()).upsert(
                 pledge
             );
         }

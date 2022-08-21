@@ -19,20 +19,21 @@ import "./Dependencies/YamatoStore.sol";
 import "./Dependencies/LiquityMath.sol";
 import "hardhat/console.sol";
 
-// @dev For gas saving reason, we use percent denominated ICR only in this contract.
+/// @dev For gas saving reason, we use percent denominated ICR only in this contract.
 contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
     using PledgeLib for IYamato.Pledge;
 
-    mapping(uint256 => mapping(address => IYamato.Pledge)) leveledPledges; // ICR => owner => Pledge
+    mapping(uint256 => mapping(address => IYamato.Pledge))
+        private leveledPledges; // ICR => owner => Pledge
     mapping(uint256 => address[]) private levelIndice; // ICR => owner[]
     uint256 public override pledgeLength; // Note: Deprecated in V6
     uint256 public override LICR; // Note: Lowest ICR in percent
-    mapping(uint256 => IPriorityRegistryV4.FifoQueue) rankedQueue; // Deprecated. Mar 28, 2020 - 0xMotoko
+    mapping(uint256 => IPriorityRegistryV4.FifoQueue) private rankedQueue; // Deprecated. Mar 28, 2020 - 0xMotoko
     uint256 public constant override MAX_PRIORITY =
         1157920892373161954235709850086879078532699846656405640394575840079131296399; // (2**256 - 1) / 100
     uint256 public nextResetRank;
-    mapping(address => DeleteDictItem) deleteDict;
-    mapping(uint256 => FifoQueue) rankedQueueV2;
+    mapping(address => DeleteDictItem) private deleteDict;
+    mapping(uint256 => FifoQueue) private rankedQueueV2;
     uint256 public nextUpsertPledgeIndex;
 
     function initialize(address _yamato) public initializer {
@@ -48,11 +49,9 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         - remove
     */
 
-    /*
-        @notice The upsert process is  1. update coll/debt in Yamato-side 2. floor the last ICR to make "level" 3. upsert and return the new "upsert-time ICR"  4. update padded-priority to the Yamato
-        @dev It upserts "deposited", "borrowed", "repayed", "partially withdrawn", "redeemed", or "partially swept" pledges.
-        @return _newICRpercent is for overwriting Yamato.sol's pledge info
-    */
+    /// @notice The upsert process is  1. update coll/debt in Yamato-side 2. floor the last ICR to make "level" 3. upsert and return the new "upsert-time ICR"  4. update padded-priority to the Yamato
+    /// @dev It upserts "deposited", "borrowed", "repayed", "partially withdrawn", "redeemed", or "partially swept" pledges.
+    /// @return _newICRpercent is for overwriting Yamato.sol's pledge info
     function upsert(IYamato.Pledge memory _pledge)
         public
         override
@@ -65,10 +64,8 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         return priorities[0];
     }
 
-    /*
-        @notice upsert for several pledges without LICR update and traverse
-        @return new ICRs in percent
-    */
+    /// @notice upsert for several pledges without LICR update and traverse
+    /// @return new ICRs in percent
     function bulkUpsert(IYamato.Pledge[] memory _pledges)
         public
         override
@@ -76,7 +73,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         returns (uint256[] memory)
     {
         BulkUpsertVar memory vars;
-        vars._ethPriceInCurrency = IPriceFeedV2(feed()).getPrice(); // Note: can't use lastGoodPrice cuz bulkUpsert can also be called be syncer which does not use fetchPrice
+        vars._ethPriceInCurrency = IPriceFeedV2(priceFeed()).getPrice(); // Note: can't use lastGoodPrice cuz bulkUpsert can also be called be syncer which does not use fetchPrice
         vars._newPriorities = new uint256[](_pledges.length);
         for (uint256 i; i < _pledges.length; i++) {
             vars._pledge = _pledges[i];
@@ -230,9 +227,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         return vars._newPriorities;
     }
 
-    /*
-        @dev It removes "just full swept" or "just full withdrawn" pledges.
-    */
+    /// @dev It removes "just full swept" or "just full withdrawn" pledges.
     function remove(IYamato.Pledge memory _pledge) public override onlyYamato {
         uint256 _oldICRpercent = floor(_pledge.priority);
         /*
@@ -273,6 +268,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         - rankedQueueLen
         - rankedQueueTotalLen
     */
+    /// @dev FIFO-esque priority mutation func
     function rankedQueuePush(uint256 _icr, address _pledgeAddr)
         public
         override
@@ -286,6 +282,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         pledgeAddrs.push(_pledgeAddr);
     }
 
+    /// @dev FIFO-esque priority mutation func
     function rankedQueuePop(uint256 _icr)
         public
         override
@@ -314,6 +311,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         }
     }
 
+    /// @dev FIFO-esque priority mutation func
     function rankedQueueSearchAndDestroy(uint256 _icr, uint256 _i)
         public
         override
@@ -322,6 +320,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         delete rankedQueueV2[_icr].pledges[_i];
     }
 
+    /// @dev real length of fifo queue
     function rankedQueueLen(uint256 _icr)
         public
         view
@@ -340,6 +339,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         }
     }
 
+    /// @dev total length of fifo queue
     function rankedQueueTotalLen(uint256 _icr)
         public
         view
@@ -349,6 +349,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         return rankedQueueV2[_icr].pledges.length;
     }
 
+    /// @dev index of next pop
     function rankedQueueNextout(uint256 _icr)
         public
         view
@@ -371,6 +372,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
              deleteDict knows which pledge is in which index.
         @param _pledge the delete target
     */
+    /// @dev wrapper of rankedQueueSearchAndDestroy
     function _deletePledge(IYamato.Pledge memory _pledge) internal {
         uint256 _icr = floor(_pledge.priority);
         DeleteDictItem memory _item = deleteDict[_pledge.owner];
@@ -381,6 +383,9 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         }
     }
 
+    /// @notice Finding highest priority pledge with scanning logic until checkpoint.
+    /// @dev Assumes pledges more than checkpoint is not redeemable if price drops more than buffer.
+    /// @dev But having some un-redeemable pledges is not a really big deal as long as TCR > 100%
     function _findFloor(uint256 _fromICR, uint256 _toICR) internal {
         uint256 _mcrPercent = uint256(IYamato(yamato()).MCR());
         uint256 _next = _fromICR;
@@ -459,6 +464,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         - getRedeemablesCap
         - getSweepablesCap
     */
+    /// @notice Just getting a fifo queue item
     function getRankedQueue(uint256 _icr, uint256 i)
         public
         view
@@ -470,12 +476,13 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         }
     }
 
+    /// @dev Redeemable amount calculator
     function getRedeemablesCap() external view returns (uint256 _cap) {
         uint256 _mcrPercent = uint256(IYamato(yamato()).MCR());
         uint256 _checkpoint = _mcrPercent +
             IYamatoV3(yamato()).CHECKPOINT_BUFFER();
         // uint256 ethPriceInCurrency = IPriceFeedV2(feed()).lastGoodPrice();
-        uint256 ethPriceInCurrency = IPriceFeedV2(feed()).getPrice();
+        uint256 ethPriceInCurrency = IPriceFeedV2(priceFeed()).getPrice();
 
         uint256 _rank = 1;
         uint256 _nextout = rankedQueueNextout(_rank);
@@ -515,6 +522,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         }
     }
 
+    /// @dev Sweepable amount calculator
     function getSweepablesCap() external view returns (uint256 _cap) {
         IYamato.Pledge memory _pledge;
         address _pledgeAddr;
@@ -530,6 +538,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         }
     }
 
+    /// @dev ICR to priority converter
     function floor(uint256 _ICRpertenk) internal pure returns (uint256) {
         return _ICRpertenk / 100;
     }
@@ -542,6 +551,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         - syncRankedQueue
     */
 
+    /// @dev When harsh storage upgrade there is, you may need this one.
     function resetQueue(uint256 _defaultRank, IYamato.Pledge[] calldata pledges)
         public
         onlyGovernance
@@ -581,6 +591,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         }
     }
 
+    /// @dev When harsh storage upgrade there is, you may need this one.
     function syncRankedQueue(IYamato.Pledge[] memory pledges)
         public
         onlyGovernance

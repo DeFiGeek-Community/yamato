@@ -41,7 +41,7 @@ contract YamatoRepayer is IYamatoRepayer, YamatoAction {
         /*
             1. Get feed and Pledge
         */
-        IPriceFeed(feed()).fetchPrice();
+        IPriceFeed(priceFeed()).fetchPrice();
         IYamato.Pledge memory pledge = IYamato(yamato()).getPledge(_sender);
         (, uint256 totalDebt, , , , ) = IYamato(yamato()).getStates();
 

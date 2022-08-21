@@ -11,6 +11,23 @@ interface IPriceFeedV2 {
         usingChainlinkTellorUntrusted
     }
 
+    struct ChainlinkResponse {
+        uint80 roundId;
+        int256 answer;
+        uint256 timestamp;
+        bool success;
+        uint8 decimals;
+        int256 subAnswer;
+        uint8 subDecimal;
+    }
+
+    struct TellorResponse {
+        bool ifRetrieve;
+        uint256 value;
+        uint256 timestamp;
+        bool success;
+    }
+
     function fetchPrice() external returns (uint256);
 
     function getPrice() external view returns (uint256);

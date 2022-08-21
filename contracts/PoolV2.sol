@@ -11,6 +11,7 @@ pragma solidity 0.8.4;
 import "./Interfaces/IYamato.sol";
 import "./Interfaces/IFeePool.sol";
 import "./Interfaces/ICurrencyOS.sol";
+import "./Interfaces/IPriorityRegistryV6.sol";
 import "./Dependencies/YamatoStore.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
@@ -51,10 +52,14 @@ contract PoolV2 is IPool, YamatoStore, ReentrancyGuardUpgradeable {
         __YamatoStore_init(_yamato);
     }
 
+    /// @notice Store ETH for new deposit.
+    /// @dev selfdestruct(address) can increase balance. Be sure that totalColl and balance can be different.
     receive() external payable onlyYamato {
         emit ETHLocked(msg.sender, msg.value, address(this).balance);
     }
 
+    /// @notice Mint new currency and save it to this pool.
+    /// @dev This only be used by YamatoBorrower and reserve is always minted, not transfered.
     function depositRedemptionReserve(uint256 amount)
         public
         override
@@ -69,6 +74,8 @@ contract PoolV2 is IPool, YamatoStore, ReentrancyGuardUpgradeable {
         emit RedemptionReserveDeposited(msg.sender, amount, redemptionReserve);
     }
 
+    /// @notice Reduce redemption budget.
+    /// @dev Please be careful that this is not atomic with sendCurrency.
     function useRedemptionReserve(uint256 amount) public override onlyYamato {
         require(
             redemptionReserve >= amount,
@@ -80,6 +87,8 @@ contract PoolV2 is IPool, YamatoStore, ReentrancyGuardUpgradeable {
         emit RedemptionReserveUsed(msg.sender, amount, redemptionReserve);
     }
 
+    /// @notice Mint new currency and save it to this pool.
+    /// @dev This only be used by YamatoBorrower and reserve is always minted, not transfered.
     function depositSweepReserve(uint256 amount) public override onlyYamato {
         ICurrencyOS(IYamato(yamato()).currencyOS()).mintCurrency(
             address(this),
@@ -89,6 +98,8 @@ contract PoolV2 is IPool, YamatoStore, ReentrancyGuardUpgradeable {
         emit SweepReserveDeposited(msg.sender, amount, sweepReserve);
     }
 
+    /// @notice Reduce sweep budget.
+    /// @dev Please be careful that this is not atomic with sendCurrency.
     function useSweepReserve(uint256 amount) public override onlyYamato {
         require(
             sweepReserve >= amount,
@@ -100,6 +111,8 @@ contract PoolV2 is IPool, YamatoStore, ReentrancyGuardUpgradeable {
         emit SweepReserveUsed(msg.sender, amount, sweepReserve);
     }
 
+    /// @notice Transfer ETH from Pool to recipient.
+    /// @dev Assume balance is greater than equal totalColl due to consistent logic and selfdestruct(address)
     function sendETH(address recipient, uint256 amount)
         public
         override
@@ -115,6 +128,7 @@ contract PoolV2 is IPool, YamatoStore, ReentrancyGuardUpgradeable {
         emit ETHSent(msg.sender, recipient, amount, address(this).balance);
     }
 
+    /// @notice Send currency from Pool to recipient
     function sendCurrency(address recipient, uint256 amount)
         public
         override
@@ -144,6 +158,11 @@ contract PoolV2 is IPool, YamatoStore, ReentrancyGuardUpgradeable {
         );
     }
 
+    /**************************
+        Dev Ops Functions (Use it only when a tiny internal-state inconsistency.)
+    **************************/
+
+    /// @dev Make all pool reserves consistent.
     function refreshReserve() public onlyGovernance {
         IERC20 _currency = IERC20(ICurrencyOS(currencyOS()).currency());
         uint256 _poolBalance = _currency.balanceOf(address(this));
@@ -151,6 +170,7 @@ contract PoolV2 is IPool, YamatoStore, ReentrancyGuardUpgradeable {
         sweepReserve = _poolBalance;
     }
 
+    /// @dev Make totalColl consistent
     function refreshColl(uint256 _acmTotalColl, address _fixer)
         public
         onlyGovernance
@@ -170,6 +190,10 @@ contract PoolV2 is IPool, YamatoStore, ReentrancyGuardUpgradeable {
         );
         _pledge.coll -= _inconsistentETHAmount;
 
+        _pledge.priority = IPriorityRegistryV6(_yamato.priorityRegistry())
+            .upsert(_pledge);
+
+        _yamato.setPledge(_fixer, _pledge);
         _yamato.setPledge(_fixer, _pledge);
     }
 }

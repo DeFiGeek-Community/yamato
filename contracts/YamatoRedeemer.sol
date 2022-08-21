@@ -41,7 +41,7 @@ contract YamatoRedeemer is IYamatoRedeemer, YamatoAction {
         returns (RedeemedArgs memory)
     {
         RunRedeemVars memory vars;
-        vars.ethPriceInCurrency = IPriceFeed(feed()).fetchPrice();
+        vars.ethPriceInCurrency = IPriceFeed(priceFeed()).fetchPrice();
         vars.currencyAmountStart = _args.wantToRedeemCurrencyAmount;
         vars._reminder = _args.wantToRedeemCurrencyAmount;
         vars._pledgesOwner = new address[](
