@@ -632,7 +632,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
             txReceipt.gasUsed.mul(txReceipt.effectiveGasPrice)
           )
         ).to.be.gt(redeemerETHBalanceBefore);
-        expect(redeemedPledgeAfter.coll).to.be.eq(0); // Bug: Sometimes coll remains "1" in uint256. It must be "0"
+        expect(redeemedPledgeAfter.coll).to.be.eq(0); // Note: Sometimes "dusty (= very small)" coll remaines. But it is internally adjusted to 0 in Redeemer.
         expect(redeemedPledgeAfter.priority).to.be.eq(0);
         expect(feePoolBalanceAfter).to.be.eq(feePoolBalanceBefore);
         expect(await assertDebtIntegrity(Yamato, CJPY)).to.be.true;

@@ -384,7 +384,7 @@ describe("PriceFeed", function () {
       };
       await setMocks(lastMockInput);
 
-      // Bug: max price route with usingTellor
+      // Note: max price route with usingTellor
       assertTellor(
         await feed.getPrice(),
         await feed.getStatus(),
