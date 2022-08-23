@@ -54,6 +54,7 @@ If not, please check that the npm dependencies are installed as expected referri
 - `npm run deploy:rinkeby` (with cached contracts / continue from resumed deployment)
   - If etherscan verification is failed, restart that by `npm run verify:rinkeby:all`
   - The deploy script is automatically handling the upgrade of latest implementation of UUPS
+  - `npx hardhat deploy --tags <tag> --network <network>` gives your a chance to run a specific deploy script.
 - `npm run test:integration`
   - Run this after deployment succeeded
 

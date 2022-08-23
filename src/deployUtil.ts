@@ -2,6 +2,7 @@ require("dotenv").config();
 import { readFileSync, writeFileSync, unlinkSync, existsSync } from "fs";
 import { Wallet, Signer, getDefaultProvider, Contract } from "ethers";
 import { genABI } from "../src/genABI";
+import { getLatestContractName } from "../src/upgradeUtil";
 import { isConstructSignatureDeclaration } from "typescript";
 import {
   DeploymentsExtension,
@@ -260,12 +261,14 @@ export function verifyWithEtherscan() {
   }
 
   try {
+    let name = getLatestContractName("PriceFeed");
+    console.log(name);
     execSync(
-      `npm run verify:rinkeby -- --contract contracts/PriceFeed.sol:PriceFeed ${PriceFeedUUPSImpl} 2> /dev/null`
+      `npm run verify:rinkeby -- --contract contracts/${name}.sol:${name} ${PriceFeedUUPSImpl}`
     );
   } catch (e) {
     console.log(
-      "Etherscan Verification of PriceFeed.sol is failed. Maybe because of oz-upgrades reusing unused impl."
+      `Etherscan Verification of PriceFeed.sol is failed. Maybe because of oz-upgrades reusing unused impl. (message: ${e.message})`
     );
   }
 
@@ -277,98 +280,109 @@ export function verifyWithEtherscan() {
     console.log(e.message);
   }
   try {
+    let name = getLatestContractName("FeePool");
     execSync(
-      `npm run verify:rinkeby -- --contract contracts/FeePool.sol:FeePool ${FeePoolUUPSImpl} 2> /dev/null`
+      `npm run verify:rinkeby -- --contract contracts/${name}.sol:${name} ${FeePoolUUPSImpl}`
     );
   } catch (e) {
     console.log(
-      "Etherscan Verification of FeePool.sol is failed. Maybe because of oz-upgrades reusing unused impl."
+      `Etherscan Verification of FeePool.sol is failed. Maybe because of oz-upgrades reusing unused impl. (message: ${e.message})`
     );
   }
   try {
+    let name = getLatestContractName("CurrencyOS");
     execSync(
-      `npm run verify:rinkeby -- --contract contracts/CurrencyOS.sol:CurrencyOS ${CurrencyOSUUPSImpl}`
+      `npm run verify:rinkeby -- --contract contracts/${name}.sol:${name} ${CurrencyOSUUPSImpl}`
     );
   } catch (e) {
     console.log(
-      "Etherscan Verification of CurrencyOS.sol is failed. Maybe because of oz-upgrades reusing unused impl."
-    );
-  }
-
-  try {
-    execSync(
-      `npm run verify:rinkeby -- --contract contracts/Yamato.sol:Yamato ${YamatoUUPSImpl} 2> /dev/null`
-    );
-  } catch (e) {
-    console.log(
-      "Etherscan Verification of Yamato.sol is failed. Maybe because of oz-upgrades reusing unused impl."
+      `Etherscan Verification of CurrencyOS.sol is failed. Maybe because of oz-upgrades reusing unused impl. (message: ${e.message})`
     );
   }
 
   try {
+    let name = getLatestContractName("Yamato");
     execSync(
-      `npm run verify:rinkeby -- --contract contracts/YamatoDepositor.sol:YamatoDepositor ${YamatoDepositorUUPSImpl} 2> /dev/null`
+      `npm run verify:rinkeby -- --contract contracts/${name}.sol:${name} ${YamatoUUPSImpl}`
     );
   } catch (e) {
     console.log(
-      "Etherscan Verification of YamatoDepositor.sol is failed. Maybe because of oz-upgrades reusing unused impl."
+      `Etherscan Verification of Yamato.sol is failed. Maybe because of oz-upgrades reusing unused impl. (message: ${e.message})`
     );
   }
+
   try {
+    let name = getLatestContractName("YamatoDepositor");
     execSync(
-      `npm run verify:rinkeby -- --contract contracts/YamatoBorrower.sol:YamatoBorrower ${YamatoBorrowerUUPSImpl} 2> /dev/null`
+      `npm run verify:rinkeby -- --contract contracts/${name}.sol:${name} ${YamatoDepositorUUPSImpl}`
     );
   } catch (e) {
     console.log(
-      "Etherscan Verification of YamatoBorrower.sol is failed. Maybe because of oz-upgrades reusing unused impl."
+      `Etherscan Verification of YamatoDepositor.sol is failed. Maybe because of oz-upgrades reusing unused impl. (message: ${e.message})`
     );
   }
   try {
+    let name = getLatestContractName("YamatoBorrower");
     execSync(
-      `npm run verify:rinkeby -- --contract contracts/YamatoRepayer.sol:YamatoRepayer ${YamatoRepayerUUPSImpl} 2> /dev/null`
+      `npm run verify:rinkeby -- --contract contracts/${name}.sol:${name} ${YamatoBorrowerUUPSImpl}`
     );
   } catch (e) {
     console.log(
-      "Etherscan Verification of YamatoRepayer.sol is failed. Maybe because of oz-upgrades reusing unused impl."
+      `Etherscan Verification of YamatoBorrower.sol is failed. Maybe because of oz-upgrades reusing unused impl. (message: ${e.message})`
     );
   }
   try {
+    let name = getLatestContractName("YamatoRepayer");
     execSync(
-      `npm run verify:rinkeby -- --contract contracts/YamatoWithdrawer.sol:YamatoWithdrawer ${YamatoWithdrawerUUPSImpl} 2> /dev/null`
+      `npm run verify:rinkeby -- --contract contracts/${name}.sol:${name} ${YamatoRepayerUUPSImpl}`
     );
   } catch (e) {
     console.log(
-      "Etherscan Verification of YamatoWithdrawer.sol is failed. Maybe because of oz-upgrades reusing unused impl."
+      `Etherscan Verification of YamatoRepayer.sol is failed. Maybe because of oz-upgrades reusing unused impl. (message: ${e.message})`
     );
   }
   try {
+    let name = getLatestContractName("YamatoWithdrawer");
     execSync(
-      `npm run verify:rinkeby -- --contract contracts/YamatoRedeemer.sol:YamatoRedeemer ${YamatoRedeemerUUPSImpl} 2> /dev/null`
+      `npm run verify:rinkeby -- --contract contracts/${name}.sol:${name} ${YamatoWithdrawerUUPSImpl}`
     );
   } catch (e) {
     console.log(
-      "Etherscan Verification of YamatoRedeemer.sol is failed. Maybe because of oz-upgrades reusing unused impl."
+      `Etherscan Verification of YamatoWithdrawer.sol is failed. Maybe because of oz-upgrades reusing unused impl. (message: ${e.message})`
     );
   }
   try {
+    let name = getLatestContractName("YamatoRedeemer");
     execSync(
-      `npm run verify:rinkeby -- --contract contracts/YamatoSweeper.sol:YamatoSweeper ${YamatoSweeperUUPSImpl} 2> /dev/null`
+      `npm run verify:rinkeby -- --contract contracts/${name}.sol:${name} ${YamatoRedeemerUUPSImpl}`
     );
   } catch (e) {
     console.log(
-      "Etherscan Verification of YamatoSweeper.sol is failed. Maybe because of oz-upgrades reusing unused impl."
+      `Etherscan Verification of YamatoRedeemer.sol is failed. Maybe because of oz-upgrades reusing unused impl. (message: ${e.message})`
     );
   }
   try {
+    let name = getLatestContractName("YamatoSweeper");
     execSync(
-      `npm run verify:rinkeby -- --contract contracts/Pool.sol:Pool ${PoolUUPSImpl}`
+      `npm run verify:rinkeby -- --contract contracts/${name}.sol:${name} ${YamatoSweeperUUPSImpl}`
+    );
+  } catch (e) {
+    console.log(
+      `Etherscan Verification of YamatoSweeper.sol is failed. Maybe because of oz-upgrades reusing unused impl. (message: ${e.message})`
+    );
+  }
+  try {
+    let name = getLatestContractName("Pool");
+    execSync(
+      `npm run verify:rinkeby -- --contract contracts/${name}.sol:${name} ${PoolUUPSImpl}`
     );
   } catch (e) {
     console.log(e.message);
   }
   try {
+    let name = getLatestContractName("PriorityRegistry");
     execSync(
-      `npm run verify:rinkeby -- --contract contracts/PriorityRegistry.sol:PriorityRegistry ${PriorityRegistryUUPSImpl}`
+      `npm run verify:rinkeby -- --contract contracts/${name}.sol:${name} ${PriorityRegistryUUPSImpl}`
     );
   } catch (e) {
     console.log(e.message);
