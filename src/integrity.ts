@@ -9,9 +9,9 @@ import {
   getDeployer,
 } from "../src/deployUtil";
 import {
-  assertPoolIntegrity, 
+  assertPoolIntegrity,
   assertCollIntegrityWithSelfDestruct,
-  assertDebtIntegrity
+  assertDebtIntegrity,
 } from "../src/testUtil";
 
 import { readFileSync, existsSync } from "fs";
@@ -41,13 +41,14 @@ export async function smokeTest() {
     genABI("PriceFeedV2"),
     p
   );
-  console.log('---');
+  console.log("---");
   const ChainLinkEthUsd = new ethers.Contract(
     await PriceFeed.ethPriceAggregatorInUSD(),
     genABI("ChainLinkMock"),
     p
   );
-  console.log('---'); process.exit();
+  console.log("---");
+  process.exit();
   const Tellor = new ethers.Contract(
     await PriceFeed.tellorCaller(),
     genABI("TellorCallerMock"),
@@ -64,7 +65,6 @@ export async function smokeTest() {
     p
   );
   const Pool = new ethers.Contract(await Yamato.pool(), genABI("PoolV2"), p);
-
 
   /*
         Market Init
@@ -236,7 +236,6 @@ export async function smokeTest() {
   assertCollIntegrityWithSelfDestruct(Pool, Yamato);
   assertDebtIntegrity(Yamato, CJPY);
   assertPoolIntegrity(Pool, CJPY);
-
 }
 
 smokeTest().catch((e) => console.log(e.message));

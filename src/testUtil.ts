@@ -260,7 +260,6 @@ export async function assertCollIntegrityWithSelfDestruct(Pool, Yamato) {
   }
 }
 
-
 export async function getPledges(Yamato) {
   let filter = Yamato.filters.Deposited(null, null);
   let logs = await Yamato.queryFilter(filter);
