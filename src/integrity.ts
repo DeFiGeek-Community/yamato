@@ -8,6 +8,12 @@ import {
   getFoundation,
   getDeployer,
 } from "../src/deployUtil";
+import {
+  assertPoolIntegrity,
+  assertCollIntegrityWithSelfDestruct,
+  assertDebtIntegrity,
+} from "../src/testUtil";
+
 import { readFileSync, existsSync } from "fs";
 import { toERC20 } from "../test/param/helper";
 import { BigNumber } from "ethers";
@@ -20,7 +26,7 @@ export async function smokeTest() {
   const YamatoAddr = readFileSync(filepath).toString();
   const accounts = await ethers.getSigners();
 
-  const Yamato = new ethers.Contract(YamatoAddr, genABI("Yamato"), p);
+  const Yamato = new ethers.Contract(YamatoAddr, genABI("YamatoV3"), p);
 
   const redeemer = getFoundation();
   const redeemee = getDeployer();
@@ -29,16 +35,20 @@ export async function smokeTest() {
 
   const toCollateralize = 0.001;
   const MCR = BigNumber.from(130);
+
   const PriceFeed = new ethers.Contract(
     await Yamato.priceFeed(),
-    genABI("PriceFeed"),
+    genABI("PriceFeedV2"),
     p
   );
+  console.log("---");
   const ChainLinkEthUsd = new ethers.Contract(
     await PriceFeed.ethPriceAggregatorInUSD(),
     genABI("ChainLinkMock"),
     p
   );
+  console.log("---");
+  process.exit();
   const Tellor = new ethers.Contract(
     await PriceFeed.tellorCaller(),
     genABI("TellorCallerMock"),
@@ -46,7 +56,7 @@ export async function smokeTest() {
   );
   const CurrencyOS = new ethers.Contract(
     await Yamato.currencyOS(),
-    genABI("CurrencyOS"),
+    genABI("CurrencyOSV2"),
     p
   );
   const CJPY = new ethers.Contract(
@@ -54,7 +64,7 @@ export async function smokeTest() {
     genABI("CJPY"),
     p
   );
-  const Pool = new ethers.Contract(await Yamato.pool(), genABI("Pool"), p);
+  const Pool = new ethers.Contract(await Yamato.pool(), genABI("PoolV2"), p);
 
   /*
         Market Init
@@ -223,33 +233,9 @@ export async function smokeTest() {
     })
   ).wait();
 
-  const redeemerCJPYBalance = await CJPY.balanceOf(_redeemerAddr);
-  const redeemeeCJPYBalance = await CJPY.balanceOf(_redeemeeAddr);
-
-  const redeemerDebt = (await Yamato.getPledge(_redeemerAddr)).debt;
-  const redeemeeDebt = (await Yamato.getPledge(_redeemeeAddr)).debt;
-
-  const [totalColl, totalDebt] = await Yamato.getStates();
-  const totalSupply = await CJPY.totalSupply();
-
-  const poolRedemptionReserve = await Pool.redemptionReserve();
-  const poolSweepReserve = await Pool.sweepReserve();
-
-  console.log(`
-    This integrity test only works when there's only alice and bob
-
-     \\ alice borrow /        \\ bob borrow /       \\ alice&bob fee part1 /   \\ alice&bob fee part2 /             \\ alice&bob debt /
-    redeemerCJPYBalance  +  redeemeeCJPYBalance  +  poolRedemptionReserve     +    poolSweepReserve           =  redeemerDebt + redeemeeDebt = totalDebt = totalSupply
-
-    ${redeemerCJPYBalance} + ${redeemeeCJPYBalance} + ${poolRedemptionReserve} + ${poolSweepReserve}       =  ${redeemerDebt} + ${redeemeeDebt} = ${totalDebt} = ${totalSupply}
-
-    ${redeemerCJPYBalance
-      .add(redeemeeCJPYBalance)
-      .add(poolRedemptionReserve)
-      .add(poolSweepReserve)} = ${redeemerDebt.add(
-    redeemeeDebt
-  )}  = ${totalDebt} = ${totalSupply}
-    `);
+  assertCollIntegrityWithSelfDestruct(Pool, Yamato);
+  assertDebtIntegrity(Yamato, CJPY);
+  assertPoolIntegrity(Pool, CJPY);
 }
 
 smokeTest().catch((e) => console.log(e.message));

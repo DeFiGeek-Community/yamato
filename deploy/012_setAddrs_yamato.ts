@@ -69,4 +69,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log(`log: Yamato.setDeps() executed.`);
 };
 export default func;
-func.tags = [""];
+func.tags = ["setDeps"];

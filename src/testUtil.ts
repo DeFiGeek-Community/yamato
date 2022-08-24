@@ -238,6 +238,28 @@ export async function assertCollIntegrity(Pool, Yamato) {
   }
 }
 
+/// @dev selfdestruct(address) can send ETH to pool, Take account it.
+export async function assertCollIntegrityWithSelfDestruct(Pool, Yamato) {
+  let provider = await setProvider();
+  let balance = await Pool.provider.getBalance(Pool.address);
+
+  let states = await Yamato.getStates();
+  let totalColl = states[0];
+
+  let msg = "";
+
+  if (balance.gte(totalColl) === false) {
+    msg += ` / Balance-TotalColl inconsistent (${balance}, ${totalColl})`;
+  }
+
+  if (msg.length === 0) {
+    return true;
+  } else {
+    console.error(msg);
+    return false;
+  }
+}
+
 export async function getPledges(Yamato) {
   let filter = Yamato.filters.Deposited(null, null);
   let logs = await Yamato.queryFilter(filter);
