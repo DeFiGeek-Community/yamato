@@ -54,9 +54,9 @@ library PledgeLib {
 
         if (_debt != 0) {
             // Note: ICR is per-ten-k in Yamato
-            _ICR =
-                ((10000 * (_pledge.coll * _ethPriceInCurrency)) / 1e18) /
-                _debt;
+            /// @dev Reorder calculation to handle larger value.
+            /// ICR = ((10000 * (_pledge.coll * _ethPriceInCurrency)) / 1e18) / _debt
+            _ICR = _pledge.coll * _ethPriceInCurrency / 1e14 / _debt;
         } else {
             if (_pledge.coll > 0) {
                 _ICR = 2**256 - 1;
