@@ -46,13 +46,13 @@ Please note, using a different version might result in commands like "npm i" and
 If it's working fine, you should be able to install the dependencies & see the tests run.
 If not, please check that the npm dependencies are installed as expected referring to the Configurations section.
 
-## Rinkeby
+## goerli
 
 ### Running deployment
 
-- `npm run deploy:rinkeby:reset`
-- `npm run deploy:rinkeby` (with cached contracts / continue from resumed deployment)
-  - If etherscan verification is failed, restart that by `npm run verify:rinkeby:all`
+- `npm run deploy:goerli:reset`
+- `npm run deploy:goerli` (with cached contracts / continue from resumed deployment)
+  - If etherscan verification is failed, restart that by `npm run verify:goerli:all`
   - The deploy script is automatically handling the upgrade of latest implementation of UUPS
   - `npx hardhat deploy --tags <tag> --network <network>` gives your a chance to run a specific deploy script.
 - `npm run test:integration`
@@ -60,16 +60,16 @@ If not, please check that the npm dependencies are installed as expected referri
 
 ### Running upgrade
 
-- `npx hardhat run upgrade/batches/commit79597f-202203280247.ts --network rinkeby`
+- `npx hardhat run upgrade/batches/commit79597f-202203280247.ts --network goerli`
   - You can read what's going on in the script file.
   - We recommend to comment-in the only-using line of script, and check if the tx suceeded property one-by-one.
 
 #### For only etherscan verification
 
-`npm run verify:rinkeby:all`
+`npm run verify:goerli:all`
 
-### The latest Rinkeby contract addresses
+### The latest goerli contract addresses
 
-See `./deployments/rinkeby/*` files.
+See `./deployments/goerli/*` files.
 
 <!-- TBD -->
