@@ -18,11 +18,10 @@ library PledgeLib {
     /// @param _pledge having coll and debt
     /// @param _feed Oracle data in decimal=18 padded uint
     /// @return _ICR in uint256
-    function getICR(IYamato.Pledge memory _pledge, address _feed)
-        public
-        view
-        returns (uint256 _ICR)
-    {
+    function getICR(
+        IYamato.Pledge memory _pledge,
+        address _feed
+    ) public view returns (uint256 _ICR) {
         require(_feed != address(0), "Feed is null address.");
         IPriceFeed feed = IPriceFeed(_feed);
 
@@ -34,7 +33,7 @@ library PledgeLib {
         if (_coll == 0 && _debt == 0) {
             _ICR = 0;
         } else if (_coll > 0 && _debt == 0) {
-            _ICR = 2**256 - 1;
+            _ICR = 2 ** 256 - 1;
         } else {
             // Note: ICR is per-ten-k in Yamato
             _ICR = (10000 * _collInCurrency) / _debt;
@@ -59,7 +58,7 @@ library PledgeLib {
                 _debt;
         } else {
             if (_pledge.coll > 0) {
-                _ICR = 2**256 - 1;
+                _ICR = 2 ** 256 - 1;
             } else {
                 _ICR = 0;
             }
@@ -68,11 +67,9 @@ library PledgeLib {
 
     /// @notice Copy the storage Pledge into memory
     /// @param _pledge having all Pledge struct params (coll, debt, isCreated, owner, priority)
-    function toMem(IYamato.Pledge storage _pledge)
-        public
-        view
-        returns (IYamato.Pledge memory)
-    {
+    function toMem(
+        IYamato.Pledge storage _pledge
+    ) public view returns (IYamato.Pledge memory) {
         return
             IYamato.Pledge(
                 _pledge.coll,
@@ -85,11 +82,9 @@ library PledgeLib {
 
     /// @notice Clone the memory Pledge into memory
     /// @param _pledge having all Pledge struct params (coll, debt, isCreated, owner, priority)
-    function clone(IYamato.Pledge memory _pledge)
-        public
-        view
-        returns (IYamato.Pledge memory)
-    {
+    function clone(
+        IYamato.Pledge memory _pledge
+    ) public view returns (IYamato.Pledge memory) {
         return
             IYamato.Pledge(
                 _pledge.coll,
@@ -103,11 +98,10 @@ library PledgeLib {
     /// @notice Add debt for the memory Pledge
     /// @param _pledge having all Pledge struct params (coll, debt, isCreated, owner, priority)
     /// @param _adder is how much debt to add
-    function addDebt(IYamato.Pledge memory _pledge, uint256 _adder)
-        public
-        view
-        returns (IYamato.Pledge memory)
-    {
+    function addDebt(
+        IYamato.Pledge memory _pledge,
+        uint256 _adder
+    ) public view returns (IYamato.Pledge memory) {
         return
             IYamato.Pledge(
                 _pledge.coll,
@@ -121,10 +115,10 @@ library PledgeLib {
     /// @notice Sync the storage Pledge with the memory Pledge
     /// @param sPledge having all Pledge struct params (coll, debt, isCreated, owner, priority)
     /// @param _pledge having all Pledge struct params (coll, debt, isCreated, owner, priority)
-    function sync(IYamato.Pledge storage sPledge, IYamato.Pledge memory _pledge)
-        public
-        returns (IYamato.Pledge storage)
-    {
+    function sync(
+        IYamato.Pledge storage sPledge,
+        IYamato.Pledge memory _pledge
+    ) public returns (IYamato.Pledge storage) {
         sPledge.coll = _pledge.coll;
         sPledge.debt = _pledge.debt;
         sPledge.isCreated = _pledge.isCreated;

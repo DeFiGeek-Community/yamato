@@ -7,7 +7,7 @@ import { getDeploymentAddressPathWithTag, setNetwork } from "./deployUtil";
 import { execSync } from "child_process";
 import { PriorityRegistry, PriorityRegistryV5 } from "../typechain";
 import chalk from "chalk";
-require('dotenv').config();
+require("dotenv").config();
 
 /*
   For single-person upgrade
@@ -62,7 +62,10 @@ export async function upgradeLinkedProxy<
 export async function proposeUpgradeProxy<
   T extends BaseContract,
   S extends ContractFactory
->(olderInstanceAddress: string, contractNameTo: string): Promise<ExtendedProposalResponse> {
+>(
+  olderInstanceAddress: string,
+  contractNameTo: string
+): Promise<ExtendedProposalResponse> {
   let contractFactory: S = <S>await ethers.getContractFactory(contractNameTo);
   const res: ExtendedProposalResponse = await defender.proposeUpgrade(
     olderInstanceAddress,
@@ -165,9 +168,9 @@ export async function runUpgrade(implNameBase, linkings = []) {
     let multisigAddr = process.env.UUPS_PROXY_ADMIN_MULTISIG_ADDRESS;
     if (!multisigAddr) {
       const inst =
-      linkings.length > 0
-        ? await upgradeLinkedProxy(ERC1967Proxy, implName, linkings)
-        : await upgradeProxy(ERC1967Proxy, implName);
+        linkings.length > 0
+          ? await upgradeLinkedProxy(ERC1967Proxy, implName, linkings)
+          : await upgradeProxy(ERC1967Proxy, implName);
       console.log(
         chalk.gray(
           `        [success] ${implName}=${inst.address} is upgraded to ERC1967Proxy`
@@ -185,20 +188,22 @@ export async function runUpgrade(implNameBase, linkings = []) {
         console.error(e.message);
       }
 
-      const implPath = getDeploymentAddressPathWithTag(implNameBase, "UUPSImpl");
+      const implPath = getDeploymentAddressPathWithTag(
+        implNameBase,
+        "UUPSImpl"
+      );
       writeFileSync(implPath, implAddr);
     } else {
       const res =
-      linkings.length > 0
-        ? await proposeUpgradeLinkedProxy(ERC1967Proxy, implName, linkings)
-        : await proposeUpgradeProxy(ERC1967Proxy, implName);
+        linkings.length > 0
+          ? await proposeUpgradeLinkedProxy(ERC1967Proxy, implName, linkings)
+          : await proposeUpgradeProxy(ERC1967Proxy, implName);
 
       console.log(res.verificationResponse);
 
       // const implPath = getDeploymentAddressPathWithTag(implNameBase, "UUPSImpl");
       // writeFileSync(implPath, implAddr);
     }
-
   }
 }
 

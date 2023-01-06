@@ -33,11 +33,10 @@ contract YamatoRepayer is IYamatoRepayer, YamatoAction {
         __YamatoAction_init(_yamato);
     }
 
-    function runRepay(address _sender, uint256 _currencyAmount)
-        public
-        override
-        onlyYamato
-    {
+    function runRepay(
+        address _sender,
+        uint256 _currencyAmount
+    ) public override onlyYamato {
         /*
             1. Get feed and Pledge
         */

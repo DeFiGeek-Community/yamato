@@ -45,9 +45,9 @@ interface IPriorityRegistryV6 {
 
     function upsert(IYamato.Pledge memory _pledge) external returns (uint256);
 
-    function bulkUpsert(IYamato.Pledge[] memory _pledges)
-        external
-        returns (uint256[] memory);
+    function bulkUpsert(
+        IYamato.Pledge[] memory _pledges
+    ) external returns (uint256[] memory);
 
     function remove(IYamato.Pledge memory _pledge) external;
 
@@ -65,14 +65,14 @@ interface IPriorityRegistryV6 {
 
     function rankedQueuePush(uint256 _icr, address _pledgeAddr) external;
 
-    function rankedQueuePop(uint256 _icr)
-        external
-        returns (address _pledgeAddr);
+    function rankedQueuePop(
+        uint256 _icr
+    ) external returns (address _pledgeAddr);
 
     function rankedQueueSearchAndDestroy(uint256 _icr, uint256 _i) external;
 
-    function getRankedQueue(uint256 _icr, uint256 _i)
-        external
-        view
-        returns (address _pledgeAddr);
+    function getRankedQueue(
+        uint256 _icr,
+        uint256 _i
+    ) external view returns (address _pledgeAddr);
 }

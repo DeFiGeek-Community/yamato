@@ -29,7 +29,9 @@ interface IYamatoSweeper {
         address[] _pledgesOwner;
     }
 
-    function runSweep(address _sender)
+    function runSweep(
+        address _sender
+    )
         external
         returns (
             uint256 _sweptAmount,
@@ -37,11 +39,8 @@ interface IYamatoSweeper {
             address[] memory
         );
 
-    function sweepDebt(IYamato.Pledge memory sPledge, uint256 maxSweeplable)
-        external
-        returns (
-            IYamato.Pledge memory,
-            uint256,
-            uint256
-        );
+    function sweepDebt(
+        IYamato.Pledge memory sPledge,
+        uint256 maxSweeplable
+    ) external returns (IYamato.Pledge memory, uint256, uint256);
 }

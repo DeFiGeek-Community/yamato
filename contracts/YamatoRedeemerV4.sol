@@ -37,12 +37,9 @@ contract YamatoRedeemerV4 is IYamatoRedeemerV4, YamatoAction {
         __YamatoAction_init(_yamato);
     }
 
-    function runRedeem(IYamatoRedeemer.RunRedeemArgs memory _args)
-        public
-        override
-        onlyYamato
-        returns (IYamatoRedeemer.RedeemedArgs memory)
-    {
+    function runRedeem(
+        IYamatoRedeemer.RunRedeemArgs memory _args
+    ) public override onlyYamato returns (IYamatoRedeemer.RedeemedArgs memory) {
         IYamatoRedeemerV4.RunRedeemVars memory vars;
         IPriorityRegistryV6 _prv6 = IPriorityRegistryV6(priorityRegistry());
         ICurrencyOS _currencyOS = ICurrencyOS(currencyOS());
@@ -135,7 +132,8 @@ contract YamatoRedeemerV4 is IYamatoRedeemerV4, YamatoAction {
                 ) {
                     vars._toBeRedeemedFragment =
                         _args.wantToRedeemCurrencyAmount -
-                        vars._toBeRedeemed; /* Limiting redeeming amount within the amount sender has. */
+                        vars
+                            ._toBeRedeemed; /* Limiting redeeming amount within the amount sender has. */
                 }
 
                 vars._toBeRedeemedFragmentInEth =

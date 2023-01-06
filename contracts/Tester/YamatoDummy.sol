@@ -42,10 +42,9 @@ contract YamatoDummy {
         feed = ICurrencyOS(currencyOS).priceFeed();
     }
 
-    function setPriorityRegistry(address _priorityRegistry)
-        public
-        onlyGovernance
-    {
+    function setPriorityRegistry(
+        address _priorityRegistry
+    ) public onlyGovernance {
         priorityRegistry = IPriorityRegistryV6(_priorityRegistry);
     }
 
@@ -71,12 +70,9 @@ contract YamatoDummy {
         - bypassRemove()
         - getICR()
     */
-    function FR(uint256 _icrpertenk)
-        external
-        view
-        onlyTester
-        returns (uint256)
-    {
+    function FR(
+        uint256 _icrpertenk
+    ) external view onlyTester returns (uint256) {
         return _icrpertenk.FR();
     }
 
@@ -96,25 +92,22 @@ contract YamatoDummy {
         priorityRegistry.rankedQueuePush(_icr, _pledge.owner);
     }
 
-    function bypassRankedQueuePop(uint256 _icr)
-        external
-        onlyTester
-        returns (address)
-    {
+    function bypassRankedQueuePop(
+        uint256 _icr
+    ) external onlyTester returns (address) {
         return priorityRegistry.rankedQueuePop(_icr);
     }
 
-    function bypassRankedQueueSearchAndDestroy(uint256 _icr, uint256 _i)
-        external
-        onlyTester
-    {
+    function bypassRankedQueueSearchAndDestroy(
+        uint256 _icr,
+        uint256 _i
+    ) external onlyTester {
         priorityRegistry.rankedQueueSearchAndDestroy(_icr, _i);
     }
 
-    function bypassDepositRedemptionReserve(uint256 _amount)
-        external
-        onlyTester
-    {
+    function bypassDepositRedemptionReserve(
+        uint256 _amount
+    ) external onlyTester {
         pool.depositRedemptionReserve(_amount);
     }
 
@@ -135,17 +128,17 @@ contract YamatoDummy {
         require(success, "Transfer failed.");
     }
 
-    function bypassSendETH(address _recipient, uint256 _amount)
-        external
-        onlyTester
-    {
+    function bypassSendETH(
+        address _recipient,
+        uint256 _amount
+    ) external onlyTester {
         pool.sendETH(_recipient, _amount);
     }
 
-    function bypassSendCurrency(address _recipient, uint256 _amount)
-        external
-        onlyTester
-    {
+    function bypassSendCurrency(
+        address _recipient,
+        uint256 _amount
+    ) external onlyTester {
         pool.sendCurrency(_recipient, _amount);
     }
 
@@ -171,11 +164,9 @@ contract YamatoDummy {
         return permit;
     }
 
-    function getPledge(address _owner)
-        public
-        view
-        returns (IYamato.Pledge memory _p)
-    {
+    function getPledge(
+        address _owner
+    ) public view returns (IYamato.Pledge memory _p) {
         _p = pledges[_owner];
     }
 }

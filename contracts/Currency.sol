@@ -21,10 +21,10 @@ contract Currency is ERC20Permit, ICurrency {
     address currencyOS;
     address governance;
 
-    constructor(string memory name, string memory symbol)
-        ERC20Permit(name)
-        ERC20(name, symbol)
-    {
+    constructor(
+        string memory name,
+        string memory symbol
+    ) ERC20Permit(name) ERC20(name, symbol) {
         governance = msg.sender;
     }
 
@@ -49,11 +49,10 @@ contract Currency is ERC20Permit, ICurrency {
         _burn(to, amount);
     }
 
-    function approve(address spender, uint256 amount)
-        public
-        override
-        returns (bool)
-    {
+    function approve(
+        address spender,
+        uint256 amount
+    ) public override returns (bool) {
         require(
             _msgSender() != spender,
             "sender and spender shouldn't be the same."

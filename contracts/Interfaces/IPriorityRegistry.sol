@@ -23,10 +23,10 @@ interface IPriorityRegistry {
 
     function pledgeLength() external view returns (uint256);
 
-    function getLevelIndice(uint256 _icr, uint256 _i)
-        external
-        view
-        returns (address);
+    function getLevelIndice(
+        uint256 _icr,
+        uint256 _i
+    ) external view returns (address);
 
     function nextRedeemable() external view returns (IYamato.Pledge memory);
 

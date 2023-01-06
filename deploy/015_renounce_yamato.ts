@@ -6,7 +6,7 @@ import {
   getDeploymentAddressPathWithTag,
   getFoundation,
   existsSlot,
-  sleep
+  sleep,
 } from "../src/deployUtil";
 import { readFileSync } from "fs";
 import { genABI } from "../src/genABI";
@@ -70,59 +70,59 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   );
 
   await sleep(5000);
-  if ( await Yamato.tester() !== constants.AddressZero ) {
+  if ((await Yamato.tester()) !== constants.AddressZero) {
     await (await Yamato.connect(getFoundation()).revokeTester()).wait();
-    console.log(`log: Yamato.revokeTester() executed.`);  
+    console.log(`log: Yamato.revokeTester() executed.`);
   } else {
-    console.log(`log: Yamato.revokeTester() skipped.`);  
+    console.log(`log: Yamato.revokeTester() skipped.`);
   }
 
   await sleep(3000);
-  if ( await YamatoDepositor.tester() !== constants.AddressZero ) {
+  if ((await YamatoDepositor.tester()) !== constants.AddressZero) {
     await YamatoDepositor.connect(getFoundation()).revokeTester();
     console.log(`log: YamatoDepositor.revokeTester() executed.`);
   } else {
-    console.log(`log: YamatoDepositor.revokeTester() skipped.`);  
+    console.log(`log: YamatoDepositor.revokeTester() skipped.`);
   }
 
   await sleep(3000);
-  if ( await YamatoBorrower.tester() !== constants.AddressZero ) {
+  if ((await YamatoBorrower.tester()) !== constants.AddressZero) {
     await YamatoBorrower.connect(getFoundation()).revokeTester();
     console.log(`log: YamatoBorrower.revokeTester() executed.`);
   } else {
-    console.log(`log: YamatoBorrower.revokeTester() skipped.`);  
+    console.log(`log: YamatoBorrower.revokeTester() skipped.`);
   }
 
   await sleep(3000);
-  if ( await YamatoRepayer.tester() !== constants.AddressZero ) {
+  if ((await YamatoRepayer.tester()) !== constants.AddressZero) {
     await YamatoRepayer.connect(getFoundation()).revokeTester();
     console.log(`log: YamatoRepayer.revokeTester() executed.`);
   } else {
-    console.log(`log: YamatoRepayer.revokeTester() skipped.`);  
+    console.log(`log: YamatoRepayer.revokeTester() skipped.`);
   }
 
   await sleep(3000);
-  if ( await YamatoWithdrawer.tester() !== constants.AddressZero ) {
+  if ((await YamatoWithdrawer.tester()) !== constants.AddressZero) {
     await YamatoWithdrawer.connect(getFoundation()).revokeTester();
     console.log(`log: YamatoWithdrawer.revokeTester() executed.`);
   } else {
-    console.log(`log: YamatoWithdrawer.revokeTester() skipped.`);  
+    console.log(`log: YamatoWithdrawer.revokeTester() skipped.`);
   }
 
   await sleep(4000);
-  if ( await YamatoRedeemer.tester() !== constants.AddressZero ) {
+  if ((await YamatoRedeemer.tester()) !== constants.AddressZero) {
     await YamatoRedeemer.connect(getFoundation()).revokeTester();
     console.log(`log: YamatoRedeemer.revokeTester() executed.`);
   } else {
-    console.log(`log: YamatoRedeemer.revokeTester() skipped.`);  
+    console.log(`log: YamatoRedeemer.revokeTester() skipped.`);
   }
 
   await sleep(4000);
-  if ( await YamatoSweeper.tester() !== constants.AddressZero ) {
+  if ((await YamatoSweeper.tester()) !== constants.AddressZero) {
     await YamatoSweeper.connect(getFoundation()).revokeTester();
     console.log(`log: YamatoSweeper.revokeTester() executed.`);
   } else {
-    console.log(`log: YamatoSweeper.revokeTester() skipped.`);  
+    console.log(`log: YamatoSweeper.revokeTester() skipped.`);
   }
 };
 

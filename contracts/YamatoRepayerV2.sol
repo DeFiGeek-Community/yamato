@@ -34,11 +34,10 @@ contract YamatoRepayerV2 is IYamatoRepayer, YamatoAction {
     }
 
     /// @dev Package-separated repay function which only be called by YamatoV(n).sol
-    function runRepay(address _sender, uint256 _repayAmountInCurrency)
-        public
-        override
-        onlyYamato
-    {
+    function runRepay(
+        address _sender,
+        uint256 _repayAmountInCurrency
+    ) public override onlyYamato {
         /*
             1. Get feed and Pledge
         */

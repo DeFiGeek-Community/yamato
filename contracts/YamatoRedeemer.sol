@@ -34,12 +34,9 @@ contract YamatoRedeemer is IYamatoRedeemer, YamatoAction {
     }
 
     // @dev no reentrancy guard because action funcs are protected by permitDeps()
-    function runRedeem(RunRedeemArgs memory _args)
-        public
-        override
-        onlyYamato
-        returns (RedeemedArgs memory)
-    {
+    function runRedeem(
+        RunRedeemArgs memory _args
+    ) public override onlyYamato returns (RedeemedArgs memory) {
         RunRedeemVars memory vars;
         vars.ethPriceInCurrency = IPriceFeed(priceFeed()).fetchPrice();
         vars.currencyAmountStart = _args.wantToRedeemCurrencyAmount;

@@ -60,11 +60,9 @@ contract PoolV2 is IPool, YamatoStore, ReentrancyGuardUpgradeable {
 
     /// @notice Mint new currency and save it to this pool.
     /// @dev This only be used by YamatoBorrower and reserve is always minted, not transfered.
-    function depositRedemptionReserve(uint256 amount)
-        public
-        override
-        onlyYamato
-    {
+    function depositRedemptionReserve(
+        uint256 amount
+    ) public override onlyYamato {
         ICurrencyOS(IYamato(yamato()).currencyOS()).mintCurrency(
             address(this),
             amount
@@ -113,12 +111,10 @@ contract PoolV2 is IPool, YamatoStore, ReentrancyGuardUpgradeable {
 
     /// @notice Transfer ETH from Pool to recipient.
     /// @dev Assume balance is greater than equal totalColl due to consistent logic and selfdestruct(address)
-    function sendETH(address recipient, uint256 amount)
-        public
-        override
-        nonReentrant
-        onlyYamato
-    {
+    function sendETH(
+        address recipient,
+        uint256 amount
+    ) public override nonReentrant onlyYamato {
         require(
             address(this).balance >= amount,
             "locked collateral must be more than sending amount."
@@ -129,11 +125,10 @@ contract PoolV2 is IPool, YamatoStore, ReentrancyGuardUpgradeable {
     }
 
     /// @notice Send currency from Pool to recipient
-    function sendCurrency(address recipient, uint256 amount)
-        public
-        override
-        onlyYamato
-    {
+    function sendCurrency(
+        address recipient,
+        uint256 amount
+    ) public override onlyYamato {
         IERC20 _currency = IERC20(ICurrencyOS(currencyOS()).currency());
         _currency.transfer(recipient, amount);
         emit CurrencySent(msg.sender, recipient, amount);
@@ -143,12 +138,7 @@ contract PoolV2 is IPool, YamatoStore, ReentrancyGuardUpgradeable {
     function getStates()
         public
         view
-        returns (
-            uint256,
-            uint256,
-            uint256,
-            uint256
-        )
+        returns (uint256, uint256, uint256, uint256)
     {
         return (
             redemptionReserve,
@@ -171,10 +161,10 @@ contract PoolV2 is IPool, YamatoStore, ReentrancyGuardUpgradeable {
     }
 
     /// @dev Make totalColl consistent
-    function refreshColl(uint256 _acmTotalColl, address _fixer)
-        public
-        onlyGovernance
-    {
+    function refreshColl(
+        uint256 _acmTotalColl,
+        address _fixer
+    ) public onlyGovernance {
         IYamato _yamato = IYamato(yamato());
 
         uint256 _poolBalance = address(this).balance;

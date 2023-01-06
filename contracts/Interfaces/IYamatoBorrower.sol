@@ -9,7 +9,8 @@ pragma solidity 0.8.4;
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 interface IYamatoBorrower {
-    function runBorrow(address _sender, uint256 _borrowAmountInCurrency)
-        external
-        returns (uint256 fee);
+    function runBorrow(
+        address _sender,
+        uint256 _borrowAmountInCurrency
+    ) external returns (uint256 fee);
 }

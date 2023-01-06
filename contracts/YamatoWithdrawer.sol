@@ -33,11 +33,10 @@ contract YamatoWithdrawer is IYamatoWithdrawer, YamatoAction {
     }
 
     // @dev no reentrancy guard because action funcs are protected by permitDeps()
-    function runWithdraw(address _sender, uint256 _ethAmount)
-        public
-        override
-        onlyYamato
-    {
+    function runWithdraw(
+        address _sender,
+        uint256 _ethAmount
+    ) public override onlyYamato {
         /*
             1. Get feed and pledge
         */

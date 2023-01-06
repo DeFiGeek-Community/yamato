@@ -36,7 +36,9 @@ contract YamatoSweeperV2 is IYamatoSweeper, YamatoAction {
     }
 
     /// @dev no reentrancy guard because action funcs are protected by permitDeps()
-    function runSweep(address _sender)
+    function runSweep(
+        address _sender
+    )
         public
         override
         onlyYamato
@@ -163,15 +165,14 @@ contract YamatoSweeperV2 is IYamatoSweeper, YamatoAction {
     }
 
     /// @dev Deprecated in V2.
-    function sweepDebt(IYamato.Pledge memory sPledge, uint256 maxSweeplable)
+    function sweepDebt(
+        IYamato.Pledge memory sPledge,
+        uint256 maxSweeplable
+    )
         public
         override
         onlyYamato
-        returns (
-            IYamato.Pledge memory,
-            uint256,
-            uint256
-        )
+        returns (IYamato.Pledge memory, uint256, uint256)
     {
         IYamato.Pledge memory sPledge;
         uint256 reminder;

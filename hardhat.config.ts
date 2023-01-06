@@ -20,7 +20,6 @@ import "hardhat-gas-reporter";
 import "@openzeppelin/hardhat-upgrades";
 import "@openzeppelin/hardhat-defender";
 
-
 // TODO
 // make a defender multisig on goerli  0x585876db533ab88A66847891054f2bf78BCcabcA
 // deploy contracts to goerli
@@ -30,7 +29,6 @@ import "@openzeppelin/hardhat-defender";
 // set that address to .env to tell upgrade sript to use defender or not
 // propose upgrade
 // see verification result
-
 
 if (!process.env.ALCHEMY_URL) throw Error("Get your .env");
 

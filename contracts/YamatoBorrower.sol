@@ -33,12 +33,10 @@ contract YamatoBorrower is IYamatoBorrower, YamatoAction {
         __YamatoAction_init(_yamato);
     }
 
-    function runBorrow(address _sender, uint256 _borrowAmountInCurrency)
-        public
-        override
-        onlyYamato
-        returns (uint256 fee)
-    {
+    function runBorrow(
+        address _sender,
+        uint256 _borrowAmountInCurrency
+    ) public override onlyYamato returns (uint256 fee) {
         /*
             1. Ready
         */
