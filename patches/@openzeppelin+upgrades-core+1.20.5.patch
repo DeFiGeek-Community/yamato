@@ -16,7 +16,7 @@ index 8865cff..5acc1ce 100644
      if (txHash !== undefined) {
          const startTime = Date.now();
 diff --git a/node_modules/@openzeppelin/upgrades-core/dist/eip-1967.js b/node_modules/@openzeppelin/upgrades-core/dist/eip-1967.js
-index 6b2623e..b8ffff1 100644
+index 6b2623e..2b8d2d8 100644
 --- a/node_modules/@openzeppelin/upgrades-core/dist/eip-1967.js
 +++ b/node_modules/@openzeppelin/upgrades-core/dist/eip-1967.js
 @@ -18,6 +18,7 @@ async function getAdminAddress(provider, address) {
@@ -36,11 +36,11 @@ index 6b2623e..b8ffff1 100644
 +let maxCount = Math.floor(waitTotal / checkInterval);
 +async function waitAndExist(provider, address, slot, count){
 +    if (count >= 1) {
-+        console.log("eip-1967.js:L38", `${address}-proxy's impl existence check :: wait ${checkInterval/1000} sec`);
++        // console.log("eip-1967.js:L38", `${address}-proxy's impl existence check :: wait ${checkInterval/1000} sec`);
 +        await new Promise(resolve => setTimeout(resolve, checkInterval))    
 +    }
 +    let storage = await (0, provider_1.getStorageAt)(provider, address, slot);
-+    console.log("eip-1967.js:L42", storage);
++    // console.log("eip-1967.js:L42", storage);
 +    return {
 +        implementationExist: !isEmptySlot(storage),
 +        storage
