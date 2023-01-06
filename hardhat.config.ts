@@ -22,12 +22,12 @@ import "@openzeppelin/hardhat-defender";
 
 
 // TODO
-// make a multisig on goerli  0x585876db533ab88A66847891054f2bf78BCcabcA
+// make a defender multisig on goerli  0x585876db533ab88A66847891054f2bf78BCcabcA
 // deploy contracts to goerli
-// get API key 
-// set it to config
-// transfer ownership to multisig wallet
-// set that address to .env
+// get API keys of infura, etherscan, and archemy
+// set it to hardhat.config.ts
+// transfer ownership to multisig wallet (How can we do acceptOwnership?)
+// set that address to .env to tell upgrade sript to use defender or not
 // propose upgrade
 // see verification result
 

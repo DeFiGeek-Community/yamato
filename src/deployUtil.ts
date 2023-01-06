@@ -477,3 +477,7 @@ export function getDeployer(): Signer {
 export async function sleep(n) {
   return new Promise((resolve) => setTimeout(resolve, n));
 }
+
+export async function existsSlot(provider, address, slot) {
+  return (await provider.getStorageAt(address, slot)).length > 2;
+}

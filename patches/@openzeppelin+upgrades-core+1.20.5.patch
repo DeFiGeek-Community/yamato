@@ -1,5 +1,5 @@
 diff --git a/node_modules/@openzeppelin/upgrades-core/dist/deployment.js b/node_modules/@openzeppelin/upgrades-core/dist/deployment.js
-index 8865cff..ff9f284 100644
+index 8865cff..5acc1ce 100644
 --- a/node_modules/@openzeppelin/upgrades-core/dist/deployment.js
 +++ b/node_modules/@openzeppelin/upgrades-core/dist/deployment.js
 @@ -93,8 +93,10 @@ async function validateStoredDeployment(stored, provider, type, opts, merge) {
@@ -8,8 +8,8 @@ index 8865cff..ff9f284 100644
      // Poll for 60 seconds with a 5 second poll interval by default.
 -    const pollTimeout = opts?.timeout ?? 60e3;
 -    const pollInterval = opts?.pollingInterval ?? 5e3;
-+    const pollTimeout = opts?.timeout ?? 360e3;
-+    const pollInterval = opts?.pollingInterval ?? 10e3;
++    const pollTimeout = opts?.timeout ?? 720e3;
++    const pollInterval = opts?.pollingInterval ?? 15e3;
 +    // const pollTimeout = opts?.timeout ?? 60e3;
 +    // const pollInterval = opts?.pollingInterval ?? 5e3;
      (0, debug_1.default)('polling timeout', pollTimeout, 'polling interval', pollInterval);
@@ -67,3 +67,18 @@ index 6b2623e..b8ffff1 100644
  }
  function toFallbackEip1967Hash(label) {
      return '0x' + (0, ethereumjs_util_1.keccak256)(Buffer.from(label)).toString('hex');
+diff --git a/node_modules/@openzeppelin/upgrades-core/dist/validate/overrides.js b/node_modules/@openzeppelin/upgrades-core/dist/validate/overrides.js
+index 84a34d5..862cd44 100644
+--- a/node_modules/@openzeppelin/upgrades-core/dist/validate/overrides.js
++++ b/node_modules/@openzeppelin/upgrades-core/dist/validate/overrides.js
+@@ -70,7 +70,9 @@ function processExceptions(contractName, errors, opts) {
+                 return !isException;
+             });
+             if (exceptionsFound && errorDescription) {
+-                (0, log_1.logWarning)(`Potentially unsafe deployment of ${contractName}`, errorDescription);
++                if(errorDescription.join("").indexOf("external-library-linking") == -1 ) {
++                    (0, log_1.logWarning)(`Potentially unsafe deployment of ${contractName}`, errorDescription);
++                }
+             }
+         }
+     }
