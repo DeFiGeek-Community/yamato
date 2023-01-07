@@ -39,12 +39,9 @@ contract FeePool is IFeePool, UUPSBase, ReentrancyGuardUpgradeable {
         emit Withdrawn(msg.sender, amount);
     }
 
-    function withdrawFromProtocol(uint256 amount)
-        public
-        override
-        onlyProtocols
-        nonReentrant
-    {
+    function withdrawFromProtocol(
+        uint256 amount
+    ) public override onlyProtocols nonReentrant {
         emit WithdrawnByProtocol(msg.sender, amount);
     }
 

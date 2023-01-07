@@ -1,0 +1,105 @@
+diff --git a/node_modules/@openzeppelin/upgrades-core/dist/deployment.js b/node_modules/@openzeppelin/upgrades-core/dist/deployment.js
+index 8865cff..5acc1ce 100644
+--- a/node_modules/@openzeppelin/upgrades-core/dist/deployment.js
++++ b/node_modules/@openzeppelin/upgrades-core/dist/deployment.js
+@@ -93,8 +93,10 @@ async function validateStoredDeployment(stored, provider, type, opts, merge) {
+ async function waitAndValidateDeployment(provider, deployment, type, opts) {
+     const { txHash, address } = deployment;
+     // Poll for 60 seconds with a 5 second poll interval by default.
+-    const pollTimeout = opts?.timeout ?? 60e3;
+-    const pollInterval = opts?.pollingInterval ?? 5e3;
++    const pollTimeout = opts?.timeout ?? 720e3;
++    const pollInterval = opts?.pollingInterval ?? 15e3;
++    // const pollTimeout = opts?.timeout ?? 60e3;
++    // const pollInterval = opts?.pollingInterval ?? 5e3;
+     (0, debug_1.default)('polling timeout', pollTimeout, 'polling interval', pollInterval);
+     if (txHash !== undefined) {
+         const startTime = Date.now();
+diff --git a/node_modules/@openzeppelin/upgrades-core/dist/eip-1967.js b/node_modules/@openzeppelin/upgrades-core/dist/eip-1967.js
+index 6b2623e..d690bce 100644
+--- a/node_modules/@openzeppelin/upgrades-core/dist/eip-1967.js
++++ b/node_modules/@openzeppelin/upgrades-core/dist/eip-1967.js
+@@ -2,6 +2,7 @@
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.isEmptySlot = exports.toEip1967Hash = exports.toFallbackEip1967Hash = exports.getBeaconAddress = exports.getImplementationAddress = exports.getAdminAddress = exports.EIP1967BeaconNotFound = exports.EIP1967ImplementationNotFound = void 0;
+ const ethereumjs_util_1 = require("ethereumjs-util");
++const { E } = require("prb-math");
+ const error_1 = require("./error");
+ const provider_1 = require("./provider");
+ const address_1 = require("./utils/address");
+@@ -18,6 +19,7 @@ async function getAdminAddress(provider, address) {
+ exports.getAdminAddress = getAdminAddress;
+ async function getImplementationAddress(provider, address) {
+     const storage = await getStorageFallback(provider, address, toEip1967Hash('eip1967.proxy.implementation'), toFallbackEip1967Hash('org.zeppelinos.proxy.implementation'));
++    
+     if (isEmptySlot(storage)) {
+         throw new EIP1967ImplementationNotFound(`Contract at ${address} doesn't look like an ERC 1967 proxy with a logic contract address`);
+     }
+@@ -32,15 +34,49 @@ async function getBeaconAddress(provider, address) {
+     return parseAddressFromStorage(storage);
+ }
+ exports.getBeaconAddress = getBeaconAddress;
++let waitTotal;
++let checkInterval;
++let maxCount;
++async function waitAndExist(provider, address, slot, count, checkInterval){
++    if (count >= 1) {
++        // console.log("eip-1967.js:L38", `${address}-proxy's impl existence check :: wait ${checkInterval/1000} sec`);
++        await new Promise(resolve => setTimeout(resolve, checkInterval))    
++    }
++    let storage = await (0, provider_1.getStorageAt)(provider, address, slot);
++    // console.log("eip-1967.js:L42", storage);
++    return {
++        implementationExist: !isEmptySlot(storage),
++        storage
++    };
++}
+ async function getStorageFallback(provider, address, ...slots) {
++    let networkId = await (0, provider_1.getChainId)(provider);
++    if (networkId === 31337) {
++        // for hardhat network
++        waitTotal = 1;
++        checkInterval = 1;        
++        maxCount = Math.floor(waitTotal / checkInterval);
++    } else {
++        // for Goerli, main network
++        waitTotal = 0.5 * 60 * 1000;
++        checkInterval = 3 * 1000;
++        maxCount = Math.floor(waitTotal / checkInterval);        
++    }
++
+     let storage = '0x0000000000000000000000000000000000000000000000000000000000000000'; // default: empty slot
++    let result = { implementationExist: false, storage };
+     for (const slot of slots) {
+-        storage = await (0, provider_1.getStorageAt)(provider, address, slot);
+-        if (!isEmptySlot(storage)) {
++        result = { implementationExist: false, storage };
++        let count = 0;
++        while (!result.implementationExist && count < maxCount) {
++            result = await waitAndExist(provider, address, slot, count, checkInterval);
++            count++;
++        }
++        if (result.implementationExist) {
+             break;
+         }
+     }
+-    return storage;
++    return result.storage;
+ }
+ function toFallbackEip1967Hash(label) {
+     return '0x' + (0, ethereumjs_util_1.keccak256)(Buffer.from(label)).toString('hex');
+diff --git a/node_modules/@openzeppelin/upgrades-core/dist/validate/overrides.js b/node_modules/@openzeppelin/upgrades-core/dist/validate/overrides.js
+index 84a34d5..862cd44 100644
+--- a/node_modules/@openzeppelin/upgrades-core/dist/validate/overrides.js
++++ b/node_modules/@openzeppelin/upgrades-core/dist/validate/overrides.js
+@@ -70,7 +70,9 @@ function processExceptions(contractName, errors, opts) {
+                 return !isException;
+             });
+             if (exceptionsFound && errorDescription) {
+-                (0, log_1.logWarning)(`Potentially unsafe deployment of ${contractName}`, errorDescription);
++                if(errorDescription.join("").indexOf("external-library-linking") == -1 ) {
++                    (0, log_1.logWarning)(`Potentially unsafe deployment of ${contractName}`, errorDescription);
++                }
+             }
+         }
+     }

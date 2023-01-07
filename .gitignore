@@ -14,7 +14,7 @@ allure-results
 typechain/*
 *.dbg.json
 cache/**/*
-!deployments/rinkeby/.chainId
+!deployments/goerli/.chainId
 !deployments/localnet/.chainId
 deployments/localnet/PledgeLib
 abis

@@ -1,4 +1,5 @@
-import { ethers, upgrades, artifacts } from "hardhat";
+import { ethers, upgrades, artifacts, defender } from "hardhat";
+import { ExtendedProposalResponse } from "@openzeppelin/hardhat-defender/dist/propose-upgrade";
 import { BaseContract, ContractFactory, BigNumber, BigNumberish } from "ethers";
 import { getLinkedContractFactory, deployLibrary } from "./testUtil";
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "fs";
@@ -6,7 +7,11 @@ import { getDeploymentAddressPathWithTag, setNetwork } from "./deployUtil";
 import { execSync } from "child_process";
 import { PriorityRegistry, PriorityRegistryV5 } from "../typechain";
 import chalk from "chalk";
+require("dotenv").config();
 
+/*
+  For single-person upgrade
+*/
 export async function upgradeProxy<
   T extends BaseContract,
   S extends ContractFactory
@@ -51,12 +56,57 @@ export async function upgradeLinkedProxy<
   return newerInstance;
 }
 
+/*
+  For multisig upgrade
+*/
+export async function proposeUpgradeProxy<
+  T extends BaseContract,
+  S extends ContractFactory
+>(
+  olderInstanceAddress: string,
+  contractNameTo: string
+): Promise<ExtendedProposalResponse> {
+  let contractFactory: S = <S>await ethers.getContractFactory(contractNameTo);
+  const res: ExtendedProposalResponse = await defender.proposeUpgrade(
+    olderInstanceAddress,
+    contractFactory
+  );
+  return res;
+}
+export async function proposeUpgradeLinkedProxy<
+  T extends BaseContract,
+  S extends ContractFactory
+>(
+  olderInstanceAddress: string,
+  contractNameTo: string,
+  libralies: string[]
+): Promise<ExtendedProposalResponse> {
+  let Libraries = {};
+  for (var i = 0; i < libralies.length; i++) {
+    let libraryName = libralies[i];
+    Libraries[libraryName] = (await deployLibrary(libraryName)).address;
+  }
+  // Note: Libraries upgrade requires you to re-deploy the whole library. That's expensive.
+
+  let contractFactory: S = <S>(
+    await getLinkedContractFactory(contractNameTo, Libraries)
+  );
+  const res: ExtendedProposalResponse = await defender.proposeUpgrade(
+    olderInstanceAddress,
+    contractFactory,
+    {
+      unsafeAllow: ["external-library-linking"],
+    }
+  );
+  return res;
+}
+
 export async function runDowngrade(
   implNameBase: string,
   versionStr: string,
   linkings = []
 ) {
-  setNetwork("rinkeby");
+  setNetwork("goerli");
   const filepath = getDeploymentAddressPathWithTag(
     implNameBase,
     "ERC1967Proxy"
@@ -90,7 +140,7 @@ export async function runDowngrade(
 
     try {
       execSync(
-        `npm run verify:rinkeby -- --contract contracts/${implName}.sol:${implName} ${implAddr}`
+        `npm run verify:goerli -- --contract contracts/${implName}.sol:${implName} ${implAddr}`
       );
       console.log(`Verified ${implAddr}`);
     } catch (e) {
@@ -99,7 +149,7 @@ export async function runDowngrade(
   }
 }
 export async function runUpgrade(implNameBase, linkings = []) {
-  setNetwork("rinkeby");
+  setNetwork("goerli");
 
   const filepath = getDeploymentAddressPathWithTag(
     implNameBase,
@@ -115,30 +165,44 @@ export async function runUpgrade(implNameBase, linkings = []) {
     );
   } else {
     // console.log(`${implName} is going to be deployed to ERC1967Proxy...`);
-
-    const inst =
-      linkings.length > 0
-        ? await upgradeLinkedProxy(ERC1967Proxy, implName, linkings)
-        : await upgradeProxy(ERC1967Proxy, implName);
-    console.log(
-      chalk.gray(
-        `        [success] ${implName}=${inst.address} is upgraded to ERC1967Proxy`
-      )
-    );
-
-    const implAddr = await (<any>inst).getImplementation();
-    const implPath = getDeploymentAddressPathWithTag(implNameBase, "UUPSImpl");
-
-    writeFileSync(implPath, implAddr);
-    // console.log(`Saved ${implAddr} to ${implPath}`);
-
-    try {
-      execSync(
-        `npm run verify:rinkeby -- --contract contracts/${implName}.sol:${implName} ${implAddr}`
+    let multisigAddr = process.env.UUPS_PROXY_ADMIN_MULTISIG_ADDRESS;
+    if (!multisigAddr) {
+      const inst =
+        linkings.length > 0
+          ? await upgradeLinkedProxy(ERC1967Proxy, implName, linkings)
+          : await upgradeProxy(ERC1967Proxy, implName);
+      console.log(
+        chalk.gray(
+          `        [success] ${implName}=${inst.address} is upgraded to ERC1967Proxy`
+        )
       );
-      console.log(`Verified ${implAddr}`);
-    } catch (e) {
-      console.error(e.message);
+
+      const implAddr = await (<any>inst).getImplementation();
+
+      try {
+        execSync(
+          `npm run verify:goerli -- --contract contracts/${implName}.sol:${implName} ${implAddr}`
+        );
+        console.log(`Verified ${implAddr}`);
+      } catch (e) {
+        console.error(e.message);
+      }
+
+      const implPath = getDeploymentAddressPathWithTag(
+        implNameBase,
+        "UUPSImpl"
+      );
+      writeFileSync(implPath, implAddr);
+    } else {
+      const res =
+        linkings.length > 0
+          ? await proposeUpgradeLinkedProxy(ERC1967Proxy, implName, linkings)
+          : await proposeUpgradeProxy(ERC1967Proxy, implName);
+
+      console.log(res.verificationResponse);
+
+      // const implPath = getDeploymentAddressPathWithTag(implNameBase, "UUPSImpl");
+      // writeFileSync(implPath, implAddr);
     }
   }
 }

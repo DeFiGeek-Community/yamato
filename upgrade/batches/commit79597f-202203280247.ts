@@ -12,11 +12,11 @@
         contracts/PriceFeed.sol
 */
 
-// delete PledgeLib rinkeby cache file
+// delete PledgeLib goerli cache file
 import { setNetwork } from "../../src/deployUtil";
 
 async function main() {
-  setNetwork("rinkeby");
+  setNetwork("goerli");
 
   /*
     ======================

@@ -35,12 +35,9 @@ contract YamatoRedeemerV2 is IYamatoRedeemer, YamatoAction {
     }
 
     // @dev no reentrancy guard because action funcs are protected by permitDeps()
-    function runRedeem(RunRedeemArgs memory _args)
-        public
-        override
-        onlyYamato
-        returns (RedeemedArgs memory)
-    {
+    function runRedeem(
+        RunRedeemArgs memory _args
+    ) public override onlyYamato returns (RedeemedArgs memory) {
         /*
             1. Set up
         */

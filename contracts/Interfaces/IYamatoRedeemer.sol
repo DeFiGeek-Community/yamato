@@ -42,7 +42,7 @@ interface IYamatoRedeemer {
         uint256 ethPriceInCurrency
     ) external returns (IYamato.Pledge memory, uint256);
 
-    function runRedeem(RunRedeemArgs memory)
-        external
-        returns (RedeemedArgs memory);
+    function runRedeem(
+        RunRedeemArgs memory
+    ) external returns (RedeemedArgs memory);
 }

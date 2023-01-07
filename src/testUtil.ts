@@ -126,7 +126,7 @@ export async function deployLibrary(libraryName) {
   }
 
   if (
-    (getCurrentNetwork() == "rinkeby" || getCurrentNetwork() == "localnet") &&
+    (getCurrentNetwork() == "goerli" || getCurrentNetwork() == "localnet") &&
     existsSync(filepath) &&
     _LibAddr
   ) {

@@ -45,7 +45,7 @@ interface IYamatoRedeemerV4 {
         IYamato.Pledge[] _skippedPledges;
     }
 
-    function runRedeem(IYamatoRedeemer.RunRedeemArgs memory)
-        external
-        returns (IYamatoRedeemer.RedeemedArgs memory);
+    function runRedeem(
+        IYamatoRedeemer.RunRedeemArgs memory
+    ) external returns (IYamatoRedeemer.RedeemedArgs memory);
 }

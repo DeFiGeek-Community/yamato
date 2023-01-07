@@ -78,11 +78,10 @@ contract ChainLinkMock is OracleMockBase, AggregatorV3Interface {
         );
     }
 
-    function simulatePriceMove(uint256 deviation, bool sign)
-        internal
-        override
-        onlyOwner
-    {
+    function simulatePriceMove(
+        uint256 deviation,
+        bool sign
+    ) internal override onlyOwner {
         uint80 currentRoundId = lastRoundId + 1;
         int256 answer;
         uint80 answeredInRound;
@@ -108,7 +107,9 @@ contract ChainLinkMock is OracleMockBase, AggregatorV3Interface {
         return 8;
     }
 
-    function getRoundData(uint80 _roundId)
+    function getRoundData(
+        uint80 _roundId
+    )
         external
         view
         virtual

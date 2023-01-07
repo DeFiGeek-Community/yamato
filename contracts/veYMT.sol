@@ -27,21 +27,17 @@ contract veYMT is IveYMT {
         symbol = "veYMT";
     }
 
-    function mintableInTimeframe(uint256 _start, uint256 _end)
-        public
-        view
-        override
-        returns (uint256)
-    {
+    function mintableInTimeframe(
+        uint256 _start,
+        uint256 _end
+    ) public view override returns (uint256) {
         return 1;
     }
 
-    function balanceOfAt(address _addr, uint256 _at)
-        public
-        view
-        override
-        returns (uint256)
-    {
+    function balanceOfAt(
+        address _addr,
+        uint256 _at
+    ) public view override returns (uint256) {
         return 1;
     }
 

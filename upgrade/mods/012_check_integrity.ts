@@ -14,7 +14,7 @@ import { readFileSync } from "fs";
 import * as ethers from "ethers";
 
 export default async function main() {
-  setNetwork("rinkeby");
+  setNetwork("goerli");
   await setProvider();
 
   let YamatoERC1967Proxy = readFileSync(

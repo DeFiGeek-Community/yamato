@@ -47,12 +47,9 @@ contract PriorityRegistryV5 is IPriorityRegistryV4, YamatoStore {
         @dev It upserts "deposited", "borrowed", "repayed", "partially withdrawn", "redeemed", or "partially swept" pledges.
         @return _newICRpercent is for overwriting Yamato.sol's pledge info
     */
-    function upsert(IYamato.Pledge memory _pledge)
-        public
-        override
-        onlyYamato
-        returns (uint256)
-    {
+    function upsert(
+        IYamato.Pledge memory _pledge
+    ) public override onlyYamato returns (uint256) {
         uint256 _oldICRpercent = floor(_pledge.priority);
 
         require(
@@ -64,7 +61,8 @@ contract PriorityRegistryV5 is IPriorityRegistryV4, YamatoStore {
             1. delete current pledge from sorted pledge and update LICR
         */
         if (
-            !(_pledge.debt == 0 && _oldICRpercent == 0) && pledgeLength > 0 /* Exclude "new pledge" */ /* Avoid underflow */
+            !(_pledge.debt == 0 && _oldICRpercent == 0) &&
+            pledgeLength > 0 /* Exclude "new pledge" */ /* Avoid underflow */
         ) {
             _deletePledge(_pledge);
             pledgeLength--;
@@ -77,7 +75,7 @@ contract PriorityRegistryV5 is IPriorityRegistryV4, YamatoStore {
         uint256 _newICRpercent = floor(_pledge.getICR(priceFeed()));
 
         require(
-            _newICRpercent <= floor(2**256 - 1),
+            _newICRpercent <= floor(2 ** 256 - 1),
             "priority can't be that big."
         );
 
@@ -142,7 +140,7 @@ contract PriorityRegistryV5 is IPriorityRegistryV4, YamatoStore {
 
         // Note: In full withdrawal scenario, this value is MAX_UINT
         require(
-            _oldICRpercent == 0 || _oldICRpercent == floor(2**256 - 1),
+            _oldICRpercent == 0 || _oldICRpercent == floor(2 ** 256 - 1),
             "Unintentional priority is given to the remove function."
         );
 
@@ -247,20 +245,16 @@ contract PriorityRegistryV5 is IPriorityRegistryV4, YamatoStore {
         - rankedQueueLen
         - rankedQueueTotalLen
     */
-    function rankedQueuePush(uint256 _icr, IYamato.Pledge memory _pledge)
-        public
-        override
-        onlyYamato
-    {
+    function rankedQueuePush(
+        uint256 _icr,
+        IYamato.Pledge memory _pledge
+    ) public override onlyYamato {
         rankedQueue[_icr].pledges.push(_pledge);
     }
 
-    function rankedQueuePop(uint256 _icr)
-        public
-        override
-        onlyYamato
-        returns (IYamato.Pledge memory _pledge)
-    {
+    function rankedQueuePop(
+        uint256 _icr
+    ) public override onlyYamato returns (IYamato.Pledge memory _pledge) {
         FifoQueue storage fifoQueue = rankedQueue[_icr];
 
         uint256 _nextout = fifoQueue.nextout;
@@ -285,11 +279,10 @@ contract PriorityRegistryV5 is IPriorityRegistryV4, YamatoStore {
         }
     }
 
-    function rankedQueueSearchAndDestroy(uint256 _icr, uint256 _i)
-        public
-        override
-        onlyYamato
-    {
+    function rankedQueueSearchAndDestroy(
+        uint256 _icr,
+        uint256 _i
+    ) public override onlyYamato {
         FifoQueue storage rankedQueue = rankedQueue[_icr];
         require(
             rankedQueueLen(_icr) > 0,
@@ -361,7 +354,7 @@ contract PriorityRegistryV5 is IPriorityRegistryV4, YamatoStore {
         uint256 _mcrPercent = uint256(IYamato(yamato()).MCR());
         uint256 _checkpoint = _mcrPercent + CHECKPOINT_BUFFER; // 185*0.7=130 ... It's possible to be "priority=184 but deficit" with 30% dump, but "priority=20000 but deficit" is impossible.
         uint256 _reminder = pledgeLength -
-            (rankedQueueLen(0) + rankedQueueLen(floor(2**256 - 1)));
+            (rankedQueueLen(0) + rankedQueueLen(floor(2 ** 256 - 1)));
         if (_reminder > 0) {
             uint256 _next = _icr;
             while (true) {
@@ -388,12 +381,10 @@ contract PriorityRegistryV5 is IPriorityRegistryV4, YamatoStore {
         - getRedeemablesCap
         - getSweepablesCap
     */
-    function getRankedQueue(uint256 icr, uint256 i)
-        public
-        view
-        override
-        returns (IYamato.Pledge memory)
-    {
+    function getRankedQueue(
+        uint256 icr,
+        uint256 i
+    ) public view override returns (IYamato.Pledge memory) {
         uint256 _mcrPercent = uint256(IYamato(yamato()).MCR());
         IYamato.Pledge memory zeroPledge = IYamato.Pledge(
             0,
@@ -426,7 +417,7 @@ contract PriorityRegistryV5 is IPriorityRegistryV4, YamatoStore {
         uint256 _rank = 1;
         uint256 _nextout = rankedQueueNextout(_rank);
         uint256 _count = pledgeLength -
-            (rankedQueueLen(0) + rankedQueueLen(floor(2**256 - 1)));
+            (rankedQueueLen(0) + rankedQueueLen(floor(2 ** 256 - 1)));
         IYamato.Pledge memory _pledge = getRankedQueue(_rank, _nextout);
         uint256 _icr = _pledge.getICR(priceFeed());
         while (true) {
@@ -439,9 +430,7 @@ contract PriorityRegistryV5 is IPriorityRegistryV4, YamatoStore {
                     rankedQueueLen(_rank) > 0 &&
                     (_nextout < rankedQueueTotalLen(_rank)) /* in range */
                 ) {
-                    if (
-                        _pledge.isCreated /* to skip gap */
-                    ) {
+                    if (_pledge.isCreated /* to skip gap */) {
                         // icr check and cap addition
                         if (_icr >= 10000) {
                             // icr=130%-based value
@@ -502,10 +491,10 @@ contract PriorityRegistryV5 is IPriorityRegistryV4, YamatoStore {
         while (rankedQueue[0].pledges.length > 0) {
             rankedQueue[0].pledges.pop();
         }
-        while (rankedQueue[floor(2**256 - 1)].pledges.length > 0) {
-            rankedQueue[floor(2**256 - 1)].pledges.pop();
+        while (rankedQueue[floor(2 ** 256 - 1)].pledges.length > 0) {
+            rankedQueue[floor(2 ** 256 - 1)].pledges.pop();
         }
-        for (uint256 i = nextResetRank; i <= floor(2**256 - 1); i++) {
+        for (uint256 i = nextResetRank; i <= floor(2 ** 256 - 1); i++) {
             if (i > nextResetRank && i % 500 == 0) {
                 nextResetRank = i;
                 return;
@@ -518,10 +507,9 @@ contract PriorityRegistryV5 is IPriorityRegistryV4, YamatoStore {
         }
     }
 
-    function syncRankedQueue(IYamato.Pledge[] calldata pledges)
-        public
-        onlyGovernance
-    {
+    function syncRankedQueue(
+        IYamato.Pledge[] calldata pledges
+    ) public onlyGovernance {
         for (uint256 i = 0; i < pledges.length; i++) {
             this.upsert(pledges[i]);
         }

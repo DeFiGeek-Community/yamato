@@ -21,7 +21,7 @@ let PoolERC1967Proxy = readFileSync(
 ).toString();
 
 export default async function main() {
-  setNetwork("rinkeby");
+  setNetwork("goerli");
   await setProvider();
 
   let Yamato = new ethers.Contract(

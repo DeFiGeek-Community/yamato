@@ -452,11 +452,9 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
             _badChainlinkResponse(_prevResponse);
     }
 
-    function _badChainlinkResponse(ChainlinkResponse memory _response)
-        internal
-        view
-        returns (bool)
-    {
+    function _badChainlinkResponse(
+        ChainlinkResponse memory _response
+    ) internal view returns (bool) {
         // Check for response call reverted
         if (!_response.success) {
             return true;
@@ -477,11 +475,9 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
         return false;
     }
 
-    function _chainlinkIsFrozen(ChainlinkResponse memory _response)
-        internal
-        view
-        returns (bool)
-    {
+    function _chainlinkIsFrozen(
+        ChainlinkResponse memory _response
+    ) internal view returns (bool) {
         return block.timestamp - _response.timestamp > TIMEOUT;
     }
 
@@ -519,11 +515,9 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
         return percentDeviation > MAX_PRICE_DEVIATION_FROM_PREVIOUS_ROUND;
     }
 
-    function _tellorIsBroken(TellorResponse memory _response)
-        internal
-        view
-        returns (bool)
-    {
+    function _tellorIsBroken(
+        TellorResponse memory _response
+    ) internal view returns (bool) {
         // Check for response call reverted
         if (!_response.success) {
             return true;
@@ -540,11 +534,9 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
         return false;
     }
 
-    function _tellorIsFrozen(TellorResponse memory _tellorResponse)
-        internal
-        view
-        returns (bool)
-    {
+    function _tellorIsFrozen(
+        TellorResponse memory _tellorResponse
+    ) internal view returns (bool) {
         return block.timestamp - _tellorResponse.timestamp > TIMEOUT;
     }
 
@@ -597,11 +589,10 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
         return percentPriceDifference <= MAX_PRICE_DIFFERENCE_BETWEEN_ORACLES;
     }
 
-    function _scaleChainlinkPriceByDigits(uint256 _price, uint256 _answerDigits)
-        internal
-        pure
-        returns (uint256)
-    {
+    function _scaleChainlinkPriceByDigits(
+        uint256 _price,
+        uint256 _answerDigits
+    ) internal pure returns (uint256) {
         /*
          * Convert the price returned by the Chainlink oracle to an 18-digit decimal for use by Liquity.
          * At date of Liquity launch, Chainlink uses an 8-digit price, but we also handle the possibility of
@@ -611,20 +602,18 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
         uint256 price;
         if (_answerDigits >= TARGET_DIGITS) {
             // Scale the returned price value down to Liquity's target precision
-            price = _price / (10**(_answerDigits - TARGET_DIGITS));
+            price = _price / (10 ** (_answerDigits - TARGET_DIGITS));
         } else if (_answerDigits < TARGET_DIGITS) {
             // Scale the returned price value up to Liquity's target precision
-            price = _price * (10**(TARGET_DIGITS - _answerDigits));
+            price = _price * (10 ** (TARGET_DIGITS - _answerDigits));
         }
         return price;
     }
 
-    function _scaleTellorPriceByDigits(uint256 _price)
-        internal
-        pure
-        returns (uint256)
-    {
-        return _price * (10**(TARGET_DIGITS - TELLOR_DIGITS));
+    function _scaleTellorPriceByDigits(
+        uint256 _price
+    ) internal pure returns (uint256) {
+        return _price * (10 ** (TARGET_DIGITS - TELLOR_DIGITS));
     }
 
     function _changeStatus(Status _status) internal {
@@ -638,10 +627,9 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
         emit LastGoodPriceUpdated(_currentPrice);
     }
 
-    function _storeTellorPrice(TellorResponse memory _tellorResponse)
-        internal
-        returns (uint256)
-    {
+    function _storeTellorPrice(
+        TellorResponse memory _tellorResponse
+    ) internal returns (uint256) {
         uint256 scaledTellorPrice = _scaleTellorPriceByDigits(
             _tellorResponse.value
         );
@@ -650,10 +638,9 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
         return scaledTellorPrice;
     }
 
-    function _storeChainlinkPrice(ChainlinkResponse memory _chainlinkResponse)
-        internal
-        returns (uint256)
-    {
+    function _storeChainlinkPrice(
+        ChainlinkResponse memory _chainlinkResponse
+    ) internal returns (uint256) {
         uint256 scaledChainlinkPrice = _scaleChainlinkPriceByDigits(
             uint256(_chainlinkResponse.answer),
             _chainlinkResponse.decimals
@@ -719,7 +706,7 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
         returns (
             uint80 roundId,
             int256 answer,
-            uint256, /* startedAt */
+            uint256 /* startedAt */,
             uint256 timestamp,
             uint80 /* answeredInRound */
         ) {
@@ -737,7 +724,7 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
         returns (
             uint80 roundId,
             int256 answer,
-            uint256, /* startedAt */
+            uint256 /* startedAt */,
             uint256 timestamp,
             uint80 /* answeredInRound */
         ) {
@@ -787,7 +774,7 @@ contract PriceFeed is IPriceFeed, UUPSBase, BaseMath {
         returns (
             uint80 roundId,
             int256 answer,
-            uint256, /* startedAt */
+            uint256 /* startedAt */,
             uint256 timestamp,
             uint80 /* answeredInRound */
         ) {

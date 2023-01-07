@@ -18,6 +18,17 @@ import "hardhat-abi-exporter";
 import "hardhat-contract-sizer";
 import "hardhat-gas-reporter";
 import "@openzeppelin/hardhat-upgrades";
+import "@openzeppelin/hardhat-defender";
+
+// TODO
+// make a defender multisig on goerli  0x585876db533ab88A66847891054f2bf78BCcabcA
+// deploy contracts to goerli
+// get API keys of infura, etherscan, and archemy
+// set it to hardhat.config.ts
+// transfer ownership to multisig wallet (How can we do acceptOwnership?)
+// set that address to .env to tell upgrade sript to use defender or not
+// propose upgrade
+// see verification result
 
 if (!process.env.ALCHEMY_URL) throw Error("Get your .env");
 
@@ -35,6 +46,10 @@ module.exports = {
               "*": ["storageLayout"],
             },
           },
+          optimizer: {
+            enabled: true,
+            runs: 1000,
+          },
         },
       },
     ],
@@ -47,7 +62,7 @@ module.exports = {
         accountsBalance: "1000000000000000000000000",
       },
     },
-    rinkeby: {
+    goerli: {
       url: process.env.ALCHEMY_URL,
       accounts: [
         process.env.FOUNDATION_PRIVATE_KEY,
@@ -58,7 +73,7 @@ module.exports = {
       tags: ["staging"],
     },
     kovan: {
-      url: process.env.ALCHEMY_URL.replace(/rinkeby/, "kovan"),
+      url: process.env.ALCHEMY_URL.replace(/goerli/, "kovan"),
       accounts: [
         process.env.FOUNDATION_PRIVATE_KEY,
         process.env.DEPLOYER_PRIVATE_KEY,
@@ -78,12 +93,12 @@ module.exports = {
     foundation: {
       default: 1,
       mainnet: "0xdAe503Fd260358b8f344D136160c299530006170",
-      rinkeby: "0xdAe503Fd260358b8f344D136160c299530006170",
+      goerli: "0xdAe503Fd260358b8f344D136160c299530006170",
     },
     deployer: {
       default: 2,
       mainnet: "0xD2dd063B77cdB7b2823297a305195128eF2C300c",
-      rinkeby: "0xD2dd063B77cdB7b2823297a305195128eF2C300c",
+      goerli: "0xD2dd063B77cdB7b2823297a305195128eF2C300c",
     },
   },
   abiExporter: {

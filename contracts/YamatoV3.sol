@@ -207,11 +207,10 @@ contract YamatoV3 is
         - setWithdrawLocks
     */
     /// @dev Only-yamato-package state mutation func
-    function setPledge(address _owner, Pledge memory _p)
-        public
-        override
-        onlyYamato
-    {
+    function setPledge(
+        address _owner,
+        Pledge memory _p
+    ) public override onlyYamato {
         Pledge storage p = pledges[_owner];
         if (_p.debt == 0 && _p.coll == 0) {
             _p.owner = address(0);
@@ -236,11 +235,9 @@ contract YamatoV3 is
     }
 
     /// @dev Only-yamato-package state mutation func
-    function setPledges(Pledge[] memory _pledges)
-        public
-        override(IYamatoV3)
-        onlyYamato
-    {
+    function setPledges(
+        Pledge[] memory _pledges
+    ) public override(IYamatoV3) onlyYamato {
         for (uint256 i; i < _pledges.length; i++) {
             Pledge memory _p = _pledges[i];
             if (_p.isCreated == false) {
@@ -264,13 +261,9 @@ contract YamatoV3 is
 
     /// @dev Only-yamato-package state mutation func
     /// @dev deposit-borrow-withdraw should not be in the same block to avoid flashloan attack.
-    function checkFlashLock(address _owner)
-        public
-        view
-        override
-        onlyYamato
-        returns (bool _isLocked)
-    {
+    function checkFlashLock(
+        address _owner
+    ) public view override onlyYamato returns (bool _isLocked) {
         FlashLockData storage lock = flashlocks[_owner];
         if (lock.lockedBlockHeight == block.number) {
             return _isLocked = true;
@@ -344,11 +337,10 @@ contract YamatoV3 is
     /// @dev Need allowance. Lowest ICR Pledges get redeemed first. TCR will go up. coll=0 pledges are to be remained.
     /// @param maxRedemptionCurrencyAmount maximal redeemable amount
     /// @param isCoreRedemption A flag for who to pay
-    function redeem(uint256 maxRedemptionCurrencyAmount, bool isCoreRedemption)
-        public
-        nonReentrant
-        whenNotPaused
-    {
+    function redeem(
+        uint256 maxRedemptionCurrencyAmount,
+        bool isCoreRedemption
+    ) public nonReentrant whenNotPaused {
         IYamatoRedeemer.RedeemedArgs memory _args = IYamatoRedeemer(redeemer())
             .runRedeem(
                 IYamatoRedeemer.RunRedeemArgs(
@@ -416,12 +408,9 @@ contract YamatoV3 is
 
     /// @notice To give pledge access to YmtOS
     /// @dev Interface can't return "struct memory" from public state variable
-    function getPledge(address _owner)
-        public
-        view
-        override
-        returns (Pledge memory)
-    {
+    function getPledge(
+        address _owner
+    ) public view override returns (Pledge memory) {
         return pledges[_owner];
     }
 
@@ -430,20 +419,15 @@ contract YamatoV3 is
         public
         view
         override
-        returns (
-            uint256,
-            uint256,
-            uint8,
-            uint8,
-            uint8,
-            uint8
-        )
+        returns (uint256, uint256, uint8, uint8, uint8, uint8)
     {
         return (totalColl, totalDebt, MCR, RRR, SRR, GRR);
     }
 
     /// @notice Provide the data of individual pledge.
-    function getIndividualStates(address owner)
+    function getIndividualStates(
+        address owner
+    )
         public
         view
         returns (
@@ -576,12 +560,9 @@ contract YamatoV3 is
     }
 
     /// @dev All YamatoStores and YamatoActions except Yamato.sol are NOT needed to modify these funcs. Just write the same signature and don't fill inside. Yamato.sol must override it with correct logic.
-    function permitDeps(address _sender)
-        public
-        view
-        override(IYamato, YamatoBase)
-        returns (bool)
-    {
+    function permitDeps(
+        address _sender
+    ) public view override(IYamato, YamatoBase) returns (bool) {
         bool permit;
         address[9] memory deps = getDeps();
         for (uint256 i = 0; i < deps.length; i++) {
@@ -610,10 +591,9 @@ contract YamatoV3 is
      */
 
     /// @dev For test
-    function setPriorityRegistry(address _priorityRegistry)
-        external
-        onlyGovernance
-    {
+    function setPriorityRegistry(
+        address _priorityRegistry
+    ) external onlyGovernance {
         bytes32 PRIORITY_REGISTRY_KEY = bytes32(
             keccak256(abi.encode(PRIORITY_REGISTRY_SLOT_ID))
         );

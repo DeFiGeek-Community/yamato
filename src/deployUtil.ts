@@ -99,17 +99,17 @@ export function setNetwork(_network) {
 }
 export function getCurrentNetwork() {
   if (network) return network;
-  if (process.argv.join("").toLowerCase().indexOf("rinkeby") >= 0) {
-    return "rinkeby";
+  if (process.argv.join("").toLowerCase().indexOf("goerli") >= 0) {
+    return "goerli";
   } else if (process.argv.join("").toLowerCase().indexOf("mainnet") >= 0) {
     return "mainnet";
   } else {
     return "localnet";
   }
-  // node hardhat deploy --network <network> / npm run verify:rinkeby:all
+  // node hardhat deploy --network <network> / npm run verify:goerli:all
 }
 export function setProvider() {
-  const provider = getDefaultProvider("rinkeby", {
+  const provider = getDefaultProvider("goerli", {
     etherscan: process.env.ETHERSCAN_API_KEY,
     infura: process.env.INFURA_API_TOKEN,
     alchemy: process.env.ALCHEMY_API_TOKEN,
@@ -244,17 +244,17 @@ export function verifyWithEtherscan() {
 
   try {
     execSync(
-      `npm run verify:rinkeby -- --contract contracts/ChainLinkMock.sol:ChainLinkMock ${ChainLinkEthUsd} ETH/USD`
+      `npm run verify:goerli -- --contract contracts/ChainLinkMock.sol:ChainLinkMock ${ChainLinkEthUsd} ETH/USD`
     );
   } catch (e) {
     console.log(e.message);
   }
   try {
     execSync(
-      `npm run verify:rinkeby -- --contract contracts/ChainLinkMock.sol:ChainLinkMock ${ChainLinkJpyUsd} JPY/USD`
+      `npm run verify:goerli -- --contract contracts/ChainLinkMock.sol:ChainLinkMock ${ChainLinkJpyUsd} JPY/USD`
     );
     execSync(
-      `npm run verify:rinkeby -- --contract contracts/TellorCallerMock.sol:TellorCallerMock ${Tellor}`
+      `npm run verify:goerli -- --contract contracts/TellorCallerMock.sol:TellorCallerMock ${Tellor}`
     );
   } catch (e) {
     console.log(e.message);
@@ -264,7 +264,7 @@ export function verifyWithEtherscan() {
     let name = getLatestContractName("PriceFeed");
     console.log(name);
     execSync(
-      `npm run verify:rinkeby -- --contract contracts/${name}.sol:${name} ${PriceFeedUUPSImpl}`
+      `npm run verify:goerli -- --contract contracts/${name}.sol:${name} ${PriceFeedUUPSImpl}`
     );
   } catch (e) {
     console.log(
@@ -274,7 +274,7 @@ export function verifyWithEtherscan() {
 
   try {
     execSync(
-      `npm run verify:rinkeby -- --contract contracts/CJPY.sol:CJPY ${CJPY}`
+      `npm run verify:goerli -- --contract contracts/CJPY.sol:CJPY ${CJPY}`
     );
   } catch (e) {
     console.log(e.message);
@@ -282,7 +282,7 @@ export function verifyWithEtherscan() {
   try {
     let name = getLatestContractName("FeePool");
     execSync(
-      `npm run verify:rinkeby -- --contract contracts/${name}.sol:${name} ${FeePoolUUPSImpl}`
+      `npm run verify:goerli -- --contract contracts/${name}.sol:${name} ${FeePoolUUPSImpl}`
     );
   } catch (e) {
     console.log(
@@ -292,7 +292,7 @@ export function verifyWithEtherscan() {
   try {
     let name = getLatestContractName("CurrencyOS");
     execSync(
-      `npm run verify:rinkeby -- --contract contracts/${name}.sol:${name} ${CurrencyOSUUPSImpl}`
+      `npm run verify:goerli -- --contract contracts/${name}.sol:${name} ${CurrencyOSUUPSImpl}`
     );
   } catch (e) {
     console.log(
@@ -303,7 +303,7 @@ export function verifyWithEtherscan() {
   try {
     let name = getLatestContractName("Yamato");
     execSync(
-      `npm run verify:rinkeby -- --contract contracts/${name}.sol:${name} ${YamatoUUPSImpl}`
+      `npm run verify:goerli -- --contract contracts/${name}.sol:${name} ${YamatoUUPSImpl}`
     );
   } catch (e) {
     console.log(
@@ -314,7 +314,7 @@ export function verifyWithEtherscan() {
   try {
     let name = getLatestContractName("YamatoDepositor");
     execSync(
-      `npm run verify:rinkeby -- --contract contracts/${name}.sol:${name} ${YamatoDepositorUUPSImpl}`
+      `npm run verify:goerli -- --contract contracts/${name}.sol:${name} ${YamatoDepositorUUPSImpl}`
     );
   } catch (e) {
     console.log(
@@ -324,7 +324,7 @@ export function verifyWithEtherscan() {
   try {
     let name = getLatestContractName("YamatoBorrower");
     execSync(
-      `npm run verify:rinkeby -- --contract contracts/${name}.sol:${name} ${YamatoBorrowerUUPSImpl}`
+      `npm run verify:goerli -- --contract contracts/${name}.sol:${name} ${YamatoBorrowerUUPSImpl}`
     );
   } catch (e) {
     console.log(
@@ -334,7 +334,7 @@ export function verifyWithEtherscan() {
   try {
     let name = getLatestContractName("YamatoRepayer");
     execSync(
-      `npm run verify:rinkeby -- --contract contracts/${name}.sol:${name} ${YamatoRepayerUUPSImpl}`
+      `npm run verify:goerli -- --contract contracts/${name}.sol:${name} ${YamatoRepayerUUPSImpl}`
     );
   } catch (e) {
     console.log(
@@ -344,7 +344,7 @@ export function verifyWithEtherscan() {
   try {
     let name = getLatestContractName("YamatoWithdrawer");
     execSync(
-      `npm run verify:rinkeby -- --contract contracts/${name}.sol:${name} ${YamatoWithdrawerUUPSImpl}`
+      `npm run verify:goerli -- --contract contracts/${name}.sol:${name} ${YamatoWithdrawerUUPSImpl}`
     );
   } catch (e) {
     console.log(
@@ -354,7 +354,7 @@ export function verifyWithEtherscan() {
   try {
     let name = getLatestContractName("YamatoRedeemer");
     execSync(
-      `npm run verify:rinkeby -- --contract contracts/${name}.sol:${name} ${YamatoRedeemerUUPSImpl}`
+      `npm run verify:goerli -- --contract contracts/${name}.sol:${name} ${YamatoRedeemerUUPSImpl}`
     );
   } catch (e) {
     console.log(
@@ -364,7 +364,7 @@ export function verifyWithEtherscan() {
   try {
     let name = getLatestContractName("YamatoSweeper");
     execSync(
-      `npm run verify:rinkeby -- --contract contracts/${name}.sol:${name} ${YamatoSweeperUUPSImpl}`
+      `npm run verify:goerli -- --contract contracts/${name}.sol:${name} ${YamatoSweeperUUPSImpl}`
     );
   } catch (e) {
     console.log(
@@ -374,7 +374,7 @@ export function verifyWithEtherscan() {
   try {
     let name = getLatestContractName("Pool");
     execSync(
-      `npm run verify:rinkeby -- --contract contracts/${name}.sol:${name} ${PoolUUPSImpl}`
+      `npm run verify:goerli -- --contract contracts/${name}.sol:${name} ${PoolUUPSImpl}`
     );
   } catch (e) {
     console.log(e.message);
@@ -382,14 +382,14 @@ export function verifyWithEtherscan() {
   try {
     let name = getLatestContractName("PriorityRegistry");
     execSync(
-      `npm run verify:rinkeby -- --contract contracts/${name}.sol:${name} ${PriorityRegistryUUPSImpl}`
+      `npm run verify:goerli -- --contract contracts/${name}.sol:${name} ${PriorityRegistryUUPSImpl}`
     );
   } catch (e) {
     console.log(e.message);
   }
   try {
     execSync(
-      `npm run verify:rinkeby -- --contract contracts/Dependencies/PledgeLib.sol:PledgeLib ${PledgeLib}`
+      `npm run verify:goerli -- --contract contracts/Dependencies/PledgeLib.sol:PledgeLib ${PledgeLib}`
     );
   } catch (e) {
     console.log(e.message);
@@ -476,4 +476,8 @@ export function getDeployer(): Signer {
 
 export async function sleep(n) {
   return new Promise((resolve) => setTimeout(resolve, n));
+}
+
+export async function existsSlot(provider, address, slot) {
+  return (await provider.getStorageAt(address, slot)).length > 2;
 }

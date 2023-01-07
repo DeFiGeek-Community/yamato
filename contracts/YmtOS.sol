@@ -28,11 +28,10 @@ contract YmtOS is IYmtOS, UUPSBase {
     mapping(address => address) decisions;
     mapping(address => uint256) memScore;
 
-    function initialize(address _YMT, address _veYMT)
-        public
-        override
-        initializer
-    {
+    function initialize(
+        address _YMT,
+        address _veYMT
+    ) public override initializer {
         __UUPSBase_init();
 
         bytes32 YMT_KEY = bytes32(keccak256(abi.encode(YMT_SLOT_ID)));
@@ -44,11 +43,9 @@ contract YmtOS is IYmtOS, UUPSBase {
         }
     }
 
-    function addYamatoOfCurrencyOS(address _yamatoAddr)
-        public
-        override
-        onlyCurrencyOSs
-    {
+    function addYamatoOfCurrencyOS(
+        address _yamatoAddr
+    ) public override onlyCurrencyOSs {
         // TODO: Given there exists a Yamato before adding the YmtOS contract to CurrencyOS contract, such Yamato contract won't be registered to YmtOS because the Yamato.sol doesn't know which YmtOS is should be added yet.
         // So you need to make a new function onto CurrencyOS.sol where it can sync the existing, but unregistered yamatoes of CurrencyOS.sol.
         /*
@@ -76,11 +73,10 @@ contract YmtOS is IYmtOS, UUPSBase {
         currencyOSs.push(_currencyOS);
     }
 
-    function vote(address _currencyOS, address _yamato)
-        public
-        override
-        onlyWhitelisted(_currencyOS, _yamato)
-    {
+    function vote(
+        address _currencyOS,
+        address _yamato
+    ) public override onlyWhitelisted(_currencyOS, _yamato) {
         decisions[msg.sender] = _yamato;
 
         /*
@@ -177,11 +173,10 @@ contract YmtOS is IYmtOS, UUPSBase {
         ];
     }
 
-    function getScore(IYamato.Pledge memory _pledge, uint256 _at)
-        public
-        view
-        returns (uint256)
-    {
+    function getScore(
+        IYamato.Pledge memory _pledge,
+        uint256 _at
+    ) public view returns (uint256) {
         uint256 veScore = IveYMT(veYMT()).balanceOfAt(_pledge.owner, _at);
 
         // TODO: Do some magic :)

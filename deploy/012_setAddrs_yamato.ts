@@ -45,14 +45,16 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const Yamato = new Contract(_yamatoAddr, genABI("Yamato"), p);
 
-  if (await Yamato.permitDeps(_yamatoAddr)) return;
-  if (await Yamato.permitDeps(_yamatoDepositorAddr)) return;
-  if (await Yamato.permitDeps(_yamatoBorrowerAddr)) return;
-  if (await Yamato.permitDeps(_yamatoRepayerAddr)) return;
-  if (await Yamato.permitDeps(_yamatoRedeemerAddr)) return;
-  if (await Yamato.permitDeps(_yamatoSweeperAddr)) return;
-  if (await Yamato.permitDeps(_poolAddr)) return;
-  if (await Yamato.permitDeps(_priorityRegistryAddr)) return;
+  let flagCount = 0;
+  if (!(await Yamato.permitDeps(_yamatoAddr))) flagCount++;
+  if (!(await Yamato.permitDeps(_yamatoDepositorAddr))) flagCount++;
+  if (!(await Yamato.permitDeps(_yamatoBorrowerAddr))) flagCount++;
+  if (!(await Yamato.permitDeps(_yamatoRepayerAddr))) flagCount++;
+  if (!(await Yamato.permitDeps(_yamatoRedeemerAddr))) flagCount++;
+  if (!(await Yamato.permitDeps(_yamatoSweeperAddr))) flagCount++;
+  if (!(await Yamato.permitDeps(_poolAddr))) flagCount++;
+  if (!(await Yamato.permitDeps(_priorityRegistryAddr))) flagCount++;
+  if (flagCount == 0) return;
 
   await (
     await Yamato.connect(getFoundation()).setDeps(

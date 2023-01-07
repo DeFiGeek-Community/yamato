@@ -20,10 +20,10 @@ import "./Interfaces/IYMT.sol";
 contract YMT is IYMT, ERC20Permit {
     address ymtOSProxy;
 
-    constructor(uint256 initialSupply, address _ymtOSProxy)
-        ERC20Permit("Yamato")
-        ERC20("Yamato", "YMT")
-    {
+    constructor(
+        uint256 initialSupply,
+        address _ymtOSProxy
+    ) ERC20Permit("Yamato") ERC20("Yamato", "YMT") {
         _mint(msg.sender, initialSupply);
         ymtOSProxy = _ymtOSProxy;
     }
@@ -33,21 +33,17 @@ contract YMT is IYMT, ERC20Permit {
         _;
     }
 
-    function mint(address to, uint256 amount)
-        public
-        virtual
-        override
-        onlyYmtOSProxy
-    {
+    function mint(
+        address to,
+        uint256 amount
+    ) public virtual override onlyYmtOSProxy {
         _mint(to, amount);
     }
 
-    function approve(address spender, uint256 amount)
-        public
-        virtual
-        override
-        returns (bool)
-    {
+    function approve(
+        address spender,
+        uint256 amount
+    ) public virtual override returns (bool) {
         require(
             _msgSender() != spender,
             "sender and spender shouldn't be the same."

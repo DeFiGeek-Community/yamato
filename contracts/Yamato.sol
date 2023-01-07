@@ -189,11 +189,10 @@ contract Yamato is
         - setDepositAndBorrowLocks
         - setWithdrawLocks
     */
-    function setPledge(address _owner, Pledge memory _p)
-        public
-        override
-        onlyYamato
-    {
+    function setPledge(
+        address _owner,
+        Pledge memory _p
+    ) public override onlyYamato {
         Pledge storage p = pledges[_owner];
         p.coll = _p.coll;
         p.debt = _p.debt;
@@ -220,13 +219,9 @@ contract Yamato is
         totalDebt = _totalDebt;
     }
 
-    function checkFlashLock(address _owner)
-        public
-        view
-        override
-        onlyYamato
-        returns (bool _isLocked)
-    {}
+    function checkFlashLock(
+        address _owner
+    ) public view override onlyYamato returns (bool _isLocked) {}
 
     function setFlashLock(address _owner) public override onlyYamato {}
 
@@ -291,11 +286,10 @@ contract Yamato is
     /// @dev Need allowance. Lowest ICR Pledges get redeemed first. TCR will go up. coll=0 pledges are to be remained.
     /// @param maxRedemptionCurrencyAmount maximal redeemable amount
     /// @param isCoreRedemption A flag for who to pay
-    function redeem(uint256 maxRedemptionCurrencyAmount, bool isCoreRedemption)
-        public
-        nonReentrant
-        whenNotPaused
-    {
+    function redeem(
+        uint256 maxRedemptionCurrencyAmount,
+        bool isCoreRedemption
+    ) public nonReentrant whenNotPaused {
         IYamatoRedeemer.RedeemedArgs memory _args = IYamatoRedeemer(redeemer())
             .runRedeem(
                 IYamatoRedeemer.RunRedeemArgs(
@@ -362,12 +356,9 @@ contract Yamato is
 
     /// @notice To give pledge access to YmtOS
     /// @dev Interface can't return "struct memory" from public state variable
-    function getPledge(address _owner)
-        public
-        view
-        override
-        returns (Pledge memory)
-    {
+    function getPledge(
+        address _owner
+    ) public view override returns (Pledge memory) {
         return pledges[_owner];
     }
 
@@ -376,20 +367,15 @@ contract Yamato is
         public
         view
         override
-        returns (
-            uint256,
-            uint256,
-            uint8,
-            uint8,
-            uint8,
-            uint8
-        )
+        returns (uint256, uint256, uint8, uint8, uint8, uint8)
     {
         return (totalColl, totalDebt, MCR, RRR, SRR, GRR);
     }
 
     /// @notice Provide the data of individual pledge.
-    function getIndividualStates(address owner)
+    function getIndividualStates(
+        address owner
+    )
         public
         view
         returns (
@@ -514,12 +500,9 @@ contract Yamato is
     }
 
     // @dev All YamatoStores and YamatoActions except Yamato.sol are NOT needed to modify these funcs. Just write the same signature and don't fill inside. Yamato.sol must override it with correct logic.
-    function permitDeps(address _sender)
-        public
-        view
-        override(IYamato, YamatoBase)
-        returns (bool)
-    {
+    function permitDeps(
+        address _sender
+    ) public view override(IYamato, YamatoBase) returns (bool) {
         bool permit;
         address[9] memory deps = getDeps();
         for (uint256 i = 0; i < deps.length; i++) {

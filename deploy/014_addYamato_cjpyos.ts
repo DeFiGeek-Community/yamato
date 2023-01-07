@@ -27,7 +27,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     return;
   }
   await (
-    await CurrencyOS.connect(getFoundation()).addYamato(_yamatoAddr)
+    await CurrencyOS.connect(getFoundation()).addYamato(_yamatoAddr, {
+      gasLimit: 2000000,
+    })
   ).wait();
 
   console.log(`log: CurrencyOS.addYamato() executed.`);

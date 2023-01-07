@@ -97,19 +97,17 @@ contract CurrencyOSV2 is ICurrencyOS, UUPSBase {
         emit YamatoAdded(_yamatoAddr);
     }
 
-    function mintCurrency(address to, uint256 amount)
-        public
-        override
-        onlyYamato
-    {
+    function mintCurrency(
+        address to,
+        uint256 amount
+    ) public override onlyYamato {
         ICurrency(currency()).mint(to, amount);
     }
 
-    function burnCurrency(address to, uint256 amount)
-        public
-        override
-        onlyYamato
-    {
+    function burnCurrency(
+        address to,
+        uint256 amount
+    ) public override onlyYamato {
         ICurrency(currency()).burn(to, amount);
     }
 

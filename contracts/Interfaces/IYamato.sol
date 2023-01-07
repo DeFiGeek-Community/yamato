@@ -48,24 +48,16 @@ interface IYamato {
 
     function getPledge(address _owner) external view returns (Pledge memory);
 
-    function checkFlashLock(address _owner)
-        external
-        view
-        returns (bool _isLocked);
+    function checkFlashLock(
+        address _owner
+    ) external view returns (bool _isLocked);
 
     function setFlashLock(address _owner) external;
 
     function getStates()
         external
         view
-        returns (
-            uint256,
-            uint256,
-            uint8,
-            uint8,
-            uint8,
-            uint8
-        );
+        returns (uint256, uint256, uint8, uint8, uint8, uint8);
 
     function priceFeed() external view returns (address);
 

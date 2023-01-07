@@ -5,6 +5,7 @@ import {
   getDeploymentAddressPath,
   getFoundation,
   getDeploymentAddressPathWithTag,
+  existsSlot,
 } from "../src/deployUtil";
 import { readFileSync } from "fs";
 import { genABI } from "../src/genABI";
@@ -25,9 +26,14 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       gasLimit: 10000000,
     })
   ).wait();
-  console.log(`log: CJPY.setCurrencyOS() executed.`);
-  await (await CJPY.connect(getFoundation()).revokeGovernance()).wait();
-  console.log(`log: CJPY.revokeGovernance() executed.`);
+
+  if (await existsSlot(p, CJPY.address, 1)) {
+    console.log(`log: CJPY.setCurrencyOS() executed.`);
+    await (await CJPY.connect(getFoundation()).revokeGovernance()).wait();
+    console.log(`log: CJPY.revokeGovernance() executed.`);
+  } else {
+    console.log(`log: CJPY.setCurrencyOS() skipped.`);
+  }
 };
 export default func;
 func.tags = [""];

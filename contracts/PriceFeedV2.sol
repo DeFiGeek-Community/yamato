@@ -220,11 +220,7 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
     function _simulatePrice()
         internal
         view
-        returns (
-            uint256 _price,
-            Status _status,
-            bool _isAdjusted
-        )
+        returns (uint256 _price, Status _status, bool _isAdjusted)
     {
         /*
             The early quit by 0xMotoko (Oct 13, 2021)
@@ -601,11 +597,9 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
             _badChainlinkResponse(_prevResponse);
     }
 
-    function _badChainlinkResponse(ChainlinkResponse memory _response)
-        internal
-        view
-        returns (bool)
-    {
+    function _badChainlinkResponse(
+        ChainlinkResponse memory _response
+    ) internal view returns (bool) {
         // Check for response call reverted
         if (!_response.success) {
             return true;
@@ -626,11 +620,9 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
         return false;
     }
 
-    function _chainlinkIsFrozen(ChainlinkResponse memory _response)
-        internal
-        view
-        returns (bool)
-    {
+    function _chainlinkIsFrozen(
+        ChainlinkResponse memory _response
+    ) internal view returns (bool) {
         return block.timestamp - _response.timestamp > TIMEOUT;
     }
 
@@ -669,11 +661,9 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
     }
 
     /// @notice internal logic of tellor mulfunctioning flag
-    function _tellorIsBroken(TellorResponse memory _response)
-        internal
-        view
-        returns (bool)
-    {
+    function _tellorIsBroken(
+        TellorResponse memory _response
+    ) internal view returns (bool) {
         // Check for response call reverted
         if (!_response.success) {
             return true;
@@ -691,11 +681,9 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
     }
 
     /// @notice internal logic of tellor stopping flag
-    function _tellorIsFrozen(TellorResponse memory _tellorResponse)
-        internal
-        view
-        returns (bool)
-    {
+    function _tellorIsFrozen(
+        TellorResponse memory _tellorResponse
+    ) internal view returns (bool) {
         return block.timestamp - _tellorResponse.timestamp > TIMEOUT;
     }
 
@@ -770,15 +758,7 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
     function _safeUsingTellorOrGracefulAdjustment(
         TellorResponse memory _tellorResponse,
         Status _inheritedStatus
-    )
-        internal
-        view
-        returns (
-            uint256 _price,
-            Status _status,
-            bool _isAdjusted
-        )
-    {
+    ) internal view returns (uint256 _price, Status _status, bool _isAdjusted) {
         if (
             _tellorAndLastGoodPriceSimilarPrice(_tellorResponse) == false &&
             /* CL is broken and Tellor is far away! Danger zone! */
@@ -810,11 +790,10 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
     }
 
     /// @notice Internal calculator of ChainLink digits padding.
-    function _scaleChainlinkPriceByDigits(uint256 _price, uint256 _answerDigits)
-        internal
-        pure
-        returns (uint256 price)
-    {
+    function _scaleChainlinkPriceByDigits(
+        uint256 _price,
+        uint256 _answerDigits
+    ) internal pure returns (uint256 price) {
         /*
          * Convert the price returned by the Chainlink oracle to an 18-digit decimal for use by Liquity.
          * At date of Liquity launch, Chainlink uses an 8-digit price, but we also handle the possibility of
@@ -823,21 +802,19 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
          */
         if (_answerDigits >= TARGET_DIGITS) {
             // Scale the returned price value down to Liquity's target precision
-            price = _price / (10**(_answerDigits - TARGET_DIGITS));
+            price = _price / (10 ** (_answerDigits - TARGET_DIGITS));
         } else {
             // Scale the returned price value up to Liquity's target precision
-            price = _price * (10**(TARGET_DIGITS - _answerDigits));
+            price = _price * (10 ** (TARGET_DIGITS - _answerDigits));
         }
         return price;
     }
 
     /// @notice Internal calculator of Tellor digits padding.
-    function _scaleTellorPriceByDigits(uint256 _price)
-        internal
-        pure
-        returns (uint256 price)
-    {
-        return price = _price * (10**(TARGET_DIGITS - TELLOR_DIGITS));
+    function _scaleTellorPriceByDigits(
+        uint256 _price
+    ) internal pure returns (uint256 price) {
+        return price = _price * (10 ** (TARGET_DIGITS - TELLOR_DIGITS));
     }
 
     /// @notice Internal status changer.
@@ -854,10 +831,9 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
     }
 
     /// @notice Internal price changer with digits calc.
-    function _storeTellorPrice(TellorResponse memory _tellorResponse)
-        internal
-        returns (uint256)
-    {
+    function _storeTellorPrice(
+        TellorResponse memory _tellorResponse
+    ) internal returns (uint256) {
         uint256 scaledTellorPrice = _scaleTellorPriceByDigits(
             _tellorResponse.value
         );
@@ -867,10 +843,9 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
     }
 
     /// @notice Internal price changer with digits calc.
-    function _storeChainlinkPrice(ChainlinkResponse memory _chainlinkResponse)
-        internal
-        returns (uint256)
-    {
+    function _storeChainlinkPrice(
+        ChainlinkResponse memory _chainlinkResponse
+    ) internal returns (uint256) {
         uint256 scaledChainlinkPrice = _scaleChainlinkPriceByDigits(
             uint256(_chainlinkResponse.answer),
             _chainlinkResponse.decimals
@@ -940,7 +915,7 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
         returns (
             uint80 roundId,
             int256 answer,
-            uint256, /* startedAt */
+            uint256 /* startedAt */,
             uint256 timestamp,
             uint80 /* answeredInRound */
         ) {
@@ -958,7 +933,7 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
         returns (
             uint80 roundId,
             int256 answer,
-            uint256, /* startedAt */
+            uint256 /* startedAt */,
             uint256 timestamp,
             uint80 /* answeredInRound */
         ) {
@@ -1010,7 +985,7 @@ contract PriceFeedV2 is IPriceFeedV2, UUPSBase, BaseMath {
         returns (
             uint80 roundId,
             int256 answer,
-            uint256, /* startedAt */
+            uint256 /* startedAt */,
             uint256 timestamp,
             uint80 /* answeredInRound */
         ) {

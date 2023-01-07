@@ -20,26 +20,23 @@ contract TellorCallerMock is OracleMockBase, ITellorCaller {
         setPriceToDefault();
     }
 
-    function getTellorCurrentValue(uint256 _requestId)
+    function getTellorCurrentValue(
+        uint256 _requestId
+    )
         external
         view
         virtual
         override
-        returns (
-            bool ifRetrieve,
-            uint256 value,
-            uint256 _timestampRetrieved
-        )
+        returns (bool ifRetrieve, uint256 value, uint256 _timestampRetrieved)
     {
         require(_requestId == 59, "Only ETH/JPY is supported.");
         return (true, uint256(lastPrice), lastSeen);
     }
 
-    function simulatePriceMove(uint256 deviation, bool sign)
-        internal
-        override
-        onlyOwner
-    {
+    function simulatePriceMove(
+        uint256 deviation,
+        bool sign
+    ) internal override onlyOwner {
         uint256 _lastPrice = uint256(lastPrice);
         uint256 value;
         if (deviation != 0) {
