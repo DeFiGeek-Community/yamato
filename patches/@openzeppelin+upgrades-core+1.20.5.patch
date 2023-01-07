@@ -16,10 +16,18 @@ index 8865cff..5acc1ce 100644
      if (txHash !== undefined) {
          const startTime = Date.now();
 diff --git a/node_modules/@openzeppelin/upgrades-core/dist/eip-1967.js b/node_modules/@openzeppelin/upgrades-core/dist/eip-1967.js
-index 6b2623e..2b8d2d8 100644
+index 6b2623e..d690bce 100644
 --- a/node_modules/@openzeppelin/upgrades-core/dist/eip-1967.js
 +++ b/node_modules/@openzeppelin/upgrades-core/dist/eip-1967.js
-@@ -18,6 +18,7 @@ async function getAdminAddress(provider, address) {
+@@ -2,6 +2,7 @@
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.isEmptySlot = exports.toEip1967Hash = exports.toFallbackEip1967Hash = exports.getBeaconAddress = exports.getImplementationAddress = exports.getAdminAddress = exports.EIP1967BeaconNotFound = exports.EIP1967ImplementationNotFound = void 0;
+ const ethereumjs_util_1 = require("ethereumjs-util");
++const { E } = require("prb-math");
+ const error_1 = require("./error");
+ const provider_1 = require("./provider");
+ const address_1 = require("./utils/address");
+@@ -18,6 +19,7 @@ async function getAdminAddress(provider, address) {
  exports.getAdminAddress = getAdminAddress;
  async function getImplementationAddress(provider, address) {
      const storage = await getStorageFallback(provider, address, toEip1967Hash('eip1967.proxy.implementation'), toFallbackEip1967Hash('org.zeppelinos.proxy.implementation'));
@@ -27,14 +35,14 @@ index 6b2623e..2b8d2d8 100644
      if (isEmptySlot(storage)) {
          throw new EIP1967ImplementationNotFound(`Contract at ${address} doesn't look like an ERC 1967 proxy with a logic contract address`);
      }
-@@ -32,15 +33,36 @@ async function getBeaconAddress(provider, address) {
+@@ -32,15 +34,49 @@ async function getBeaconAddress(provider, address) {
      return parseAddressFromStorage(storage);
  }
  exports.getBeaconAddress = getBeaconAddress;
-+let waitTotal = 0.5 * 60 * 1000; // Note: many slots there.
-+let checkInterval = 3 * 1000;
-+let maxCount = Math.floor(waitTotal / checkInterval);
-+async function waitAndExist(provider, address, slot, count){
++let waitTotal;
++let checkInterval;
++let maxCount;
++async function waitAndExist(provider, address, slot, count, checkInterval){
 +    if (count >= 1) {
 +        // console.log("eip-1967.js:L38", `${address}-proxy's impl existence check :: wait ${checkInterval/1000} sec`);
 +        await new Promise(resolve => setTimeout(resolve, checkInterval))    
@@ -47,6 +55,19 @@ index 6b2623e..2b8d2d8 100644
 +    };
 +}
  async function getStorageFallback(provider, address, ...slots) {
++    let networkId = await (0, provider_1.getChainId)(provider);
++    if (networkId === 31337) {
++        // for hardhat network
++        waitTotal = 1;
++        checkInterval = 1;        
++        maxCount = Math.floor(waitTotal / checkInterval);
++    } else {
++        // for Goerli, main network
++        waitTotal = 0.5 * 60 * 1000;
++        checkInterval = 3 * 1000;
++        maxCount = Math.floor(waitTotal / checkInterval);        
++    }
++
      let storage = '0x0000000000000000000000000000000000000000000000000000000000000000'; // default: empty slot
 +    let result = { implementationExist: false, storage };
      for (const slot of slots) {
@@ -55,7 +76,7 @@ index 6b2623e..2b8d2d8 100644
 +        result = { implementationExist: false, storage };
 +        let count = 0;
 +        while (!result.implementationExist && count < maxCount) {
-+            result = await waitAndExist(provider, address, slot, count);
++            result = await waitAndExist(provider, address, slot, count, checkInterval);
 +            count++;
 +        }
 +        if (result.implementationExist) {
