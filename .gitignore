@@ -1,5 +1,4 @@
 node_modules
-lib
 .DS_Store
 .idea
 .env
@@ -23,3 +22,6 @@ test/**/*.js
 /slither-output.json
 .openzeppelin/*.json
 .openzeppelin/unknown-31337.json
+
+# foundry cache file
+forge-cache
