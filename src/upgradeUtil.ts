@@ -64,12 +64,14 @@ export async function proposeUpgradeProxy<
   S extends ContractFactory
 >(
   olderInstanceAddress: string,
-  contractNameTo: string
+  contractNameTo: string,
+  multisigAddr: string
 ): Promise<ExtendedProposalResponse> {
   let contractFactory: S = <S>await ethers.getContractFactory(contractNameTo);
   const res: ExtendedProposalResponse = await defender.proposeUpgrade(
     olderInstanceAddress,
-    contractFactory
+    contractFactory,
+    {multisig: multisigAddr,proxyAdmin:multisigAddr}
   );
   return res;
 }
@@ -197,7 +199,7 @@ export async function runUpgrade(implNameBase, linkings = []) {
       const res =
         linkings.length > 0
           ? await proposeUpgradeLinkedProxy(ERC1967Proxy, implName, linkings)
-          : await proposeUpgradeProxy(ERC1967Proxy, implName);
+          : await proposeUpgradeProxy(ERC1967Proxy, implName, multisigAddr);
 
       console.log(res.verificationResponse);
 

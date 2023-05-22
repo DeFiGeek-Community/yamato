@@ -122,4 +122,8 @@ module.exports = {
     currency: "USD",
     gasPrice: 100,
   },
+  defender: {
+    apiKey: process.env.DEFENDER_TEAM_API_KEY,
+    apiSecret: process.env.DEFENDER_TEAM_API_SECRET_KEY,
+  }
 };
