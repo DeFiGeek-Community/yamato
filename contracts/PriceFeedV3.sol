@@ -168,11 +168,7 @@ contract PriceFeedV3 is IPriceFeedV3, UUPSBase, BaseMath {
     }
 
     /// @dev An internal function to dry run oracle usage determination logic. Can use it for view func or write func. ChainLink is the main oracle.
-    function _simulatePrice()
-        internal
-        view
-        returns (uint256 _price)
-    {
+    function _simulatePrice() internal view returns (uint256 _price) {
         /*
             The early quit by 0xMotoko (Oct 13, 2021)
         */
@@ -226,7 +222,11 @@ contract PriceFeedV3 is IPriceFeedV3, UUPSBase, BaseMath {
             return true;
         }
         // Check for an invalid timeStamp that is 0, or in the future
-        if (_response.timestamp == 0 || _response.timestamp > block.timestamp || _response.subTimestamp > block.timestamp) {
+        if (
+            _response.timestamp == 0 ||
+            _response.timestamp > block.timestamp ||
+            _response.subTimestamp > block.timestamp
+        ) {
             return true;
         }
         // Check for non-positive price
@@ -240,7 +240,9 @@ contract PriceFeedV3 is IPriceFeedV3, UUPSBase, BaseMath {
     function _chainlinkIsFrozen(
         ChainlinkResponse memory _response
     ) internal view returns (bool) {
-        return block.timestamp - _response.timestamp > ETHUSD_TIMEOUT || block.timestamp - _response.subTimestamp > USDJPY_TIMEOUT;
+        return
+            block.timestamp - _response.timestamp > ETHUSD_TIMEOUT ||
+            block.timestamp - _response.subTimestamp > USDJPY_TIMEOUT;
     }
 
     /// @notice Internal calculator of ChainLink digits padding.
@@ -374,7 +376,9 @@ contract PriceFeedV3 is IPriceFeedV3, UUPSBase, BaseMath {
                 uint256(jpyChainlinkResponseInUSD.answer)
         );
         chainlinkResponse.timestamp = ethChainlinkResponseInUSD.timestamp;
-        chainlinkResponse.success = ethChainlinkResponseInUSD.success && jpyChainlinkResponseInUSD.success;
+        chainlinkResponse.success =
+            ethChainlinkResponseInUSD.success &&
+            jpyChainlinkResponseInUSD.success;
         chainlinkResponse.subAnswer = jpyChainlinkResponseInUSD.answer; // TODO: What if JPYUSD changes a lot since the last ETHUSD feed round? (No way...)
         chainlinkResponse.subDecimal = jpyChainlinkResponseInUSD.decimals;
         chainlinkResponse.subTimestamp = jpyChainlinkResponseInUSD.timestamp;
