@@ -11,7 +11,7 @@ pragma solidity 0.8.4;
 
 import "./Pool.sol";
 import "./YMT.sol";
-import "./PriceFeedV2.sol";
+import "./PriceFeedV3.sol";
 import "./Dependencies/YamatoAction.sol";
 import "./Dependencies/PledgeLib.sol";
 import "./Dependencies/SafeMath.sol";
@@ -41,7 +41,7 @@ contract YamatoWithdrawerV2 is IYamatoWithdrawer, YamatoAction {
         /*
             1. Get feed and pledge
         */
-        IPriceFeedV2(priceFeed()).fetchPrice();
+        IPriceFeedV3(priceFeed()).fetchPrice();
         IYamato.Pledge memory pledge = IYamato(yamato()).getPledge(_sender);
         (uint256 totalColl, , , , , ) = IYamato(yamato()).getStates();
 

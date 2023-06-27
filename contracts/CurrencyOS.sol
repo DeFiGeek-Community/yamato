@@ -13,7 +13,6 @@ import "./Interfaces/ICurrency.sol";
 import "./Interfaces/ICurrencyOS.sol";
 import "./Interfaces/IYMT.sol";
 import "./veYMT.sol";
-import "./PriceFeed.sol";
 import "./Interfaces/IYamato.sol";
 import "./YmtOS.sol";
 import "./Dependencies/UUPSBase.sol";

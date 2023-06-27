@@ -1,13 +1,11 @@
 import { ethers } from "hardhat";
 import { FakeContract, smock } from "@defi-wonderland/smock";
 import chai, { expect } from "chai";
-import { solidity } from "ethereum-waffle";
 import { Signer, BigNumber, Wallet } from "ethers";
 import { Pool, Yamato, Pool__factory } from "../../typechain";
 import { getFakeProxy, getProxy } from "../../src/testUtil";
 
 chai.use(smock.matchers);
-chai.use(solidity);
 
 describe("contract Pool", function () {
   let pool: Pool;

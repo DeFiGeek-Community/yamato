@@ -1,7 +1,6 @@
 import { ethers } from "hardhat";
 import { FakeContract, smock } from "@defi-wonderland/smock";
 import chai, { expect } from "chai";
-import { solidity } from "ethereum-waffle";
 import { Signer } from "ethers";
 import {
   CurrencyOS,
@@ -16,20 +15,19 @@ import {
   YamatoWithdrawer,
   YamatoRedeemer,
   YamatoSweeper,
-  PriceFeed,
+  PriceFeedV3,
   CurrencyOS__factory,
   FeePool__factory,
 } from "../../typechain";
 import { getFakeProxy, getProxy } from "../../src/testUtil";
 
 chai.use(smock.matchers);
-chai.use(solidity);
 
 describe("CurrencyOS", () => {
   let mockCJPY: FakeContract<CJPY>;
   let mockYMT: FakeContract<YMT>;
   let mockVeYMT: FakeContract<VeYMT>;
-  let mockFeed: FakeContract<PriceFeed>;
+  let mockFeed: FakeContract<PriceFeedV3>;
   let mockFeePool: FakeContract<FeePool>;
   let mockYamato: FakeContract<Yamato>;
   let mockYamatoDepositor: FakeContract<YamatoDepositor>;
@@ -48,7 +46,7 @@ describe("CurrencyOS", () => {
     ownerAddress = await accounts[0].getAddress();
     userAddress = await accounts[1].getAddress();
     mockCJPY = await smock.fake<CJPY>("CJPY");
-    mockFeed = await getFakeProxy<PriceFeed>("PriceFeed");
+    mockFeed = await getFakeProxy<PriceFeedV3>("PriceFeed");
     mockFeePool = await getFakeProxy<FeePool>("FeePool");
     mockYamato = await getFakeProxy<Yamato>("Yamato");
     mockYamatoDepositor = await getFakeProxy<YamatoDepositor>(

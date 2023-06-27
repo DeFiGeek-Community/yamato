@@ -1,14 +1,13 @@
 import { ethers } from "hardhat";
 import { FakeContract, smock } from "@defi-wonderland/smock";
 import chai, { expect } from "chai";
-import { solidity } from "ethereum-waffle";
 import { Signer, BigNumber } from "ethers";
 import {
   CJPY,
   CurrencyOS,
   Pool,
   FeePool,
-  PriceFeedV2,
+  PriceFeedV3,
   PriorityRegistry,
   PriorityRegistry__factory,
   Yamato,
@@ -40,12 +39,11 @@ import {
 } from "../../src/testUtil";
 
 chai.use(smock.matchers);
-chai.use(solidity);
 
 describe("contract Yamato - pure func quickier tests", function () {
   let mockPool: FakeContract<Pool>;
   let mockFeePool: FakeContract<FeePool>;
-  let mockFeed: FakeContract<PriceFeedV2>;
+  let mockFeed: FakeContract<PriceFeedV3>;
   let mockYMT: FakeContract<YMT>;
   let mockCJPY: FakeContract<CJPY>;
   let mockCurrencyOS: FakeContract<CurrencyOS>;
@@ -71,7 +69,7 @@ describe("contract Yamato - pure func quickier tests", function () {
 
     mockPool = await smock.fake<Pool>("Pool");
     mockFeePool = await getFakeProxy<FeePool>("FeePool");
-    mockFeed = await getFakeProxy<PriceFeedV2>("PriceFeedV2");
+    mockFeed = await getFakeProxy<PriceFeedV3>("PriceFeedV3");
     mockYMT = await smock.fake<YMT>("YMT");
     mockCJPY = await smock.fake<CJPY>("CJPY");
     mockCurrencyOS = await smock.fake<CurrencyOS>("CurrencyOS");
@@ -242,7 +240,7 @@ describe("contract Yamato - pure func quickier tests", function () {
 describe("contract Yamato", function () {
   let mockPool: FakeContract<Pool>;
   let mockFeePool: FakeContract<FeePool>;
-  let mockFeed: FakeContract<PriceFeedV2>;
+  let mockFeed: FakeContract<PriceFeedV3>;
   let mockYMT: FakeContract<YMT>;
   let mockCJPY: FakeContract<CJPY>;
   let mockCurrencyOS: FakeContract<CurrencyOS>;
@@ -268,7 +266,7 @@ describe("contract Yamato", function () {
 
     mockPool = await smock.fake<Pool>("Pool");
     mockFeePool = await getFakeProxy<FeePool>("FeePool");
-    mockFeed = await getFakeProxy<PriceFeedV2>("PriceFeedV2");
+    mockFeed = await getFakeProxy<PriceFeedV3>("PriceFeedV3");
     mockYMT = await smock.fake<YMT>("YMT");
     mockCJPY = await smock.fake<CJPY>("CJPY");
     mockCurrencyOS = await smock.fake<CurrencyOS>("CurrencyOS");

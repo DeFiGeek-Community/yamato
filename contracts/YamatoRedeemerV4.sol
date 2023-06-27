@@ -11,7 +11,7 @@ pragma solidity 0.8.4;
 
 import "./Pool.sol";
 import "./YMT.sol";
-import "./PriceFeedV2.sol";
+import "./PriceFeedV3.sol";
 import "./Dependencies/YamatoAction.sol";
 import "./Dependencies/PledgeLib.sol";
 import "./Dependencies/SafeMath.sol";
@@ -46,7 +46,7 @@ contract YamatoRedeemerV4 is IYamatoRedeemerV4, YamatoAction {
         IERC20 _cjpy = IERC20(_currencyOS.currency());
         IYamato _yamato = IYamato(yamato());
 
-        vars.ethPriceInCurrency = IPriceFeedV2(priceFeed()).fetchPrice();
+        vars.ethPriceInCurrency = IPriceFeedV3(priceFeed()).fetchPrice();
         if (_args.isCoreRedemption) {
             _args.wantToRedeemCurrencyAmount = IPool(pool())
                 .redemptionReserve();

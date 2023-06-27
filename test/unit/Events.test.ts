@@ -1,14 +1,13 @@
 import { ethers } from "hardhat";
 import { FakeContract, smock } from "@defi-wonderland/smock";
 import chai, { expect } from "chai";
-import { solidity } from "ethereum-waffle";
 import { Signer, BigNumber, Wallet } from "ethers";
 import {
   CJPY,
   CurrencyOS,
   Pool,
   FeePool,
-  PriceFeed,
+  PriceFeedV3,
   PriorityRegistryV6,
   PriorityRegistryV6__factory,
   Yamato,
@@ -35,13 +34,12 @@ import { encode, toERC20 } from "../param/helper";
 import { getFakeProxy, getLinkedProxy, getProxy } from "../../src/testUtil";
 
 chai.use(smock.matchers);
-chai.use(solidity);
 
 describe("story Events", function () {
   describe("contract Yamato", function () {
     let mockPool: FakeContract<Pool>;
     let mockFeePool: FakeContract<FeePool>;
-    let mockFeed: FakeContract<PriceFeed>;
+    let mockFeed: FakeContract<PriceFeedV3>;
     let mockYMT: FakeContract<YMT>;
     let mockCJPY: FakeContract<CJPY>;
     let mockCurrencyOS: FakeContract<CurrencyOS>;
@@ -67,7 +65,7 @@ describe("story Events", function () {
 
       mockPool = await smock.fake<Pool>("Pool");
       mockFeePool = await smock.fake<FeePool>("FeePool");
-      mockFeed = await smock.fake<PriceFeed>("PriceFeed");
+      mockFeed = await smock.fake<PriceFeedV3>("PriceFeed");
       mockYMT = await smock.fake<YMT>("YMT");
       mockCJPY = await smock.fake<CJPY>("CJPY");
       mockCurrencyOS = await smock.fake<CurrencyOS>("CurrencyOS");
@@ -318,7 +316,7 @@ describe("story Events", function () {
     let yamatoDummy: YamatoDummy;
     let mockCJPY: FakeContract<CJPY>;
     let mockFeePool: FakeContract<FeePool>;
-    let mockFeed: FakeContract<PriceFeed>;
+    let mockFeed: FakeContract<PriceFeedV3>;
     let mockCurrencyOS: FakeContract<CurrencyOS>;
     let mockYamatoDepositor: FakeContract<YamatoDepositor>;
     let mockYamatoBorrower: FakeContract<YamatoBorrower>;
@@ -334,7 +332,7 @@ describe("story Events", function () {
       mockCJPY.transfer.returns(0);
 
       mockFeePool = await getFakeProxy<FeePool>("FeePool");
-      mockFeed = await getFakeProxy<PriceFeed>("PriceFeed");
+      mockFeed = await getFakeProxy<PriceFeedV3>("PriceFeed");
       mockCurrencyOS = await smock.fake<CurrencyOS>("CurrencyOS");
       mockCurrencyOS.priceFeed.returns(mockFeed.address);
       mockCurrencyOS.feePool.returns(mockFeePool.address);

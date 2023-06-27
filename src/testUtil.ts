@@ -41,18 +41,25 @@ export async function getProxy<
   args: any,
   versionSpecification?: number | undefined
 ): Promise<T> {
-  let contractFactory: S = <S>await ethers.getContractFactory(contractName);
-  const defaultInst: T = <T>(
-    await upgrades.deployProxy(contractFactory, args, { kind: "uups" })
-  );
+  let contractFactory: S;
+  let defaultInst: T;
 
   // TODO: V2 Flag
   let implName;
   if (versionSpecification) {
-    implName = `${contractName}V${versionSpecification}`;
+    contractFactory = <S>(
+      await ethers.getContractFactory(`${contractName}V${versionSpecification}`)
+    );
+    implName = "";
   } else {
+    contractFactory = <S>await ethers.getContractFactory(contractName);
     implName = getLatestContractName(contractName);
   }
+
+  defaultInst = <T>(
+    await upgrades.deployProxy(contractFactory, args, { kind: "uups" })
+  );
+
   if (implName.length == 0) {
     return defaultInst;
   } else {

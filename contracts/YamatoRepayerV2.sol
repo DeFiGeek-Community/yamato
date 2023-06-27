@@ -11,7 +11,7 @@ pragma solidity 0.8.4;
 
 import "./Pool.sol";
 import "./YMT.sol";
-import "./PriceFeedV2.sol";
+import "./PriceFeedV3.sol";
 import "./Dependencies/YamatoAction.sol";
 import "./Dependencies/PledgeLib.sol";
 import "./Dependencies/SafeMath.sol";
@@ -41,7 +41,7 @@ contract YamatoRepayerV2 is IYamatoRepayer, YamatoAction {
         /*
             1. Get feed and Pledge
         */
-        IPriceFeedV2(priceFeed()).fetchPrice();
+        IPriceFeedV3(priceFeed()).fetchPrice();
         IYamato.Pledge memory pledge = IYamato(yamato()).getPledge(_sender);
         (, uint256 totalDebt, , , , ) = IYamato(yamato()).getStates();
         uint256 senderBalance = IERC20(ICurrencyOS(currencyOS()).currency())

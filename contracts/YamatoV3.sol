@@ -11,7 +11,6 @@ pragma solidity 0.8.4;
 
 import "./Pool.sol";
 import "./YMT.sol";
-import "./PriceFeed.sol";
 import "./Interfaces/IYamatoDepositor.sol";
 import "./Interfaces/IYamatoBorrower.sol";
 import "./Interfaces/IYamatoRepayer.sol";

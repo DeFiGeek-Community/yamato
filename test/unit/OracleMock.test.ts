@@ -1,24 +1,15 @@
 import { ethers } from "hardhat";
 import { smock } from "@defi-wonderland/smock";
 import chai, { expect } from "chai";
-import { solidity } from "ethereum-waffle";
 import { BigNumber } from "ethers";
-import {
-  ChainLinkMock,
-  ChainLinkMock__factory,
-  TellorCallerMock,
-  TellorCallerMock__factory,
-} from "../../typechain";
+import { ChainLinkMock, ChainLinkMock__factory } from "../../typechain";
 
 chai.use(smock.matchers);
-chai.use(solidity);
 
 let chainlinkMockEthUsd: ChainLinkMock;
 let chainlinkMockJpyUsd: ChainLinkMock;
-let tellorCallerMockEthJpy: TellorCallerMock;
 let ethUsdDefaultPrice = 410000000000;
 let jpyUsdDefaultPrice = 877000;
-let ethJpyDefaultPrice = 410000000000;
 let chainlinkInitialRoundId = BigNumber.from("30000000000000000001").add(1);
 let priceDeviationRange = 0.01;
 let accounts;
@@ -139,64 +130,6 @@ describe("ChainlinkMock", function () {
         )
       ).wait();
       const ownerAfter = await chainlinkMockEthUsd.owner();
-      chai.expect(ownerAfter).to.not.equal(ownerBefore);
-    });
-  });
-});
-
-describe("TellorCallerMock", function () {
-  beforeEach(async () => {
-    accounts = await ethers.getSigners();
-    const spec = <TellorCallerMock__factory>(
-      await ethers.getContractFactory("TellorCallerMock")
-    );
-    tellorCallerMockEthJpy = await spec.deploy();
-  });
-
-  describe("setPriceToDefault()", function () {
-    it(`succeeds to set a default price for the Tellor instance`, async function () {
-      // change the last price then call the set to default function
-      const ethJpyLastPrice = 320000000000;
-      await tellorCallerMockEthJpy.setLastPrice(ethJpyLastPrice);
-
-      await tellorCallerMockEthJpy.setPriceToDefault();
-
-      let [ifRetrieve, ethJpyValue, timestampRetrieved] =
-        await tellorCallerMockEthJpy.getTellorCurrentValue(59);
-      expect(ethJpyValue.toNumber()).to.eq(ethJpyDefaultPrice);
-    });
-  });
-
-  describe("getTellorCurrentValue()", function () {
-    it(`succeeds to get a price from Tellor`, async function () {
-      // the prices shall be equal to the default prices
-      let [ifRetrieve, ethJpyValue, timestampRetrieved] =
-        await tellorCallerMockEthJpy.getTellorCurrentValue(59);
-      expect(ethJpyValue.toNumber()).to.eq(ethJpyDefaultPrice);
-    });
-  });
-
-  describe("simulatePriceMove()", function () {
-    it(`succeeds to update a price for Tellor`, async function () {
-      // the price deviation shall be within 1% range.
-      await tellorCallerMockEthJpy.simulatePriceMove();
-      let [ifRetrieve, ethJpyValue, timestampRetrieved] =
-        await tellorCallerMockEthJpy.getTellorCurrentValue(59);
-      const lowerRangeEthJpy = ethJpyDefaultPrice * (1 - priceDeviationRange);
-      const upperRangeEthJpy = ethJpyDefaultPrice * (1 + priceDeviationRange);
-      expect(ethJpyValue).to.be.within(lowerRangeEthJpy, upperRangeEthJpy);
-    });
-  });
-
-  describe("transferOwnership()", function () {
-    it(`succeeds to change owner`, async function () {
-      const ownerBefore = await tellorCallerMockEthJpy.owner();
-      await (
-        await tellorCallerMockEthJpy.transferOwnership(
-          await accounts[1].getAddress()
-        )
-      ).wait();
-      const ownerAfter = await tellorCallerMockEthJpy.owner();
       chai.expect(ownerAfter).to.not.equal(ownerBefore);
     });
   });

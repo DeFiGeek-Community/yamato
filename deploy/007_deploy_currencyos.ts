@@ -5,6 +5,7 @@ import {
   setProvider,
   getDeploymentAddressPath,
   getDeploymentAddressPathWithTag,
+  setNetwork,
 } from "../src/deployUtil";
 import { readFileSync, writeFileSync, existsSync } from "fs";
 import { CurrencyOS, CurrencyOS__factory } from "../typechain";
@@ -14,6 +15,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   if (existsSync(getDeploymentAddressPathWithTag("CurrencyOS", "ERC1967Proxy")))
     return;
 
+  setNetwork(hre.network.name);
   const p = await setProvider();
   const { ethers, deployments } = hre;
   const { getContractFactory } = ethers;

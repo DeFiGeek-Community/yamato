@@ -1,19 +1,16 @@
 import { ethers } from "hardhat";
 import { FakeContract, smock } from "@defi-wonderland/smock";
 import chai, { expect } from "chai";
-import { solidity } from "ethereum-waffle";
 import { Signer, BigNumber } from "ethers";
 import {
   CurrencyOS,
   FeePool,
   PledgeLib__factory,
-  PriceFeedV2,
+  PriceFeedV3,
   Yamato,
   YamatoDummy,
   YamatoDummy__factory,
-  PriorityRegistry,
   PriorityRegistryV6,
-  PriorityRegistry__factory,
   PriorityRegistryV6__factory,
   CJPY,
 } from "../../typechain";
@@ -21,13 +18,12 @@ import { getFakeProxy, getLinkedProxy } from "../../src/testUtil";
 import { describe } from "mocha";
 
 chai.use(smock.matchers);
-chai.use(solidity);
 
 describe("contract PriorityRegistry", function () {
   let mockYamato: FakeContract<Yamato>;
   let mockCurrencyOS: FakeContract<CurrencyOS>;
   let mockFeePool: FakeContract<FeePool>;
-  let mockFeed: FakeContract<PriceFeedV2>;
+  let mockFeed: FakeContract<PriceFeedV3>;
   let mockCJPY: FakeContract<CJPY>;
   let yamatoDummy: YamatoDummy;
   let priorityRegistryWithYamatoMock: PriorityRegistryV6;
@@ -40,7 +36,7 @@ describe("contract PriorityRegistry", function () {
     accounts = await ethers.getSigners();
     address0 = await accounts[0].getAddress();
 
-    mockFeed = await getFakeProxy<PriceFeedV2>("PriceFeedV2");
+    mockFeed = await getFakeProxy<PriceFeedV3>("PriceFeedV3");
     mockFeePool = await getFakeProxy<FeePool>("FeePool");
     mockCurrencyOS = await getFakeProxy<CurrencyOS>("CurrencyOSV2");
     const PledgeLib = (
@@ -598,9 +594,7 @@ describe("contract PriorityRegistry", function () {
         let _deleteNextout = await priorityRegistry.rankedQueueNextout(_index);
         await expect(
           yamatoDummy.bypassRankedQueueSearchAndDestroy(_index, _deleteNextout)
-        ).to.be.revertedWith(
-          "reverted with panic code 0x32 (Array accessed at an out-of-bounds or negative index"
-        );
+        ).to.be.revertedWithPanic(0x32);
       });
       it("push1 push2 push3 pop1 push4 push5 destroy2 pop3 destroy4 pop5 push1 push2 destroy1 pop2 = success", async function () {
         await yamatoDummy.bypassRankedQueuePush(_index, toTyped(_inputPledge1));

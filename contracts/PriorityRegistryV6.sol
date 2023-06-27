@@ -10,8 +10,7 @@ pragma solidity 0.8.4;
 //solhint-disable no-inline-assembly
 import "./Yamato.sol";
 import "./Interfaces/IYamatoV3.sol";
-import "./Interfaces/IPriceFeed.sol";
-import "./Interfaces/IPriceFeedV2.sol";
+import "./Interfaces/IPriceFeedV3.sol";
 import "./Interfaces/IPriorityRegistryV6.sol";
 import "./Interfaces/IPriorityRegistryV4.sol";
 import "./Dependencies/PledgeLib.sol";
@@ -67,7 +66,7 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         IYamato.Pledge[] memory _pledges
     ) public override onlyYamato returns (uint256[] memory) {
         BulkUpsertVar memory vars;
-        vars._ethPriceInCurrency = IPriceFeedV2(priceFeed()).getPrice(); // Note: can't use lastGoodPrice cuz bulkUpsert can also be called be syncer which does not use fetchPrice
+        vars._ethPriceInCurrency = IPriceFeedV3(priceFeed()).getPrice(); // Note: can't use lastGoodPrice cuz bulkUpsert can also be called be syncer which does not use fetchPrice
         vars._newPriorities = new uint256[](_pledges.length);
         for (uint256 i; i < _pledges.length; i++) {
             vars._pledge = _pledges[i];
@@ -464,8 +463,8 @@ contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
         uint256 _mcrPercent = uint256(IYamato(yamato()).MCR());
         uint256 _checkpoint = _mcrPercent +
             IYamatoV3(yamato()).CHECKPOINT_BUFFER();
-        // uint256 ethPriceInCurrency = IPriceFeedV2(feed()).lastGoodPrice();
-        uint256 ethPriceInCurrency = IPriceFeedV2(priceFeed()).getPrice();
+        // uint256 ethPriceInCurrency = IPriceFeedV3(feed()).lastGoodPrice();
+        uint256 ethPriceInCurrency = IPriceFeedV3(priceFeed()).getPrice();
 
         uint256 _rank = 1;
         uint256 _nextout = rankedQueueNextout(_rank);
