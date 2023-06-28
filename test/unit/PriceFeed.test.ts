@@ -65,14 +65,12 @@ async function setMocks(conf: MockConf) {
     cPriceJpyInUsd = BigNumber.from(0);
   }
 
-  let cDiffEthInUsd = conf.silentFor.chainlink.ethInUsd; // TIMEOUT = 14400 secs
+  let cDiffEthInUsd = conf.silentFor.chainlink.ethInUsd; // TIMEOUT = 3600 secs
   let cDiffJpyInUsd = conf.silentFor.chainlink.jpyInUsd;
 
   let now = Math.ceil(Date.now() / 1000);
-  if (feed) {
-    let block = await feed.provider.getBlock("latest");
-    now = block.timestamp;
-  }
+  let block = await (<any>accounts[0].provider).getBlock("latest");
+  now = block.timestamp;
 
   mockAggregatorV3EthUsd.decimals.returns(CHAINLINK_DIGITS); // uint8
   mockAggregatorV3EthUsd.latestRoundData.returns([
@@ -126,19 +124,16 @@ describe("PriceFeed", function () {
         chainlink: { ethInUsd: 3200, jpyInUsd: 0.0091 },
       },
       silentFor: {
-        chainlink: { ethInUsd: 7200, jpyInUsd: 7200 },
+        chainlink: { ethInUsd: 1200, jpyInUsd: 7200 },
       },
       resetFlag: true,
     };
     await setMocks(lastMockInput);
-    // (<any>accounts[0].provider).send("evm_increaseTime", [150]);
     (<any>accounts[0].provider).send("evm_increaseTime", [1200]);
     (<any>accounts[0].provider).send("evm_mine");
 
     lastMockInput.silentFor.chainlink.ethInUsd = 1000; // Note: To avoid frozen response due to other depending specs
     lastMockInput.silentFor.chainlink.jpyInUsd = 1000;
-    // lastMockInput.silentFor.chainlink.ethInUsd = 100; // Note: To avoid frozen response due to other depending specs
-    // lastMockInput.silentFor.chainlink.jpyInUsd = 100;
     lastMockInput.resetFlag = false;
     await setMocks(lastMockInput);
 
