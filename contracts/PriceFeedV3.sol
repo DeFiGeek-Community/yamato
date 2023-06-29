@@ -10,6 +10,7 @@ pragma solidity 0.8.4;
 //solhint-disable no-inline-assembly
 
 import "./Interfaces/IPriceFeedV3.sol";
+import "./Interfaces/IPriceFeedFunctionalV3.sol";
 import "./Dependencies/AggregatorV3Interface.sol";
 import "./Dependencies/BaseMath.sol";
 import "./Dependencies/UUPSBase.sol";
@@ -21,7 +22,12 @@ import "./Dependencies/UUPSBase.sol";
  * switching oracles based on oracle failures, timeouts, and conditions for returning to the primary
  * Chainlink oracle.
  */
-contract PriceFeedV3 is IPriceFeedV3, UUPSBase, BaseMath {
+contract PriceFeedV3 is
+    IPriceFeedV3,
+    IPriceFeedFunctionalV3,
+    UUPSBase,
+    BaseMath
+{
     /*
         =========================
         ~~~ SAFE HAVEN ~~~
@@ -161,10 +167,6 @@ contract PriceFeedV3 is IPriceFeedV3, UUPSBase, BaseMath {
     function getStatus() external view override returns (Status) {
         _simulatePrice();
         return status;
-    }
-
-    function getIsAdjusted() external pure override returns (bool) {
-        return false;
     }
 
     /// @dev An internal function to dry run oracle usage determination logic. Can use it for view func or write func. ChainLink is the main oracle.
