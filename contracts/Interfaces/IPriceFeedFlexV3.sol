@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.4;
 
-interface IPriceFeedFunctionalV3 {
+interface IPriceFeedFlexV3 {
     enum Status {
         chainlinkWorking
     }

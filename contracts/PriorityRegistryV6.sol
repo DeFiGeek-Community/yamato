@@ -12,6 +12,7 @@ import "./Yamato.sol";
 import "./Interfaces/IYamatoV3.sol";
 import "./Interfaces/IPriceFeedV3.sol";
 import "./Interfaces/IPriorityRegistryV6.sol";
+import "./Interfaces/IPriorityRegistryFlexV6.sol";
 import "./Interfaces/IPriorityRegistryV4.sol";
 import "./Dependencies/PledgeLib.sol";
 import "./Dependencies/YamatoStore.sol";
@@ -19,7 +20,11 @@ import "./Dependencies/LiquityMath.sol";
 import "hardhat/console.sol";
 
 /// @dev For gas saving reason, we use percent denominated ICR only in this contract.
-contract PriorityRegistryV6 is IPriorityRegistryV6, YamatoStore {
+contract PriorityRegistryV6 is
+    IPriorityRegistryV6,
+    IPriorityRegistryFlexV6,
+    YamatoStore
+{
     using PledgeLib for IYamato.Pledge;
 
     mapping(uint256 => mapping(address => IYamato.Pledge))

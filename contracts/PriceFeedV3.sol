@@ -10,7 +10,7 @@ pragma solidity 0.8.4;
 //solhint-disable no-inline-assembly
 
 import "./Interfaces/IPriceFeedV3.sol";
-import "./Interfaces/IPriceFeedFunctionalV3.sol";
+import "./Interfaces/IPriceFeedFlexV3.sol";
 import "./Dependencies/AggregatorV3Interface.sol";
 import "./Dependencies/BaseMath.sol";
 import "./Dependencies/UUPSBase.sol";
@@ -22,12 +22,7 @@ import "./Dependencies/UUPSBase.sol";
  * switching oracles based on oracle failures, timeouts, and conditions for returning to the primary
  * Chainlink oracle.
  */
-contract PriceFeedV3 is
-    IPriceFeedV3,
-    IPriceFeedFunctionalV3,
-    UUPSBase,
-    BaseMath
-{
+contract PriceFeedV3 is IPriceFeedV3, IPriceFeedFlexV3, UUPSBase, BaseMath {
     /*
         =========================
         ~~~ SAFE HAVEN ~~~
