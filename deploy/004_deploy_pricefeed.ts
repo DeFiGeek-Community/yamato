@@ -23,12 +23,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { ethers, deployments } = hre;
   const { getContractFactory } = ethers;
 
-  let ChainLinkEthUsd = readFileSync(
-    getDeploymentAddressPathWithTag("ChainLinkMock", "EthUsd")
-  ).toString();
-  let ChainLinkJpyUsd = readFileSync(
-    getDeploymentAddressPathWithTag("ChainLinkMock", "JpyUsd")
-  ).toString();
+  let ChainLinkEthUsd;
+  let ChainLinkJpyUsd;
 
   if (hre.network.name == "mainnet") {
     ChainLinkEthUsd = "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419";
@@ -82,7 +78,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const inst = await getProxy<PriceFeed, PriceFeed__factory>("PriceFeed", [
     ChainLinkEthUsd,
     ChainLinkJpyUsd,
-  ]);
+  ], 3);
   const implAddr = await inst.getImplementation();
 
   console.log(
