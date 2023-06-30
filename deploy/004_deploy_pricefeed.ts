@@ -75,10 +75,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     ).wait();
   }
 
-  const inst = await getProxy<PriceFeed, PriceFeed__factory>("PriceFeed", [
-    ChainLinkEthUsd,
-    ChainLinkJpyUsd,
-  ], 3);
+  const inst = await getProxy<PriceFeed, PriceFeed__factory>(
+    "PriceFeed",
+    [ChainLinkEthUsd, ChainLinkJpyUsd],
+    3
+  );
   const implAddr = await inst.getImplementation();
 
   console.log(
