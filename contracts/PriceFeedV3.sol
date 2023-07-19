@@ -56,12 +56,11 @@ contract PriceFeedV3 is IPriceFeedV3, IPriceFeedFlexV3, UUPSBase, BaseMath {
         - Read more => https://docs.openzeppelin.com/upgrades-plugins/1.x/writing-upgradeable#modifying-your-contracts
         =========================
     */
-    // The last good price seen from an oracle by Liquity
+    // The last good price seen from an oracle by Chainlink
     uint256 public override lastGoodPrice;
     uint256 public lastSeen;
     // The current status of the PricFeed, which determines the conditions for the next price fetch attempt
     Status public status;
-    // uint256 public lastAdjusted;
     /*
         =========================
         --- END DANGER ZONE ---
@@ -140,13 +139,7 @@ contract PriceFeedV3 is IPriceFeedV3, IPriceFeedFlexV3, UUPSBase, BaseMath {
     function fetchPrice() external override returns (uint256) {
         uint256 _price = _simulatePrice();
 
-        // _changeStatus(_status);
-
         _storePrice(_price);
-
-        // if (_isAdjusted) {
-        //     lastAdjusted = block.number;
-        // }
 
         return _price;
     }
@@ -202,12 +195,6 @@ contract PriceFeedV3 is IPriceFeedV3, IPriceFeedFlexV3, UUPSBase, BaseMath {
      * peace of mind when using or returning to Chainlink.
      */
     function _chainlinkIsBroken(
-        ChainlinkResponse memory _currentResponse
-    ) internal view returns (bool) {
-        return _badChainlinkResponse(_currentResponse);
-    }
-
-    function _badChainlinkResponse(
         ChainlinkResponse memory _response
     ) internal view returns (bool) {
         // Check for response call reverted
@@ -261,15 +248,6 @@ contract PriceFeedV3 is IPriceFeedV3, IPriceFeedFlexV3, UUPSBase, BaseMath {
             price = _price * (10 ** (TARGET_DIGITS - _answerDigits));
         }
         return price;
-    }
-
-    /// @notice Internal status changer.
-    function _changeStatus(Status _status) internal {
-        if (lastSeen == block.number) return;
-        if (status == _status) return;
-
-        status = _status;
-        emit PriceFeedStatusChanged(_status);
     }
 
     /// @notice Internal price changer.
