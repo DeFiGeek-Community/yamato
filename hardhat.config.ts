@@ -140,4 +140,8 @@ module.exports = {
   paths: {
     tests: "./test/unit",
   },
+  defender: {
+    apiKey: process.env.DEFENDER_TEAM_API_KEY,
+    apiSecret: process.env.DEFENDER_TEAM_API_SECRET_KEY,
+  },
 };
