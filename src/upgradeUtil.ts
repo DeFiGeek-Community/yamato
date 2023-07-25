@@ -71,7 +71,7 @@ export async function proposeUpgradeProxy<
   const res: ExtendedProposalResponse = await defender.proposeUpgrade(
     olderInstanceAddress,
     contractFactory,
-    {multisig: multisigAddr,proxyAdmin:multisigAddr}
+    { multisig: multisigAddr, proxyAdmin: multisigAddr }
   );
   return res;
 }
