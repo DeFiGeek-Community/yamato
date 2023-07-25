@@ -5,12 +5,14 @@ import {
   getDeploymentAddressPath,
   getDeploymentAddressPathWithTag,
   getFoundation,
+  setNetwork,
 } from "../src/deployUtil";
 import { readFileSync } from "fs";
 import { genABI } from "../src/genABI";
 import { Contract } from "ethers";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+  setNetwork(hre.network.name);
   const p = await setProvider();
 
   const _currencyOSAddr = readFileSync(

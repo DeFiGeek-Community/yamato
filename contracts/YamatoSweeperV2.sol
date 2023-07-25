@@ -11,7 +11,7 @@ pragma solidity 0.8.4;
 
 import "./Pool.sol";
 import "./YMT.sol";
-import "./PriceFeedV2.sol";
+import "./PriceFeedV3.sol";
 import "./Dependencies/YamatoAction.sol";
 import "./Dependencies/PledgeLib.sol";
 import "./Dependencies/SafeMath.sol";
@@ -48,7 +48,7 @@ contract YamatoSweeperV2 is IYamatoSweeper, YamatoAction {
             address[] memory _pledgesOwner
         )
     {
-        IPriceFeedV2(priceFeed()).fetchPrice();
+        IPriceFeedV3(priceFeed()).fetchPrice();
 
         IYamatoSweeper.Vars memory vars;
 

@@ -38,7 +38,7 @@ export async function smokeTest() {
 
   const PriceFeed = new ethers.Contract(
     await Yamato.priceFeed(),
-    genABI("PriceFeedV2"),
+    genABI("PriceFeedV3"),
     p
   );
   console.log("---");

@@ -1,11 +1,10 @@
-const { ethers } = require("hardhat");
+const { ethers, waffle } = require("hardhat");
 import { BigNumber, Contract, Signer } from "ethers";
-const { MockProvider } = require("ethereum-waffle");
 
 let provider;
 export function getSharedProvider() {
   if (!provider) {
-    provider = new MockProvider();
+    provider = new waffle.provider();
   }
   return provider;
 }

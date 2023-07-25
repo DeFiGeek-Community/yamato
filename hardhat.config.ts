@@ -5,18 +5,15 @@ require("dotenv").config();
 This module is related to the feature, path mapping, for TypeScript(in this case ts-node).
 Path mapping causes lots of annoying and we should stop using this.
 */
-import "@nomiclabs/hardhat-ethers";
-import "@nomiclabs/hardhat-waffle";
+import "@nomicfoundation/hardhat-toolbox";
 import "@nomiclabs/hardhat-web3";
 import "hardhat-tracer";
 import "@nomiclabs/hardhat-solhint";
 import "hardhat-deploy";
 import "hardhat-deploy-ethers";
 import "@typechain/hardhat";
-import "@nomiclabs/hardhat-etherscan";
 import "hardhat-abi-exporter";
 import "hardhat-contract-sizer";
-import "hardhat-gas-reporter";
 import "@openzeppelin/hardhat-upgrades";
 import "@openzeppelin/hardhat-defender";
 
@@ -62,8 +59,20 @@ module.exports = {
         accountsBalance: "1000000000000000000000000",
       },
     },
-    goerli: {
+    localhost: {
+      url: "http://127.0.0.1:8545",
+    },
+    mainnet: {
       url: process.env.ALCHEMY_URL,
+      accounts: [
+        process.env.FOUNDATION_PRIVATE_KEY,
+        process.env.DEPLOYER_PRIVATE_KEY,
+      ],
+      live: true,
+      saveDeployments: true,
+    },
+    goerli: {
+      url: process.env.ALCHEMY_URL.replace(/mainnet/, "goerli"),
       accounts: [
         process.env.FOUNDATION_PRIVATE_KEY,
         process.env.DEPLOYER_PRIVATE_KEY,
@@ -72,8 +81,8 @@ module.exports = {
       saveDeployments: true,
       tags: ["staging"],
     },
-    kovan: {
-      url: process.env.ALCHEMY_URL.replace(/goerli/, "kovan"),
+    sepolia: {
+      url: process.env.ALCHEMY_URL.replace(/mainnet/, "sepolia"),
       accounts: [
         process.env.FOUNDATION_PRIVATE_KEY,
         process.env.DEPLOYER_PRIVATE_KEY,
@@ -88,6 +97,7 @@ module.exports = {
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
+    customChains: [],
   },
   namedAccounts: {
     foundation: {
@@ -121,6 +131,14 @@ module.exports = {
   gasReporter: {
     currency: "USD",
     gasPrice: 100,
+  },
+  typechain: {
+    outDir: "typechain",
+    target: "ethers-v5",
+    alwaysGenerateOverloads: false, // should overloads with full signatures like deposit(uint256) be generated always, even if there are no overloads?
+  },
+  paths: {
+    tests: "./test/unit",
   },
   defender: {
     apiKey: process.env.DEFENDER_TEAM_API_KEY,

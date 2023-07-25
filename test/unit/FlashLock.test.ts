@@ -1,13 +1,11 @@
 import { ethers } from "hardhat";
 import { smock } from "@defi-wonderland/smock";
 import chai, { expect } from "chai";
-import { solidity } from "ethereum-waffle";
 import { Signer, BigNumber } from "ethers";
 import { toERC20 } from "../param/helper";
 import {
   ChainLinkMock,
-  TellorCallerMock,
-  PriceFeed,
+  PriceFeedV3,
   FeePool,
   CurrencyOS,
   CJPY,
@@ -22,8 +20,7 @@ import {
   Pool,
   SameBlockClient,
   ChainLinkMock__factory,
-  TellorCallerMock__factory,
-  PriceFeed__factory,
+  PriceFeedV3__factory,
   FeePool__factory,
   CurrencyOS__factory,
   CJPY__factory,
@@ -41,13 +38,11 @@ import {
 import { getProxy, getLinkedProxy } from "../../src/testUtil";
 
 chai.use(smock.matchers);
-chai.use(solidity);
 
 describe("FlashLock :: contract Yamato", () => {
   let ChainLinkEthUsd: ChainLinkMock;
   let ChainLinkUsdJpy: ChainLinkMock;
-  let Tellor: TellorCallerMock;
-  let PriceFeed: PriceFeed;
+  let PriceFeed: PriceFeedV3;
   let CJPY: CJPY;
   let FeePool: FeePool;
   let CurrencyOS: CurrencyOS;
@@ -98,15 +93,11 @@ describe("FlashLock :: contract Yamato", () => {
       })
     ).wait();
 
-    Tellor = await (<TellorCallerMock__factory>(
-      await ethers.getContractFactory("TellorCallerMock")
-    )).deploy();
-
-    PriceFeed = await getProxy<PriceFeed, PriceFeed__factory>("PriceFeed", [
-      ChainLinkEthUsd.address,
-      ChainLinkUsdJpy.address,
-      Tellor.address,
-    ]);
+    PriceFeed = await getProxy<PriceFeedV3, PriceFeedV3__factory>(
+      "PriceFeed",
+      [ChainLinkEthUsd.address, ChainLinkUsdJpy.address],
+      3
+    );
 
     CJPY = await (<CJPY__factory>(
       await ethers.getContractFactory("CJPY")

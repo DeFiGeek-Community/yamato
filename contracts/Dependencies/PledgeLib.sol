@@ -10,7 +10,7 @@ pragma solidity 0.8.4;
 //solhint-disable no-inline-assembly
 
 import "../Interfaces/IYamato.sol";
-import "../PriceFeed.sol";
+import "../PriceFeedV3.sol";
 
 library PledgeLib {
     /// @notice Calculate ICR for the memory Pledge
@@ -23,7 +23,7 @@ library PledgeLib {
         address _feed
     ) public view returns (uint256 _ICR) {
         require(_feed != address(0), "Feed is null address.");
-        IPriceFeed feed = IPriceFeed(_feed);
+        IPriceFeedV3 feed = IPriceFeedV3(_feed);
 
         uint256 _ethPriceInCurrency = feed.lastGoodPrice(); // dec18 // All Yamato funcs uses fetchPrice before hand and so you can use lastGoodPrice here.
         uint256 _coll = _pledge.coll; // dec18
