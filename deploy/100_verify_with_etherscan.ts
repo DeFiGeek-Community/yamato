@@ -26,7 +26,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { ethers, deployments } = hre;
   const { getContractFactory, Contract, BigNumber, Signer, getSigners } =
     ethers;
-
+  return;
   verifyWithEtherscan();
 };
 export default func;

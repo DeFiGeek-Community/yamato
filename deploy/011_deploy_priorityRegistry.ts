@@ -4,6 +4,7 @@ import {
   deploy,
   setProvider,
   getDeploymentAddressPathWithTag,
+  setNetwork,
 } from "../src/deployUtil";
 import { getLinkedProxy } from "../src/testUtil";
 import { readFileSync, writeFileSync, existsSync } from "fs";
@@ -18,6 +19,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   )
     return;
 
+  setNetwork(hre.network.name);
   const p = await setProvider();
   const { ethers, deployments } = hre;
   const { getContractFactory } = ethers;

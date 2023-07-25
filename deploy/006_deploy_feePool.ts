@@ -4,6 +4,7 @@ import {
   deploy,
   setProvider,
   getDeploymentAddressPathWithTag,
+  setNetwork,
 } from "../src/deployUtil";
 import { readFileSync } from "fs";
 import { FeePool, FeePool__factory } from "../typechain";
@@ -14,6 +15,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   if (existsSync(getDeploymentAddressPathWithTag("FeePool", "ERC1967Proxy")))
     return;
 
+  setNetwork(hre.network.name);
   const p = await setProvider();
   const { ethers, deployments } = hre;
   const { getContractFactory } = ethers;

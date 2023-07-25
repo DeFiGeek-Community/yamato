@@ -101,15 +101,23 @@ export function getCurrentNetwork() {
   if (network) return network;
   if (process.argv.join("").toLowerCase().indexOf("goerli") >= 0) {
     return "goerli";
+  } else if (process.argv.join("").toLowerCase().indexOf("sepolia") >= 0) {
+    return "sepolia";
   } else if (process.argv.join("").toLowerCase().indexOf("mainnet") >= 0) {
     return "mainnet";
   } else {
-    return "localnet";
+    return "localhost";
   }
   // node hardhat deploy --network <network> / npm run verify:goerli:all
 }
 export function setProvider() {
-  const provider = getDefaultProvider("goerli", {
+  let network;
+  if (getCurrentNetwork() == "localhost") {
+    network = "http://localhost:8545";
+  } else {
+    network = getCurrentNetwork();
+  }
+  const provider = getDefaultProvider(network, {
     etherscan: process.env.ETHERSCAN_API_KEY,
     infura: process.env.INFURA_API_TOKEN,
     alchemy: process.env.ALCHEMY_API_TOKEN,

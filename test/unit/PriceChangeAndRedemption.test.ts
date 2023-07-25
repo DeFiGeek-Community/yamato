@@ -1,13 +1,11 @@
 import { ethers } from "hardhat";
 import { smock } from "@defi-wonderland/smock";
 import chai, { expect } from "chai";
-import { solidity } from "ethereum-waffle";
 import { Signer, BigNumber, Wallet } from "ethers";
 import { toERC20 } from "../param/helper";
 import {
   ChainLinkMock,
-  TellorCallerMock,
-  PriceFeedV2,
+  PriceFeedV3,
   FeePool,
   CurrencyOS,
   CJPY,
@@ -18,12 +16,10 @@ import {
   YamatoWithdrawer,
   YamatoRedeemer,
   YamatoSweeper,
-  PriorityRegistry,
   PriorityRegistryV6,
   Pool,
   ChainLinkMock__factory,
-  TellorCallerMock__factory,
-  PriceFeedV2__factory,
+  PriceFeedV3__factory,
   CurrencyOS__factory,
   CJPY__factory,
   Yamato__factory,
@@ -35,7 +31,6 @@ import {
   YamatoSweeper__factory,
   Pool__factory,
   FeePool__factory,
-  PriorityRegistry__factory,
   PriorityRegistryV6__factory,
 } from "../../typechain";
 import {
@@ -48,13 +43,11 @@ import {
 import { isToken } from "typescript";
 
 chai.use(smock.matchers);
-chai.use(solidity);
 
 describe("PriceChangeAndRedemption :: contract Yamato", () => {
   let ChainLinkEthUsd: ChainLinkMock;
   let ChainLinkUsdJpy: ChainLinkMock;
-  let Tellor: TellorCallerMock;
-  let PriceFeed: PriceFeedV2;
+  let PriceFeed: PriceFeedV3;
   let CJPY: CJPY;
   let FeePool: FeePool;
   let CurrencyOS: CurrencyOS;
@@ -104,19 +97,14 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       })
     ).wait();
 
-    Tellor = await (<TellorCallerMock__factory>(
-      await ethers.getContractFactory("TellorCallerMock")
-    )).deploy();
-
     await (await ChainLinkEthUsd.setLastPrice(400000000000)).wait(); //dec8
     await (await ChainLinkUsdJpy.setLastPrice(877000)).wait();
-    await (await Tellor.setLastPrice(Math.ceil(400000000000 * 1.14))).wait(); //dec8
 
-    PriceFeed = await getProxy<PriceFeedV2, PriceFeedV2__factory>("PriceFeed", [
-      ChainLinkEthUsd.address,
-      ChainLinkUsdJpy.address,
-      Tellor.address,
-    ]);
+    PriceFeed = await getProxy<PriceFeedV3, PriceFeedV3__factory>(
+      "PriceFeed",
+      [ChainLinkEthUsd.address, ChainLinkUsdJpy.address],
+      3
+    );
     await (await PriceFeed.fetchPrice()).wait();
 
     CJPY = await (<CJPY__factory>(
@@ -238,9 +226,6 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         /* Market Dump */
         await (await ChainLinkEthUsd.setLastPrice(dumpedPriceBase)).wait(); //dec8
         await (await ChainLinkUsdJpy.setLastPrice(877000)).wait();
-        await (
-          await Tellor.setLastPrice(Math.ceil(dumpedPriceBase * 1.14))
-        ).wait(); //dec8
       });
 
       it(`should full-redeem a all pledge w/o infinite traversing nor no pledges redeemed but w/ reasonable gas.`, async function () {
@@ -372,9 +357,6 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         /* Market Dump */
         await (await ChainLinkEthUsd.setLastPrice(dumpedPriceBase)).wait(); //dec8
         await (await ChainLinkUsdJpy.setLastPrice(877000)).wait();
-        await (
-          await Tellor.setLastPrice(Math.ceil(dumpedPriceBase * 1.14))
-        ).wait(); //dec8
       });
 
       it(`should full-redeem all pledges with small CJPY amount even if there's a huge pledge`, async function () {
@@ -541,9 +523,6 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         /* Market Dump */
         await (await ChainLinkEthUsd.setLastPrice(300000000000)).wait(); //dec8
         await (await ChainLinkUsdJpy.setLastPrice(877000)).wait();
-        await (
-          await Tellor.setLastPrice(Math.ceil(300000000000 * 1.14))
-        ).wait(); //dec8
 
         /* redeemee's pledge is sweepable */
         await Yamato.connect(redeemer).redeem(
@@ -554,9 +533,6 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         /* Market Pump */
         await (await ChainLinkEthUsd.setLastPrice(600000000000)).wait(); //dec8
         await (await ChainLinkUsdJpy.setLastPrice(877000)).wait();
-        await (
-          await Tellor.setLastPrice(Math.ceil(600000000000 * 1.14))
-        ).wait(); //dec8
 
         let toBorrowForAnotherRedeemee = (await PriceFeed.getPrice())
           .mul(toCollateralize)
@@ -576,9 +552,6 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         /* Market Dump */
         await (await ChainLinkEthUsd.setLastPrice(dumpedPriceBase)).wait(); //dec8
         await (await ChainLinkUsdJpy.setLastPrice(877000)).wait();
-        await (
-          await Tellor.setLastPrice(Math.ceil(dumpedPriceBase * 1.14))
-        ).wait(); //dec8
       });
 
       it(`should redeem w/o making LICR broken and w/ reasonable gas`, async function () {
@@ -695,9 +668,6 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         /* Market Dump */
         await (await ChainLinkEthUsd.setLastPrice(dumpedPriceBase)).wait(); //dec8
         await (await ChainLinkUsdJpy.setLastPrice(877000)).wait();
-        await (
-          await Tellor.setLastPrice(Math.ceil(dumpedPriceBase * 1.14))
-        ).wait(); //dec8
         dumpedEffectivePrice = await PriceFeed.getPrice();
 
         toBorrow = dumpedEffectivePrice
@@ -803,9 +773,6 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
           await ChainLinkEthUsd.connect(redeemer).setLastPrice("204000000000")
         ).wait(); //dec8
         await (await ChainLinkUsdJpy.setLastPrice(877000)).wait();
-        await (
-          await Tellor.connect(redeemer).setLastPrice("203000000000")
-        ).wait(); //dec8
 
         toBorrow = (await PriceFeed.getPrice())
           .mul(toCollateralize)
@@ -865,9 +832,6 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
           await ChainLinkEthUsd.setLastPrice(Math.ceil(dumpedPriceBase * 1.01))
         ).wait(); //dec8
         await (await ChainLinkUsdJpy.setLastPrice(877000)).wait();
-        await (
-          await Tellor.setLastPrice(Math.ceil(dumpedPriceBase * 1.01 * 1.14))
-        ).wait(); //dec8
 
         redeemer = accounts[0];
         toCollateralize = 1;
@@ -901,9 +865,6 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         /* Market Dump */
         await (await ChainLinkEthUsd.setLastPrice(dumpedPriceBase)).wait(); //dec8
         await (await ChainLinkUsdJpy.setLastPrice(877000)).wait();
-        await (
-          await Tellor.setLastPrice(Math.ceil(dumpedPriceBase * 1.14))
-        ).wait(); //dec8
       });
 
       it(`should redeem all pledges to ICR 130% and LICR is 130`, async function () {
@@ -966,9 +927,6 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         /* Market Dump */
         await (await ChainLinkEthUsd.setLastPrice(dumpedPriceBase * 3)).wait(); //dec8
         await (await ChainLinkUsdJpy.setLastPrice(877000)).wait();
-        await (
-          await Tellor.setLastPrice(Math.ceil(dumpedPriceBase * 3 * 1.14))
-        ).wait(); //dec8
         (<any>Yamato.provider).send("evm_increaseTime", [1200]);
         (<any>Yamato.provider).send("evm_mine");
 
@@ -1004,9 +962,6 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         /* Market Dump */
         await (await ChainLinkEthUsd.setLastPrice(dumpedPriceBase)).wait(); //dec8
         await (await ChainLinkUsdJpy.setLastPrice(877000)).wait();
-        await (
-          await Tellor.setLastPrice(Math.ceil(dumpedPriceBase * 1.14))
-        ).wait(); //dec8
         (<any>Yamato.provider).send("evm_increaseTime", [1200]);
         (<any>Yamato.provider).send("evm_mine");
       });
@@ -1096,7 +1051,6 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       /* Market Dump */
       await (await ChainLinkEthUsd.setLastPrice("204000000000")).wait(); //dec8
       await (await ChainLinkUsdJpy.setLastPrice(877000)).wait();
-      await (await Tellor.setLastPrice("203000000000")).wait(); //dec8
 
       toBorrow = (await PriceFeed.getPrice())
         .mul(toCollateralize)
@@ -1297,9 +1251,6 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
     async function fillMinPledgesWithICR(icr) {
       await (await ChainLinkEthUsd.setLastPrice(initialPriceBase)).wait(); //dec8
       await (await ChainLinkEthUsd.setLastPrice(initialPriceBase)).wait(); //dec8
-      await (
-        await Tellor.setLastPrice(Math.ceil(initialPriceBase * 1.14))
-      ).wait(); //dec8
 
       const MCR = BigNumber.from(130);
 
@@ -1385,7 +1336,6 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
         .div(1e18 + "")
         .div(1e12 + "");
       await (await ChainLinkEthUsd.setLastPrice(adjustedPriceInUSD)).wait(); //dec8
-      await (await Tellor.setLastPrice(adjustedPriceInJPY)).wait(); //dec8
 
       await (await PriceFeed.fetchPrice()).wait();
     }

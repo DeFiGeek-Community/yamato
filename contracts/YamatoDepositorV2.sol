@@ -11,7 +11,7 @@ pragma solidity 0.8.4;
 
 import "./PoolV2.sol";
 import "./YMT.sol";
-import "./PriceFeedV2.sol";
+import "./PriceFeedV3.sol";
 import "./Dependencies/YamatoAction.sol";
 import "./Dependencies/PledgeLib.sol";
 import "./Dependencies/SafeMath.sol";
@@ -36,7 +36,7 @@ contract YamatoDepositorV2 is IYamatoDepositor, YamatoAction {
 
     /// @dev no reentrancy guard because action funcs are protected by permitDeps()
     function runDeposit(address _sender) public payable override onlyYamato {
-        IPriceFeedV2(priceFeed()).fetchPrice();
+        IPriceFeedV3(priceFeed()).fetchPrice();
         uint256 _ethAmount = msg.value;
 
         /*
