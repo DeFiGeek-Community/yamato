@@ -95,11 +95,16 @@ export async function getLinkedProxy<
   let implName;
   if (versionSpecification) {
     contractFactory = <S>(
-      await getLinkedContractFactory(`${contractName}V${versionSpecification}`, Libraries)
+      await getLinkedContractFactory(
+        `${contractName}V${versionSpecification}`,
+        Libraries
+      )
     );
     implName = "";
   } else {
-    contractFactory = <S>(await getLinkedContractFactory(contractName, Libraries));
+    contractFactory = <S>(
+      await getLinkedContractFactory(contractName, Libraries)
+    );
     implName = getLatestContractName(contractName);
   }
 
@@ -133,7 +138,10 @@ export async function deployLibrary(libraryName) {
   }
 
   if (
-    (getCurrentNetwork() == "mainnet" || getCurrentNetwork() == "sepolia" || getCurrentNetwork() == "goerli" || getCurrentNetwork() == "localnet") &&
+    (getCurrentNetwork() == "mainnet" ||
+      getCurrentNetwork() == "sepolia" ||
+      getCurrentNetwork() == "goerli" ||
+      getCurrentNetwork() == "localnet") &&
     existsSync(filepath) &&
     _LibAddr
   ) {

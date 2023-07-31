@@ -18,7 +18,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   setNetwork(hre.network.name);
   const p = await setProvider();
-  
+
   const _priceFeedAddr = readFileSync(
     getDeploymentAddressPathWithTag("PriceFeed", "ERC1967Proxy")
   ).toString();
@@ -38,7 +38,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const _priorityRegistryAddr = readFileSync(
     getDeploymentAddressPathWithTag("PriorityRegistry", "ERC1967Proxy")
   ).toString();
-  const PriorityRegistry = new Contract(_priorityRegistryAddr, genABI("PriorityRegistry"), p);
+  const PriorityRegistry = new Contract(
+    _priorityRegistryAddr,
+    genABI("PriorityRegistry"),
+    p
+  );
   const _yamatoAddr = readFileSync(
     getDeploymentAddressPathWithTag("Yamato", "ERC1967Proxy")
   ).toString();
@@ -92,29 +96,53 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     p
   );
 
-  await (await PriceFeed.connect(getFoundation()).setGovernance(multisigAddr)).wait();
+  await (
+    await PriceFeed.connect(getFoundation()).setGovernance(multisigAddr)
+  ).wait();
   console.log(`log: PriceFeed.setGovernance(${multisigAddr}) executed.`);
-  await (await FeePool.connect(getFoundation()).setGovernance(multisigAddr)).wait();
+  await (
+    await FeePool.connect(getFoundation()).setGovernance(multisigAddr)
+  ).wait();
   console.log(`log: FeePool.setGovernance(${multisigAddr}) executed.`);
-  await (await CurrencyOS.connect(getFoundation()).setGovernance(multisigAddr)).wait();
+  await (
+    await CurrencyOS.connect(getFoundation()).setGovernance(multisigAddr)
+  ).wait();
   console.log(`log: CurrencyOS.setGovernance(${multisigAddr}) executed.`);
-  await (await Pool.connect(getFoundation()).setGovernance(multisigAddr)).wait();
+  await (
+    await Pool.connect(getFoundation()).setGovernance(multisigAddr)
+  ).wait();
   console.log(`log: Pool.setGovernance(${multisigAddr}) executed.`);
-  await (await PriorityRegistry.connect(getFoundation()).setGovernance(multisigAddr)).wait();
+  await (
+    await PriorityRegistry.connect(getFoundation()).setGovernance(multisigAddr)
+  ).wait();
   console.log(`log: PriorityRegistry.setGovernance(${multisigAddr}) executed.`);
-  await (await Yamato.connect(getFoundation()).setGovernance(multisigAddr)).wait();
+  await (
+    await Yamato.connect(getFoundation()).setGovernance(multisigAddr)
+  ).wait();
   console.log(`log: Yamato.setGovernance(${multisigAddr}) executed.`);
-  await (await YamatoDepositor.connect(getFoundation()).setGovernance(multisigAddr)).wait();
+  await (
+    await YamatoDepositor.connect(getFoundation()).setGovernance(multisigAddr)
+  ).wait();
   console.log(`log: YamatoDepositor.setGovernance(${multisigAddr}) executed.`);
-  await (await YamatoBorrower.connect(getFoundation()).setGovernance(multisigAddr)).wait();
+  await (
+    await YamatoBorrower.connect(getFoundation()).setGovernance(multisigAddr)
+  ).wait();
   console.log(`log: YamatoBorrower.setGovernance(${multisigAddr}) executed.`);
-  await (await YamatoRepayer.connect(getFoundation()).setGovernance(multisigAddr)).wait();
+  await (
+    await YamatoRepayer.connect(getFoundation()).setGovernance(multisigAddr)
+  ).wait();
   console.log(`log: YamatoRepayer.setGovernance(${multisigAddr}) executed.`);
-  await (await YamatoWithdrawer.connect(getFoundation()).setGovernance(multisigAddr)).wait();
+  await (
+    await YamatoWithdrawer.connect(getFoundation()).setGovernance(multisigAddr)
+  ).wait();
   console.log(`log: YamatoWithdrawer.setGovernance(${multisigAddr}) executed.`);
-  await (await YamatoRedeemer.connect(getFoundation()).setGovernance(multisigAddr)).wait();
+  await (
+    await YamatoRedeemer.connect(getFoundation()).setGovernance(multisigAddr)
+  ).wait();
   console.log(`log: YamatoRedeemer.setGovernance(${multisigAddr}) executed.`);
-  await (await YamatoSweeper.connect(getFoundation()).setGovernance(multisigAddr)).wait();
+  await (
+    await YamatoSweeper.connect(getFoundation()).setGovernance(multisigAddr)
+  ).wait();
   console.log(`log: YamatoSweeper.setGovernance(${multisigAddr}) executed.`);
 };
 

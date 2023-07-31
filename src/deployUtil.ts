@@ -454,7 +454,10 @@ export function getDeployer(): Signer {
   return new Wallet(process.env.DEPLOYER_PRIVATE_KEY, singletonProvider());
 }
 export function getMultisigGoverner(): Signer {
-  return new Wallet(process.env.UUPS_PROXY_ADMIN_MULTISIG_ADDRESS, singletonProvider());
+  return new Wallet(
+    process.env.UUPS_PROXY_ADMIN_MULTISIG_ADDRESS,
+    singletonProvider()
+  );
 }
 
 export async function sleep(n) {
