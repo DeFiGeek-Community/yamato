@@ -31,7 +31,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const inst = await getLinkedProxy<
     PriorityRegistry,
     PriorityRegistry__factory
-  >("PriorityRegistry", [_yamatoAddr], ["PledgeLib"]);
+  >("PriorityRegistry", [_yamatoAddr], ["PledgeLib"],6);
   const implAddr = await inst.getImplementation();
 
   console.log(

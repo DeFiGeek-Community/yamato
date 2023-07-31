@@ -37,4 +37,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log(`log: CurrencyOS.addYamato() executed.`);
 };
 export default func;
-func.tags = [""];
+func.tags = ["addYamato"];

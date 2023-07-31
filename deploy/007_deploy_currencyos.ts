@@ -32,7 +32,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     cjpyAddr,
     feedAddr,
     feePoolAddr,
-  ]);
+  ],2);
   const implAddr = await inst.getImplementation();
 
   writeFileSync(

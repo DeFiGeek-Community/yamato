@@ -27,7 +27,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const inst = await getLinkedProxy<Yamato, Yamato__factory>(
     "Yamato",
     [_currencyOSAddr],
-    ["PledgeLib"]
+    ["PledgeLib"],3
   );
   const implAddr = await inst.getImplementation();
 
