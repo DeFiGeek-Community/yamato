@@ -30,7 +30,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const inst = await getLinkedProxy<Pool, Pool__factory>(
     "Pool",
     [_yamatoAddr],
-    ["PledgeLib"]
+    ["PledgeLib"],
+    2
   );
   const implAddr = await inst.getImplementation();
 

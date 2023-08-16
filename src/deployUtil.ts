@@ -108,7 +108,6 @@ export function getCurrentNetwork() {
   } else {
     return "localhost";
   }
-  // node hardhat deploy --network <network> / npm run verify:goerli:all
 }
 export function setProvider() {
   let network;
@@ -196,15 +195,6 @@ export function getDeploymentAddressPathWithTag(
 export function verifyWithEtherscan() {
   console.log("=== Fetching local addresses");
 
-  let ChainLinkEthUsd = readFileSync(
-    getDeploymentAddressPathWithTag("ChainLinkMock", "EthUsd")
-  ).toString();
-  let ChainLinkJpyUsd = readFileSync(
-    getDeploymentAddressPathWithTag("ChainLinkMock", "JpyUsd")
-  ).toString();
-  let Tellor = readFileSync(
-    getDeploymentAddressPath("TellorCallerMock")
-  ).toString();
   let PriceFeedUUPSImpl = readFileSync(
     getDeploymentAddressPathWithTag("PriceFeed", "UUPSImpl")
   ).toString();
@@ -251,28 +241,10 @@ export function verifyWithEtherscan() {
   console.log("=== Verify started");
 
   try {
-    execSync(
-      `npm run verify:goerli -- --contract contracts/ChainLinkMock.sol:ChainLinkMock ${ChainLinkEthUsd} ETH/USD`
-    );
-  } catch (e) {
-    console.log(e.message);
-  }
-  try {
-    execSync(
-      `npm run verify:goerli -- --contract contracts/ChainLinkMock.sol:ChainLinkMock ${ChainLinkJpyUsd} JPY/USD`
-    );
-    execSync(
-      `npm run verify:goerli -- --contract contracts/TellorCallerMock.sol:TellorCallerMock ${Tellor}`
-    );
-  } catch (e) {
-    console.log(e.message);
-  }
-
-  try {
     let name = getLatestContractName("PriceFeed");
     console.log(name);
     execSync(
-      `npm run verify:goerli -- --contract contracts/${name}.sol:${name} ${PriceFeedUUPSImpl}`
+      `npx hardhat verify --network ${getCurrentNetwork()} --contract contracts/${name}.sol:${name} ${PriceFeedUUPSImpl}`
     );
   } catch (e) {
     console.log(
@@ -282,7 +254,7 @@ export function verifyWithEtherscan() {
 
   try {
     execSync(
-      `npm run verify:goerli -- --contract contracts/CJPY.sol:CJPY ${CJPY}`
+      `npx hardhat verify --network ${getCurrentNetwork()} --contract contracts/CJPY.sol:CJPY ${CJPY}`
     );
   } catch (e) {
     console.log(e.message);
@@ -290,7 +262,7 @@ export function verifyWithEtherscan() {
   try {
     let name = getLatestContractName("FeePool");
     execSync(
-      `npm run verify:goerli -- --contract contracts/${name}.sol:${name} ${FeePoolUUPSImpl}`
+      `npx hardhat verify --network ${getCurrentNetwork()} --contract contracts/${name}.sol:${name} ${FeePoolUUPSImpl}`
     );
   } catch (e) {
     console.log(
@@ -300,7 +272,7 @@ export function verifyWithEtherscan() {
   try {
     let name = getLatestContractName("CurrencyOS");
     execSync(
-      `npm run verify:goerli -- --contract contracts/${name}.sol:${name} ${CurrencyOSUUPSImpl}`
+      `npx hardhat verify --network ${getCurrentNetwork()} --contract contracts/${name}.sol:${name} ${CurrencyOSUUPSImpl}`
     );
   } catch (e) {
     console.log(
@@ -311,7 +283,7 @@ export function verifyWithEtherscan() {
   try {
     let name = getLatestContractName("Yamato");
     execSync(
-      `npm run verify:goerli -- --contract contracts/${name}.sol:${name} ${YamatoUUPSImpl}`
+      `npx hardhat verify --network ${getCurrentNetwork()} --contract contracts/${name}.sol:${name} ${YamatoUUPSImpl}`
     );
   } catch (e) {
     console.log(
@@ -322,7 +294,7 @@ export function verifyWithEtherscan() {
   try {
     let name = getLatestContractName("YamatoDepositor");
     execSync(
-      `npm run verify:goerli -- --contract contracts/${name}.sol:${name} ${YamatoDepositorUUPSImpl}`
+      `npx hardhat verify --network ${getCurrentNetwork()} --contract contracts/${name}.sol:${name} ${YamatoDepositorUUPSImpl}`
     );
   } catch (e) {
     console.log(
@@ -332,7 +304,7 @@ export function verifyWithEtherscan() {
   try {
     let name = getLatestContractName("YamatoBorrower");
     execSync(
-      `npm run verify:goerli -- --contract contracts/${name}.sol:${name} ${YamatoBorrowerUUPSImpl}`
+      `npx hardhat verify --network ${getCurrentNetwork()} --contract contracts/${name}.sol:${name} ${YamatoBorrowerUUPSImpl}`
     );
   } catch (e) {
     console.log(
@@ -342,7 +314,7 @@ export function verifyWithEtherscan() {
   try {
     let name = getLatestContractName("YamatoRepayer");
     execSync(
-      `npm run verify:goerli -- --contract contracts/${name}.sol:${name} ${YamatoRepayerUUPSImpl}`
+      `npx hardhat verify --network ${getCurrentNetwork()} --contract contracts/${name}.sol:${name} ${YamatoRepayerUUPSImpl}`
     );
   } catch (e) {
     console.log(
@@ -352,7 +324,7 @@ export function verifyWithEtherscan() {
   try {
     let name = getLatestContractName("YamatoWithdrawer");
     execSync(
-      `npm run verify:goerli -- --contract contracts/${name}.sol:${name} ${YamatoWithdrawerUUPSImpl}`
+      `npx hardhat verify --network ${getCurrentNetwork()} --contract contracts/${name}.sol:${name} ${YamatoWithdrawerUUPSImpl}`
     );
   } catch (e) {
     console.log(
@@ -362,7 +334,7 @@ export function verifyWithEtherscan() {
   try {
     let name = getLatestContractName("YamatoRedeemer");
     execSync(
-      `npm run verify:goerli -- --contract contracts/${name}.sol:${name} ${YamatoRedeemerUUPSImpl}`
+      `npx hardhat verify --network ${getCurrentNetwork()} --contract contracts/${name}.sol:${name} ${YamatoRedeemerUUPSImpl}`
     );
   } catch (e) {
     console.log(
@@ -372,7 +344,7 @@ export function verifyWithEtherscan() {
   try {
     let name = getLatestContractName("YamatoSweeper");
     execSync(
-      `npm run verify:goerli -- --contract contracts/${name}.sol:${name} ${YamatoSweeperUUPSImpl}`
+      `npx hardhat verify --network ${getCurrentNetwork()} --contract contracts/${name}.sol:${name} ${YamatoSweeperUUPSImpl}`
     );
   } catch (e) {
     console.log(
@@ -382,7 +354,7 @@ export function verifyWithEtherscan() {
   try {
     let name = getLatestContractName("Pool");
     execSync(
-      `npm run verify:goerli -- --contract contracts/${name}.sol:${name} ${PoolUUPSImpl}`
+      `npx hardhat verify --network ${getCurrentNetwork()} --contract contracts/${name}.sol:${name} ${PoolUUPSImpl}`
     );
   } catch (e) {
     console.log(e.message);
@@ -390,14 +362,14 @@ export function verifyWithEtherscan() {
   try {
     let name = getLatestContractName("PriorityRegistry");
     execSync(
-      `npm run verify:goerli -- --contract contracts/${name}.sol:${name} ${PriorityRegistryUUPSImpl}`
+      `npx hardhat verify --network ${getCurrentNetwork()} --contract contracts/${name}.sol:${name} ${PriorityRegistryUUPSImpl}`
     );
   } catch (e) {
     console.log(e.message);
   }
   try {
     execSync(
-      `npm run verify:goerli -- --contract contracts/Dependencies/PledgeLib.sol:PledgeLib ${PledgeLib}`
+      `npx hardhat verify --network ${getCurrentNetwork()} --contract contracts/Dependencies/PledgeLib.sol:PledgeLib ${PledgeLib}`
     );
   } catch (e) {
     console.log(e.message);
@@ -480,6 +452,12 @@ export function getFoundation(): Signer {
 }
 export function getDeployer(): Signer {
   return new Wallet(process.env.DEPLOYER_PRIVATE_KEY, singletonProvider());
+}
+export function getMultisigGoverner(): Signer {
+  return new Wallet(
+    process.env.UUPS_PROXY_ADMIN_MULTISIG_ADDRESS,
+    singletonProvider()
+  );
 }
 
 export async function sleep(n) {

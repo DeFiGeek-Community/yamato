@@ -37,7 +37,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     )
   ) {
     await deployYamatoAction<YamatoDepositor, YamatoDepositor__factory>(
-      "Depositor"
+      "Depositor",
+      2
     );
   }
 
@@ -58,7 +59,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       getDeploymentAddressPathWithTag("YamatoRepayer", "ERC1967Proxy")
     )
   ) {
-    await deployYamatoAction<YamatoRepayer, YamatoRepayer__factory>("Repayer");
+    await deployYamatoAction<YamatoRepayer, YamatoRepayer__factory>(
+      "Repayer",
+      2
+    );
   }
 
   if (
@@ -68,7 +72,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     )
   ) {
     await deployYamatoAction<YamatoWithdrawer, YamatoWithdrawer__factory>(
-      "Withdrawer"
+      "Withdrawer",
+      2
     );
   }
 
@@ -79,7 +84,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     )
   ) {
     await deployYamatoAction<YamatoRedeemer, YamatoRedeemer__factory>(
-      "Redeemer"
+      "Redeemer",
+      4
     );
   }
 
@@ -89,16 +95,19 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       getDeploymentAddressPathWithTag("YamatoSweeper", "ERC1967Proxy")
     )
   ) {
-    await deployYamatoAction<YamatoSweeper, YamatoSweeper__factory>("Sweeper");
+    await deployYamatoAction<YamatoSweeper, YamatoSweeper__factory>(
+      "Sweeper",
+      2
+    );
   }
 };
 export default func;
-func.tags = ["Yamato"];
+func.tags = ["YamatoAction"];
 
 async function deployYamatoAction<
   T extends BaseContract,
   S extends ContractFactory
->(actionName) {
+>(actionName, versionSpecification?: number | undefined) {
   console.log(`Yamato${actionName} is being deployed...`);
 
   const _yamatoAddr = readFileSync(
@@ -108,7 +117,8 @@ async function deployYamatoAction<
   const inst = await getLinkedProxy<T, S>(
     `Yamato${actionName}`,
     [_yamatoAddr],
-    ["PledgeLib"]
+    ["PledgeLib"],
+    versionSpecification
   );
   const implAddr = await (<any>inst).getImplementation();
 

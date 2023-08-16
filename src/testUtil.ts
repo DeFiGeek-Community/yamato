@@ -44,7 +44,6 @@ export async function getProxy<
   let contractFactory: S;
   let defaultInst: T;
 
-  // TODO: V2 Flag
   let implName;
   if (versionSpecification) {
     contractFactory = <S>(
@@ -84,33 +83,39 @@ export async function getLinkedProxy<
   libralies: string[],
   versionSpecification?: number | undefined
 ): Promise<T> {
-  // console.log(`getLinkedProxy: deploying libs...`);
   let Libraries = {};
   for (var i = 0; i < libralies.length; i++) {
     let libraryName = libralies[i];
     Libraries[libraryName] = (await deployLibrary(libraryName)).address;
   }
 
-  let contractFactory: S = <S>(
-    await getLinkedContractFactory(contractName, Libraries)
-  );
-  const defaultInst: T = <T>await upgrades.deployProxy(contractFactory, args, {
+  let contractFactory: S;
+  let defaultInst: T;
+
+  let implName;
+  if (versionSpecification) {
+    contractFactory = <S>(
+      await getLinkedContractFactory(
+        `${contractName}V${versionSpecification}`,
+        Libraries
+      )
+    );
+    implName = "";
+  } else {
+    contractFactory = <S>(
+      await getLinkedContractFactory(contractName, Libraries)
+    );
+    implName = getLatestContractName(contractName);
+  }
+
+  defaultInst = <T>await upgrades.deployProxy(contractFactory, args, {
     kind: "uups",
     unsafeAllow: ["external-library-linking"],
   });
 
-  let implName;
-  if (versionSpecification) {
-    implName = `${contractName}V${versionSpecification}`;
-  } else {
-    implName = getLatestContractName(contractName);
-  }
-
   if (implName.length == 0) {
     return defaultInst;
   } else {
-    // console.log(`${implName} is going to be deployed to ERC1967Proxy...`);
-
     const inst: T = <T>(
       await upgradeLinkedProxy(defaultInst.address, implName, libralies)
     );
@@ -133,7 +138,10 @@ export async function deployLibrary(libraryName) {
   }
 
   if (
-    (getCurrentNetwork() == "goerli" || getCurrentNetwork() == "localnet") &&
+    (getCurrentNetwork() == "mainnet" ||
+      getCurrentNetwork() == "sepolia" ||
+      getCurrentNetwork() == "goerli" ||
+      getCurrentNetwork() == "localnet") &&
     existsSync(filepath) &&
     _LibAddr
   ) {

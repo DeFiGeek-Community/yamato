@@ -11,6 +11,7 @@ import {
   getDeployer,
   extractEmbeddedFactoryAddress,
   recoverFactoryAddress,
+  setNetwork,
   setProvider,
   isInitMode,
   isEmbeddedMode,
@@ -23,10 +24,7 @@ import { Wallet } from "ethers";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await setProvider();
-  const { ethers, deployments } = hre;
-  const { getContractFactory, Contract, BigNumber, Signer, getSigners } =
-    ethers;
-  return;
+  setNetwork(hre.network.name);
   verifyWithEtherscan();
 };
 export default func;

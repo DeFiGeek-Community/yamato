@@ -28,11 +28,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     getDeploymentAddressPath("PriceFeedERC1967Proxy")
   ).toString();
 
-  const inst = await getProxy<CurrencyOS, CurrencyOS__factory>("CurrencyOS", [
-    cjpyAddr,
-    feedAddr,
-    feePoolAddr,
-  ]);
+  const inst = await getProxy<CurrencyOS, CurrencyOS__factory>(
+    "CurrencyOS",
+    [cjpyAddr, feedAddr, feePoolAddr],
+    2
+  );
   const implAddr = await inst.getImplementation();
 
   writeFileSync(
