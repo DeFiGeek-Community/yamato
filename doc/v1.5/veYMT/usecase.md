@@ -37,7 +37,7 @@ graph LR
 
     gauge_relative_weight[ゲージの重みを取得する]
 
-    collateral_ratio[担保率を取得]
+    collateral_ratio[預入額を取得]
     balance_issued[CJPYの発行額を取得]
     first_checkpoint[チェックポイントを更新する]
     depositor
