@@ -1,4 +1,4 @@
-pragma solidity 0.8.18;
+pragma solidity 0.8.4;
 
 /***
  *@title Gauge Controller
@@ -7,9 +7,8 @@ pragma solidity 0.8.18;
  */
 
 //dao-contracts
-import "./interfaces/dao/ICRV.sol";
-import "./interfaces/dao/IVotingEscrow.sol";
-import "./interfaces/pool/IOwnership.sol";
+import "./interfaces/ICRV.sol";
+import "./interfaces/IVotingEscrow.sol";
 
 contract GaugeController {
     // 7 * 86400 seconds - all future times are rounded by week
@@ -116,7 +115,7 @@ contract GaugeController {
      */
     constructor(
         address token_,
-        address votingEscrow_,
+        address votingEscrow_
     ) {
         require(token_ != address(0));
         require(votingEscrow_ != address(0));
@@ -153,7 +152,7 @@ contract GaugeController {
      */
     function gaugeTypes(address addr_) external view returns (int128) {
         int128 _gaugeType = gaugeTypes_[addr_];
-        require(qaugeType != 0);
+        require(_gaugeType != 0);
 
         return _gaugeType - 1;
     }
@@ -165,7 +164,8 @@ contract GaugeController {
      *@return Type weight
      */
     function _getTypeWeight(int128 gaugeType_) internal returns (uint256) {
-        uint256 _t = timeTypeWeight[gaugeType_];
+        uint256 _gaugeType = uint256(uint128(gaugeType_));
+        uint256 _t = timeTypeWeight[_gaugeType];
         if (_t > 0) {
             uint256 _w = pointsTypeWeight[gaugeType_][_t];
             for (uint256 i; i < 500; ) {
@@ -175,7 +175,7 @@ contract GaugeController {
                 _t += WEEK;
                 pointsTypeWeight[gaugeType_][_t] = _w;
                 if (_t > block.timestamp) {
-                    timeTypeWeight[gaugeType_] = _t;
+                    timeTypeWeight[_gaugeType] = _t;
                 }
                 unchecked { ++i; }
             }
@@ -192,7 +192,8 @@ contract GaugeController {
      *@return Sum of weights
      */
     function _getSum(int128 gaugeType_) internal returns (uint256) {
-        uint256 _t = timeSum[gaugeType_];
+        uint256 _gaugeType = uint256(uint128(gaugeType_));
+        uint256 _t = timeSum[_gaugeType];
         if (_t > 0) {
             Point memory _pt = pointsSum[gaugeType_][_t];
             for (uint256 i; i < 500; ) {
@@ -211,7 +212,7 @@ contract GaugeController {
                 }
                 pointsSum[gaugeType_][_t] = _pt;
                 if (_t > block.timestamp) {
-                    timeSum[gaugeType_] = _t;
+                    timeSum[_gaugeType] = _t;
                 }
                 unchecked { ++i; }
             }
@@ -235,7 +236,7 @@ contract GaugeController {
         }
         uint256 _pt = pointsTotal[_t];
 
-        for (uint256 _gaugeType = 1; _gaugeType < 100; ) {
+        for (int128 _gaugeType = 1; _gaugeType < 100; ) {
             if (_gaugeType == _nGaugeTypes) {
                 break;
             }
@@ -250,7 +251,7 @@ contract GaugeController {
             _t += WEEK;
             _pt = 0;
             // Scales as n_types * n_unchecked_weeks (hopefully 1 at most)
-            for (uint256 _gaugeType = 1; _gaugeType < 100; ) {
+            for (int128 _gaugeType = 1; _gaugeType < 100; ) {
                 if (_gaugeType == _nGaugeTypes) {
                     break;
                 }
@@ -313,7 +314,7 @@ contract GaugeController {
     function addGauge(
         address addr_,
         int128 gaugeType_,
-        uint256 weight_,
+        uint256 weight_
     ) external onlyAdmin {
         require((gaugeType_ >= 0) && (gaugeType_ < nGaugeTypes)); //gauge_type 0 means unset
         require(gaugeTypes_[addr_] == 0, "cannot add the same gauge twice");
@@ -321,8 +322,8 @@ contract GaugeController {
         unchecked {
             nGauges = _n + 1;
         }
-        gauges[_n] = addr_;
-
+        gauges[uint256(uint128(_n))] = addr_;
+        uint256 _gaugeType = uint256(uint128(gaugeType_));
         gaugeTypes_[addr_] = gaugeType_ + 1;
         uint256 _nextTime;
         unchecked {
@@ -335,14 +336,14 @@ contract GaugeController {
             uint256 _oldTotal = _getTotal();
 
             pointsSum[gaugeType_][_nextTime].bias = weight_ + _oldSum;
-            timeSum[gaugeType_] = _nextTime;
+            timeSum[_gaugeType] = _nextTime;
             pointsTotal[_nextTime] = _oldTotal + (_typeWeight * weight_);
             timeTotal = _nextTime;
 
             pointsWeight[addr_][_nextTime].bias = weight_;
         }
-        if (timeSum[gaugeType_] == 0) {
-            timeSum[gaugeType_] = _nextTime;
+        if (timeSum[_gaugeType] == 0) {
+            timeSum[_gaugeType] = _nextTime;
         }
         timeWeight[addr_] = _nextTime;
 
@@ -440,6 +441,7 @@ contract GaugeController {
         unchecked {
             _nextTime = ((block.timestamp + WEEK) / WEEK) * WEEK;
         }
+        uint256 _typeId = uint256(uint128(typeId_));
 
         _totalWeight =
             _totalWeight +
@@ -448,7 +450,7 @@ contract GaugeController {
         pointsTotal[_nextTime] = _totalWeight;
         pointsTypeWeight[typeId_][_nextTime] = weight_;
         timeTotal = _nextTime;
-        timeTypeWeight[typeId_] = _nextTime;
+        timeTypeWeight[_typeId] = _nextTime;
 
         emit NewTypeWeight(typeId_, _nextTime, weight_, _totalWeight);
     }
@@ -499,7 +501,7 @@ contract GaugeController {
 
         uint256 newSum = _oldSum + weight_ - _oldGaugeWeight;
         pointsSum[_gaugeType][_nextTime].bias = newSum;
-        timeSum[_gaugeType] = _nextTime;
+        timeSum[uint256(uint128(_gaugeType))] = _nextTime;
 
         _totalWeight =
             _totalWeight +
@@ -542,9 +544,9 @@ contract GaugeController {
         external
     {
         VotingParameter memory _vp;
-        _vp.slope = uint256(IvotingEscrow(votingEscrow).getLastUserSlope(msg.sender));
-        _vp.lockEnd = IvotingEscrow(votingEscrow).lockedEnd(msg.sender);
-        _vp._nGauges = nGauges;
+        _vp.slope = uint256(uint128(IVotingEscrow(votingEscrow).getLastUserSlope(msg.sender)));
+        _vp.lockEnd = IVotingEscrow(votingEscrow).lockedEnd(msg.sender);
+        _vp._nGauges = uint256(uint128(nGauges));
         unchecked {
             _vp.nextTime = ((block.timestamp + WEEK) / WEEK) * WEEK;
         }
@@ -577,8 +579,8 @@ contract GaugeController {
         _vp.oldBias = _oldSlope.slope * _vp.oldDt;
         VotedSlope memory _newSlope = VotedSlope({
             slope: (_vp.slope * userWeight_) / 10000,
-            end: _vp.lockEnd
-            power: userWeight_,
+            end: _vp.lockEnd,
+            power: userWeight_
         });
         uint256 _newDt = _vp.lockEnd - _vp.nextTime; // dev: raises when expired
         uint256 _newBias = _newSlope.slope * _newDt;
@@ -658,7 +660,8 @@ contract GaugeController {
      *@return Type weight
      */
     function getTypeWeight(int128 typeId_) external view returns (uint256) {
-        return pointsTypeWeight[typeId_][timeTypeWeight[typeId_]];
+        uint256 _typeId = uint256(uint128(typeId_));
+        return pointsTypeWeight[typeId_][timeTypeWeight[_typeId]];
     }
 
     /***
@@ -679,7 +682,8 @@ contract GaugeController {
         view
         returns (uint256)
     {
-        return pointsSum[typeId_][timeSum[typeId_]].bias;
+        uint256 _typeId = uint256(uint128(typeId_));
+        return pointsSum[typeId_][timeSum[_typeId]].bias;
     }
 
     function max(uint256 _a, uint256 _b) internal pure returns (uint256) {

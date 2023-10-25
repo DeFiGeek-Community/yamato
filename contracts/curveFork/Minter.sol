@@ -1,4 +1,4 @@
-pragma solidity 0.8.18;
+pragma solidity 0.8.4;
 
 /***
  *@title Token Minter
@@ -32,12 +32,12 @@ contract Minter is ReentrancyGuard {
 
     function _mintFor(address gaugeAddr_, address for_) internal {
         require(
-            IGaugeController(controller).gauge_types(gaugeAddr_) >= 0,
+            IGaugeController(controller).gaugeTypes(gaugeAddr_) >= 0,
             "dev: gauge is not added"
         );
 
-        ILiquidityGauge(gaugeAddr_).user_checkpoint(for_);
-        uint256 totalMint = ILiquidityGauge(gaugeAddr_).integrate_fraction(
+        ILiquidityGauge(gaugeAddr_).userCheckpoint(for_);
+        uint256 totalMint = ILiquidityGauge(gaugeAddr_).integrateFraction(
             for_
         );
         uint256 _toMint = totalMint - minted[for_][gaugeAddr_];
