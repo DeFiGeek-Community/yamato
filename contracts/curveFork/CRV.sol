@@ -34,11 +34,11 @@ contract CRV is ERC20 {
     uint256 constant INFLATION_DELAY = 1 days;
 
     // Supply variables
-    int128 public mining_epoch;
-    uint256 public start_epoch_time;
+    int128 public miningEpoch;
+    uint256 public startEpochTime;
     uint256 public rate;
 
-    uint256 start_epoch_supply;
+    uint256 startEpochSupply;
 
     constructor() ERC20("Curve", "CRV") {
         uint256 init_supply = INITIAL_SUPPLY * 10 ** decimals();
@@ -46,29 +46,29 @@ contract CRV is ERC20 {
 
         admin = msg.sender;
 
-        start_epoch_time =
+        startEpochTime =
             block.timestamp +
             INFLATION_DELAY -
             RATE_REDUCTION_TIME;
-        mining_epoch = -1;
+        miningEpoch = -1;
         rate = 0;
-        start_epoch_supply = init_supply;
+        startEpochSupply = init_supply;
     }
 
     // @dev Update mining rate and supply at the start of the epoch
     //      Any modifying mining call must also call this
-    function _update_mining_parameters() internal {
+    function _updateMiningParameters() internal {
         uint256 _rate = rate;
-        uint256 _start_epoch_supply = start_epoch_supply;
+        uint256 _startEpochSupply = startEpochSupply;
 
-        start_epoch_time += RATE_REDUCTION_TIME;
-        mining_epoch += 1;
+        startEpochTime += RATE_REDUCTION_TIME;
+        miningEpoch += 1;
 
         if (_rate == 0) {
             _rate = INITIAL_RATE;
         } else {
-            _start_epoch_supply += _rate * RATE_REDUCTION_TIME;
-            start_epoch_supply = _start_epoch_supply;
+            _startEpochSupply += _rate * RATE_REDUCTION_TIME;
+            startEpochSupply = _startEpochSupply;
             _rate = (_rate * RATE_DENOMINATOR) / RATE_REDUCTION_COEFFICIENT;
         }
 
@@ -77,64 +77,64 @@ contract CRV is ERC20 {
         emit UpdateMiningParameters(
             block.timestamp,
             _rate,
-            _start_epoch_supply
+            _startEpochSupply
         );
     }
 
     // @notice Update mining rate and supply at the start of the epoch
     // @dev Callable by any address, but only once per epoch
     //      Total supply becomes slightly larger if(this function is called late
-    function update_mining_parameters() external {
-        require(block.timestamp >= start_epoch_time + RATE_REDUCTION_TIME); // dev: too soon!
-        _update_mining_parameters();
+    function updateMiningParameters() external {
+        require(block.timestamp >= startEpochTime + RATE_REDUCTION_TIME); // dev: too soon!
+        _updateMiningParameters();
     }
 
     // @notice Get timestamp of the current mining epoch start
     //         while simultaneously updating mining parameters
     // @return Timestamp of the epoch
-    function start_epoch_time_write() external returns (uint256) {
-        uint256 _start_epoch_time = start_epoch_time;
-        if (block.timestamp >= _start_epoch_time + RATE_REDUCTION_TIME) {
-            _update_mining_parameters();
-            return start_epoch_time;
+    function startEpochTimeWrite() external returns (uint256) {
+        uint256 _startEpochTime = startEpochTime;
+        if (block.timestamp >= _startEpochTime + RATE_REDUCTION_TIME) {
+            _updateMiningParameters();
+            return startEpochTime;
         } else {
-            return _start_epoch_time;
+            return _startEpochTime;
         }
     }
 
     // @notice Get timestamp of the next mining epoch start
     //         while simultaneously updating mining parameters
     // @return Timestamp of the next epoch
-    function future_epoch_time_write() external returns (uint256) {
-        uint256 _start_epoch_time = start_epoch_time;
-        if (block.timestamp >= _start_epoch_time + RATE_REDUCTION_TIME) {
-            _update_mining_parameters();
-            return start_epoch_time + RATE_REDUCTION_TIME;
+    function futureEpochTimeWrite() external returns (uint256) {
+        uint256 _startEpochTime = startEpochTime;
+        if (block.timestamp >= _startEpochTime + RATE_REDUCTION_TIME) {
+            _updateMiningParameters();
+            return startEpochTime + RATE_REDUCTION_TIME;
         } else {
-            return _start_epoch_time + RATE_REDUCTION_TIME;
+            return _startEpochTime + RATE_REDUCTION_TIME;
         }
     }
 
-    function _available_supply() internal view returns (uint256) {
-        return start_epoch_supply + (block.timestamp - start_epoch_time) * rate;
+    function _availableSupply() internal view returns (uint256) {
+        return startEpochSupply + (block.timestamp - startEpochTime) * rate;
     }
 
     // @notice Current number of tokens in existence (claimed or unclaimed)
-    function available_supply() external view returns (uint256) {
-        return _available_supply();
+    function availableSupply() external view returns (uint256) {
+        return _availableSupply();
     }
 
     // @notice How much supply is mintable from start timestamp till end timestamp
     // @param start Start of the time interval (timestamp)
     // @param end End of the time interval (timestamp)
     // @return Tokens mintable from `start` till `end`
-    function mintable_in_timeframe(
+    function mintableInTimeframe(
         uint256 start,
         uint256 end
     ) external view returns (uint256) {
         require(start <= end); // dev: start > end
         uint256 to_mint = 0;
-        uint256 current_epoch_time = start_epoch_time;
+        uint256 current_epoch_time = startEpochTime;
         uint256 current_rate = rate;
 
         // Special case if(end is in future (not yet minted) epoch
@@ -184,7 +184,7 @@ contract CRV is ERC20 {
     // @notice Set the minter address
     // @dev Only callable once, when minter has not yet been set
     // @param _minter Address of the minter
-    function set_minter(address _minter) external {
+    function setMinter(address _minter) external {
         require(msg.sender == admin); // dev: admin only
         require(minter == address(0)); // dev: can set the minter only once, at creation
         minter = _minter;
@@ -194,7 +194,7 @@ contract CRV is ERC20 {
     // @notice Set the new admin.
     // @dev After all is set up, admin only can change the token name
     // @param _admin New admin address
-    function set_admin(address _admin) external {
+    function setAdmin(address _admin) external {
         require(msg.sender == admin); // dev: admin only
         admin = _admin;
         emit SetAdmin(_admin);
@@ -209,8 +209,8 @@ contract CRV is ERC20 {
         require(msg.sender == minter); // dev: minter only
         require(_to != address(0)); // dev: zero address
 
-        if (block.timestamp >= start_epoch_time + RATE_REDUCTION_TIME) {
-            _update_mining_parameters();
+        if (block.timestamp >= startEpochTime + RATE_REDUCTION_TIME) {
+            _updateMiningParameters();
         }
 
         _mint(_to, _value);
