@@ -486,7 +486,7 @@ contract GaugeController {
     function _changeGaugeWeight(address addr_, uint256 weight_) internal {
         // Change gauge weight
         // Only needed when testing in reality
-        int128 _gaugeType = gaugeTypes_[addr_];
+        int128 _gaugeType = gaugeTypes_[addr_] - 1;
         uint256 _oldGaugeWeight = _getWeight(addr_);
         uint256 _typeWeight = _getTypeWeight(_gaugeType);
         uint256 _oldSum = _getSum(_gaugeType);
