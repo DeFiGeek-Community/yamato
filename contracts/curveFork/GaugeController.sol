@@ -3,7 +3,7 @@ pragma solidity 0.8.4;
 /***
  *@title Gauge Controller
  * SPDX-License-Identifier: MIT
- *@notice Controls liquidity gauges and the issuance of INSURE token through the gauges
+ *@notice Controls liquidity gauges and the issuance of token through the gauges
  */
 
 //dao-contracts
@@ -110,7 +110,7 @@ contract GaugeController {
 
     /***
      *@notice Contract constructor
-     *@param _token `InsureToken` contract address
+     *@param _token `Token` contract address
      *@param _votingEscrow `VotingEscrow` contract address
      */
     constructor(
@@ -152,7 +152,7 @@ contract GaugeController {
      */
     function gaugeTypes(address addr_) external view returns (int128) {
         int128 _gaugeType = gaugeTypes_[addr_];
-        require(_gaugeType != 0);
+        require(_gaugeType != 0, "dev: gauge is not added");
 
         return _gaugeType - 1;
     }
@@ -316,7 +316,7 @@ contract GaugeController {
         int128 gaugeType_,
         uint256 weight_
     ) external onlyAdmin {
-        require((gaugeType_ >= 0) && (gaugeType_ < nGaugeTypes)); //gauge_type 0 means unset
+        require((gaugeType_ >= 0) && (gaugeType_ < nGaugeTypes), "gauge_type 0 means unset"); //gauge_type 0 means unset
         require(gaugeTypes_[addr_] == 0, "cannot add the same gauge twice");
         int128 _n = nGauges;
         unchecked {
