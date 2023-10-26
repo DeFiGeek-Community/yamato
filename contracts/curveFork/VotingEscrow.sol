@@ -223,9 +223,6 @@ contract VotingEscrow is ReentrancyGuard {
         int128 _newDSlope = 0;
         uint256 _epoch = epoch;
 
-        int128(
-            int128(uint128(oldLocked_.end)) - int128(uint128(block.timestamp))
-        );
         if (addr_ != address(0)) {
             // Calculate slopes and biases
             // Kept at zero when they have to
