@@ -17,7 +17,7 @@ contract Minter is ReentrancyGuard {
     address public controller;
 
     // user -> gauge -> value
-    mapping(address => mapping(address => uint256)) public minted; //INSURE minted amount of user from specific gauge.
+    mapping(address => mapping(address => uint256)) public minted; // minted amount of user from specific gauge.
 
     // minter -> user -> can mint?
     mapping(address => mapping(address => bool)) public allowedToMintFor; // A can mint for B if [A => B => true].
