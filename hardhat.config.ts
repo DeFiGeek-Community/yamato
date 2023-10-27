@@ -49,14 +49,19 @@ module.exports = {
           },
         },
       },
-    ],
-  },
-  networks: {
-    hardhat: {
-      allowUnlimitedContractSize: true,
-      accounts: {
-        count: 200,
-        accountsBalance: "1000000000000000000000000",
+      {
+        version: "0.8.18",
+        settings: {
+          outputSelection: {
+            "*": {
+              "*": ["storageLayout"],
+            },
+          },
+          optimizer: {
+            enabled: true,
+            runs: 1000,
+          },
+        },
       },
     },
     localhost: {
@@ -138,7 +143,8 @@ module.exports = {
     alwaysGenerateOverloads: false, // should overloads with full signatures like deposit(uint256) be generated always, even if there are no overloads?
   },
   paths: {
-    tests: "./test/unit",
+    // tests: "./test/unit",
+    tests: "./test/fork",
   },
   defender: {
     apiKey: process.env.DEFENDER_TEAM_API_KEY,
