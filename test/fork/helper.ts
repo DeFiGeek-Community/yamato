@@ -12,7 +12,7 @@ class EVMUtils {
   }
 }
 
-class GaugeControllerTestSetup {
+class TestSetup {
 
   readonly DAY = BigNumber.from(86400);
   readonly WEEK = BigNumber.from(86400 * 7);
@@ -133,4 +133,4 @@ class GaugeControllerTestSetup {
   }
 }
 
-export { EVMUtils, GaugeControllerTestSetup };
+export { EVMUtils, TestSetup };

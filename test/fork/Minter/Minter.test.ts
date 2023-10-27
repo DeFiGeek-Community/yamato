@@ -1,15 +1,15 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { BigNumber } from "ethers";
-import { EVMUtils, GaugeControllerTestSetup } from "../helper";
+import { EVMUtils, TestSetup } from "../helper";
 
 describe("Minter", function () {
-  let setup: GaugeControllerTestSetup;
+  let setup: TestSetup;
   let evm: EVMUtils;
   let snapshotId: string;
 
   before(async () => {
-    setup = new GaugeControllerTestSetup();
+    setup = new TestSetup();
     await setup.setup();
     await setup.addType();
     await setup.addGauge();
