@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.4;
+pragma solidity 0.8.18;
 
 // Voting escrow to have time-weighted votes
 // Votes have a weight depending on time, so that users are committed
@@ -235,9 +235,6 @@ contract VotingEscrow is ReentrancyGuard {
                     int128(uint128(oldLocked_.end) - uint128(block.timestamp));
             }
 
-            // Read values of scheduled changes in the slope
-            // old_locked.end can be in the past and in the future
-            // new_locked.end can ONLY by in the FUTURE unless everything expired: than zeros
             if (newLocked_.end > block.timestamp && newLocked_.amount > 0) {
                 unchecked {
                     _uNew.slope = int128(
@@ -249,6 +246,9 @@ contract VotingEscrow is ReentrancyGuard {
                     int128(uint128(newLocked_.end) - uint128(block.timestamp));
             }
 
+            // Read values of scheduled changes in the slope
+            // old_locked.end can be in the past and in the future
+            // new_locked.end can ONLY by in the FUTURE unless everything expired: than zeros
             _oldDSlope = slopeChanges[oldLocked_.end];
             if (newLocked_.end != 0) {
                 if (newLocked_.end == oldLocked_.end) {
@@ -402,11 +402,18 @@ contract VotingEscrow is ReentrancyGuard {
         LockedBalance memory lockedBalance_,
         int128 type_
     ) internal {
-        LockedBalance memory _locked = lockedBalance_;
-        uint256 supplyBefore = supply;
+        LockedBalance memory _locked = LockedBalance(
+            lockedBalance_.amount,
+            lockedBalance_.end
+        );
+        LockedBalance memory _oldLocked = LockedBalance(
+            lockedBalance_.amount,
+            lockedBalance_.end
+        );
 
-        supply = supplyBefore + value_;
-        LockedBalance memory oldLocked = _locked;
+        uint256 _supplyBefore = supply;
+        supply = _supplyBefore + value_;
+
         // Adding to existing lock, or if a lock is expired - creating a new one
         _locked.amount += int128(uint128(value_));
         if (unlockTime_ != 0) {
@@ -418,7 +425,7 @@ contract VotingEscrow is ReentrancyGuard {
         // Both old_locked.end could be current or expired (>/< block.timestamp)
         // value == 0 (extend lock) or value > 0 (add to lock or extend lock)
         // _locked.end > block.timestamp (always)
-        _checkpoint(addr_, oldLocked, _locked);
+        _checkpoint(addr_, _oldLocked, _locked);
 
         if (value_ != 0) {
             require(
@@ -428,7 +435,7 @@ contract VotingEscrow is ReentrancyGuard {
         }
 
         emit Deposit(addr_, value_, _locked.end, type_, block.timestamp);
-        emit Supply(supplyBefore, supplyBefore + value_);
+        emit Supply(_supplyBefore, _supplyBefore + value_);
     }
 
     /***
@@ -552,11 +559,18 @@ contract VotingEscrow is ReentrancyGuard {
      * @dev Only possible if the lock has expired
      */
     function withdraw() external nonReentrant {
-        LockedBalance memory _locked = locked[msg.sender];
+        LockedBalance memory _locked = LockedBalance(
+            locked[msg.sender].amount,
+            locked[msg.sender].end
+        );
         require(block.timestamp >= _locked.end, "The lock didn't expire");
         uint256 _value = uint256(int256(_locked.amount));
 
-        LockedBalance memory oldLocked = _locked;
+        LockedBalance memory _oldLocked = LockedBalance(
+            locked[msg.sender].amount,
+            locked[msg.sender].end
+        );
+
         _locked.end = 0;
         _locked.amount = 0;
         locked[msg.sender] = _locked;
@@ -566,7 +580,7 @@ contract VotingEscrow is ReentrancyGuard {
         // old_locked can have either expired <= timestamp or zero end
         // _locked has only 0 end
         // Both can have >= 0 amount
-        _checkpoint(msg.sender, oldLocked, _locked);
+        _checkpoint(msg.sender, _oldLocked, _locked);
 
         require(ERC20(token).transfer(msg.sender, _value), "Transfer failed");
 
@@ -731,33 +745,36 @@ contract VotingEscrow is ReentrancyGuard {
         Point memory point_,
         uint256 t_
     ) internal view returns (uint256) {
-        Point memory lastPoint = point_;
-        uint256 _ti = (lastPoint.ts / WEEK) * WEEK;
+        Point memory _lastPoint = point_;
+        uint256 _ti;
+        unchecked {
+            _ti = (_lastPoint.ts / WEEK) * WEEK;
+        }
         for (uint256 i; i < 255; ) {
             _ti += WEEK;
-            int128 d_slope = 0;
+            int128 _dSlope = 0;
             if (_ti > t_) {
                 _ti = t_;
             } else {
-                d_slope = slopeChanges[_ti];
+                _dSlope = slopeChanges[_ti];
             }
-            lastPoint.bias -=
-                lastPoint.slope *
-                int128(int256(_ti) - int256(lastPoint.ts));
+            _lastPoint.bias -=
+                _lastPoint.slope *
+                int128(int256(_ti) - int256(_lastPoint.ts));
             if (_ti == t_) {
                 break;
             }
-            lastPoint.slope += d_slope;
-            lastPoint.ts = _ti;
+            _lastPoint.slope += _dSlope;
+            _lastPoint.ts = _ti;
             unchecked {
                 ++i;
             }
         }
 
-        if (lastPoint.bias < 0) {
-            lastPoint.bias = 0;
+        if (_lastPoint.bias < 0) {
+            _lastPoint.bias = 0;
         }
-        return uint256(int256(lastPoint.bias));
+        return uint256(int256(_lastPoint.bias));
     }
 
     /***
@@ -768,8 +785,8 @@ contract VotingEscrow is ReentrancyGuard {
      */
     function totalSupply(uint256 t_) external view returns (uint256) {
         uint256 _epoch = epoch;
-        Point memory lastPoint = pointHistory[_epoch];
-        return supplyAt(lastPoint, t_);
+        Point memory _lastPoint = pointHistory[_epoch];
+        return supplyAt(_lastPoint, t_);
     }
 
     /***
@@ -779,8 +796,8 @@ contract VotingEscrow is ReentrancyGuard {
      */
     function totalSupply() external view returns (uint256) {
         uint256 _epoch = epoch;
-        Point memory lastPoint = pointHistory[_epoch];
-        return supplyAt(lastPoint, block.timestamp);
+        Point memory _lastPoint = pointHistory[_epoch];
+        return supplyAt(_lastPoint, block.timestamp);
     }
 
     /***
@@ -791,26 +808,26 @@ contract VotingEscrow is ReentrancyGuard {
     function totalSupplyAt(uint256 block_) external view returns (uint256) {
         require(block_ <= block.number, "Invalid block number");
         uint256 _epoch = epoch;
-        uint256 targetEpoch = findBlockEpoch(block_, _epoch);
+        uint256 _targetEpoch = findBlockEpoch(block_, _epoch);
 
-        Point memory point = pointHistory[targetEpoch];
+        Point memory _point = pointHistory[_targetEpoch];
         uint256 _dt = 0;
-        if (targetEpoch < _epoch) {
-            Point memory pointNext = pointHistory[targetEpoch + 1];
-            if (point.blk != pointNext.blk) {
+        if (_targetEpoch < _epoch) {
+            Point memory _pointNext = pointHistory[_targetEpoch + 1];
+            if (_point.blk != _pointNext.blk) {
                 _dt =
-                    ((block_ - point.blk) * (pointNext.ts - point.ts)) /
-                    (pointNext.blk - point.blk);
+                    ((block_ - _point.blk) * (_pointNext.ts - _point.ts)) /
+                    (_pointNext.blk - _point.blk);
             }
         } else {
-            if (point.blk != block.number) {
+            if (_point.blk != block.number) {
                 _dt =
-                    ((block_ - point.blk) * (block.timestamp - point.ts)) /
-                    (block.number - point.blk);
+                    ((block_ - _point.blk) * (block.timestamp - _point.ts)) /
+                    (block.number - _point.blk);
             }
         }
         // Now _dt contains info on how far are we beyond point
-        return supplyAt(point, point.ts + _dt);
+        return supplyAt(_point, _point.ts + _dt);
     }
 
     /***

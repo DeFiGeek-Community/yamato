@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.4;
+pragma solidity 0.8.18;
 
 interface IVotingEscrow {
     function getLastUserSlope(address addr_) external view returns (int128);
@@ -20,9 +20,9 @@ interface IVotingEscrow {
         view
         returns (uint256);
 
-    function userPointHistoryTs(address _addr, uint256 _idx)
-        external
-        view
-        returns (uint256);
+    function userPointHistoryTs(
+        address addr,
+        uint256 epoch
+    ) external view returns (uint256);
 
 }

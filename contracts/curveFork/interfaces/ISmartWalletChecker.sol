@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.4;
+pragma solidity 0.8.18;
 
 // Interface for checking whether address belongs to a whitelisted type of a smart wallet.
 // When new types are added - the whole contract is changed
