@@ -42,12 +42,12 @@ class TestSetup {
   accounts: Signer[];
   accountsAddress: String[];
   token: Contract;
-  voting_escrow: Contract;
-  gauge_controller: Contract;
-  mock_lp_token: Contract;
+  votingEscrow: Contract;
+  gaugeController: Contract;
+  mockLpToken: Contract;
   minter: Contract;
-  three_gauges_contracts: Contract[];
-  three_gauges: string[];
+  gaugesContracts: Contract[];
+  gaugesAddress: string[];
 
   TYPE_WEIGHTS: BigNumber[];
   GAUGE_WEIGHTS: BigNumber[];
@@ -75,46 +75,46 @@ class TestSetup {
 
     // deploy
     this.token = await Token.deploy();
-    this.voting_escrow = await VotingEscrow.deploy(
+    this.votingEscrow = await VotingEscrow.deploy(
       this.token.address,
       "Voting-escrowed token",
       "vetoken",
       "v1"
     );
-    this.gauge_controller = await GaugeController.deploy(this.token.address, this.voting_escrow.address);
-    this.mock_lp_token = await TestLP.deploy("tokenDAO LP token", "iToken", 18, BigNumber.from("1000000000000000000000"));
-    this.minter = await Minter.deploy(this.token.address, this.gauge_controller.address);
-    const lg1 = await LiquidityGauge.deploy(this.mock_lp_token.address, this.minter.address);
-    const lg2 = await LiquidityGauge.deploy(this.mock_lp_token.address, this.minter.address);
-    const lg3 = await LiquidityGauge.deploy(this.mock_lp_token.address, this.minter.address);
-    this.three_gauges_contracts = [lg1, lg2, lg3];
-    this.three_gauges = [lg1.address, lg2.address, lg3.address];
+    this.gaugeController = await GaugeController.deploy(this.token.address, this.votingEscrow.address);
+    this.mockLpToken = await TestLP.deploy("tokenDAO LP token", "iToken", 18, BigNumber.from("1000000000000000000000"));
+    this.minter = await Minter.deploy(this.token.address, this.gaugeController.address);
+    const lg1 = await LiquidityGauge.deploy(this.mockLpToken.address, this.minter.address);
+    const lg2 = await LiquidityGauge.deploy(this.mockLpToken.address, this.minter.address);
+    const lg3 = await LiquidityGauge.deploy(this.mockLpToken.address, this.minter.address);
+    this.gaugesContracts = [lg1, lg2, lg3];
+    this.gaugesAddress = [lg1.address, lg2.address, lg3.address];
 
     await this.token.setMinter(this.minter.address);
     // setup
-    await this.gauge_controller.addType("none", 0);
+    await this.gaugeController.addType("none", 0);
   }
 
 
   async addType(){
-    await this.gauge_controller.addType("Liquidity", this.TYPE_WEIGHTS[0]);
-    await this.gauge_controller.addType("Liquidity", this.TYPE_WEIGHTS[1]);
+    await this.gaugeController.addType("Liquidity", this.TYPE_WEIGHTS[0]);
+    await this.gaugeController.addType("Liquidity", this.TYPE_WEIGHTS[1]);
   }
 
   async addGaugeZero(){
     for (let i = 0; i < 2; i++) {
-      await this.gauge_controller.addGauge(this.three_gauges[i], this.GAUGE_TYPES[i], 0);
+      await this.gaugeController.addGauge(this.gaugesAddress[i], this.GAUGE_TYPES[i], 0);
     }
   }
   async addGauge(){
     for (let i = 0; i < 3; i++) {
-      await this.gauge_controller.addGauge(this.three_gauges[i], this.GAUGE_TYPES[i], this.GAUGE_WEIGHTS[i]);
+      await this.gaugeController.addGauge(this.gaugesAddress[i], this.GAUGE_TYPES[i], this.GAUGE_WEIGHTS[i]);
     }
   }
 
   async createLock(){
-    await this.token.approve(this.voting_escrow.address, BigNumber.from("1000000000000000000000000"));
-    await this.voting_escrow.createLock(
+    await this.token.approve(this.votingEscrow.address, BigNumber.from("1000000000000000000000000"));
+    await this.votingEscrow.createLock(
       BigNumber.from("1000000000000000000000000"),
       BigNumber.from((await ethers.provider.getBlock("latest")).timestamp).add(this.YEAR)
     );
@@ -122,12 +122,12 @@ class TestSetup {
 
   async createLP(){
     for (let i = 1; i < 4; i++) {
-      await this.mock_lp_token.transfer(this.accountsAddress[i], this.ten_to_the_18);
+      await this.mockLpToken.transfer(this.accountsAddress[i], this.ten_to_the_18);
     }
 
     for (let i = 0; i < 3; i++) {
       for (let t = 0; t < 3; t++) {
-        await this.mock_lp_token.connect(this.accounts[i + 1]).approve(this.three_gauges[t], this.ten_to_the_18);
+        await this.mockLpToken.connect(this.accounts[i + 1]).approve(this.gaugesAddress[t], this.ten_to_the_18);
       }
     }
   }
