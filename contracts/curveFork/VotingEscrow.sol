@@ -278,7 +278,6 @@ contract VotingEscrow is ReentrancyGuard {
         // initial_last_point is used for extrapolation to calculate block number
         // (approximately, for *At methods) and save them
         // as we cannot figure that out exactly from inside the contract
-        // Point memory _initialLastPoint = _lastPoint;
         Point memory _initialLastPoint = Point({
             bias: _lastPoint.bias,
             slope: _lastPoint.slope,
