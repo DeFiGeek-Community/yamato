@@ -266,14 +266,25 @@ contract VotingEscrow is ReentrancyGuard {
             blk: block.number
         });
         if (_epoch > 0) {
-            _lastPoint = pointHistory[_epoch];
+            _lastPoint = Point({
+                bias: pointHistory[_epoch].bias,
+                slope: pointHistory[_epoch].slope,
+                ts: pointHistory[_epoch].ts,
+                blk: pointHistory[_epoch].blk
+            });
         }
         uint256 _lastCheckpoint = _lastPoint.ts;
 
         // initial_last_point is used for extrapolation to calculate block number
         // (approximately, for *At methods) and save them
         // as we cannot figure that out exactly from inside the contract
-        Point memory _initialLastPoint = _lastPoint;
+        // Point memory _initialLastPoint = _lastPoint;
+        Point memory _initialLastPoint = Point({
+            bias: _lastPoint.bias,
+            slope: _lastPoint.slope,
+            ts: _lastPoint.ts,
+            blk: _lastPoint.blk
+        });
         uint256 _blockSlope = 0;
         if (block.timestamp > _lastPoint.ts) {
             _blockSlope =
@@ -326,7 +337,12 @@ contract VotingEscrow is ReentrancyGuard {
                 _lastPoint.blk = block.number;
                 break;
             } else {
-                pointHistory[_epoch] = _lastPoint;
+                pointHistory[_epoch] = Point({
+                    bias: _lastPoint.bias,
+                    slope: _lastPoint.slope,
+                    ts: _lastPoint.ts,
+                    blk: _lastPoint.blk
+                });
             }
             unchecked {
                 ++i;
@@ -704,32 +720,33 @@ contract VotingEscrow is ReentrancyGuard {
             }
         }
 
-        Point memory upoint = userPointHistory[addr_][min_];
-        uint256 maxEpoch = epoch;
-        uint256 epoch_ = findBlockEpoch(block_, maxEpoch);
-        Point memory point0 = pointHistory[epoch_];
-        uint256 dBlock = 0;
-        uint256 dt = 0;
+        Point memory _upoint = userPointHistory[addr_][min_];
+        uint256 _maxEpoch = epoch;
+        uint256 _epoch = findBlockEpoch(block_, _maxEpoch);
+        Point memory _point0 = pointHistory[_epoch];
+        // revert(_epoch.uintToString());
+        uint256 _dBlock = 0;
+        uint256 _dt = 0;
 
-        if (epoch_ < maxEpoch) {
-            Point memory point1 = pointHistory[epoch_ + 1];
-            dBlock = point1.blk - point0.blk;
-            dt = point1.ts - point0.ts;
+        if (_epoch < _maxEpoch) {
+            Point memory _point1 = pointHistory[_epoch + 1];
+            _dBlock = _point1.blk - _point0.blk;
+            _dt = _point1.ts - _point0.ts;
         } else {
-            dBlock = block.number - point0.blk;
-            dt = block.timestamp - point0.ts;
+            _dBlock = block.number - _point0.blk;
+            _dt = block.timestamp - _point0.ts;
         }
 
-        uint256 blockTime = point0.ts;
-        if (dBlock != 0) {
-            blockTime += (dt * (block_ - point0.blk)) / dBlock;
+        uint256 _blockTime = _point0.ts;
+        if (_dBlock != 0) {
+            _blockTime += _dt * (block_ - _point0.blk) / _dBlock;
         }
 
-        upoint.bias -=
-            upoint.slope *
-            int128(int256(blockTime) - int256(upoint.ts));
-        if (upoint.bias >= 0) {
-            return uint256(int256(upoint.bias));
+        _upoint.bias -=
+            _upoint.slope *
+            int128(int256(_blockTime) - int256(_upoint.ts));
+        if (_upoint.bias >= 0) {
+            return uint256(int256(_upoint.bias));
         } else {
             return 0;
         }
