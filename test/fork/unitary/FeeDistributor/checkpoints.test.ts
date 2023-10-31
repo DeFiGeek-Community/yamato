@@ -1,7 +1,11 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { Contract } from "ethers";
-import { time } from "@nomicfoundation/hardhat-network-helpers";
+import {
+  time,
+  takeSnapshot,
+  SnapshotRestorer,
+} from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 const DAY = 86400;
@@ -15,8 +19,10 @@ describe("FeeDistributor", () => {
   let votingEscrow: Contract;
   let token: Contract;
   let coinA: Contract;
+  let snapshot: SnapshotRestorer;
 
   beforeEach(async function () {
+    snapshot = await takeSnapshot();
     [alice, bob, charlie] = await ethers.getSigners();
 
     const Distributor = await ethers.getContractFactory("FeeDistributor");
@@ -46,6 +52,10 @@ describe("FeeDistributor", () => {
       alice.address
     );
     await distributor.deployed();
+  });
+
+  afterEach(async () => {
+    await snapshot.restore();
   });
 
   // TODO
