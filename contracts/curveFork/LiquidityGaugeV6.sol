@@ -4,56 +4,13 @@ pragma solidity 0.8.18;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-interface ICRV20 {
-    function futureEpochTimeWrite() external returns (uint256);
-
-    function rate() external view returns (uint256);
-}
-
-interface IController {
-    function checkpointGauge(address addr) external;
-
-    function gaugeRelativeWeight(
-        address addr,
-        uint256 time
-    ) external view returns (uint256);
-}
+import "./interfaces/IGaugeController.sol";
+import "./interfaces/ICRV.sol";
+import "./interfaces/IMinter.sol";
+import "./interfaces/IVotingEscrow.sol";
 
 interface IERC20Extended {
     function symbol() external view returns (string memory);
-}
-
-interface IERC1271 {
-    function isValidSignature(
-        bytes32 _hash,
-        bytes calldata _signature
-    ) external view returns (bytes32);
-}
-
-interface IFactory {
-    function admin() external view returns (address);
-}
-
-interface IMinter {
-    function minted(
-        address user,
-        address gauge
-    ) external view returns (uint256);
-}
-
-interface IVotingEscrow {
-    function userPointEpoch(address addr) external view returns (uint256);
-
-    function userPointHistoryTs(
-        address addr,
-        uint256 epoch
-    ) external view returns (uint256);
-}
-
-interface IVotingEscrowBoost {
-    function adjustedBalanceOf(
-        address _account
-    ) external view returns (uint256);
 }
 
 contract LiquidityGaugeV6 is ReentrancyGuard {
@@ -135,16 +92,6 @@ contract LiquidityGaugeV6 is ReentrancyGuard {
     bytes32 public immutable salt;
     bytes32 public immutable CACHED_DOMAIN_SEPARATOR;
 
-    // Address Constants
-    address public constant CRV = 0xD533a949740bb3306d119CC777fa900bA034cd52;
-    address public constant GAUGE_CONTROLLER =
-        0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB;
-    address public constant MINTER = 0xd061D61a4d941c39E5453435B6345Dc261C2fcE0;
-    address public constant VEBOOST_PROXY =
-        0x8E0c00ed546602fD9927DF742bbAbF726D5B0d16;
-    address public constant VOTING_ESCROW =
-        0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2;
-
     // ERC20
     mapping(address => uint256) public balanceOf;
     uint256 public totalSupply;
@@ -157,8 +104,13 @@ contract LiquidityGaugeV6 is ReentrancyGuard {
     mapping(address => uint256) public nonces;
 
     // Gauge
-    address public factory;
+    address public admin;
     address public lpToken;
+
+    address public token;
+    address public votingEscrow;
+    address public minter;
+    address public gaugeController;
 
     bool public isKilled;
 
@@ -195,25 +147,32 @@ contract LiquidityGaugeV6 is ReentrancyGuard {
     address[MAX_REWARDS] public rewardTokens; // Assuming MAX_REWARDS is a constant already defined
 
     // Using dynamic array instead of fixed 100000000000000000000000000000 array to avoid warning about collisions
-    uint256[] public periodTimestamp;
-    uint256[] public integrateInvSupply;
+    uint256[100000000000000000000000000000] public periodTimestamp;
+    uint256[100000000000000000000000000000] public integrateInvSupply;
 
-    constructor(address lpToken_) {
+    constructor(
+        address lpToken_,
+        address minter_
+    ) {
         require(lpToken == address(0));
 
         lpToken = lpToken_;
-        factory = msg.sender;
+        minter = minter_;
+        token = IMinter(minter).token();
+        gaugeController = IMinter(minter).controller();
+        votingEscrow = IGaugeController(gaugeController).votingEscrow();
 
         string memory _symbol = IERC20Extended(lpToken_).symbol();
         name = string(abi.encodePacked("Curve.fi ", _symbol, " Gauge Deposit"));
         symbol = string(abi.encodePacked(_symbol, "-gauge"));
 
         periodTimestamp[0] = block.timestamp;
+        admin = msg.sender;
 
         // Assuming you have the CRV20 interface defined somewhere for the following line
         inflationParams =
-            (ICRV20(CRV).futureEpochTimeWrite() << 216) +
-            ICRV20(CRV).rate();
+            (ICRV(token).futureEpochTimeWrite() << 216) +
+            ICRV(token).rate();
 
         NAME_HASH = keccak256(abi.encodePacked(name));
         salt = blockhash(block.number - 1);
@@ -262,9 +221,9 @@ contract LiquidityGaugeV6 is ReentrancyGuard {
         _st.newRate = _st.rate;
 
         if (_st.prevFutureEpoch >= _st.periodTime) {
-            _st.newRate = ICRV20(CRV).rate();
+            _st.newRate = ICRV(token).rate();
             inflationParams =
-                (ICRV20(CRV).futureEpochTimeWrite() << 216) +
+                (ICRV(token).futureEpochTimeWrite() << 216) +
                 _st.newRate;
         }
 
@@ -275,16 +234,13 @@ contract LiquidityGaugeV6 is ReentrancyGuard {
 
         if (block.timestamp > _st.periodTime) {
             uint256 _workingSupply = workingSupply;
-            IController(GAUGE_CONTROLLER).checkpointGauge(address(this));
+            IGaugeController(gaugeController).checkpointGauge(address(this));
             uint256 prevWeekTime = _st.periodTime;
-            uint256 weekTime = ((_st.periodTime + WEEK) / WEEK) * WEEK <
-                block.timestamp
-                ? ((_st.periodTime + WEEK) / WEEK) * WEEK
-                : block.timestamp;
+            uint256 weekTime = min((_st.periodTime + WEEK) / WEEK * WEEK, block.timestamp);
 
             for (uint256 i = 0; i < 500; i++) {
                 uint256 dt = weekTime - prevWeekTime;
-                uint256 w = IController(GAUGE_CONTROLLER).gaugeRelativeWeight(
+                uint256 w = IGaugeController(gaugeController).gaugeRelativeWeight(
                     address(this),
                     (prevWeekTime / WEEK) * WEEK
                 );
@@ -314,9 +270,7 @@ contract LiquidityGaugeV6 is ReentrancyGuard {
                     break;
                 }
                 prevWeekTime = weekTime;
-                weekTime = weekTime + WEEK < block.timestamp
-                    ? weekTime + WEEK
-                    : block.timestamp;
+                weekTime = min(weekTime + WEEK, block.timestamp);
             }
         }
 
@@ -362,10 +316,7 @@ contract LiquidityGaugeV6 is ReentrancyGuard {
             _rp.token = rewardTokens[i];
 
             _rp.integral = rewardData[_rp.token].integral;
-            _rp.lastUpdate = block.timestamp <
-                rewardData[_rp.token].periodFinish
-                ? block.timestamp
-                : rewardData[_rp.token].periodFinish;
+            _rp.lastUpdate = min(block.timestamp, rewardData[_rp.token].periodFinish);
             _rp.duration = _rp.lastUpdate - rewardData[_rp.token].lastUpdate;
             if (_rp.duration != 0) {
                 rewardData[_rp.token].lastUpdate = _rp.lastUpdate;
@@ -425,9 +376,8 @@ contract LiquidityGaugeV6 is ReentrancyGuard {
         uint256 l_,
         uint256 L_
     ) internal {
-        uint256 _votingBalance = IVotingEscrowBoost(VEBOOST_PROXY)
-            .adjustedBalanceOf(addr_);
-        uint256 _votingTotal = IERC20(VOTING_ESCROW).totalSupply();
+        uint256 _votingBalance = IVotingEscrow(votingEscrow).balanceOf(addr_);
+        uint256 _votingTotal = IERC20(votingEscrow).totalSupply();
 
         uint256 _lim = (l_ * TOKENLESS_PRODUCTION) / 100;
         if (_votingTotal > 0) {
@@ -437,7 +387,7 @@ contract LiquidityGaugeV6 is ReentrancyGuard {
                 100;
         }
 
-        _lim = l_ < _lim ? l_ : _lim;
+        _lim = min(l_, _lim);
         uint256 _oldBal = workingBalances[addr_];
         workingBalances[addr_] = _lim;
         uint256 _workingSupply = workingSupply + _lim - _oldBal;
@@ -641,7 +591,7 @@ contract LiquidityGaugeV6 is ReentrancyGuard {
     }
 
     function userCheckpoint(address addr_) external returns (bool) {
-        require(msg.sender == addr_ || msg.sender == MINTER);
+        require(msg.sender == addr_ || msg.sender == minter);
         _checkpoint(addr_);
         _updateLiquidityLimit(addr_, balanceOf[addr_], totalSupply);
         return true;
@@ -653,14 +603,14 @@ contract LiquidityGaugeV6 is ReentrancyGuard {
 
     function kick(address addr_) external {
         uint256 _tLast = integrateCheckpointOf[addr_];
-        uint256 _tVe = IVotingEscrow(VOTING_ESCROW).userPointHistoryTs(
+        uint256 _tVe = IVotingEscrow(votingEscrow).userPointHistoryTs(
             addr_,
-            IVotingEscrow(VOTING_ESCROW).userPointEpoch(addr_)
+            IVotingEscrow(votingEscrow).userPointEpoch(addr_)
         );
         uint256 _balance = balanceOf[addr_];
 
         require(
-            ERC20(VOTING_ESCROW).balanceOf(addr_) == 0 || _tVe > _tLast,
+            ERC20(votingEscrow).balanceOf(addr_) == 0 || _tVe > _tLast,
             "Not allowed"
         );
         require(
@@ -725,7 +675,7 @@ contract LiquidityGaugeV6 is ReentrancyGuard {
         address currentDistributor = rewardData[rewardToken_].distributor;
         require(
             msg.sender == currentDistributor ||
-                msg.sender == IFactory(factory).admin()
+                msg.sender == admin
         );
         require(currentDistributor != address(0));
         require(distributor_ != address(0));
@@ -771,7 +721,7 @@ contract LiquidityGaugeV6 is ReentrancyGuard {
         _checkpoint(addr_);
         return
             integrateFraction[addr_] -
-            IMinter(MINTER).minted(addr_, address(this));
+            IMinter(minter).minted(addr_, address(this));
     }
 
     function integrateCheckpoint() external view returns (uint256) {
@@ -798,8 +748,12 @@ contract LiquidityGaugeV6 is ReentrancyGuard {
         return _domainSeparator();
     }
 
+    function min(uint256 a, uint256 b) internal pure returns (uint256) {
+        return a < b ? a : b;
+    }
+
     modifier onlyAdmin() {
-        require(msg.sender == IFactory(factory).admin());
+        require(msg.sender == admin);
         _;
     }
 }
