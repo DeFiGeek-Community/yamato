@@ -313,7 +313,7 @@ contract LiquidityGauge is ReentrancyGuard {
         uint256 _t_last = integrate_checkpoint_of[_addr];
         uint256 _t_ve = voting_escrow.userPointHistoryTs(
             _addr,
-            voting_escrow.getUserPointEpoch(_addr)
+            voting_escrow.userPointEpoch(_addr)
         );
         uint256 _balance = balanceOf[_addr];
 

@@ -16,7 +16,7 @@ class TestSetup {
 
   readonly DAY = BigNumber.from(86400);
   readonly WEEK = BigNumber.from(86400 * 7);
-  readonly MONTH: BigNumber = BigNumber.from(86400 * 30);
+  readonly MONTH = BigNumber.from(86400 * 30);
   readonly YEAR = BigNumber.from(86400 * 365);
 
   readonly name = "Token";
@@ -36,9 +36,19 @@ class TestSetup {
   readonly a = BigNumber.from("2");
   readonly b = BigNumber.from("5");
   readonly zero = BigNumber.from("0");
+  readonly MAX_UINT256 = BigNumber.from("115792089237316195423570985008687907853269984665640564039457584007913129639935");
 
   readonly GAUGE_TYPES = [BigNumber.from("1"), BigNumber.from("1"), BigNumber.from("2")];
 
+
+  creator: Signer;
+  alice: Signer;
+  bob: Signer;
+  charly: Signer;
+  creatorAddress: String;
+  aliceAddress: String;
+  bobAddress: String;
+  charlyAddress: String;
   accounts: Signer[];
   accountsAddress: String[];
   token: Contract;
@@ -46,6 +56,7 @@ class TestSetup {
   gaugeController: Contract;
   mockLpToken: Contract;
   minter: Contract;
+  lg: Contract;
   gaugesContracts: Contract[];
   gaugesAddress: string[];
 
@@ -54,13 +65,17 @@ class TestSetup {
 
   async setup() {
     
-    const [creator, alice, bob, charly] = await ethers.getSigners();
-    this.accounts = [creator, alice, bob, charly];
+    [this.creator, this.alice, this.bob, this.charly] = await ethers.getSigners();
+    this.accounts = [this.creator, this.alice, this.bob, this.charly];
+    this.creatorAddress = await this.creator.getAddress();
+    this.aliceAddress = await this.alice.getAddress();
+    this.bobAddress = await this.bob.getAddress();
+    this.charlyAddress = await this.charly.getAddress();
     this.accountsAddress = [
-      await creator.getAddress(),
-      await alice.getAddress(),
-      await bob.getAddress(),
-      await charly.getAddress(),
+      this.creatorAddress,
+      this.aliceAddress,
+      this.bobAddress,
+      this.charlyAddress,
     ];
 
     this.TYPE_WEIGHTS = [this.ten_to_the_17.mul(this.b), this.ten_to_the_18.mul(this.a)];
@@ -80,16 +95,24 @@ class TestSetup {
       "Voting-escrowed token",
       "vetoken",
       "v1"
-    );
+      );
     this.gaugeController = await GaugeController.deploy(this.token.address, this.votingEscrow.address);
-    this.mockLpToken = await TestLP.deploy("tokenDAO LP token", "iToken", 18, BigNumber.from("1000000000000000000000"));
+    this.mockLpToken = await TestLP.deploy("tokenDAO LP token", "iToken", 18, this.ten_to_the_21.mul("2"));
     this.minter = await Minter.deploy(this.token.address, this.gaugeController.address);
-    const lg1 = await LiquidityGauge.deploy(this.mockLpToken.address, this.minter.address);
-    const lg2 = await LiquidityGauge.deploy(this.mockLpToken.address, this.minter.address);
-    const lg3 = await LiquidityGauge.deploy(this.mockLpToken.address, this.minter.address);
-    this.gaugesContracts = [lg1, lg2, lg3];
-    this.gaugesAddress = [lg1.address, lg2.address, lg3.address];
-
+    this.lg = await LiquidityGauge.deploy(
+      this.mockLpToken.address,
+      this.minter.address,
+      );
+    const lg2 = await LiquidityGauge.deploy(
+      this.mockLpToken.address,
+      this.minter.address,
+    );
+    const lg3 = await LiquidityGauge.deploy(
+      this.mockLpToken.address,
+      this.minter.address,
+    );
+    this.gaugesContracts = [this.lg, lg2, lg3];
+    this.gaugesAddress = [this.lg.address, lg2.address, lg3.address];
     await this.token.setMinter(this.minter.address);
     // setup
     await this.gaugeController.addType("none", 0);
