@@ -114,7 +114,7 @@ describe("LiquidityGauge", function () {
           let amount = BigNumber.from(Math.floor(Math.random() * 10000).toString())
             .mul(await setup.lg.balanceOf(setup.bobAddress))
             .div(BigNumber.from("10000"));
-          await setup.lg.connect(setup.bob).withdraw(amount);
+          await setup.lg.connect(setup.bob).withdraw(amount, false);
           await update_integral();
           bob_staked = bob_staked.sub(amount);
         } else {
@@ -124,7 +124,7 @@ describe("LiquidityGauge", function () {
             .div(BigNumber.from("10"))
             .div(BigNumber.from("10000"));
           await setup.mockLpToken.connect(setup.bob).approve(setup.lg.address, amount);
-          await setup.lg.connect(setup.bob).deposit(amount, setup.bobAddress);
+          await setup.lg.connect(setup.bob).deposit(amount, setup.bobAddress, false);
           await update_integral();
           bob_staked = bob_staked.add(amount);
         }
@@ -138,7 +138,7 @@ describe("LiquidityGauge", function () {
               .mul(await setup.lg.balanceOf(setup.aliceAddress))
               .div(BigNumber.from("10"))
               .div(BigNumber.from("10000"));
-            await setup.lg.connect(setup.alice).withdraw(amount_alice);
+            await setup.lg.connect(setup.alice).withdraw(amount_alice, false);
             await update_integral();
             alice_staked = alice_staked.sub(amount_alice);
           } else {
@@ -147,7 +147,7 @@ describe("LiquidityGauge", function () {
               .mul(await setup.mockLpToken.balanceOf(setup.aliceAddress))
               .div(BigNumber.from("10000"));
             await setup.mockLpToken.connect(setup.alice).approve(setup.lg.address, amount_alice);
-            await setup.lg.connect(setup.alice).deposit(amount_alice, setup.aliceAddress);
+            await setup.lg.connect(setup.alice).deposit(amount_alice, setup.aliceAddress, false);
             await update_integral();
             alice_staked = alice_staked.add(amount_alice);
           }
@@ -230,8 +230,8 @@ describe("LiquidityGauge", function () {
       await setup.votingEscrow.connect(setup.alice).createLock(setup.ten_to_the_20, t.add(setup.WEEK.mul(BigNumber.from("2"))));
     
       // AliceとBobが一部の流動性をデポジットする
-      await setup.lg.connect(setup.alice).deposit(setup.ten_to_the_21, setup.aliceAddress);
-      await setup.lg.connect(setup.bob).deposit(setup.ten_to_the_21, setup.bobAddress);
+      await setup.lg.connect(setup.alice).deposit(setup.ten_to_the_21, setup.aliceAddress, false);
+      await setup.lg.connect(setup.bob).deposit(setup.ten_to_the_21, setup.bobAddress, false);
       let now = BigNumber.from((await ethers.provider.getBlock("latest")).timestamp);
     
       // 現在、Aliceは投票ロックを持っているが、Bobは持っていないことを確認する

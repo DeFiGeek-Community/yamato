@@ -345,7 +345,7 @@ contract LiquidityGauge is ReentrancyGuard {
      *@param _value Number of tokens to deposit
      *@param _addr Address to deposit for
      */
-    function deposit(uint256 _value, address _addr) external nonReentrant {
+    function deposit(uint256 _value, address _addr, bool claimRewards_) external nonReentrant {
         if (_addr != msg.sender) {
             require(approved_to_deposit[msg.sender][_addr], "Not approved");
         }
@@ -369,7 +369,7 @@ contract LiquidityGauge is ReentrancyGuard {
      *@notice Withdraw `_value` LP tokens
      *@param _value Number of tokens to withdraw
      */
-    function withdraw(uint256 _value) external nonReentrant {
+    function withdraw(uint256 _value, bool claimRewards_) external nonReentrant {
         _checkpoint(msg.sender);
 
         uint256 _balance = balanceOf[msg.sender] - _value;
