@@ -588,7 +588,10 @@ contract VotingEscrow is ReentrancyGuard {
 
         _locked.end = 0;
         _locked.amount = 0;
-        locked[msg.sender] = _locked;
+        locked[msg.sender] = LockedBalance(
+            _locked.amount,
+            _locked.end
+        );
         uint256 _supplyBefore = supply;
         supply = _supplyBefore - _value;
 
@@ -723,7 +726,6 @@ contract VotingEscrow is ReentrancyGuard {
         uint256 _maxEpoch = epoch;
         uint256 _epoch = findBlockEpoch(block_, _maxEpoch);
         Point memory _point0 = pointHistory[_epoch];
-        // revert(_epoch.uintToString());
         uint256 _dBlock = 0;
         uint256 _dt = 0;
 
