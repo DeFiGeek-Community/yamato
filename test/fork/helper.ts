@@ -84,7 +84,7 @@ class TestSetup {
     const Token = await ethers.getContractFactory("CRV");
     const VotingEscrow = await ethers.getContractFactory("VotingEscrow");
     const GaugeController = await ethers.getContractFactory("GaugeController");
-    const LiquidityGauge = await ethers.getContractFactory("LiquidityGauge");
+    const LiquidityGauge = await ethers.getContractFactory("LiquidityGaugeV6");
     const TestLP = await ethers.getContractFactory("TestLP");
     const Minter = await ethers.getContractFactory("Minter");
 

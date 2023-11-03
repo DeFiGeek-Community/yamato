@@ -115,7 +115,8 @@ contract LiquidityGaugeV6 is ReentrancyGuard {
     bool public isKilled;
 
     // [future_epoch_time uint40][inflation_rate uint216]
-    uint256 public inflationParams;
+    uint256 public futureEpochTime;
+    uint256 public inflationRate;
 
     // For tracking external rewards
     uint256 public rewardCount;
@@ -170,9 +171,8 @@ contract LiquidityGaugeV6 is ReentrancyGuard {
         admin = msg.sender;
 
         // Assuming you have the CRV20 interface defined somewhere for the following line
-        inflationParams =
-            (ICRV(token).futureEpochTimeWrite() << 216) +
-            ICRV(token).rate();
+        inflationRate = ICRV(token).rate();
+        futureEpochTime = ICRV(token).futureEpochTimeWrite();
 
         NAME_HASH = keccak256(abi.encodePacked(name));
         salt = blockhash(block.number - 1);
@@ -215,16 +215,14 @@ contract LiquidityGaugeV6 is ReentrancyGuard {
             uint256(uint128(_st.period))
         ];
 
-        _st.inflationParams = inflationParams;
-        _st.rate = _st.inflationParams & ((1 << 216) - 1);
-        _st.prevFutureEpoch = _st.inflationParams >> 216;
+        _st.rate = inflationRate;
+        _st.prevFutureEpoch = futureEpochTime;
         _st.newRate = _st.rate;
 
         if (_st.prevFutureEpoch >= _st.periodTime) {
+            futureEpochTime = ICRV(token).futureEpochTimeWrite();
             _st.newRate = ICRV(token).rate();
-            inflationParams =
-                (ICRV(token).futureEpochTimeWrite() << 216) +
-                _st.newRate;
+            inflationRate = _st.newRate;
         }
 
         if (isKilled) {
@@ -235,29 +233,29 @@ contract LiquidityGaugeV6 is ReentrancyGuard {
         if (block.timestamp > _st.periodTime) {
             uint256 _workingSupply = workingSupply;
             IGaugeController(gaugeController).checkpointGauge(address(this));
-            uint256 prevWeekTime = _st.periodTime;
-            uint256 weekTime = min((_st.periodTime + WEEK) / WEEK * WEEK, block.timestamp);
+            uint256 _prevWeekTime = _st.periodTime;
+            uint256 _weekTime = min((_st.periodTime + WEEK) / WEEK * WEEK, block.timestamp);
 
-            for (uint256 i = 0; i < 500; i++) {
-                uint256 dt = weekTime - prevWeekTime;
+            for (uint256 i = 0; i < 500;) {
+                uint256 dt = _weekTime - _prevWeekTime;
                 uint256 w = IGaugeController(gaugeController).gaugeRelativeWeight(
                     address(this),
-                    (prevWeekTime / WEEK) * WEEK
+                    (_prevWeekTime / WEEK) * WEEK
                 );
 
                 if (_workingSupply > 0) {
                     if (
-                        _st.prevFutureEpoch >= prevWeekTime &&
-                        _st.prevFutureEpoch < weekTime
+                        _st.prevFutureEpoch >= _prevWeekTime &&
+                        _st.prevFutureEpoch < _weekTime
                     ) {
                         _st.integrateInvSupply +=
                             (_st.rate *
                                 w *
-                                (_st.prevFutureEpoch - prevWeekTime)) /
+                                (_st.prevFutureEpoch - _prevWeekTime)) /
                             _workingSupply;
                         _st.rate = _st.newRate;
                         _st.integrateInvSupply +=
-                            (_st.rate * w * (weekTime - _st.prevFutureEpoch)) /
+                            (_st.rate * w * (_weekTime - _st.prevFutureEpoch)) /
                             _workingSupply;
                     } else {
                         _st.integrateInvSupply +=
@@ -266,11 +264,14 @@ contract LiquidityGaugeV6 is ReentrancyGuard {
                     }
                 }
 
-                if (weekTime == block.timestamp) {
+                if (_weekTime == block.timestamp) {
                     break;
                 }
-                prevWeekTime = weekTime;
-                weekTime = min(weekTime + WEEK, block.timestamp);
+                _prevWeekTime = _weekTime;
+                _weekTime = min(_weekTime + WEEK, block.timestamp);
+                unchecked {
+                    ++i;
+                }
             }
         }
 
@@ -726,14 +727,6 @@ contract LiquidityGaugeV6 is ReentrancyGuard {
 
     function integrateCheckpoint() external view returns (uint256) {
         return periodTimestamp[uint256(uint128(period))];
-    }
-
-    function futureEpochTime() external view returns (uint256) {
-        return inflationParams >> 216;
-    }
-
-    function inflationRate() external view returns (uint256) {
-        return inflationParams % 2 ** 216;
     }
 
     function decimals() external pure returns (uint256) {
