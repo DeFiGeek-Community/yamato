@@ -159,8 +159,8 @@ contract FeeDistributor is ReentrancyGuard {
                     break;
                 }
                 uint256 _mid = (_min + _max + 2) / 2;
-                Point memory pt = IVotingEscrow(ve_).pointHistory(_mid);
-                if (pt.ts <= timestamp_) {
+                Point memory _pt = IVotingEscrow(ve_).pointHistory(_mid);
+                if (_pt.ts <= timestamp_) {
                     _min = _mid;
                 } else {
                     _max = _mid - 1;
@@ -185,11 +185,11 @@ contract FeeDistributor is ReentrancyGuard {
                     break;
                 }
                 uint256 _mid = (_min + _max + 2) / 2;
-                Point memory pt = IVotingEscrow(ve_).userPointHistory(
+                Point memory _pt = IVotingEscrow(ve_).userPointHistory(
                     user_,
                     _mid
                 );
-                if (pt.ts <= timestamp_) {
+                if (_pt.ts <= timestamp_) {
                     _min = _mid;
                 } else {
                     _max = _mid - 1;
@@ -218,14 +218,14 @@ contract FeeDistributor is ReentrancyGuard {
             _maxUserEpoch
         );
         Point memory _pt = IVotingEscrow(_ve).userPointHistory(user_, _epoch);
-        return
-            uint256(
-                int256(
-                    _pt.bias -
-                        _pt.slope *
-                        int128(int256(timestamp_) - int256(_pt.ts))
-                )
-            );
+        int128 _balance = _pt.bias -
+            _pt.slope *
+            int128(int256(timestamp_ - _pt.ts));
+        if (_balance < 0) {
+            return 0;
+        } else {
+            return uint256(uint128(_balance));
+        }
     }
 
     function _checkpointTotalSupply() internal {
@@ -275,16 +275,13 @@ contract FeeDistributor is ReentrancyGuard {
                 if (_t > _pt.ts) {
                     _dt = uint256(int256(_t) - int256(_pt.ts));
                 }
-                veSupply[_t] = uint256(
-                    int256(
-                        Math.max(
-                            uint256(int256(_pt.bias)) -
-                                uint256(int256(_pt.slope)) *
-                                _dt,
-                            0
-                        )
-                    )
-                );
+
+                int128 _balance = _pt.bias - _pt.slope * int128(int256(_dt));
+                if (_balance < 0) {
+                    veSupply[_t] = 0;
+                } else {
+                    veSupply[_t] = uint256(uint128(_balance));
+                }
             }
             _t += WEEK;
             unchecked {
@@ -356,7 +353,12 @@ contract FeeDistributor is ReentrancyGuard {
                 _weekCursor >= _userPoint.ts && _userEpoch <= _maxUserEpoch
             ) {
                 _userEpoch += 1;
-                _oldUserPoint = _userPoint;
+                _oldUserPoint = Point({
+                    bias: _userPoint.bias,
+                    slope: _userPoint.slope,
+                    ts: _userPoint.ts,
+                    blk: _userPoint.blk
+                });
                 if (_userEpoch > _maxUserEpoch) {
                     _userPoint = Point({bias: 0, slope: 0, ts: 0, blk: 0});
                 } else {
@@ -366,25 +368,25 @@ contract FeeDistributor is ReentrancyGuard {
                     );
                 }
             } else {
-                uint256 dt = uint256(
-                    int256(_weekCursor) - int256(_oldUserPoint.ts)
-                );
-                uint256 balanceOf = uint256(
-                    int256(
-                        Math.max(
-                            uint256(int256(_oldUserPoint.bias)) -
-                                dt *
-                                uint256(int256(_oldUserPoint.slope)),
-                            0
-                        )
-                    )
-                );
-                if (balanceOf == 0 && _userEpoch > _maxUserEpoch) {
+                int256 _dt = int256(_weekCursor) - int256(_oldUserPoint.ts);
+                int256 _balanceOf = int256(_oldUserPoint.bias) -
+                    _dt *
+                    int256(_oldUserPoint.slope);
+                if (
+                    int256(_oldUserPoint.bias) -
+                        _dt *
+                        int256(_oldUserPoint.slope) <
+                    0
+                ) {
+                    _balanceOf = 0;
+                }
+
+                if (_balanceOf == 0 && _userEpoch > _maxUserEpoch) {
                     break;
                 }
-                if (balanceOf > 0) {
+                if (_balanceOf > 0) {
                     _toDistribute +=
-                        (balanceOf * tokensPerWeek[_weekCursor]) /
+                        (uint256(_balanceOf) * tokensPerWeek[_weekCursor]) /
                         veSupply[_weekCursor];
                 }
                 _weekCursor += WEEK;
@@ -432,13 +434,13 @@ contract FeeDistributor is ReentrancyGuard {
             _lastTokenTime = (_lastTokenTime / WEEK) * WEEK;
         }
 
-        uint256 amount = _claim(_addr, votingEscrow, _lastTokenTime);
-        if (amount != 0) {
-            require(IERC20(token).transfer(_addr, amount), "Transfer failed");
-            tokenLastBalance -= amount;
+        uint256 _amount = _claim(_addr, votingEscrow, _lastTokenTime);
+        if (_amount != 0) {
+            require(IERC20(token).transfer(_addr, _amount), "Transfer failed");
+            tokenLastBalance -= _amount;
         }
 
-        return amount;
+        return _amount;
     }
 
     /***
@@ -511,18 +513,18 @@ contract FeeDistributor is ReentrancyGuard {
         uint256 _total = 0;
         uint256 _l = receivers_.length;
         for (uint256 i; i < _l; ) {
-            address addr = receivers_[i];
-            if (addr == address(0)) {
+            address _addr = receivers_[i];
+            if (_addr == address(0)) {
                 break;
             }
 
-            uint256 amount = _claim(addr, votingEscrow, _lastTokenTime);
-            if (amount != 0) {
+            uint256 _amount = _claim(_addr, votingEscrow, _lastTokenTime);
+            if (_amount != 0) {
                 require(
-                    IERC20(token).transfer(addr, amount),
+                    IERC20(token).transfer(_addr, _amount),
                     "Transfer failed"
                 );
-                _total += amount;
+                _total += _amount;
             }
             unchecked {
                 ++i;
@@ -608,9 +610,9 @@ contract FeeDistributor is ReentrancyGuard {
     function recoverBalance(address coin_) external onlyAdmin returns (bool) {
         require(coin_ != address(token), "Cannot recover this token");
 
-        uint256 amount = IERC20(coin_).balanceOf(address(this));
+        uint256 _amount = IERC20(coin_).balanceOf(address(this));
         require(
-            IERC20(coin_).transfer(emergencyReturn, amount),
+            IERC20(coin_).transfer(emergencyReturn, _amount),
             "Transfer failed"
         );
         return true;
