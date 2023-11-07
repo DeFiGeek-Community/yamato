@@ -236,7 +236,7 @@ contract GaugeController {
         }
         uint256 _pt = pointsTotal[_t];
 
-        for (int128 _gaugeType = 1; _gaugeType < 100; ) {
+        for (int128 _gaugeType; _gaugeType < 100; ) {
             if (_gaugeType == _nGaugeTypes) {
                 break;
             }
@@ -251,7 +251,7 @@ contract GaugeController {
             _t += WEEK;
             _pt = 0;
             // Scales as n_types * n_unchecked_weeks (hopefully 1 at most)
-            for (int128 _gaugeType = 1; _gaugeType < 100; ) {
+            for (int128 _gaugeType; _gaugeType < 100; ) {
                 if (_gaugeType == _nGaugeTypes) {
                     break;
                 }

@@ -33,7 +33,7 @@ describe("VotingEscrow", function () {
 
   let snapshot: SnapshotRestorer;
 
-  before(async () => {
+  beforeEach(async () => {
     snapshot = await takeSnapshot();
     accounts = (await ethers.getSigners()).slice(0, ACCOUNT_NUM);
 
@@ -66,10 +66,6 @@ describe("VotingEscrow", function () {
       value: BigNumber.from("0"),
       unlockTime: BigNumber.from("0"),
     });
-  });
-
-  after(async () => {
-    await snapshot.restore();
   });
 
   //--------------------------------------------- functions -----------------------------------------------------------//
@@ -332,5 +328,7 @@ describe("VotingEscrow", function () {
     expect(await votingEscrow.totalSupplyAt(blocknumber)).to.equal(
       total_supply
     );
+
+    await snapshot.restore();
   });
 });
