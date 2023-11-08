@@ -1,90 +1,75 @@
+import { ethers } from "hardhat";
 import { expect } from "chai";
-import { BigNumber } from "ethers";
-import { EVMUtils, TestSetup } from "../../helper";
+import {
+  takeSnapshot,
+  SnapshotRestorer,
+} from "@nomicfoundation/hardhat-network-helpers";
+import { Signer, Contract } from "ethers";
+import { deployContracts } from "../../helper";
+import Constants from "../../Constants";
 
 describe("GaugeController", function () {
-  let setup: TestSetup;
-  let evm: EVMUtils;
-  let snapshotId: string;
+  let accounts: Signer[];
+  let gaugeController: Contract;
+  let threeGauges: Contract[];
+  let snapshot: SnapshotRestorer;
 
-  beforeEach(async () => {
-    evm = new EVMUtils();
-    snapshotId = await evm.snapshot();
-    setup = new TestSetup();
-    await setup.setup();
-    await setup.addType();
+  const TYPE_WEIGHTS = Constants.TYPE_WEIGHTS;
+  const GAUGE_WEIGHTS = Constants.GAUGE_WEIGHTS;
+  const ten_to_the_18 = Constants.ten_to_the_18;
+
+  beforeEach(async function () {
+    snapshot = await takeSnapshot();
+    accounts = await ethers.getSigners();
+    ({ gaugeController, threeGauges } = await deployContracts());
+    await gaugeController.addType("none", TYPE_WEIGHTS[0]);
   });
 
   afterEach(async () => {
-    await evm.restore(snapshotId);
+    await snapshot.restore();
   });
 
-  describe("test_total_weight", function () {
-    it("test_total_weight", async () => {
-      await setup.gaugeController.addGauge(
-        setup.gaugesAddress[0],
-        1,
-        setup.GAUGE_WEIGHTS[0]
-      );
-      expect(await setup.gaugeController.getTotalWeight()).to.equal(
-        setup.GAUGE_WEIGHTS[0].mul(setup.TYPE_WEIGHTS[0])
+  describe("GaugeController TotalWeight", function () {
+    it("test_total_weight", async function () {
+      await gaugeController.addGauge(threeGauges[0], 0, GAUGE_WEIGHTS[0]);
+
+      expect(await gaugeController.getTotalWeight()).to.equal(
+        GAUGE_WEIGHTS[0].mul(TYPE_WEIGHTS[0])
       );
     });
 
-    it("test_changeTypeWeight", async () => {
-      await setup.gaugeController.addGauge(
-        setup.gaugesAddress[0],
-        1,
-        setup.ten_to_the_18
-      );
+    it("test_change_type_weight", async function () {
+      await gaugeController.addGauge(threeGauges[0], 0, ten_to_the_18);
+      await gaugeController.changeTypeWeight(0, 31337);
 
-      await setup.gaugeController.changeTypeWeight(1, BigNumber.from("31337"));
-
-      expect(await setup.gaugeController.getTotalWeight()).to.equal(
-        setup.ten_to_the_18.mul(BigNumber.from("31337"))
+      expect(await gaugeController.getTotalWeight()).to.equal(
+        ten_to_the_18.mul(31337)
       );
     });
 
-    it("test_changeGaugeWeight", async () => {
-      await setup.gaugeController.addGauge(
-        setup.gaugesAddress[0],
-        1,
-        setup.ten_to_the_18
-      );
+    it("test_change_gauge_weight", async function () {
+      await gaugeController.addGauge(threeGauges[0], 0, ten_to_the_18);
+      await gaugeController.changeGaugeWeight(threeGauges[0], 31337);
 
-      await setup.gaugeController.changeGaugeWeight(
-        setup.gaugesAddress[0],
-        BigNumber.from("31337")
-      );
-
-      expect(await setup.gaugeController.getTotalWeight()).to.equal(
-        setup.TYPE_WEIGHTS[0].mul(BigNumber.from("31337"))
+      expect(await gaugeController.getTotalWeight()).to.equal(
+        TYPE_WEIGHTS[0].mul(31337)
       );
     });
 
-    it("test_multiple", async () => {
-      await setup.gaugeController.addGauge(
-        setup.gaugesAddress[0],
-        1,
-        setup.GAUGE_WEIGHTS[0]
-      );
-      await setup.gaugeController.addGauge(
-        setup.gaugesAddress[1],
-        1,
-        setup.GAUGE_WEIGHTS[1]
-      );
-      await setup.gaugeController.addGauge(
-        setup.gaugesAddress[2],
-        2,
-        setup.GAUGE_WEIGHTS[2]
-      );
+    it("test_multiple", async function () {
+      await gaugeController.addType("Insurance", TYPE_WEIGHTS[1]);
+      await gaugeController.addGauge(threeGauges[0], 0, GAUGE_WEIGHTS[0]);
+      await gaugeController.addGauge(threeGauges[1], 0, GAUGE_WEIGHTS[1]);
+      await gaugeController.addGauge(threeGauges[2], 1, GAUGE_WEIGHTS[2]);
 
-      let expected = setup.GAUGE_WEIGHTS[0]
-        .mul(setup.TYPE_WEIGHTS[0])
-        .add(setup.GAUGE_WEIGHTS[1].mul(setup.TYPE_WEIGHTS[0]))
-        .add(setup.GAUGE_WEIGHTS[2].mul(setup.TYPE_WEIGHTS[1]));
+      const expectedTotalWeight = GAUGE_WEIGHTS[0]
+        .mul(TYPE_WEIGHTS[0])
+        .add(GAUGE_WEIGHTS[1].mul(TYPE_WEIGHTS[0]))
+        .add(GAUGE_WEIGHTS[2].mul(TYPE_WEIGHTS[1]));
 
-      expect(await setup.gaugeController.getTotalWeight()).to.equal(expected);
+      expect(await gaugeController.getTotalWeight()).to.equal(
+        expectedTotalWeight
+      );
     });
   });
 });
