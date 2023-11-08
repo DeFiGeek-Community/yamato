@@ -12,13 +12,14 @@ describe("LiquidityGauge checkpoint", function () {
   let snapshotId: string;
 
   beforeEach(async () => {
+    evm = new EVMUtils();
+    snapshotId = await evm.snapshot();
     setup = new TestSetup();
     await setup.setup();
   });
 
-  beforeEach(async () => {
-    evm = new EVMUtils();
-    snapshotId = await evm.snapshot();
+  afterEach(async () => {
+    await evm.restore(snapshotId);
   });
 
   it("test_user_checkpoint", async function () {
