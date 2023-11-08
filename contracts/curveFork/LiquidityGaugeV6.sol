@@ -592,7 +592,7 @@ contract LiquidityGaugeV6 is ReentrancyGuard {
     }
 
     function userCheckpoint(address addr_) external returns (bool) {
-        require(msg.sender == addr_ || msg.sender == minter);
+        require(msg.sender == addr_ || msg.sender == minter, "dev: unauthorized");
         _checkpoint(addr_);
         _updateLiquidityLimit(addr_, balanceOf[addr_], totalSupply);
         return true;
