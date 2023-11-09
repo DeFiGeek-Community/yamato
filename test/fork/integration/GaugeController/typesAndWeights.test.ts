@@ -123,7 +123,7 @@ describe("GaugeController", function () {
     await ruleAddType();
 
     // Check
-    await invariants();
+    await checkInvariants();
   }
   //--------------------------------------------- randomly exceuted functions -----------------------------------------------------------//
   async function ruleAddType(stTypeWeight?: BigNumber) {
@@ -137,7 +137,7 @@ describe("GaugeController", function () {
     console.log(`ruleAddType --- stTypeWeight: ${stTypeWeight.toString()}`);
 
     // Check
-    await invariants();
+    await checkInvariants();
   }
 
   async function ruleAddGauge(gaugeType?: number, stGaugeWeight?: BigNumber) {
@@ -169,10 +169,10 @@ describe("GaugeController", function () {
     gauges.push({ contract: gauge, type: gaugeType, weight: stGaugeWeight });
 
     // Check
-    await invariants();
+    await checkInvariants();
   }
 
-  async function invariants() {
+  async function checkInvariants() {
     await invariantGaugeWeightSums();
     await invariantTotalTypeWeight();
     await invariantRelativeGaugeWeight();
