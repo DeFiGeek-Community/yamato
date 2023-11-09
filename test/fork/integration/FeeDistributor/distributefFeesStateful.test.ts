@@ -12,7 +12,8 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-wit
 // https://eth-brownie.readthedocs.io/en/stable/tests-hypothesis-stateful.html
 
 const ACCOUNT_NUM = 5;
-const NUMBER_OF_ATTEMPTS = 30;
+const MAX_EXAMPLES = 50;
+const STATEFUL_STEP_COUNT = 30;
 const WEEK = 86400 * 7;
 const YEAR = 86400 * 365;
 const two_to_the_256_minus_1 = BigNumber.from("2")
@@ -21,10 +22,13 @@ const two_to_the_256_minus_1 = BigNumber.from("2")
 const MOUNT_DECIMALS = 3;
 
 // Helper functions to generate random variables ----->
-function randomValue(min: number, max: number): BigNumber {
+function randomBigValue(min: number, max: number): BigNumber {
   return BigNumber.from(
     Math.floor(Math.random() * (max - min) + min).toString()
   );
+}
+function randomValue(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min) + min);
 }
 function getRandomAccountNum(): number {
   // Corresponds strategy("address", length=5)
@@ -33,17 +37,18 @@ function getRandomAccountNum(): number {
 }
 function getRandomWeeks(): BigNumber {
   // Corresponds strategy("uint256", min_value=1, max_value=12)
-  return randomValue(1, 12);
+  return randomBigValue(1, 12);
 }
 function getRandomAmounts(): BigNumber {
   // Corresponds strategy("decimal", min_value=1, max_value=100, places=3)
-  return randomValue(1 * 10 ** MOUNT_DECIMALS, 100 * 10 ** MOUNT_DECIMALS).mul(
-    BigNumber.from(10).pow(18 - MOUNT_DECIMALS)
-  );
+  return randomBigValue(
+    1 * 10 ** MOUNT_DECIMALS,
+    100 * 10 ** MOUNT_DECIMALS
+  ).mul(BigNumber.from(10).pow(18 - MOUNT_DECIMALS));
 }
 function getRandomsTime(): BigNumber {
   // Corresponds strategy("uint256", min_value=0, max_value=86400 * 3)
-  return randomValue(0, 86400 * 3);
+  return randomBigValue(0, 86400 * 3);
 }
 // ------------------------------------------------
 
@@ -64,6 +69,11 @@ describe("FeeDistributor", function () {
   beforeEach(async () => {
     snapshot = await takeSnapshot();
     accounts = (await ethers.getSigners()).slice(0, ACCOUNT_NUM);
+
+    lockedUntil = {};
+    fees = {};
+    userClaims = {};
+    totalFees = ethers.utils.parseEther("1");
 
     const CRV = await ethers.getContractFactory("CRV");
     const Token = await ethers.getContractFactory("MockToken");
@@ -104,9 +114,11 @@ describe("FeeDistributor", function () {
         (await time.latest()) + YEAR * 2
       );
 
-    lockedUntil[accounts[0].address] = (
-      await votingEscrow.lockedEnd(accounts[0].address)
-    ).toNumber();
+    lockedUntil = {
+      [accounts[0].address]: (
+        await votingEscrow.lockedEnd(accounts[0].address)
+      ).toNumber(),
+    };
 
     // a week later we deploy the fee distributor
     // await ethers.provider.send("evm_increaseTime", [WEEK]);
@@ -421,37 +433,37 @@ describe("FeeDistributor", function () {
     }
 
     // Display results--------------------------------------------------
-    console.log(`Results: ${tokensPerUserPerWeek}`);
-    console.log(`TokensPerUserPerWeek------------`);
-    Object.entries(tokensPerUserPerWeek).forEach(([key, val]) => {
-      console.log(`${key}: ${val}`);
-    });
-    console.log(``);
-    console.log(`Fees-----------`);
-    Object.entries(fees).forEach(([key, val]) => {
-      console.log(`${key}: ${val}`);
-    });
-    console.log(``);
-    console.log(`Total Fee-----------`);
-    console.log(totalFees.toString());
-    console.log(``);
-    console.log(`User claims---------`);
-    Object.entries(userClaims).forEach(([key, val]) => {
-      console.log(`${key}:`);
-      Object.entries(val).forEach(([k, v]) => {
-        console.log(`${k}: ${v}`);
-      });
-    });
-    console.log(``);
-    console.log(`User balances---------`);
-    for (const acct of accounts) {
-      console.log(
-        acct.address,
-        (await feeCoin.balanceOf(acct.address)).toString()
-      );
-    }
-    console.log(`feeCoin balance of Distributor--------`);
-    console.log((await feeCoin.balanceOf(distributor.address)).toString());
+    // console.log(`Results: ${tokensPerUserPerWeek}`);
+    // console.log(`TokensPerUserPerWeek------------`);
+    // Object.entries(tokensPerUserPerWeek).forEach(([key, val]) => {
+    //   console.log(`${key}: ${val}`);
+    // });
+    // console.log(``);
+    // console.log(`Fees-----------`);
+    // Object.entries(fees).forEach(([key, val]) => {
+    //   console.log(`${key}: ${val}`);
+    // });
+    // console.log(``);
+    // console.log(`Total Fee-----------`);
+    // console.log(totalFees.toString());
+    // console.log(``);
+    // console.log(`User claims---------`);
+    // Object.entries(userClaims).forEach(([key, val]) => {
+    //   console.log(`${key}:`);
+    //   Object.entries(val).forEach(([k, v]) => {
+    //     console.log(`${k}: ${v}`);
+    //   });
+    // });
+    // console.log(``);
+    // console.log(`User balances---------`);
+    // for (const acct of accounts) {
+    //   console.log(
+    //     acct.address,
+    //     (await feeCoin.balanceOf(acct.address)).toString()
+    //   );
+    // }
+    // console.log(`feeCoin balance of Distributor--------`);
+    // console.log((await feeCoin.balanceOf(distributor.address)).toString());
     // -------------------------------------------
 
     for (const acct of accounts) {
@@ -477,30 +489,33 @@ describe("FeeDistributor", function () {
   ];
 
   describe("test_deposit_withdraw_voting", function () {
-    it(`should distributes fee`, async () => {
-      // Corresponds initializer initialize_new_lock and initialize_transfer_fees
-      // https://eth-brownie.readthedocs.io/en/stable/tests-hypothesis-stateful.html#initializers
-      // initialize_new_lock: This is equivalent to `rule_new_lock` to make it more likely we have at least 2 accounts locked at the start of the test run.
-      // initialize_transfer_fees: This is equivalent to `rule_transfer_fees` to make it more likely that claimable fees are available from the start of the test.
-      const initializerSeed = Math.random();
-      if (initializerSeed < 0.2) {
-        ruleNewLock();
-        ruleTransferFees();
-      } else if (initializerSeed < 0.4) {
-        ruleTransferFees();
-        ruleNewLock();
-      } else if (initializerSeed < 0.6) {
-        ruleNewLock();
-      } else if (initializerSeed < 0.8) {
-        ruleTransferFees();
-      }
+    for (let i = 0; i < MAX_EXAMPLES; i++) {
+      it(`should distributes fee ${i}`, async () => {
+        // Corresponds initializer initialize_new_lock and initialize_transfer_fees
+        // https://eth-brownie.readthedocs.io/en/stable/tests-hypothesis-stateful.html#initializers
+        // initialize_new_lock: This is equivalent to `rule_new_lock` to make it more likely we have at least 2 accounts locked at the start of the test run.
+        // initialize_transfer_fees: This is equivalent to `rule_transfer_fees` to make it more likely that claimable fees are available from the start of the test.
+        const initializerSeed = Math.random();
+        if (initializerSeed < 0.2) {
+          await ruleNewLock();
+          await ruleTransferFees();
+        } else if (initializerSeed < 0.4) {
+          await ruleTransferFees();
+          await ruleNewLock();
+        } else if (initializerSeed < 0.6) {
+          await ruleNewLock();
+        } else if (initializerSeed < 0.8) {
+          await ruleTransferFees();
+        }
 
-      for (let x = 0; x < NUMBER_OF_ATTEMPTS; x++) {
-        let n = (await randomValue(0, func.length)).toNumber();
-        await eval(func[n])();
-      }
+        const steps = randomValue(1, STATEFUL_STEP_COUNT);
+        for (let x = 0; x < steps; x++) {
+          let n = randomValue(0, func.length);
+          await eval(func[n])();
+        }
 
-      await teardown();
-    });
+        await teardown();
+      });
+    }
   });
 });
