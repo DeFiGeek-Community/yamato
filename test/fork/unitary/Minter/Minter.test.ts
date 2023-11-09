@@ -1,415 +1,461 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { BigNumber } from "ethers";
-import { EVMUtils, TestSetup } from "../../helper";
+import { BigNumber, Contract } from "ethers";
+import {
+  takeSnapshot,
+  SnapshotRestorer,
+} from "@nomicfoundation/hardhat-network-helpers";
+import { deployContracts } from "../../helper";
+import Constants from "../../Constants";
 
 describe("Minter", function () {
-  let setup: TestSetup;
-  let evm: EVMUtils;
-  let snapshotId: string;
+  let accounts: any;
+  let minter: Contract;
+  let gaugeController: Contract;
+  let token: Contract;
+  let mockLpToken: Contract;
+  let threeGauges: String[];
+  let gauges: Contract[];
 
-  beforeEach(async () => {
-    evm = new EVMUtils();
-    snapshotId = await evm.snapshot();
-    setup = new TestSetup();
-    await setup.setup();
-    await setup.addType();
-    await setup.addGauge();
-    await setup.createLP();
+  let snapshot: SnapshotRestorer;
+
+  const TYPE_WEIGHTS = Constants.TYPE_WEIGHTS;
+  const GAUGE_WEIGHTS = Constants.GAUGE_WEIGHTS;
+  const GAUGE_TYPES = [0, 0, 1];
+  
+  const ten_to_the_18 = Constants.ten_to_the_18;
+  const ten_to_the_17 = Constants.ten_to_the_17;
+  const ZERO_ADDRESS = Constants.ZERO_ADDRESS;
+  const zero = Constants.zero;
+  const MONTH = Constants.MONTH;
+  const WEEK = Constants.WEEK;
+  const month = Constants.month;
+  const week = Constants.week;
+
+  beforeEach(async function () {
+    snapshot = await takeSnapshot();
+    accounts = await ethers.getSigners();
+    ({ gaugeController, minter, token, mockLpToken, threeGauges, gauges } =
+      await deployContracts());
+
+    // Set minter for the token
+    await token.setMinter(minter.address);
+
+    // Skip to the start of a new epoch week
+    const currentWeek = BigNumber.from(
+      (await ethers.provider.getBlock("latest")).timestamp
+    )
+      .div(WEEK)
+      .mul(WEEK);
+    await ethers.provider.send("evm_setNextBlockTimestamp", [
+      currentWeek.add(WEEK).toNumber(),
+    ]);
+
+    // Add types and gauges
+    for (const weight of TYPE_WEIGHTS) {
+      await gaugeController.addType("Liquidity", weight);
+    }
+    for (let i = 0; i < 3; i++) {
+      await gaugeController.addGauge(
+        threeGauges[i],
+        GAUGE_TYPES[i],
+        GAUGE_WEIGHTS[i]
+      );
+    }
+    for (const account of accounts) {
+      mockLpToken.transfer(account.address, ten_to_the_18);
+    }
+    for (let i = 1; i <= 3; i++) {
+      for (const gauge of threeGauges) {
+        await mockLpToken.connect(accounts[i]).approve(gauge, ten_to_the_18);
+      }
+    }
   });
 
   afterEach(async () => {
-    await evm.restore(snapshotId);
+    await snapshot.restore();
   });
-
   describe("Minter Behavior", function () {
     // Test basic mint functionality
-    it("test mint", async () => {
-      await setup.lg
-        .connect(setup.alice)
-        .deposit(setup.ten_to_the_17, setup.aliceAddress, false);
+    it("test_mint", async () => {
+      await gauges[0]
+        .connect(accounts[1])
+        .deposit(ten_to_the_17, accounts[1].address, false);
 
-      await ethers.provider.send("evm_increaseTime", [setup.MONTH.toNumber()]);
+      await ethers.provider.send("evm_increaseTime", [month]);
 
-      await setup.minter
-        .connect(setup.alice)
-        .mint(setup.lg.address); //gauge_address, msg.sender, mint
-      let expected = await setup.lg.integrateFraction(
-        setup.aliceAddress
+      await minter
+        .connect(accounts[1])
+        .mint(threeGauges[0]); //gauge_address, msg.sender, mint
+      let expected = await  gauges[0].integrateFraction(
+        accounts[1].address
       );
 
       expect(expected.gt(BigNumber.from("0"))).to.be.equal(true);
-      expect(await setup.token.balanceOf(setup.aliceAddress)).to.equal(
+      expect(await token.balanceOf(accounts[1].address)).to.equal(
         expected
       );
       expect(
-        await setup.minter.minted(
-          setup.aliceAddress,
-          setup.lg.address
+        await minter.minted(
+          accounts[1].address,
+          threeGauges[0]
         )
       ).to.equal(expected);
     });
 
     // Test minting immediately after setup
-    it("test mint immediate", async () => {
-      await setup.lg
-        .connect(setup.alice)
-        .deposit(setup.ten_to_the_18, setup.aliceAddress, false);
+    it("test_mint_immediate", async () => {
+      await gauges[0]
+        .connect(accounts[1])
+        .deposit(ten_to_the_18, accounts[1].address, false);
 
       let t0 = BigNumber.from(
         (await ethers.provider.getBlock("latest")).timestamp
       );
-      let moment = t0.add(setup.WEEK).div(setup.WEEK).mul(setup.WEEK).add("5");
+      let moment = t0.add(WEEK).div(WEEK).mul(WEEK).add("5");
       await ethers.provider.send("evm_setNextBlockTimestamp", [
         moment.toNumber(),
       ]);
 
       //mint
       expect(
-        await setup.minter.minted(
-          setup.aliceAddress,
-          setup.lg.address
+        await minter.minted(
+          accounts[1].address,
+          threeGauges[0]
         )
       ).to.equal("0");
-      await setup.minter
-        .connect(setup.alice)
-        .mint(setup.lg.address);
+      await minter
+        .connect(accounts[1])
+        .mint(threeGauges[0]);
 
       //check
-      let balance = await setup.token.balanceOf(setup.aliceAddress);
+      let balance = await token.balanceOf(accounts[1].address);
       expect(
-        await setup.minter.minted(
-          setup.aliceAddress,
-          setup.lg.address
+        await minter.minted(
+          accounts[1].address,
+          threeGauges[0]
         )
       ).to.equal(balance);
     });
 
     // Test multiple mint operations on the same gauge
-    it("test mint multiple same gauge", async () => {
-      await setup.lg
-        .connect(setup.alice)
-        .deposit(setup.ten_to_the_18, setup.aliceAddress, false);
-      await ethers.provider.send("evm_increaseTime", [setup.MONTH.toNumber()]);
-      await setup.minter
-        .connect(setup.alice)
-        .mint(setup.lg.address);
-      let balance = await setup.token.balanceOf(setup.aliceAddress);
-      await ethers.provider.send("evm_increaseTime", [setup.MONTH.toNumber()]);
-      await setup.minter
-        .connect(setup.alice)
-        .mint(setup.lg.address);
-      let expected = await setup.lg.integrateFraction(
-        setup.aliceAddress
+    it("test_mint_multiple_same_gauge", async () => {
+      await gauges[0]
+        .connect(accounts[1])
+        .deposit(ten_to_the_18, accounts[1].address, false);
+      await ethers.provider.send("evm_increaseTime", [month]);
+      await minter
+        .connect(accounts[1])
+        .mint(threeGauges[0]);
+      let balance = await token.balanceOf(accounts[1].address);
+      await ethers.provider.send("evm_increaseTime", [month]);
+      await minter
+        .connect(accounts[1])
+        .mint(threeGauges[0]);
+      let expected = await gauges[0].integrateFraction(
+        accounts[1].address
       );
-      let final_balance = await setup.token.balanceOf(setup.aliceAddress);
+      let final_balance = await token.balanceOf(accounts[1].address);
 
       expect(final_balance.gt(balance)).to.be.equal(true); //2nd mint success
       expect(final_balance).to.equal(expected); //2nd mint works fine
       expect(
-        await setup.minter.minted(
-          setup.aliceAddress,
-          setup.lg.address
+        await minter.minted(
+          accounts[1].address,
+          threeGauges[0]
         )
       ).to.equal(expected); //tracks fine
     });
 
     // Test minting across multiple gauges
-    it("test mint multiple gauges", async () => {
+    it("test_mint_multiple_gauges", async () => {
       //setup
-      await setup.lg
-        .connect(setup.alice)
-        .deposit(setup.ten_to_the_17, setup.aliceAddress, false);
-      await setup.gaugesContracts[1]
-        .connect(setup.alice)
-        .deposit(setup.ten_to_the_17, setup.aliceAddress, false);
-      await setup.gaugesContracts[2]
-        .connect(setup.alice)
-        .deposit(setup.ten_to_the_17, setup.aliceAddress, false);
+      await gauges[0]
+        .connect(accounts[1])
+        .deposit(ten_to_the_17, accounts[1].address, false);
+      await gauges[1]
+        .connect(accounts[1])
+        .deposit(ten_to_the_17, accounts[1].address, false);
+      await gauges[2]
+        .connect(accounts[1])
+        .deposit(ten_to_the_17, accounts[1].address, false);
 
-      await ethers.provider.send("evm_increaseTime", [setup.MONTH.toNumber()]);
+      await ethers.provider.send("evm_increaseTime", [month]);
 
       //mint
       for (let i = 0; i < 3; i++) {
-        await setup.minter
-          .connect(setup.alice)
-          .mint(setup.gaugesAddress[i]);
+        await minter
+          .connect(accounts[1])
+          .mint(threeGauges[i]);
       }
 
       //check
       let total_minted = BigNumber.from("0");
 
       for (let i = 0; i < 3; i++) {
-        let gauge = setup.gaugesContracts[i];
-        let minted = await setup.minter.minted(
-          setup.aliceAddress,
+        let gauge = gauges[i];
+        let minted = await minter.minted(
+          accounts[1].address,
           gauge.address
         );
         expect(minted).to.equal(
-          await gauge.integrateFraction(setup.aliceAddress)
+          await gauge.integrateFraction(accounts[1].address)
         );
         total_minted = total_minted.add(minted);
       }
 
-      expect(await setup.token.balanceOf(setup.aliceAddress)).to.equal(
+      expect(await token.balanceOf(accounts[1].address)).to.equal(
         total_minted
       );
     });
 
     // Test minting after withdrawing
-    it("test mint after withdraw", async () => {
-      await setup.lg
-        .connect(setup.alice)
-        .deposit(setup.ten_to_the_18, setup.aliceAddress, false);
+    it("test_mint_after_withdraw", async () => {
+      await gauges[0]
+        .connect(accounts[1])
+        .deposit(ten_to_the_18, accounts[1].address, false);
 
       await ethers.provider.send("evm_increaseTime", [
-        setup.WEEK.mul(BigNumber.from("2")).toNumber(),
+        week * 2,
       ]);
 
-      await setup.lg
-        .connect(setup.alice)
-        .withdraw(setup.ten_to_the_18, false);
-      await setup.minter
-        .connect(setup.alice)
-        .mint(setup.lg.address);
+      await gauges[0]
+        .connect(accounts[1])
+        .withdraw(ten_to_the_18, false);
+      await minter
+        .connect(accounts[1])
+        .mint(threeGauges[0]);
 
       expect(
-        (await setup.token.balanceOf(setup.aliceAddress)).gt(
+        (await token.balanceOf(accounts[1].address)).gt(
           BigNumber.from("0")
         )
       ).to.equal(true);
     });
 
     // Test multiple mints after withdrawing
-    it("test mint multiple after withdraw", async () => {
-      await setup.lg
-        .connect(setup.alice)
-        .deposit(setup.ten_to_the_18, setup.aliceAddress, false);
+    it("test_mint_multiple_after_withdraw", async () => {
+      await gauges[0]
+        .connect(accounts[1])
+        .deposit(ten_to_the_18, accounts[1].address, false);
 
       await ethers.provider.send("evm_increaseTime", [10]);
-      await setup.lg
-        .connect(setup.alice)
-        .withdraw(setup.ten_to_the_18, false);
-      await setup.minter
-        .connect(setup.alice)
-        .mint(setup.lg.address);
+      await gauges[0]
+        .connect(accounts[1])
+        .withdraw(ten_to_the_18, false);
+      await minter
+        .connect(accounts[1])
+        .mint(threeGauges[0]);
 
-      let balance = await setup.token.balanceOf(setup.aliceAddress);
+      let balance = await token.balanceOf(accounts[1].address);
 
       await ethers.provider.send("evm_increaseTime", [10]);
-      await setup.minter
-        .connect(setup.alice)
-        .mint(setup.lg.address);
+      await minter
+        .connect(accounts[1])
+        .mint(threeGauges[0]);
 
-      expect(await setup.token.balanceOf(setup.aliceAddress)).to.equal(
+      expect(await token.balanceOf(accounts[1].address)).to.equal(
         balance
       );
     });
 
     // Test mint without any deposit
-    it("test no deposit", async () => {
-      await setup.minter
-        .connect(setup.alice)
-        .mint(setup.lg.address);
-      expect(await setup.token.balanceOf(setup.aliceAddress)).to.equal(
-        setup.zero
+    it("test_no_deposit", async () => {
+      await minter
+        .connect(accounts[1])
+        .mint(threeGauges[0]);
+      expect(await token.balanceOf(accounts[1].address)).to.equal(
+        zero
       );
       expect(
-        await setup.minter.minted(
-          setup.aliceAddress,
-          setup.lg.address
+        await minter.minted(
+          accounts[1].address,
+          threeGauges[0]
         )
-      ).to.equal(setup.zero);
+      ).to.equal(zero);
     });
 
     // Test minting with the wrong gauge
-    it("test mint wrong gauge", async () => {
-      await setup.lg
-        .connect(setup.alice)
-        .deposit(setup.ten_to_the_18, setup.aliceAddress, false);
+    it("test_mint_wrong_gauge", async () => {
+      await gauges[0]
+        .connect(accounts[1])
+        .deposit(ten_to_the_18, accounts[1].address, false);
 
-      await ethers.provider.send("evm_increaseTime", [setup.MONTH.toNumber()]);
-      await setup.minter
-        .connect(setup.alice)
-        .mint(setup.gaugesAddress[1]);
+      await ethers.provider.send("evm_increaseTime", [month]);
+      await minter
+        .connect(accounts[1])
+        .mint(threeGauges[1]);
 
       //check
-      expect(await setup.token.balanceOf(setup.aliceAddress)).to.equal(
-        setup.zero
+      expect(await token.balanceOf(accounts[1].address)).to.equal(
+        zero
       );
       expect(
-        await setup.minter.minted(
-          setup.aliceAddress,
-          setup.lg.address
+        await minter.minted(
+          accounts[1].address,
+          threeGauges[0]
         )
-      ).to.equal(setup.zero);
+      ).to.equal(zero);
       expect(
-        await setup.minter.minted(
-          setup.aliceAddress,
-          setup.gaugesAddress[1]
+        await minter.minted(
+          accounts[1].address,
+          threeGauges[1]
         )
-      ).to.equal(setup.zero);
+      ).to.equal(zero);
     });
 
     // Test minting with an invalid gauge address
-    it("test mint not a gauge", async () => {
-      await expect(setup.minter.mint(setup.aliceAddress)).to.revertedWith(
+    it("test_mint_not_a_gauge", async () => {
+      await expect(minter.mint(accounts[1].address)).to.revertedWith(
         "dev: gauge is not added"
       );
     });
 
     // Test minting before inflation begins
-    it("test mint before inflation begins", async () => {
-      await setup.lg
-        .connect(setup.alice)
-        .deposit(setup.ten_to_the_18, setup.aliceAddress, false);
-      expect(await setup.token.miningEpoch()).to.equal(BigNumber.from("-1"));
-
-      await setup.minter
-        .connect(setup.alice)
-        .mint(setup.lg.address);
-      expect(await setup.token.balanceOf(setup.aliceAddress)).to.equal(
-        BigNumber.from("0")
-      );
-      expect(
-        await setup.minter.minted(
-          setup.aliceAddress,
-          setup.lg.address
-        )
-      ).to.equal(setup.zero);
+    it("test_mint_before_inflation_begins", async function () {
+      await gauges[0].connect(accounts[1]).deposit(ten_to_the_18, accounts[1].address, false);
+      const startEpochTime = await token.startEpochTime();
+      const currentTime = BigNumber.from((await ethers.provider.getBlock("latest")).timestamp);
+      const timeToSleep = startEpochTime.sub(currentTime).sub(5);
+      await ethers.provider.send("evm_increaseTime", [timeToSleep.toNumber()]);
+  
+      await minter.connect(accounts[1]).mint(threeGauges[0]);
+  
+      expect(await token.balanceOf(accounts[1].address)).to.equal(BigNumber.from(0));
+      expect(await minter.minted(accounts[1].address, threeGauges[0])).to.equal(BigNumber.from(0));
     });
 
     // Test mintMany function with multiple gauges
-    it("test mintMany function multiple gauges", async () => {
+    it("test_mintMany_function_multiple_gauges", async () => {
       //setup
-      await setup.lg
-        .connect(setup.alice)
-        .deposit(setup.ten_to_the_17, setup.aliceAddress, false);
-      await setup.gaugesContracts[1]
-        .connect(setup.alice)
-        .deposit(setup.ten_to_the_17, setup.aliceAddress, false);
-      await setup.gaugesContracts[2]
-        .connect(setup.alice)
-        .deposit(setup.ten_to_the_17, setup.aliceAddress, false);
+      await gauges[0]
+        .connect(accounts[1])
+        .deposit(ten_to_the_17, accounts[1].address, false);
+      await gauges[1]
+        .connect(accounts[1])
+        .deposit(ten_to_the_17, accounts[1].address, false);
+      await gauges[2]
+        .connect(accounts[1])
+        .deposit(ten_to_the_17, accounts[1].address, false);
 
-      await ethers.provider.send("evm_increaseTime", [setup.MONTH.toNumber()]);
+      await ethers.provider.send("evm_increaseTime", [month]);
 
       let addresses = [
-        setup.lg.address,
-        setup.gaugesAddress[1],
-        setup.gaugesAddress[2],
-        setup.ZERO_ADDRESS,
-        setup.ZERO_ADDRESS,
-        setup.ZERO_ADDRESS,
-        setup.ZERO_ADDRESS,
-        setup.ZERO_ADDRESS,
+        threeGauges[0],
+        threeGauges[1],
+        threeGauges[2],
+        ZERO_ADDRESS,
+        ZERO_ADDRESS,
+        ZERO_ADDRESS,
+        ZERO_ADDRESS,
+        ZERO_ADDRESS,
       ];
-      await setup.minter.connect(setup.alice).mintMany(addresses);
+      await minter.connect(accounts[1]).mintMany(addresses);
 
       //check
       let total_minted = BigNumber.from("0");
 
       for (let i = 0; i < 3; i++) {
-        let gauge = setup.gaugesContracts[i];
-        let minted = await setup.minter.minted(
-          setup.aliceAddress,
+        let gauge = gauges[i];
+        let minted = await minter.minted(
+          accounts[1].address,
           gauge.address
         );
         expect(minted).to.equal(
-          await gauge.integrateFraction(setup.aliceAddress)
+          await gauge.integrateFraction(accounts[1].address)
         );
         total_minted = total_minted.add(minted);
       }
 
-      expect(await setup.token.balanceOf(setup.aliceAddress)).to.equal(
+      expect(await token.balanceOf(accounts[1].address)).to.equal(
         total_minted
       );
     });
 
     // Test toggling of the mint approval function
-    it("test toggleApproveMint function", async () => {
-      await setup.minter
-        .connect(setup.alice)
-        .toggleApproveMint(setup.accountsAddress[2]);
+    it("test_toggleApproveMint_function", async () => {
+      await minter
+        .connect(accounts[1])
+        .toggleApproveMint(accounts[2].address);
       expect(
-        await setup.minter.allowedToMintFor(
-          setup.accountsAddress[2],
-          setup.aliceAddress
+        await minter.allowedToMintFor(
+          accounts[2].address,
+          accounts[1].address
         )
       ).to.equal(true);
 
-      await setup.minter
-        .connect(setup.alice)
-        .toggleApproveMint(setup.accountsAddress[2]);
+      await minter
+        .connect(accounts[1])
+        .toggleApproveMint(accounts[2].address);
       expect(
-        await setup.minter.allowedToMintFor(
-          setup.accountsAddress[2],
-          setup.aliceAddress
+        await minter.allowedToMintFor(
+          accounts[2].address,
+          accounts[1].address
         )
       ).to.equal(false);
     });
 
     // Test minting on behalf of another user
-    it("test mintFor function", async () => {
-      await setup.lg
-        .connect(setup.alice)
-        .deposit(setup.ten_to_the_17, setup.aliceAddress, false);
+    it("test_mintFor_function", async () => {
+      await gauges[0]
+        .connect(accounts[1])
+        .deposit(ten_to_the_17, accounts[1].address, false);
 
-      await ethers.provider.send("evm_increaseTime", [setup.MONTH.toNumber()]);
+      await ethers.provider.send("evm_increaseTime", [month]);
 
-      await setup.minter
-        .connect(setup.alice)
-        .toggleApproveMint(setup.accountsAddress[2]);
+      await minter
+        .connect(accounts[1])
+        .toggleApproveMint(accounts[2].address);
       expect(
-        await setup.minter.allowedToMintFor(
-          setup.accountsAddress[2],
-          setup.aliceAddress
+        await minter.allowedToMintFor(
+          accounts[2].address,
+          accounts[1].address
         )
       ).to.equal(true);
 
-      await setup.minter
-        .connect(setup.accounts[2])
-        .mintFor(setup.lg.address, setup.aliceAddress);
+      await minter
+        .connect(accounts[2])
+        .mintFor(threeGauges[0], accounts[1].address);
 
-      let expected = await setup.lg.integrateFraction(
-        setup.aliceAddress
+      let expected = await gauges[0].integrateFraction(
+        accounts[1].address
       );
       expect(expected.gt(BigNumber.from("0"))).to.be.equal(true);
-      expect(await setup.token.balanceOf(setup.aliceAddress)).to.equal(
+      expect(await token.balanceOf(accounts[1].address)).to.equal(
         expected
       );
       expect(
-        await setup.minter.minted(
-          setup.aliceAddress,
-          setup.lg.address
+        await minter.minted(
+          accounts[1].address,
+          threeGauges[0]
         )
       ).to.equal(expected);
     });
 
     // Test mintFor function when not approved
-    it("test mintForFail function", async () => {
-      await setup.lg
-        .connect(setup.alice)
-        .deposit(setup.ten_to_the_17, setup.aliceAddress, false);
+    it("test_mintForFail_function", async () => {
+      await gauges[0]
+        .connect(accounts[1])
+        .deposit(ten_to_the_17, accounts[1].address, false);
 
-      await ethers.provider.send("evm_increaseTime", [setup.MONTH.toNumber()]);
+      await ethers.provider.send("evm_increaseTime", [month]);
 
       expect(
-        await setup.minter.allowedToMintFor(
-          setup.accountsAddress[2],
-          setup.aliceAddress
+        await minter.allowedToMintFor(
+          accounts[2].address,
+          accounts[1].address
         )
       ).to.equal(false);
 
-      await setup.minter
-        .connect(setup.accounts[2])
-        .mintFor(setup.lg.address, setup.aliceAddress);
+      await minter
+        .connect(accounts[2])
+        .mintFor(threeGauges[0], accounts[1].address);
 
-      expect(await setup.token.balanceOf(setup.aliceAddress)).to.equal(0);
+      expect(await token.balanceOf(accounts[1].address)).to.equal(0);
       expect(
-        await setup.minter.minted(
-          setup.aliceAddress,
-          setup.lg.address
+        await minter.minted(
+          accounts[1].address,
+          threeGauges[0]
         )
       ).to.equal(0);
     });
