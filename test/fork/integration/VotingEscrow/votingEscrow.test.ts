@@ -526,8 +526,9 @@ describe("Voting Powers Test", function () {
   }
 
   async function showStats() {
+    const initialBlock = (await votingEscrow.pointHistory(0)).blk.toNumber();
     const latestBlock = await time.latestBlock();
-    for (let i = 2; i < latestBlock; i++) {
+    for (let i = initialBlock; i < latestBlock; i++) {
       let a = await votingEscrow.balanceOfAt(alice.address, `${i}`);
       let b = await votingEscrow.balanceOfAt(bob.address, `${i}`);
       console.log(`Block ${i}: a: ${a.toString()} b: ${b.toString()}`);

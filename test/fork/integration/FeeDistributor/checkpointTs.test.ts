@@ -10,6 +10,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 const DAY = 86400;
 const WEEK = DAY * 7;
+const MAX_EXAMPLES = 10;
 
 describe("FeeDistributor", function () {
   let accounts: SignerWithAddress[];
@@ -70,10 +71,10 @@ describe("FeeDistributor", function () {
   }
 
   it("test checkpoint total supply", async function () {
-    const stAmount = generateUniqueRandomNumbers(10, 1 * 1e4, 100 * 1e4);
-    const stLocktime = generateUniqueRandomNumbers(10, 1, 52);
-    const stSleep = generateUniqueRandomNumbers(10, 1, 30);
-    for (let i = 0; i < 10; i++) {
+    const stAmount = generateUniqueRandomNumbers(MAX_EXAMPLES, 1e4, 100 * 1e4);
+    const stLocktime = generateUniqueRandomNumbers(MAX_EXAMPLES, 1, 52);
+    const stSleep = generateUniqueRandomNumbers(MAX_EXAMPLES, 1, 30);
+    for (let i = 0; i < MAX_EXAMPLES; i++) {
       await token
         .connect(accounts[i])
         .approve(votingEscrow.address, ethers.constants.MaxUint256);
@@ -83,7 +84,7 @@ describe("FeeDistributor", function () {
     }
 
     let finalLock = 0;
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < MAX_EXAMPLES; i++) {
       const sleepTime = Math.floor(stSleep[i] * 86400);
       await ethers.provider.send("evm_increaseTime", [sleepTime]);
       const lockTime = (await time.latest()) + sleepTime + WEEK * stLocktime[i];

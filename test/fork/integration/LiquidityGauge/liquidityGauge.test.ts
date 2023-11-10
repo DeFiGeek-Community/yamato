@@ -8,14 +8,11 @@ describe("LiquidityGauge", function () {
   let evm: EVMUtils;
   let snapshotId: string;
 
-  before(async () => {
-    setup = new TestSetup();
-    await setup.setup();
-  });
-
   beforeEach(async () => {
     evm = new EVMUtils();
     snapshotId = await evm.snapshot();
+    setup = new TestSetup();
+    await setup.setup();
   });
 
   afterEach(async () => {
