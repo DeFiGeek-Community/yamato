@@ -1,116 +1,108 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { BigNumber } from "ethers";
-import { EVMUtils, TestSetup } from "../../helper";
+import {
+  takeSnapshot,
+  SnapshotRestorer,
+} from "@nomicfoundation/hardhat-network-helpers";
+import { deployContracts } from "../../helper";
+import Constants from "../../Constants";
 
 describe("GaugeController", function () {
-  let setup: TestSetup;
-  let evm: EVMUtils;
-  let snapshotId: string;
+  let accounts;
+  let gaugeController;
+  let threeGauges;
+  let votingEscrow;
+  let token;
 
-  beforeEach(async () => {
-    evm = new EVMUtils();
-    snapshotId = await evm.snapshot();
-    setup = new TestSetup();
-    await setup.setup();
-    await setup.addType();
-    await setup.addGaugeZero();
-    await setup.createLock();
+  let snapshot: SnapshotRestorer;
+
+  const TYPE_WEIGHTS = Constants.TYPE_WEIGHTS;
+  const ten_to_the_18 = Constants.ten_to_the_18;
+  const ten_to_the_24 = Constants.ten_to_the_24;
+  const year = Constants.year;
+  const day = Constants.day;
+
+  beforeEach(async function () {
+    snapshot = await takeSnapshot();
+    accounts = await ethers.getSigners();
+    ({ gaugeController, threeGauges, votingEscrow, token } =
+      await deployContracts());
+
+    await gaugeController.addType("none", TYPE_WEIGHTS[0]);
+    await gaugeController.addType("Insurance", ten_to_the_18);
+    await gaugeController.addGauge(threeGauges[0], 0, 0);
+    await gaugeController.addGauge(threeGauges[1], 1, 0);
+
+    await token.approve(votingEscrow.address, ten_to_the_24);
+    await votingEscrow.createLock(
+      ten_to_the_24,
+      (await ethers.provider.getBlock("latest")).timestamp + year
+    );
   });
 
   afterEach(async () => {
-    await evm.restore(snapshotId);
+    await snapshot.restore();
   });
 
-  describe("test_vote_weight_unitary", function () {
-    it("test_no_immediate_effect_on_weight", async () => {
-      await setup.gaugeController.voteForGaugeWeights(
-        setup.gaugesAddress[0],
-        10000
-      );
-      expect(
-        await setup.gaugeController.gaugeRelativeWeight(
-          setup.gaugesAddress[0],
-          BigNumber.from((await ethers.provider.getBlock("latest")).timestamp)
-        )
-      ).to.equal(BigNumber.from("0"));
-    });
-
-    it("test_remove_vote_no_immediate_effect", async () => {
-      // ゲージに対して投票を行った後、時間を進めてそのゲージのチェックポイントを取ります。
-      // その後、投票を取り消して、投票の取り消しは即座には影響しないことを確認します。
-      await setup.gaugeController.voteForGaugeWeights(
-        setup.gaugesAddress[0],
-        10000
-      );
-
-      await ethers.provider.send("evm_increaseTime", [
-        setup.DAY.mul("10").toNumber(),
-      ]);
-
-      await setup.gaugeController.checkpointGauge(setup.gaugesAddress[0]);
-      await setup.gaugeController.voteForGaugeWeights(
-        setup.gaugesAddress[0],
+  describe("GaugeController voteWeightUnitary", function () {
+    it("test_no_immediate_effect_on_weight", async function () {
+      await gaugeController.voteForGaugeWeights(threeGauges[0], 10000);
+      const weight = await gaugeController.gaugeRelativeWeight(
+        threeGauges[0],
         0
       );
-
-      expect(
-        await setup.gaugeController.gaugeRelativeWeight(
-          setup.gaugesAddress[0],
-          BigNumber.from((await ethers.provider.getBlock("latest")).timestamp)
-        )
-      ).to.equal(setup.ten_to_the_18);
+      expect(weight).to.equal(0);
     });
 
     it("test_effect_on_following_period", async () => {
-      // ゲージに対して投票を行い、一週間時間を進めた後にそのゲージの重みが変わっていることを確認します。
-      await setup.gaugeController.voteForGaugeWeights(
-        setup.gaugesAddress[0],
-        10000
-      );
+      await gaugeController.voteForGaugeWeights(threeGauges[0], 10000);
 
-      await ethers.provider.send("evm_increaseTime", [setup.WEEK.toNumber()]);
-      await setup.gaugeController.checkpointGauge(setup.gaugesAddress[0]);
+      await ethers.provider.send("evm_increaseTime", [day * 7]);
+
+      await gaugeController.checkpointGauge(threeGauges[0]);
       expect(
-        await setup.gaugeController.gaugeRelativeWeight(
-          setup.gaugesAddress[0],
-          BigNumber.from((await ethers.provider.getBlock("latest")).timestamp)
+        await gaugeController.gaugeRelativeWeight(
+          threeGauges[0],
+          (
+            await ethers.provider.getBlock("latest")
+          ).timestamp
         )
-      ).to.equal(setup.ten_to_the_18);
+      ).to.equal(ten_to_the_18);
     });
 
-    it("test_remove_vote_means_no_weight", async () => {
-      // ゲージに対して投票を行い、時間を進めてそのゲージのチェックポイントを取ります。
-      // 投票を取り消し、さらに一週間時間を進めた後、そのゲージの重みが0になっていることを確認します。
-      await setup.gaugeController.voteForGaugeWeights(
-        setup.gaugesAddress[0],
-        10000
-      );
-      await ethers.provider.send("evm_increaseTime", [
-        setup.DAY.mul("10").toNumber(),
-      ]);
-      await setup.gaugeController.checkpointGauge(setup.gaugesAddress[0]);
+    it("test_remove_vote_no_immediate_effect", async function () {
+      await gaugeController.voteForGaugeWeights(threeGauges[0], 10000);
+
+      await ethers.provider.send("evm_increaseTime", [day * 10]);
+
+      await gaugeController.checkpointGauge(threeGauges[0]);
+      await gaugeController.voteForGaugeWeights(threeGauges[0], 0);
 
       expect(
-        await setup.gaugeController.gaugeRelativeWeight(
-          setup.gaugesAddress[0],
-          BigNumber.from((await ethers.provider.getBlock("latest")).timestamp)
-        )
-      ).to.equal(setup.ten_to_the_18);
+        await gaugeController.gaugeRelativeWeight(threeGauges[0], 0)
+      ).to.equal(ten_to_the_18);
+    });
 
-      await setup.gaugeController.voteForGaugeWeights(
-        setup.gaugesAddress[0],
-        0
-      );
-      await ethers.provider.send("evm_increaseTime", [setup.WEEK.toNumber()]);
-      await setup.gaugeController.checkpointGauge(setup.gaugesAddress[0]);
+    it("test_remove_vote_means_no_weight", async function () {
+      await gaugeController.voteForGaugeWeights(threeGauges[0], 10000);
 
+      await ethers.provider.send("evm_increaseTime", [day * 10]);
+      await ethers.provider.send("evm_mine");
+
+      await gaugeController.checkpointGauge(threeGauges[0]);
       expect(
-        await setup.gaugeController.gaugeRelativeWeight(
-          setup.gaugesAddress[0],
-          BigNumber.from((await ethers.provider.getBlock("latest")).timestamp)
-        )
-      ).to.equal(setup.zero);
+        await gaugeController.gaugeRelativeWeight(threeGauges[0], 0)
+      ).to.equal(ethers.utils.parseUnits("1", 18));
+
+      await gaugeController.voteForGaugeWeights(threeGauges[0], 0);
+
+      await ethers.provider.send("evm_increaseTime", [day * 7]);
+      await ethers.provider.send("evm_mine");
+
+      await gaugeController.checkpointGauge(threeGauges[0]);
+      expect(
+        await gaugeController.gaugeRelativeWeight(threeGauges[0], 0)
+      ).to.equal(0);
     });
   });
 });
