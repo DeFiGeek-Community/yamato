@@ -40,10 +40,10 @@ contract VotingEscrow is ReentrancyGuard {
         uint256 end;
     }
 
-    int128 constant DEPOSIT_FOR_TYPE = 0;
-    int128 constant CREATE_LOCK_TYPE = 1;
-    int128 constant INCREASE_LOCK_AMOUNT = 2;
-    int128 constant INCREASE_UNLOCK_TIME = 3;
+    uint128 private constant DEPOSIT_FOR_TYPE = 0;
+    uint128 private constant CREATE_LOCK_TYPE = 1;
+    uint128 private constant INCREASE_LOCK_AMOUNT = 2;
+    uint128 private constant INCREASE_UNLOCK_TIME = 3;
 
     event CommitOwnership(address admin);
     event ApplyOwnership(address admin);
@@ -51,7 +51,7 @@ contract VotingEscrow is ReentrancyGuard {
         address indexed provider,
         uint256 value,
         uint256 indexed locktime,
-        int128 _type,
+        uint128 _type,
         uint256 ts
     );
     event Withdraw(address indexed provider, uint256 value, uint256 ts);
@@ -232,7 +232,7 @@ contract VotingEscrow is ReentrancyGuard {
                 }
                 _uOld.bias =
                     _uOld.slope *
-                    int128(uint128(oldLocked_.end) - uint128(block.timestamp));
+                    int128(uint128(oldLocked_.end - block.timestamp));
             }
 
             if (newLocked_.end > block.timestamp && newLocked_.amount > 0) {
@@ -243,7 +243,7 @@ contract VotingEscrow is ReentrancyGuard {
                 }
                 _uNew.bias =
                     _uNew.slope *
-                    int128(uint128(newLocked_.end) - uint128(block.timestamp));
+                    int128(uint128(newLocked_.end - block.timestamp));
             }
 
             // Read values of scheduled changes in the slope
@@ -415,7 +415,7 @@ contract VotingEscrow is ReentrancyGuard {
         uint256 value_,
         uint256 unlockTime_,
         LockedBalance memory lockedBalance_,
-        int128 type_
+        uint128 type_
     ) internal {
         LockedBalance memory _locked = LockedBalance(
             lockedBalance_.amount,
