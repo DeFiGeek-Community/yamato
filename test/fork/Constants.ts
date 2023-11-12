@@ -33,6 +33,7 @@ class Constants {
   static ten_to_the_19 = BigNumber.from("10000000000000000000");
   static ten_to_the_18 = BigNumber.from("1000000000000000000");
   static ten_to_the_17 = BigNumber.from("100000000000000000");
+  static ten_to_the_16 = BigNumber.from("10000000000000000");
   static ten_to_the_9 = BigNumber.from("1000000000");
   static a = BigNumber.from("2");
   static b = BigNumber.from("5");

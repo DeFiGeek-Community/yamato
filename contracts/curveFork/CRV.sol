@@ -85,7 +85,7 @@ contract CRV is ERC20 {
     // @dev Callable by any address, but only once per epoch
     //      Total supply becomes slightly larger if(this function is called late
     function updateMiningParameters() external {
-        require(block.timestamp >= startEpochTime + RATE_REDUCTION_TIME); // dev: too soon!
+        require(block.timestamp >= startEpochTime + RATE_REDUCTION_TIME,"dev: too soon!"); // dev: too soon!
         _updateMiningParameters();
     }
 
@@ -132,7 +132,7 @@ contract CRV is ERC20 {
         uint256 start,
         uint256 end
     ) external view returns (uint256) {
-        require(start <= end); // dev: start > end
+        require(start <= end, "dev: start > end"); // dev: start > end
         uint256 to_mint = 0;
         uint256 current_epoch_time = startEpochTime;
         uint256 current_rate = rate;
@@ -145,7 +145,7 @@ contract CRV is ERC20 {
                 RATE_REDUCTION_COEFFICIENT;
         }
 
-        require(end <= current_epoch_time + RATE_REDUCTION_TIME); // dev: too far in future
+        require(end <= current_epoch_time + RATE_REDUCTION_TIME, "dev: too far in future"); // dev: too far in future
 
         // Curve will not work in 1000 years. Darn!
         for (uint i; i < 999; ) {
@@ -171,7 +171,7 @@ contract CRV is ERC20 {
             current_rate =
                 (current_rate * RATE_REDUCTION_COEFFICIENT) /
                 RATE_DENOMINATOR; // double-division with rounding made rate a bit less => good
-            require(current_rate <= INITIAL_RATE); // This should never happen
+            require(current_rate <= INITIAL_RATE, "This should never happen"); // This should never happen
 
             unchecked {
                 i++;
@@ -184,9 +184,8 @@ contract CRV is ERC20 {
     // @notice Set the minter address
     // @dev Only callable once, when minter has not yet been set
     // @param _minter Address of the minter
-    function setMinter(address _minter) external {
-        require(msg.sender == admin); // dev: admin only
-        require(minter == address(0)); // dev: can set the minter only once, at creation
+    function setMinter(address _minter) external onlyAdmin() {
+        require(_minter != address(0), "dev: can set the minter only once, at creation"); // dev: can set the minter only once, at creation
         minter = _minter;
         emit SetMinter(_minter);
     }
@@ -194,8 +193,7 @@ contract CRV is ERC20 {
     // @notice Set the new admin.
     // @dev After all is set up, admin only can change the token name
     // @param _admin New admin address
-    function setAdmin(address _admin) external {
-        require(msg.sender == admin); // dev: admin only
+    function setAdmin(address _admin) external onlyAdmin() {
         admin = _admin;
         emit SetAdmin(_admin);
     }
@@ -206,15 +204,30 @@ contract CRV is ERC20 {
     // @param _value The amount that will be created
     // @return bool success
     function mint(address _to, uint256 _value) external returns (bool) {
-        require(msg.sender == minter); // dev: minter only
-        require(_to != address(0)); // dev: zero address
+        require(msg.sender == minter, "dev: minter only"); // dev: minter only
+        require(_to != address(0), "dev: zero address"); // dev: zero address
 
         if (block.timestamp >= startEpochTime + RATE_REDUCTION_TIME) {
             _updateMiningParameters();
         }
+        require(totalSupply() + _value <= _availableSupply(), "dev: exceeds allowable mint amount");
 
         _mint(_to, _value);
 
         return true;
+    }
+
+    // @notice Burn `_value` tokens belonging to `msg.sender`
+    // @dev Emits a Transfer event with a destination of 0x00
+    // @param _value The amount that will be burned
+    // @return bool success
+    function burn(uint256 _value) external returns (bool) {
+        _burn(msg.sender, _value);
+        return true;
+    }
+
+    modifier onlyAdmin() {
+        require(admin == msg.sender, "dev: admin only");
+        _;
     }
 }
