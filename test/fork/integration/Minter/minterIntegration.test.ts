@@ -13,7 +13,7 @@ const WEEK = 86400 * 7;
 const MONTH = 86400 * 30;
 const W = BigNumber.from(10).pow(18);
 
-describe("Liquidity Gauge Tests", function () {
+describe("Minter integration", function () {
   let admin, bob, charlie, dan: SignerWithAddress;
   let gaugeController: Contract;
   let threeGauges: Contract[3] = [];

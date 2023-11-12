@@ -14,7 +14,7 @@ const SCALE = BigNumber.from((1e20).toString());
 const WEEK = 86400 * 7;
 const MONTH = 86400 * 30;
 
-describe("Liquidity Gauge Tests", function () {
+describe("Minter components", function () {
   let accounts: SignerWithAddress[];
   let gaugeController: Contract;
   let liquidityGauge: Contract;
