@@ -41,8 +41,8 @@ contract CRV is ERC20 {
     uint256 startEpochSupply;
 
     constructor() ERC20("Curve", "CRV") {
-        uint256 init_supply = INITIAL_SUPPLY * 10 ** decimals();
-        _mint(msg.sender, init_supply);
+        uint256 initSupply = INITIAL_SUPPLY * 10 ** decimals();
+        _mint(msg.sender, initSupply);
 
         admin = msg.sender;
 
@@ -52,7 +52,7 @@ contract CRV is ERC20 {
             RATE_REDUCTION_TIME;
         miningEpoch = -1;
         rate = 0;
-        startEpochSupply = init_supply;
+        startEpochSupply = initSupply;
     }
 
     // @dev Update mining rate and supply at the start of the epoch
@@ -133,47 +133,47 @@ contract CRV is ERC20 {
     ) external view returns (uint256) {
         require(start <= end, "dev: start > end"); // dev: start > end
         uint256 to_mint = 0;
-        uint256 current_epoch_time = startEpochTime;
-        uint256 current_rate = rate;
+        uint256 currentEpochTime = startEpochTime;
+        uint256 currentRate = rate;
 
         // Special case if(end is in future (not yet minted) epoch
-        if (end > current_epoch_time + RATE_REDUCTION_TIME) {
-            current_epoch_time += RATE_REDUCTION_TIME;
-            current_rate =
-                (current_rate * RATE_DENOMINATOR) /
+        if (end > currentEpochTime + RATE_REDUCTION_TIME) {
+            currentEpochTime += RATE_REDUCTION_TIME;
+            currentRate =
+                (currentRate * RATE_DENOMINATOR) /
                 RATE_REDUCTION_COEFFICIENT;
         }
 
         require(
-            end <= current_epoch_time + RATE_REDUCTION_TIME,
+            end <= currentEpochTime + RATE_REDUCTION_TIME,
             "dev: too far in future"
         ); // dev: too far in future
 
         // Curve will not work in 1000 years. Darn!
         for (uint i; i < 999; ) {
-            if (end >= current_epoch_time) {
-                uint256 current_end = end;
-                if (current_end > current_epoch_time + RATE_REDUCTION_TIME) {
-                    current_end = current_epoch_time + RATE_REDUCTION_TIME;
+            if (end >= currentEpochTime) {
+                uint256 currentEnd = end;
+                if (currentEnd > currentEpochTime + RATE_REDUCTION_TIME) {
+                    currentEnd = currentEpochTime + RATE_REDUCTION_TIME;
                 }
 
-                uint256 current_start = start;
-                if (current_start >= current_epoch_time + RATE_REDUCTION_TIME) {
+                uint256 currentStart = start;
+                if (currentStart >= currentEpochTime + RATE_REDUCTION_TIME) {
                     break; // We should never get here but what if...
-                } else if (current_start < current_epoch_time) {
-                    current_start = current_epoch_time;
+                } else if (currentStart < currentEpochTime) {
+                    currentStart = currentEpochTime;
                 }
-                to_mint += current_rate * (current_end - current_start);
-                if (start >= current_epoch_time) {
+                to_mint += currentRate * (currentEnd - currentStart);
+                if (start >= currentEpochTime) {
                     break;
                 }
             }
 
-            current_epoch_time -= RATE_REDUCTION_TIME;
-            current_rate =
-                (current_rate * RATE_REDUCTION_COEFFICIENT) /
+            currentEpochTime -= RATE_REDUCTION_TIME;
+            currentRate =
+                (currentRate * RATE_REDUCTION_COEFFICIENT) /
                 RATE_DENOMINATOR; // double-division with rounding made rate a bit less => good
-            require(current_rate <= INITIAL_RATE, "This should never happen"); // This should never happen
+            require(currentRate <= INITIAL_RATE, "This should never happen"); // This should never happen
 
             unchecked {
                 i++;
