@@ -22,10 +22,7 @@ contract Minter is ReentrancyGuard {
     // minter -> user -> can mint?
     mapping(address => mapping(address => bool)) public allowedToMintFor; // A can mint for B if [A => B => true].
 
-    constructor(
-        address _token,
-        address _controller
-    ) {
+    constructor(address _token, address _controller) {
         token = _token;
         controller = _controller;
     }
@@ -37,9 +34,7 @@ contract Minter is ReentrancyGuard {
         );
 
         ILiquidityGauge(gaugeAddr_).userCheckpoint(for_);
-        uint256 totalMint = ILiquidityGauge(gaugeAddr_).integrateFraction(
-            for_
-        );
+        uint256 totalMint = ILiquidityGauge(gaugeAddr_).integrateFraction(for_);
         uint256 _toMint = totalMint - minted[for_][gaugeAddr_];
 
         if (_toMint != 0) {
@@ -96,5 +91,4 @@ contract Minter is ReentrancyGuard {
             mintingUser_
         ][msg.sender];
     }
-
 }

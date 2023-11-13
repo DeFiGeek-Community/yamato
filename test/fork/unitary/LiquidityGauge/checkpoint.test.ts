@@ -1,46 +1,50 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { BigNumber } from "ethers";
-import { EVMUtils, TestSetup } from "../../helper";
-
-
-const YEAR = 86400 * 365;
+import {
+  takeSnapshot,
+  SnapshotRestorer,
+} from "@nomicfoundation/hardhat-network-helpers";
+import { Contract } from "ethers";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { deployContracts } from "../../Helper";
+import Constants from "../../Constants";
 
 describe("LiquidityGauge checkpoint", function () {
-  let setup: TestSetup;
-  let evm: EVMUtils;
-  let snapshotId: string;
+  let accounts: SignerWithAddress;
+  let gauges: Contract[];
 
-  beforeEach(async () => {
-    evm = new EVMUtils();
-    snapshotId = await evm.snapshot();
-    setup = new TestSetup();
-    await setup.setup();
+  let snapshot: SnapshotRestorer;
+  const year = Constants.year;
+
+  beforeEach(async function () {
+    snapshot = await takeSnapshot();
+    accounts = await ethers.getSigners();
+    ({ gauges } = await deployContracts());
   });
 
   afterEach(async () => {
-    await evm.restore(snapshotId);
+    await snapshot.restore();
   });
 
   it("test_user_checkpoint", async function () {
     // Assuming `userCheckpoint` is a function on your contract
-    await setup.lg.connect(setup.alice).userCheckpoint(setup.aliceAddress);
+    await gauges[0].connect(accounts[1]).userCheckpoint(accounts[1].address);
   });
 
   it("test_user_checkpoint_new_period", async function () {
-    await setup.lg.connect(setup.alice).userCheckpoint(setup.aliceAddress);
-    
-    // Increase the time on the blockchain
-    await ethers.provider.send('evm_increaseTime', [(YEAR * 1.1)]);
-    await ethers.provider.send('evm_mine'); // this one will actually mine a new block
+    await gauges[0].connect(accounts[1]).userCheckpoint(accounts[1].address);
 
-    await setup.lg.connect(setup.alice).userCheckpoint(setup.aliceAddress);
+    // Increase the time on the blockchain
+    await ethers.provider.send("evm_increaseTime", [year * 1.1]);
+    await ethers.provider.send("evm_mine"); // this one will actually mine a new block
+
+    await gauges[0].connect(accounts[1]).userCheckpoint(accounts[1].address);
   });
 
   it("test_user_checkpoint_wrong_account", async function () {
     // Expect the transaction to be reverted with the specified error message
     await expect(
-      setup.lg.connect(setup.alice).userCheckpoint(setup.bobAddress)
+      gauges[0].connect(accounts[1]).userCheckpoint(accounts[2].address)
     ).to.be.revertedWith("dev: unauthorized");
   });
 });

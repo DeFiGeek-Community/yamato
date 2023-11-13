@@ -588,10 +588,7 @@ contract VotingEscrow is ReentrancyGuard {
 
         _locked.end = 0;
         _locked.amount = 0;
-        locked[msg.sender] = LockedBalance(
-            _locked.amount,
-            _locked.end
-        );
+        locked[msg.sender] = LockedBalance(_locked.amount, _locked.end);
         uint256 _supplyBefore = supply;
         supply = _supplyBefore - _value;
 
@@ -740,7 +737,7 @@ contract VotingEscrow is ReentrancyGuard {
 
         uint256 _blockTime = _point0.ts;
         if (_dBlock != 0) {
-            _blockTime += _dt * (block_ - _point0.blk) / _dBlock;
+            _blockTime += (_dt * (block_ - _point0.blk)) / _dBlock;
         }
 
         _upoint.bias -=

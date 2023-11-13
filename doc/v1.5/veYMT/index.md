@@ -2,8 +2,8 @@
 
 ## 概要
 
-YMT トークンをロックし、移転不可のveYMT トークンを発行する。
-ロック期間は最大4年間、最小単位は1週間で、veYMTはロック後の時間経過により線形に減衰する。1YMTを4年間ロックすると1veYMTが発行される。
+YMT トークンをロックし、移転不可の veYMT トークンを発行する。
+ロック期間は最大 4 年間、最小単位は 1 週間で、veYMT はロック後の時間経過により線形に減衰する。1YMT を 4 年間ロックすると 1veYMT が発行される。
 
 #### 参考
 
@@ -86,11 +86,11 @@ veYMT のある時点での状態を格納するための構造体
 
 ### `point_history: public(Point[])`
 
-veYMTのグローバルな状態を epoch ごとに記録する配列
+veYMT のグローバルな状態を epoch ごとに記録する配列
 
 ### `user_point_history: public(address => Point[])`
 
-veYMTのユーザごとの状態を user epoch ごとに記録する配列
+veYMT のユーザごとの状態を user epoch ごとに記録する配列
 
 ### `user_point_epoch: public(address => uint256)`
 
@@ -102,11 +102,11 @@ veYMTのユーザごとの状態を user epoch ごとに記録する配列
 
 ### `controller: public(address)`
 
-Aragon互換性のため
+Aragon 互換性のため
 
 ### `transfersEnabled: public(bool)`
 
-Aragon互換性のため
+Aragon 互換性のため
 
 ### `name: public(string)`
 
@@ -134,7 +134,7 @@ The goal is to prevent tokenizing the escrow
 Checker for whitelisted (smart contract) wallets which are allowed to deposit
 The goal is to prevent tokenizing the escrow
 
-CurveのVotingEscrowでは現在下記コントラクトが登録されている
+Curve の VotingEscrow では現在下記コントラクトが登録されている
 https://etherscan.io/address/0xca719728Ef172d0961768581fdF35CB116e0B7a4#readContract
 
 ### `admin: public(address)`
@@ -151,16 +151,16 @@ https://etherscan.io/address/0xca719728Ef172d0961768581fdF35CB116e0B7a4#readCont
 
 初期化
 
-- adminにmsg.senderを設定
-- tokenにtoken_addrを設定
-- point_history[0].blkにblock.numberを設定
-- point_history[0].tsにblock.timestampを設定
-- controllerにmsg.senderを設定
-- transfersEnabledにTrueを設定
-- decimalsにtokenのdecimalsと同じ値を設定
-- nameに\_nameを設定
-- symbolに\_symbolを設定
-- versionに\_versionを設定
+- admin に msg.sender を設定
+- token に token_addr を設定
+- point_history[0].blk に block.number を設定
+- point_history[0].ts に block.timestamp を設定
+- controller に msg.sender を設定
+- transfersEnabled に True を設定
+- decimals に token の decimals と同じ値を設定
+- name に\_name を設定
+- symbol に\_symbol を設定
+- version に\_version を設定
 
 ### `commit_transfer_ownership(addr: address) external`
 
@@ -211,7 +211,7 @@ https://etherscan.io/address/0xca719728Ef172d0961768581fdF35CB116e0B7a4#readCont
     - integrate_checkpoint_of
     - integrate_fraction
 - ポイント履歴の最後の時点から 最大 255 週分の履歴を作成する。255 週以上の期間に渡って履歴がない場合(=ユーザ操作がない場合）は正しい計算ができなくなる
-- integrate_inv_supplyを更新する
+- integrate_inv_supply を更新する
 
 ### `_deposit_for(_addr: address, _value: uint256, unlock_time: uint256, locked_balance: LockedBalance, type: int128) internal`
 
@@ -249,28 +249,28 @@ https://etherscan.io/address/0xca719728Ef172d0961768581fdF35CB116e0B7a4#readCont
 
 ### `balanceOf(addr: address, _t: uint256 = block.timestamp) -> uint256 external view`
 
-- 指定したアドレスの指定したタイムスタンプ時点でのveYMT残高を返す
+- 指定したアドレスの指定したタイムスタンプ時点での veYMT 残高を返す
 - \_t が最後に記録されたユーザのポイント履歴より前の場合は失敗する
 
 ### `balanceOfAt(addr: address, _block: uint256) -> uint256 external view`
 
-- 指定したアドレスの指定したブロック高時点でのveYMT残高を返す
+- 指定したアドレスの指定したブロック高時点での veYMT 残高を返す
 
 ### `supply_at(point: Point, t: uint256) -> uint256 internal view`
 
-- 指定したポイントを起点に指定したタイムスタンプ時点での 総veYMT残高を返す
+- 指定したポイントを起点に指定したタイムスタンプ時点での 総 veYMT 残高を返す
 - 255 週以上ポイントが記録されていない状況の場合は正しい計算ができなくなる
 
 ### `totalSupply(t: uint256 = block.timestamp) -> uint256 external view`
 
-- 最後に記録されたポイントを起点に、指定したタイムスタンプ時点の総veYMT残高を返す
+- 最後に記録されたポイントを起点に、指定したタイムスタンプ時点の総 veYMT 残高を返す
 
 ### `totalSupplyAt(_block: uint256) -> uint256 external view`
 
-- 指定したブロック高時点での総veYMT残高を返す
+- 指定したブロック高時点での総 veYMT 残高を返す
 
 ### `changeController(_newController: address) external`
 
 - controller のみ
 - controller を変更する
-- Aragon互換性のためのダミー関数
+- Aragon 互換性のためのダミー関数

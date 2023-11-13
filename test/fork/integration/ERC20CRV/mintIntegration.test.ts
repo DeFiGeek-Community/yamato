@@ -4,18 +4,20 @@ import {
   takeSnapshot,
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
+import { Contract } from "ethers";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { BigNumber } from "ethers";
 
 // Assuming you have a helper function to increase blockchain time
 async function increaseTime(duration: number) {
-  await ethers.provider.send('evm_increaseTime', [duration]);
-  await ethers.provider.send('evm_mine', []);
+  await ethers.provider.send("evm_increaseTime", [duration]);
+  await ethers.provider.send("evm_mine", []);
 }
 
 const YEAR = 365 * 24 * 60 * 60; // seconds in a year
 
 describe("ERC20CRV", function () {
-  let accounts: Signer[];
+  let accounts: SignerWithAddress[];
   let token: Contract;
   let snapshot: SnapshotRestorer;
 
@@ -43,7 +45,9 @@ describe("ERC20CRV", function () {
 
       await increaseTime(duration);
 
-      const currentTime = BigNumber.from((await ethers.provider.getBlock('latest')).timestamp);
+      const currentTime = BigNumber.from(
+        (await ethers.provider.getBlock("latest")).timestamp
+      );
       const amount = currentTime.sub(creationTime).mul(rate);
       await token.mint(accounts[1].address, amount);
 
@@ -59,9 +63,13 @@ describe("ERC20CRV", function () {
 
       await increaseTime(duration);
 
-      const currentTime = BigNumber.from((await ethers.provider.getBlock('latest')).timestamp);
+      const currentTime = BigNumber.from(
+        (await ethers.provider.getBlock("latest")).timestamp
+      );
       const amount = currentTime.sub(creationTime).add(2).mul(rate);
-      await expect(token.mint(accounts[1].address, amount)).to.be.revertedWith("dev: exceeds allowable mint amount");
+      await expect(token.mint(accounts[1].address, amount)).to.be.revertedWith(
+        "dev: exceeds allowable mint amount"
+      );
     });
 
     it("should mint multiple times correctly", async function () {
@@ -75,7 +83,10 @@ describe("ERC20CRV", function () {
       for (const time of durations) {
         await increaseTime(time);
 
-        if ((await ethers.provider.getBlock('latest')).timestamp - epochStart > YEAR) {
+        if (
+          (await ethers.provider.getBlock("latest")).timestamp - epochStart >
+          YEAR
+        ) {
           await token.updateMiningParameters();
           epochStart = await token.startEpochTime();
         }

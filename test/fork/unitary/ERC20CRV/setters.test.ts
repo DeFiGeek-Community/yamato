@@ -4,19 +4,13 @@ import {
   takeSnapshot,
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
-import { BigNumber, Contract } from "ethers";
-import { deployContracts } from "../../helper";
-import Constants from "../../Constants";
+import { Contract } from "ethers";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 describe("ERC20CRV", function () {
-  let accounts: Signer[];
+  let accounts: SignerWithAddress[];
   let token: Contract;
   let snapshot: SnapshotRestorer;
-
-  const WEEK = Constants.WEEK;
-  const week = Constants.week;
-  const YEAR = Constants.YEAR;
-  const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
   beforeEach(async function () {
     snapshot = await takeSnapshot();
@@ -31,11 +25,15 @@ describe("ERC20CRV", function () {
 
   describe("ERC20CRV Setters", function () {
     it("should revert when non-admin tries to set minter", async function () {
-      await expect(token.connect(accounts[1]).setMinter(accounts[2].address)).to.be.revertedWith("dev: admin only");
+      await expect(
+        token.connect(accounts[1]).setMinter(accounts[2].address)
+      ).to.be.revertedWith("dev: admin only");
     });
 
     it("should revert when non-admin tries to set admin", async function () {
-      await expect(token.connect(accounts[1]).setAdmin(accounts[2].address)).to.be.revertedWith("dev: admin only");
+      await expect(
+        token.connect(accounts[1]).setAdmin(accounts[2].address)
+      ).to.be.revertedWith("dev: admin only");
     });
 
     it("should allow admin to set minter", async function () {

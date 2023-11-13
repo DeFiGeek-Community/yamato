@@ -9,7 +9,7 @@ class Constants {
   static day = 86400;
   static week = 86400 * 7;
   static month = 86400 * 30;
-  static year = 86400 * 265;
+  static year = 86400 * 365;
 
   static TYPE_WEIGHTS: BigNumber[] = [
     BigNumber.from(5).mul(BigNumber.from(10).pow(17)),
@@ -46,16 +46,6 @@ class Constants {
     BigNumber.from("1"),
     BigNumber.from("1"),
     BigNumber.from("2"),
-  ];
-
-  static TYPE_WEIGHTS = [
-    Constants.ten_to_the_17.mul(Constants.b),
-    Constants.ten_to_the_18.mul(Constants.a),
-  ];
-  static GAUGE_WEIGHTS = [
-    Constants.ten_to_the_18.mul(Constants.a),
-    Constants.ten_to_the_18,
-    Constants.ten_to_the_17.mul(Constants.b),
   ];
 }
 

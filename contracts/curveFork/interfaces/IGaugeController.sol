@@ -11,10 +11,14 @@ interface IGaugeController {
 
     function addType(string memory name_, uint256 weight_) external;
 
-    function addGauge(address addr_, int128 gaugeType_, uint256 weight_) external;
+    function addGauge(
+        address addr_,
+        int128 gaugeType_,
+        uint256 weight_
+    ) external;
 
-    function gaugeRelativeWeight(address addr, uint256 time)
-        external
-        view
-        returns (uint256);
+    function gaugeRelativeWeight(
+        address addr,
+        uint256 time
+    ) external view returns (uint256);
 }

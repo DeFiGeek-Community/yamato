@@ -4,12 +4,13 @@ import {
   takeSnapshot,
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
-import { BigNumber, Contract } from "ethers";
-import { deployContracts } from "../../helper";
+import { Contract } from "ethers";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { deployContracts } from "../../Helper";
 import Constants from "../../Constants";
 
 describe("ERC20CRV", function () {
-  let accounts: Signer[];
+  let accounts: SignerWithAddress[];
   let token: Contract;
   let snapshot: SnapshotRestorer;
 
@@ -62,14 +63,18 @@ describe("ERC20CRV", function () {
     });
 
     it("test_available_supply", async function () {
-      expect(await token.availableSupply()).to.equal(ethers.utils.parseEther("1303030303"));
+      expect(await token.availableSupply()).to.equal(
+        ethers.utils.parseEther("1303030303")
+      );
 
       await ethers.provider.send("evm_increaseTime", [86401]);
       await ethers.provider.send("evm_mine", []);
 
       await token.updateMiningParameters();
 
-      expect(await token.availableSupply()).to.be.gt(ethers.utils.parseEther("1303030303"));
+      expect(await token.availableSupply()).to.be.gt(
+        ethers.utils.parseEther("1303030303")
+      );
     });
   });
 });
