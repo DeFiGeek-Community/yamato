@@ -4,6 +4,8 @@ import {
   takeSnapshot,
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
+import { Contract } from "ethers";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { BigNumber } from "ethers";
 
 // Assuming you have a helper function to increase blockchain time
@@ -15,7 +17,7 @@ async function increaseTime(duration: number) {
 const YEAR = 365 * 24 * 60 * 60; // seconds in a year
 
 describe("ERC20CRV", function () {
-  let accounts: Signer[];
+  let accounts: SignerWithAddress[];
   let token: Contract;
   let snapshot: SnapshotRestorer;
 

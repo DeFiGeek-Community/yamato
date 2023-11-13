@@ -4,18 +4,20 @@ import {
   takeSnapshot,
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
-import { deployContracts } from "../../helper";
+import { Contract } from "ethers";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { deployContracts } from "../../Helper";
 import Constants from "../../Constants";
 
 describe("GaugeController", function () {
-  let accounts;
-  let gaugeController;
+  let accounts: SignerWithAddress[];
+  let gaugeController: Contract;
 
   let snapshot: SnapshotRestorer;
 
   const TYPE_WEIGHTS = Constants.TYPE_WEIGHTS;
-  const WEEK = Constants.week;
-  const YEAR = Constants.year;
+  const week = Constants.week;
+  const year = Constants.year;
 
   beforeEach(async function () {
     snapshot = await takeSnapshot();
@@ -31,12 +33,12 @@ describe("GaugeController", function () {
   describe("GaugeController Timestamps", function () {
     it("test_timestamps", async function () {
       const currentTime = (await ethers.provider.getBlock("latest")).timestamp;
-      const expectedTime = Math.floor((currentTime + WEEK) / WEEK) * WEEK;
+      const expectedTime = Math.floor((currentTime + week) / week) * week;
       expect(await gaugeController.timeTotal()).to.equal(expectedTime);
 
       for (let i = 0; i < 5; i++) {
         await ethers.provider.send("evm_increaseTime", [
-          Math.floor(1.1 * YEAR),
+          Math.floor(1.1 * year),
         ]);
 
         await gaugeController.checkpoint();
@@ -44,7 +46,7 @@ describe("GaugeController", function () {
         const newCurrentTime = (await ethers.provider.getBlock("latest"))
           .timestamp;
         const newExpectedTime =
-          Math.floor((newCurrentTime + WEEK) / WEEK) * WEEK;
+          Math.floor((newCurrentTime + week) / week) * week;
         expect(await gaugeController.timeTotal()).to.equal(newExpectedTime);
       }
     });

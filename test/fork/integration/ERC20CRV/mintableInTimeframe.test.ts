@@ -1,7 +1,8 @@
 import { ethers } from "hardhat";
 import { expect } from "chai";
-import { BigNumber, Contract, Signer } from "ethers";
+import { BigNumber, Contract } from "ethers";
 import { takeSnapshot, SnapshotRestorer } from "@nomicfoundation/hardhat-network-helpers";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import Constants from "../../Constants";
 
 async function increaseTime(duration: BigNumber) {
@@ -10,13 +11,13 @@ async function increaseTime(duration: BigNumber) {
 }
 
 // Constants
-const YEAR = BigNumber.from(365 * 86400);
+const YEAR = Constants.YEAR;
 const INITIAL_RATE = BigNumber.from(274815283);
 const YEAR_1_SUPPLY = INITIAL_RATE.mul(BigNumber.from(10).pow(18)).div(YEAR).mul(YEAR);
 const INITIAL_SUPPLY = BigNumber.from(1303030303);
 
 describe("ERC20CRV", function () {
-  let accounts: Signer[];
+  let accounts: SignerWithAddress[];
   let token: Contract;
   let snapshot: SnapshotRestorer;
   const year = Constants.year;

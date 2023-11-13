@@ -5,18 +5,16 @@ import {
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
 import { BigNumber, Contract } from "ethers";
-import { deployContracts } from "../../helper";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import Constants from "../../Constants";
 
 describe("ERC20CRV", function () {
-  let accounts: Signer[];
+  let accounts: SignerWithAddress[];
   let token: Contract;
   let snapshot: SnapshotRestorer;
 
-  const WEEK = Constants.WEEK;
   const week = Constants.week;
-  const YEAR = Constants.YEAR;
-  const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
+  const ZERO_ADDRESS = Constants.ZERO_ADDRESS;
 
   beforeEach(async function () {
     snapshot = await takeSnapshot();

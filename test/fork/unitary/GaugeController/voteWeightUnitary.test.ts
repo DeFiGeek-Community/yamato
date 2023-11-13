@@ -4,15 +4,17 @@ import {
   takeSnapshot,
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
-import { deployContracts } from "../../helper";
+import { Contract } from "ethers";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { deployContracts } from "../../Helper";
 import Constants from "../../Constants";
 
 describe("GaugeController", function () {
-  let accounts;
-  let gaugeController;
-  let threeGauges;
-  let votingEscrow;
-  let token;
+  let accounts: SignerWithAddress[];
+  let gaugeController: Contract;
+  let threeGauges: String[];
+  let votingEscrow: Contract;
+  let token: Contract;
 
   let snapshot: SnapshotRestorer;
 
