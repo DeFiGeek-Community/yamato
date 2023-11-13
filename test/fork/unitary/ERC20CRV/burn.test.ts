@@ -27,10 +27,12 @@ describe("ERC20CRV", function () {
     it("test_burn", async function () {
       const balance: BigNumber = await token.balanceOf(accounts[0].address);
       const initialSupply: BigNumber = await token.totalSupply();
-      
+
       await token.connect(accounts[0]).burn(31337);
 
-      expect(await token.balanceOf(accounts[0].address)).to.equal(balance.sub(31337));
+      expect(await token.balanceOf(accounts[0].address)).to.equal(
+        balance.sub(31337)
+      );
       expect(await token.totalSupply()).to.equal(initialSupply.sub(31337));
     });
 
@@ -40,7 +42,9 @@ describe("ERC20CRV", function () {
       await token.transfer(accounts[1].address, 1000000);
       await token.connect(accounts[1]).burn(31337);
 
-      expect(await token.balanceOf(accounts[1].address)).to.equal(1000000 - 31337);
+      expect(await token.balanceOf(accounts[1].address)).to.equal(
+        1000000 - 31337
+      );
       expect(await token.totalSupply()).to.equal(initialSupply.sub(31337));
     });
 
@@ -56,8 +60,9 @@ describe("ERC20CRV", function () {
     it("test_overburn", async function () {
       const initialSupply: BigNumber = await token.totalSupply();
 
-      await expect(token.connect(accounts[0]).burn(initialSupply.add(1)))
-        .to.be.revertedWith("ERC20: burn amount exceeds balance");
+      await expect(
+        token.connect(accounts[0]).burn(initialSupply.add(1))
+      ).to.be.revertedWith("ERC20: burn amount exceeds balance");
     });
   });
 });

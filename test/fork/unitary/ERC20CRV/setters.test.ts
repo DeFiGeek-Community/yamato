@@ -25,11 +25,15 @@ describe("ERC20CRV", function () {
 
   describe("ERC20CRV Setters", function () {
     it("should revert when non-admin tries to set minter", async function () {
-      await expect(token.connect(accounts[1]).setMinter(accounts[2].address)).to.be.revertedWith("dev: admin only");
+      await expect(
+        token.connect(accounts[1]).setMinter(accounts[2].address)
+      ).to.be.revertedWith("dev: admin only");
     });
 
     it("should revert when non-admin tries to set admin", async function () {
-      await expect(token.connect(accounts[1]).setAdmin(accounts[2].address)).to.be.revertedWith("dev: admin only");
+      await expect(
+        token.connect(accounts[1]).setAdmin(accounts[2].address)
+      ).to.be.revertedWith("dev: admin only");
     });
 
     it("should allow admin to set minter", async function () {

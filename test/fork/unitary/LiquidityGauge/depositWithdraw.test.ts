@@ -22,8 +22,7 @@ describe("LiquidityGauge depositWithdraw", function () {
   beforeEach(async () => {
     snapshot = await takeSnapshot();
     accounts = await ethers.getSigners();
-    ({ mockLpToken, threeGauges, gauges } =
-      await deployContracts());
+    ({ mockLpToken, threeGauges, gauges } = await deployContracts());
     await mockLpToken.approve(threeGauges[0], ten_to_the_21.mul("2"));
   });
 
@@ -37,23 +36,33 @@ describe("LiquidityGauge depositWithdraw", function () {
     await gauges[0].deposit(100000, accounts[0].address, false);
 
     expect(await mockLpToken.balanceOf(threeGauges[0])).to.equal(depositAmount);
-    expect(await mockLpToken.balanceOf(accounts[0].address)).to.equal(balance.sub(depositAmount));
+    expect(await mockLpToken.balanceOf(accounts[0].address)).to.equal(
+      balance.sub(depositAmount)
+    );
     expect(await gauges[0].totalSupply()).to.equal(depositAmount);
-    expect(await gauges[0].balanceOf(accounts[0].address)).to.equal(depositAmount);
+    expect(await gauges[0].balanceOf(accounts[0].address)).to.equal(
+      depositAmount
+    );
   });
 
   it("should handle zero deposit", async function () {
     const balance = await mockLpToken.balanceOf(accounts[0].address);
     await gauges[0].deposit(0, accounts[0].address, false);
 
-    expect(await mockLpToken.balanceOf(threeGauges[0])).to.equal(BigNumber.from(0));
+    expect(await mockLpToken.balanceOf(threeGauges[0])).to.equal(
+      BigNumber.from(0)
+    );
     expect(await mockLpToken.balanceOf(accounts[0].address)).to.equal(balance);
     expect(await gauges[0].totalSupply()).to.equal(BigNumber.from(0));
-    expect(await gauges[0].balanceOf(accounts[0].address)).to.equal(BigNumber.from(0));
+    expect(await gauges[0].balanceOf(accounts[0].address)).to.equal(
+      BigNumber.from(0)
+    );
   });
 
   it("should revert on deposit with insufficient balance", async function () {
-    await expect(gauges[0].connect(accounts[1]).deposit(100000, accounts[0].address, false)).to.be.reverted;
+    await expect(
+      gauges[0].connect(accounts[1]).deposit(100000, accounts[0].address, false)
+    ).to.be.reverted;
   });
 
   it("should withdraw tokens", async function () {
@@ -77,9 +86,13 @@ describe("LiquidityGauge depositWithdraw", function () {
     await gauges[0].withdraw(0, false);
 
     expect(await mockLpToken.balanceOf(threeGauges[0])).to.equal(depositAmount);
-    expect(await mockLpToken.balanceOf(accounts[0].address)).to.equal(balance.sub(depositAmount));
+    expect(await mockLpToken.balanceOf(accounts[0].address)).to.equal(
+      balance.sub(depositAmount)
+    );
     expect(await gauges[0].totalSupply()).to.equal(depositAmount);
-    expect(await gauges[0].balanceOf(accounts[0].address)).to.equal(depositAmount);
+    expect(await gauges[0].balanceOf(accounts[0].address)).to.equal(
+      depositAmount
+    );
   });
 
   it("should withdraw tokens after a new epoch", async function () {
@@ -98,5 +111,4 @@ describe("LiquidityGauge depositWithdraw", function () {
     expect(await gauges[0].totalSupply()).to.equal(0);
     expect(await gauges[0].balanceOf(accounts[0].address)).to.equal(0);
   });
-
-  });
+});

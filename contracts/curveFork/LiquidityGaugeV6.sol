@@ -151,10 +151,7 @@ contract LiquidityGaugeV6 is ReentrancyGuard {
     uint256[100000000000000000000000000000] public periodTimestamp;
     uint256[100000000000000000000000000000] public integrateInvSupply;
 
-    constructor(
-        address lpToken_,
-        address minter_
-    ) {
+    constructor(address lpToken_, address minter_) {
         require(lpToken == address(0));
 
         lpToken = lpToken_;
@@ -234,14 +231,18 @@ contract LiquidityGaugeV6 is ReentrancyGuard {
             uint256 _workingSupply = workingSupply;
             IGaugeController(gaugeController).checkpointGauge(address(this));
             uint256 _prevWeekTime = _st.periodTime;
-            uint256 _weekTime = min((_st.periodTime + WEEK) / WEEK * WEEK, block.timestamp);
+            uint256 _weekTime = min(
+                ((_st.periodTime + WEEK) / WEEK) * WEEK,
+                block.timestamp
+            );
 
-            for (uint256 i = 0; i < 500;) {
+            for (uint256 i = 0; i < 500; ) {
                 uint256 dt = _weekTime - _prevWeekTime;
-                uint256 w = IGaugeController(gaugeController).gaugeRelativeWeight(
-                    address(this),
-                    (_prevWeekTime / WEEK) * WEEK
-                );
+                uint256 w = IGaugeController(gaugeController)
+                    .gaugeRelativeWeight(
+                        address(this),
+                        (_prevWeekTime / WEEK) * WEEK
+                    );
 
                 if (_workingSupply > 0) {
                     if (
@@ -317,7 +318,10 @@ contract LiquidityGaugeV6 is ReentrancyGuard {
             _rp.token = rewardTokens[i];
 
             _rp.integral = rewardData[_rp.token].integral;
-            _rp.lastUpdate = min(block.timestamp, rewardData[_rp.token].periodFinish);
+            _rp.lastUpdate = min(
+                block.timestamp,
+                rewardData[_rp.token].periodFinish
+            );
             _rp.duration = _rp.lastUpdate - rewardData[_rp.token].lastUpdate;
             if (_rp.duration != 0) {
                 rewardData[_rp.token].lastUpdate = _rp.lastUpdate;
@@ -592,7 +596,10 @@ contract LiquidityGaugeV6 is ReentrancyGuard {
     }
 
     function userCheckpoint(address addr_) external returns (bool) {
-        require(msg.sender == addr_ || msg.sender == minter, "dev: unauthorized");
+        require(
+            msg.sender == addr_ || msg.sender == minter,
+            "dev: unauthorized"
+        );
         _checkpoint(addr_);
         _updateLiquidityLimit(addr_, balanceOf[addr_], totalSupply);
         return true;
@@ -674,10 +681,7 @@ contract LiquidityGaugeV6 is ReentrancyGuard {
         address distributor_
     ) external {
         address currentDistributor = rewardData[rewardToken_].distributor;
-        require(
-            msg.sender == currentDistributor ||
-                msg.sender == admin
-        );
+        require(msg.sender == currentDistributor || msg.sender == admin);
         require(currentDistributor != address(0));
         require(distributor_ != address(0));
 

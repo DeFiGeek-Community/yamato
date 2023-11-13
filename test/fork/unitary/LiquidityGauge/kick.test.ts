@@ -15,7 +15,7 @@ describe("LiquidityGauge kick", function () {
   let votingEscrow: Contract;
   let mockLpToken: Contract;
   let gauges: Contract[];
-  
+
   let snapshot: SnapshotRestorer;
 
   const MAX_UINT256 = Constants.MAX_UINT256;
@@ -26,8 +26,7 @@ describe("LiquidityGauge kick", function () {
   beforeEach(async () => {
     snapshot = await takeSnapshot();
     accounts = await ethers.getSigners();
-    ({ token, votingEscrow, mockLpToken, gauges } =
-      await deployContracts());
+    ({ token, votingEscrow, mockLpToken, gauges } = await deployContracts());
     await token.transfer(accounts[1].address, LOCK_AMOUNT);
     await mockLpToken.transfer(accounts[1].address, DEPOSIT_AMOUNT);
   });
@@ -43,21 +42,34 @@ describe("LiquidityGauge kick", function () {
 
     // Alice approves tokens to voting escrow and creates a lock
     await token.connect(accounts[1]).approve(votingEscrow.address, MAX_UINT256);
-    await votingEscrow.connect(accounts[1]).createLock(LOCK_AMOUNT, (await ethers.provider.getBlock('latest')).timestamp + 4 * week);
+    await votingEscrow
+      .connect(accounts[1])
+      .createLock(
+        LOCK_AMOUNT,
+        (await ethers.provider.getBlock("latest")).timestamp + 4 * week
+      );
 
     // Alice approves LP tokens to Gauge and deposits
-    await mockLpToken.connect(accounts[1]).approve(gauges[0].address, MAX_UINT256);
-    await gauges[0].connect(accounts[1]).deposit(DEPOSIT_AMOUNT, accounts[1].address, false);
+    await mockLpToken
+      .connect(accounts[1])
+      .approve(gauges[0].address, MAX_UINT256);
+    await gauges[0]
+      .connect(accounts[1])
+      .deposit(DEPOSIT_AMOUNT, accounts[1].address, false);
 
     // Check working balance of Alice in Gauge
-    expect(await gauges[0].workingBalances(accounts[1].address)).to.equal(DEPOSIT_AMOUNT);
+    expect(await gauges[0].workingBalances(accounts[1].address)).to.equal(
+      DEPOSIT_AMOUNT
+    );
 
     // Forward time by 1 week
     await ethers.provider.send("evm_increaseTime", [week]);
     await ethers.provider.send("evm_mine");
 
     // Bob tries to kick Alice but should fail because it's not allowed yet
-    await expect(gauges[0].connect(accounts[1]).kick(accounts[1].address)).to.be.revertedWith("Not allowed");
+    await expect(
+      gauges[0].connect(accounts[1]).kick(accounts[1].address)
+    ).to.be.revertedWith("Not allowed");
 
     // Forward time by 4 weeks
     await ethers.provider.send("evm_increaseTime", [4 * week]);
@@ -67,9 +79,13 @@ describe("LiquidityGauge kick", function () {
     await gauges[0].connect(accounts[1]).kick(accounts[1].address);
 
     // Check the working balance of Alice after kick
-    expect(await gauges[0].workingBalances(accounts[1].address)).to.equal(LOCK_AMOUNT.mul(4));
+    expect(await gauges[0].workingBalances(accounts[1].address)).to.equal(
+      LOCK_AMOUNT.mul(4)
+    );
 
     // Trying to kick again should fail as it's not needed
-    await expect(gauges[0].connect(accounts[1]).kick(accounts[1].address)).to.be.revertedWith("Not needed");
+    await expect(
+      gauges[0].connect(accounts[1]).kick(accounts[1].address)
+    ).to.be.revertedWith("Not needed");
   });
 });

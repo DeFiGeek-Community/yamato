@@ -64,5 +64,4 @@ async function deployContracts() {
   };
 }
 
-
 export { deployContracts };

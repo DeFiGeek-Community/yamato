@@ -1,6 +1,4 @@
-
 # GaugeController
-
 
 ```mermaid
 classDiagram

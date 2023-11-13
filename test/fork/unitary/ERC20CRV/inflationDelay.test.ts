@@ -63,14 +63,18 @@ describe("ERC20CRV", function () {
     });
 
     it("test_available_supply", async function () {
-      expect(await token.availableSupply()).to.equal(ethers.utils.parseEther("1303030303"));
+      expect(await token.availableSupply()).to.equal(
+        ethers.utils.parseEther("1303030303")
+      );
 
       await ethers.provider.send("evm_increaseTime", [86401]);
       await ethers.provider.send("evm_mine", []);
 
       await token.updateMiningParameters();
 
-      expect(await token.availableSupply()).to.be.gt(ethers.utils.parseEther("1303030303"));
+      expect(await token.availableSupply()).to.be.gt(
+        ethers.utils.parseEther("1303030303")
+      );
     });
   });
 });

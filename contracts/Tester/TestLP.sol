@@ -28,7 +28,7 @@ contract TestLP {
         uint256 _decimal,
         uint256 _supply
     ) {
-        uint256 init_supply = _supply.mul(10**_decimals);
+        uint256 init_supply = _supply.mul(10 ** _decimals);
         name = _name;
         symbol = _symbol;
         _decimals = _decimal;
@@ -48,11 +48,10 @@ contract TestLP {
         return total_supply;
     }
 
-    function allowance(address _owner, address _spender)
-        external
-        view
-        returns (uint256)
-    {
+    function allowance(
+        address _owner,
+        address _spender
+    ) external view returns (uint256) {
         /***
          *@notice Check the amount of tokens that an owner allowed to a spender
          *@param _owner The address which owns the funds

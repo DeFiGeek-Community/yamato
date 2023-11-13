@@ -47,7 +47,6 @@ class Constants {
     BigNumber.from("1"),
     BigNumber.from("2"),
   ];
-
 }
 
 export default Constants;
