@@ -5,7 +5,7 @@ import {
   takeSnapshot,
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
-import { deployContracts } from "../../Helper";
+import { deployContracts } from "../../helper";
 import Constants from "../../Constants";
 
 describe("LiquidityGauge", function () {

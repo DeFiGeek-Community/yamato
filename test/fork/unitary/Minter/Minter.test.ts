@@ -5,8 +5,8 @@ import {
   takeSnapshot,
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { deployContracts } from "../../Helper";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import { deployContracts } from "../../helper";
 import Constants from "../../Constants";
 
 describe("Minter", function () {

@@ -21,6 +21,7 @@
     "src/**/*.ts",
     "deploy/**/*.ts",
     "./node_modules/hardhat/hardhat-ethers/src/type-extensions.d.ts",
-    "./typechain/**/*.ts"
+    "./typechain/**/*.ts",
+    "./test"
   ]
 }
