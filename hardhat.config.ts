@@ -64,6 +64,15 @@ module.exports = {
         },
       },
     ],
+  },
+  networks: {
+    hardhat: {
+      allowUnlimitedContractSize: true,
+      accounts: {
+        count: 200,
+        accountsBalance: "1000000000000000000000000",
+      },
+    },
     localhost: {
       url: "http://127.0.0.1:8545",
     },
