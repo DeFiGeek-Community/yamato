@@ -81,9 +81,11 @@ describe("FeeDistributor", () => {
       await time.increase(2 * WEEK);
 
       await distributor.connect(alice)["claim()"]();
-      expect(
-        await distributor.connect(alice)["claim()"]()
-      ).to.changeTokenBalance(coinA, alice, 0);
+
+      const balanceBefore = await coinA.balanceOf(alice.address);
+      await distributor.connect(alice)["claim()"]();
+      const balanceAfter = await coinA.balanceOf(alice.address);
+      expect(balanceAfter.sub(balanceBefore)).to.be.eq(0);
     });
 
     it("test_deposited_during", async function () {
