@@ -5,8 +5,8 @@ import {
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
 import { Contract } from "ethers";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { deployContracts } from "../../Helper";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import { deployContracts } from "../../helper";
 import Constants from "../../Constants";
 
 describe("GaugeController", function () {
@@ -89,7 +89,7 @@ describe("GaugeController", function () {
       await gaugeController.voteForGaugeWeights(threeGauges[0], 10000);
 
       await ethers.provider.send("evm_increaseTime", [day * 10]);
-      await ethers.provider.send("evm_mine");
+      await ethers.provider.send("evm_mine", []);
 
       await gaugeController.checkpointGauge(threeGauges[0]);
       expect(
@@ -99,7 +99,7 @@ describe("GaugeController", function () {
       await gaugeController.voteForGaugeWeights(threeGauges[0], 0);
 
       await ethers.provider.send("evm_increaseTime", [day * 7]);
-      await ethers.provider.send("evm_mine");
+      await ethers.provider.send("evm_mine", []);
 
       await gaugeController.checkpointGauge(threeGauges[0]);
       expect(

@@ -6,14 +6,16 @@ import {
   takeSnapshot,
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 
 const DAY = 86400;
 const WEEK = DAY * 7;
 
 describe("FeeDistributor", () => {
   let snapshot: SnapshotRestorer;
-  let alice, bob, charlie: SignerWithAddress;
+  let alice: SignerWithAddress,
+    bob: SignerWithAddress,
+    charlie: SignerWithAddress;
 
   let distributor: Contract;
   let votingEscrow: Contract;

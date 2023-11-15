@@ -5,7 +5,7 @@ import {
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
 import { Contract } from "ethers";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 
 describe("ERC20CRV", function () {
   let accounts: SignerWithAddress[];
