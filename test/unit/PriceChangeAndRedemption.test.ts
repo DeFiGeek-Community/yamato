@@ -2,6 +2,10 @@ import { ethers } from "hardhat";
 import { smock } from "@defi-wonderland/smock";
 import chai, { expect } from "chai";
 import { Signer, BigNumber, Wallet } from "ethers";
+import {
+  takeSnapshot,
+  SnapshotRestorer,
+} from "@nomicfoundation/hardhat-network-helpers";
 import { toERC20 } from "../param/helper";
 import {
   ChainLinkMock,
@@ -41,6 +45,7 @@ import {
   assertCollIntegrity,
 } from "../../src/testUtil";
 import { isToken } from "typescript";
+import { contractVersion } from "../param/version";
 
 chai.use(smock.matchers);
 
@@ -64,7 +69,9 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
   let ownerAddress: string;
   let userAddress: string;
 
-  beforeEach(async () => {
+  let snapshot: SnapshotRestorer;
+
+  before(async () => {
     accounts = await ethers.getSigners();
     ownerAddress = await accounts[0].getAddress();
     userAddress = await accounts[1].getAddress();
@@ -101,9 +108,8 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
     await (await ChainLinkUsdJpy.setLastPrice(877000)).wait();
 
     PriceFeed = await getProxy<PriceFeedV3, PriceFeedV3__factory>(
-      "PriceFeed",
+      contractVersion["PriceFeed"],
       [ChainLinkEthUsd.address, ChainLinkUsdJpy.address],
-      3
     );
     await (await PriceFeed.fetchPrice()).wait();
 
@@ -111,9 +117,9 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       await ethers.getContractFactory("CJPY")
     )).deploy();
 
-    FeePool = await getProxy<FeePool, FeePool__factory>("FeePool", []);
+    FeePool = await getProxy<FeePool, FeePool__factory>(contractVersion["FeePool"], []);
 
-    CurrencyOS = await getProxy<CurrencyOS, CurrencyOS__factory>("CurrencyOS", [
+    CurrencyOS = await getProxy<CurrencyOS, CurrencyOS__factory>(contractVersion["CurrencyOS"], [
       CJPY.address,
       PriceFeed.address,
       FeePool.address,
@@ -124,7 +130,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
     ).address;
 
     Yamato = await getLinkedProxy<Yamato, Yamato__factory>(
-      "Yamato",
+      contractVersion["Yamato"],
       [CurrencyOS.address],
       ["PledgeLib"]
     );
@@ -132,15 +138,15 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
     YamatoDepositor = await getLinkedProxy<
       YamatoDepositor,
       YamatoDepositor__factory
-    >("YamatoDepositor", [Yamato.address], ["PledgeLib"]);
+    >(contractVersion["YamatoDepositor"], [Yamato.address], ["PledgeLib"]);
 
     YamatoBorrower = await getLinkedProxy<
       YamatoBorrower,
       YamatoBorrower__factory
-    >("YamatoBorrower", [Yamato.address], ["PledgeLib"]);
+    >(contractVersion["YamatoBorrower"], [Yamato.address], ["PledgeLib"]);
 
     YamatoRepayer = await getLinkedProxy<YamatoRepayer, YamatoRepayer__factory>(
-      "YamatoRepayer",
+      contractVersion["YamatoRepayer"],
       [Yamato.address],
       ["PledgeLib"]
     );
@@ -148,25 +154,25 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
     YamatoWithdrawer = await getLinkedProxy<
       YamatoWithdrawer,
       YamatoWithdrawer__factory
-    >("YamatoWithdrawer", [Yamato.address], ["PledgeLib"]);
+    >(contractVersion["YamatoWithdrawer"], [Yamato.address], ["PledgeLib"]);
 
     YamatoRedeemer = await getLinkedProxy<
       YamatoRedeemer,
       YamatoRedeemer__factory
-    >("YamatoRedeemer", [Yamato.address], ["PledgeLib"]);
+    >(contractVersion["YamatoRedeemer"], [Yamato.address], ["PledgeLib"]);
 
     YamatoSweeper = await getLinkedProxy<YamatoSweeper, YamatoSweeper__factory>(
-      "YamatoSweeper",
+      contractVersion["YamatoSweeper"],
       [Yamato.address],
       ["PledgeLib"]
     );
 
-    Pool = await getProxy<Pool, Pool__factory>("Pool", [Yamato.address]);
+    Pool = await getProxy<Pool, Pool__factory>(contractVersion["Pool"], [Yamato.address]);
 
     PriorityRegistry = await getLinkedProxy<
       PriorityRegistryV6,
       PriorityRegistryV6__factory
-    >("PriorityRegistry", [Yamato.address], ["PledgeLib"]);
+    >(contractVersion["PriorityRegistry"], [Yamato.address], ["PledgeLib"]);
 
     await (
       await Yamato.setDeps(
@@ -183,6 +189,14 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
 
     await (await CurrencyOS.addYamato(Yamato.address)).wait();
     await (await CJPY.setCurrencyOS(CurrencyOS.address)).wait();
+  });
+
+  beforeEach(async () => {
+    snapshot = await takeSnapshot();
+  });
+
+  afterEach(async () => {
+    await snapshot.restore();
   });
 
   describe("redeem()", function () {

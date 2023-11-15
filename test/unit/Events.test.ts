@@ -32,6 +32,7 @@ import {
 } from "../../typechain";
 import { encode, toERC20 } from "../param/helper";
 import { getFakeProxy, getLinkedProxy, getProxy } from "../../src/testUtil";
+import { contractVersion } from "../param/version";
 
 chai.use(smock.matchers);
 
@@ -85,42 +86,42 @@ describe("story Events", function () {
       mockCurrencyOS.currency.returns(mockCJPY.address);
 
       yamato = await getLinkedProxy<Yamato, Yamato__factory>(
-        "Yamato",
+        contractVersion["Yamato"],
         [mockCurrencyOS.address],
         ["PledgeLib"]
       );
       yamatoDepositor = await getLinkedProxy<
         YamatoDepositor,
         YamatoDepositor__factory
-      >("YamatoDepositor", [yamato.address], ["PledgeLib"]);
+      >(contractVersion["YamatoDepositor"], [yamato.address], ["PledgeLib"]);
 
       yamatoBorrower = await getLinkedProxy<
         YamatoBorrower,
         YamatoBorrower__factory
-      >("YamatoBorrower", [yamato.address], ["PledgeLib"]);
+      >(contractVersion["YamatoBorrower"], [yamato.address], ["PledgeLib"]);
 
       yamatoRepayer = await getLinkedProxy<
         YamatoRepayer,
         YamatoRepayer__factory
-      >("YamatoRepayer", [yamato.address], ["PledgeLib"]);
+      >(contractVersion["YamatoRepayer"], [yamato.address], ["PledgeLib"]);
 
       yamatoWithdrawer = await getLinkedProxy<
         YamatoWithdrawer,
         YamatoWithdrawer__factory
-      >("YamatoWithdrawer", [yamato.address], ["PledgeLib"]);
+      >(contractVersion["YamatoWithdrawer"], [yamato.address], ["PledgeLib"]);
 
       yamatoRedeemer = await getLinkedProxy<
         YamatoRedeemer,
         YamatoRedeemer__factory
-      >("YamatoRedeemer", [yamato.address], ["PledgeLib"]);
+      >(contractVersion["YamatoRedeemer"], [yamato.address], ["PledgeLib"]);
 
       yamatoSweeper = await getLinkedProxy<
         YamatoSweeper,
         YamatoSweeper__factory
-      >("YamatoSweeper", [yamato.address], ["PledgeLib"]);
+      >(contractVersion["YamatoSweeper"], [yamato.address], ["PledgeLib"]);
 
       mockPriorityRegistry = await getFakeProxy<PriorityRegistryV6>(
-        "PriorityRegistryV6"
+        contractVersion["PriorityRegistry"]
       );
 
       await (
@@ -331,7 +332,7 @@ describe("story Events", function () {
       mockCJPY = await smock.fake<CJPY>("CJPY");
       mockCJPY.transfer.returns(0);
 
-      mockFeePool = await getFakeProxy<FeePool>("FeePool");
+      mockFeePool = await getFakeProxy<FeePool>(contractVersion["FeePool"]);
       mockFeed = await getFakeProxy<PriceFeedV3>("PriceFeed");
       mockCurrencyOS = await smock.fake<CurrencyOS>("CurrencyOS");
       mockCurrencyOS.priceFeed.returns(mockFeed.address);
@@ -367,7 +368,7 @@ describe("story Events", function () {
       mockYamatoRedeemer.yamato.returns(yamatoDummy.address);
       mockYamatoSweeper.yamato.returns(yamatoDummy.address);
 
-      pool = await getProxy<Pool, Pool__factory>("Pool", [yamatoDummy.address]);
+      pool = await getProxy<Pool, Pool__factory>(contractVersion["Pool"], [yamatoDummy.address]);
 
       await (await yamatoDummy.setPool(pool.address)).wait();
     });

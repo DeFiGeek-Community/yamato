@@ -3,6 +3,10 @@ import { FakeContract, smock } from "@defi-wonderland/smock";
 import chai, { expect } from "chai";
 import { Signer, BigNumber } from "ethers";
 import {
+  takeSnapshot,
+  SnapshotRestorer,
+} from "@nomicfoundation/hardhat-network-helpers";
+import {
   CurrencyOS,
   FeePool,
   PledgeLib__factory,
@@ -16,6 +20,7 @@ import {
 } from "../../typechain";
 import { getFakeProxy, getLinkedProxy } from "../../src/testUtil";
 import { describe } from "mocha";
+import { contractVersion } from "../param/version";
 
 chai.use(smock.matchers);
 
@@ -32,13 +37,15 @@ describe("contract PriorityRegistry", function () {
   let address0: string;
   const PRICE = BigNumber.from(410000).mul(1e18 + "");
 
-  beforeEach(async () => {
+  let snapshot: SnapshotRestorer;
+
+  before(async () => {
     accounts = await ethers.getSigners();
     address0 = await accounts[0].getAddress();
 
-    mockFeed = await getFakeProxy<PriceFeedV3>("PriceFeedV3");
-    mockFeePool = await getFakeProxy<FeePool>("FeePool");
-    mockCurrencyOS = await getFakeProxy<CurrencyOS>("CurrencyOSV2");
+    mockFeed = await getFakeProxy<PriceFeedV3>(contractVersion["PriceFeed"]);
+    mockFeePool = await getFakeProxy<FeePool>(contractVersion["FeePool"]);
+    mockCurrencyOS = await getFakeProxy<CurrencyOS>(contractVersion["CurrencyOS"]);
     const PledgeLib = (
       await (<PledgeLib__factory>(
         await ethers.getContractFactory("PledgeLib")
@@ -49,7 +56,7 @@ describe("contract PriorityRegistry", function () {
         libraries: { PledgeLib },
       })
     );
-    mockYamato = await getFakeProxy<Yamato>("Yamato");
+    mockYamato = await getFakeProxy<Yamato>(contractVersion["Yamato"]);
     mockYamato.currencyOS.returns(mockCurrencyOS.address);
 
     mockCJPY = await smock.fake<CJPY>("CJPY");
@@ -69,7 +76,7 @@ describe("contract PriorityRegistry", function () {
     priorityRegistryWithYamatoMock = await getLinkedProxy<
       PriorityRegistryV6,
       PriorityRegistryV6__factory
-    >("PriorityRegistry", [mockYamato.address], ["PledgeLib"]);
+    >(contractVersion["PriorityRegistry"], [mockYamato.address], ["PledgeLib"]);
 
     /*
         For onlyYamato tests
@@ -81,11 +88,19 @@ describe("contract PriorityRegistry", function () {
     priorityRegistry = await getLinkedProxy<
       PriorityRegistryV6,
       PriorityRegistryV6__factory
-    >("PriorityRegistry", [yamatoDummy.address], ["PledgeLib"]);
+    >(contractVersion["PriorityRegistry"], [yamatoDummy.address], ["PledgeLib"]);
 
     await (
       await yamatoDummy.setPriorityRegistry(priorityRegistry.address)
     ).wait();
+  });
+
+  beforeEach(async () => {
+    snapshot = await takeSnapshot();
+  });
+
+  afterEach(async () => {
+    await snapshot.restore();
   });
 
   describe("upsert()", function () {

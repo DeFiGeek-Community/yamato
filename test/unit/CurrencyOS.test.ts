@@ -3,6 +3,10 @@ import { FakeContract, smock } from "@defi-wonderland/smock";
 import chai, { expect } from "chai";
 import { Signer } from "ethers";
 import {
+  takeSnapshot,
+  SnapshotRestorer,
+} from "@nomicfoundation/hardhat-network-helpers";
+import {
   CurrencyOS,
   CJPY,
   FeePool,
@@ -20,6 +24,7 @@ import {
   FeePool__factory,
 } from "../../typechain";
 import { getFakeProxy, getProxy } from "../../src/testUtil";
+import { contractVersion } from "../param/version";
 
 chai.use(smock.matchers);
 
@@ -40,25 +45,26 @@ describe("CurrencyOS", () => {
   let accounts: Signer[];
   let ownerAddress: string;
   let userAddress: string;
+  let snapshot: SnapshotRestorer;
 
-  beforeEach(async () => {
+  before(async () => {
     accounts = await ethers.getSigners();
     ownerAddress = await accounts[0].getAddress();
     userAddress = await accounts[1].getAddress();
     mockCJPY = await smock.fake<CJPY>("CJPY");
     mockFeed = await getFakeProxy<PriceFeedV3>("PriceFeed");
-    mockFeePool = await getFakeProxy<FeePool>("FeePool");
-    mockYamato = await getFakeProxy<Yamato>("Yamato");
+    mockFeePool = await getFakeProxy<FeePool>(contractVersion["FeePool"]);
+    mockYamato = await getFakeProxy<Yamato>(contractVersion["Yamato"]);
     mockYamatoDepositor = await getFakeProxy<YamatoDepositor>(
-      "YamatoDepositor"
+      contractVersion["YamatoDepositor"]
     );
-    mockYamatoBorrower = await getFakeProxy<YamatoBorrower>("YamatoBorrower");
-    mockYamatoRepayer = await getFakeProxy<YamatoRepayer>("YamatoRepayer");
+    mockYamatoBorrower = await getFakeProxy<YamatoBorrower>(contractVersion["YamatoBorrower"]);
+    mockYamatoRepayer = await getFakeProxy<YamatoRepayer>(contractVersion["YamatoRepayer"]);
     mockYamatoWithdrawer = await getFakeProxy<YamatoWithdrawer>(
-      "YamatoWithdrawer"
+      contractVersion["YamatoWithdrawer"]
     );
-    mockYamatoRedeemer = await getFakeProxy<YamatoRedeemer>("YamatoRedeemer");
-    mockYamatoSweeper = await getFakeProxy<YamatoSweeper>("YamatoSweeper");
+    mockYamatoRedeemer = await getFakeProxy<YamatoRedeemer>(contractVersion["YamatoRedeemer"]);
+    mockYamatoSweeper = await getFakeProxy<YamatoSweeper>(contractVersion["YamatoSweeper"]);
     mockYamato.depositor.returns(mockYamatoDepositor.address);
     mockYamato.borrower.returns(mockYamatoBorrower.address);
     mockYamato.repayer.returns(mockYamatoRepayer.address);
@@ -67,7 +73,7 @@ describe("CurrencyOS", () => {
     mockYamato.sweeper.returns(mockYamatoSweeper.address);
     mockYamato.permitDeps.returns(true);
 
-    currencyOS = await getProxy<CurrencyOS, CurrencyOS__factory>("CurrencyOS", [
+    currencyOS = await getProxy<CurrencyOS, CurrencyOS__factory>(contractVersion["CurrencyOS"], [
       mockCJPY.address,
       mockFeed.address,
       mockFeePool.address,
@@ -75,6 +81,14 @@ describe("CurrencyOS", () => {
 
     mockCJPY.mint.returns(0);
     mockCJPY.burn.returns(0);
+  });
+
+  beforeEach(async () => {
+    snapshot = await takeSnapshot();
+  });
+
+  afterEach(async () => {
+    await snapshot.restore();
   });
 
   describe("addYamato()", function () {

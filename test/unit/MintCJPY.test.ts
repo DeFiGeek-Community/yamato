@@ -2,6 +2,10 @@ import { ethers } from "hardhat";
 import { smock } from "@defi-wonderland/smock";
 import chai, { expect } from "chai";
 import { Signer, BigNumber } from "ethers";
+import {
+  takeSnapshot,
+  SnapshotRestorer,
+} from "@nomicfoundation/hardhat-network-helpers";
 import { toERC20 } from "../param/helper";
 import {
   ChainLinkMock,
@@ -34,6 +38,7 @@ import {
   PriorityRegistry__factory,
 } from "../../typechain";
 import { getProxy, getLinkedProxy } from "../../src/testUtil";
+import { contractVersion } from "../param/version";
 
 chai.use(smock.matchers);
 
@@ -56,8 +61,9 @@ describe("MintCJPY :: contract Yamato", () => {
   let accounts: Signer[];
   let ownerAddress: string;
   let userAddress: string;
+  let snapshot: SnapshotRestorer;
 
-  beforeEach(async () => {
+  before(async () => {
     accounts = await ethers.getSigners();
     ownerAddress = await accounts[0].getAddress();
     userAddress = await accounts[1].getAddress();
@@ -91,25 +97,24 @@ describe("MintCJPY :: contract Yamato", () => {
     ).wait();
 
     PriceFeed = await getProxy<PriceFeedV3, PriceFeedV3__factory>(
-      "PriceFeed",
+      contractVersion["PriceFeed"],
       [ChainLinkEthUsd.address, ChainLinkUsdJpy.address],
-      3
     );
 
     CJPY = await (<CJPY__factory>(
       await ethers.getContractFactory("CJPY")
     )).deploy();
 
-    FeePool = await getProxy<FeePool, FeePool__factory>("FeePool", []);
+    FeePool = await getProxy<FeePool, FeePool__factory>(contractVersion["FeePool"], []);
 
-    CurrencyOS = await getProxy<CurrencyOS, CurrencyOS__factory>("CurrencyOS", [
+    CurrencyOS = await getProxy<CurrencyOS, CurrencyOS__factory>(contractVersion["CurrencyOS"], [
       CJPY.address,
       PriceFeed.address,
       FeePool.address,
     ]);
 
     Yamato = await getLinkedProxy<Yamato, Yamato__factory>(
-      "Yamato",
+      contractVersion["Yamato"],
       [CurrencyOS.address],
       ["PledgeLib"]
     );
@@ -117,15 +122,15 @@ describe("MintCJPY :: contract Yamato", () => {
     YamatoDepositor = await getLinkedProxy<
       YamatoDepositor,
       YamatoDepositor__factory
-    >("YamatoDepositor", [Yamato.address], ["PledgeLib"]);
+    >(contractVersion["YamatoDepositor"], [Yamato.address], ["PledgeLib"]);
 
     YamatoBorrower = await getLinkedProxy<
       YamatoBorrower,
       YamatoBorrower__factory
-    >("YamatoBorrower", [Yamato.address], ["PledgeLib"]);
+    >(contractVersion["YamatoBorrower"], [Yamato.address], ["PledgeLib"]);
 
     YamatoRepayer = await getLinkedProxy<YamatoRepayer, YamatoRepayer__factory>(
-      "YamatoRepayer",
+      contractVersion["YamatoRepayer"],
       [Yamato.address],
       ["PledgeLib"]
     );
@@ -133,25 +138,25 @@ describe("MintCJPY :: contract Yamato", () => {
     YamatoWithdrawer = await getLinkedProxy<
       YamatoWithdrawer,
       YamatoWithdrawer__factory
-    >("YamatoDepositor", [Yamato.address], ["PledgeLib"]);
+    >(contractVersion["YamatoDepositor"], [Yamato.address], ["PledgeLib"]);
 
     YamatoRedeemer = await getLinkedProxy<
       YamatoRedeemer,
       YamatoRedeemer__factory
-    >("YamatoRedeemer", [Yamato.address], ["PledgeLib"]);
+    >(contractVersion["YamatoRedeemer"], [Yamato.address], ["PledgeLib"]);
 
     YamatoSweeper = await getLinkedProxy<YamatoSweeper, YamatoSweeper__factory>(
-      "YamatoSweeper",
+      contractVersion["YamatoSweeper"],
       [Yamato.address],
       ["PledgeLib"]
     );
 
-    Pool = await getProxy<Pool, Pool__factory>("Pool", [Yamato.address]);
+    Pool = await getProxy<Pool, Pool__factory>(contractVersion["Pool"], [Yamato.address]);
 
     PriorityRegistry = await getLinkedProxy<
       PriorityRegistry,
       PriorityRegistry__factory
-    >("PriorityRegistry", [Yamato.address], ["PledgeLib"]);
+    >(contractVersion["PriorityRegistry"], [Yamato.address], ["PledgeLib"]);
 
     await (
       await Yamato.setDeps(
@@ -167,6 +172,14 @@ describe("MintCJPY :: contract Yamato", () => {
     ).wait();
     await (await CurrencyOS.addYamato(Yamato.address)).wait();
     await (await CJPY.setCurrencyOS(CurrencyOS.address)).wait();
+  });
+
+  beforeEach(async () => {
+    snapshot = await takeSnapshot();
+  });
+
+  afterEach(async () => {
+    await snapshot.restore();
   });
 
   describe("borrow()", function () {
