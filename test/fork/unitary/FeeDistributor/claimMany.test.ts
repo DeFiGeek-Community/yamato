@@ -6,14 +6,16 @@ import {
   takeSnapshot,
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 
 const DAY = 86400;
 const WEEK = DAY * 7;
 
 describe("FeeDistributor", () => {
   let snapshot: SnapshotRestorer;
-  let alice, bob, charlie: SignerWithAddress;
+  let alice: SignerWithAddress,
+    bob: SignerWithAddress,
+    charlie: SignerWithAddress;
 
   let distributor: Contract;
   let votingEscrow: Contract;
@@ -145,12 +147,11 @@ describe("FeeDistributor", () => {
       const expected = await distributor.connect(alice).callStatic["claim()"]();
 
       expect(expected).to.above(0);
-      expect(
-        await distributor
-          .connect(alice)
-          .claimMany(Array(20).fill(alice.address))
-          .toString()
-      ).to.changeTokenBalance(coinA, alice, expected);
+
+      const balanceBefore = await coinA.balanceOf(alice.address);
+      await distributor.connect(alice).claimMany(Array(20).fill(alice.address));
+      const balanceAfter = await coinA.balanceOf(alice.address);
+      expect(balanceAfter.sub(balanceBefore)).to.be.eq(expected);
     });
   });
 });

@@ -5,7 +5,7 @@ import {
   takeSnapshot,
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import Constants from "../../Constants";
 
 async function increaseTime(duration: BigNumber) {
@@ -91,7 +91,7 @@ describe("ERC20CRV", function () {
       if (t1 - t0 >= year) {
         await token.updateMiningParameters();
       }
-      t1 = BigNumber.from((await ethers.provider.getBlock("latest")).timestamp);
+      t1 = (await ethers.provider.getBlock("latest")).timestamp;
 
       const availableSupply = await token.availableSupply();
       const mintable = await token.mintableInTimeframe(t0, t1);
