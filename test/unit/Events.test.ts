@@ -368,7 +368,9 @@ describe("story Events", function () {
       mockYamatoRedeemer.yamato.returns(yamatoDummy.address);
       mockYamatoSweeper.yamato.returns(yamatoDummy.address);
 
-      pool = await getProxy<Pool, Pool__factory>(contractVersion["Pool"], [yamatoDummy.address]);
+      pool = await getProxy<Pool, Pool__factory>(contractVersion["Pool"], [
+        yamatoDummy.address,
+      ]);
 
       await (await yamatoDummy.setPool(pool.address)).wait();
     });

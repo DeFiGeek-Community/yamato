@@ -147,7 +147,9 @@ describe("contract Yamato - pure func quickier tests", function () {
     ).wait();
 
     // Note: Will use later for mintCurrency mockery test in borrow spec
-    pool = await getProxy<Pool, Pool__factory>(contractVersion["Pool"], [yamato.address]);
+    pool = await getProxy<Pool, Pool__factory>(contractVersion["Pool"], [
+      yamato.address,
+    ]);
 
     // Note: Will use later for the redeem() test
     priorityRegistry = await getLinkedProxy<
@@ -344,7 +346,9 @@ describe("contract Yamato", function () {
     ).wait();
 
     // Note: Will use later for mintCurrency mockery test in borrow spec
-    pool = await getProxy<Pool, Pool__factory>(contractVersion["Pool"], [yamato.address]);
+    pool = await getProxy<Pool, Pool__factory>(contractVersion["Pool"], [
+      yamato.address,
+    ]);
 
     // Note: Will use later for the redeem() test
     priorityRegistry = await getLinkedProxy<

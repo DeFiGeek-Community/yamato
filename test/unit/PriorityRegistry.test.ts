@@ -45,7 +45,9 @@ describe("contract PriorityRegistry", function () {
 
     mockFeed = await getFakeProxy<PriceFeedV3>(contractVersion["PriceFeed"]);
     mockFeePool = await getFakeProxy<FeePool>(contractVersion["FeePool"]);
-    mockCurrencyOS = await getFakeProxy<CurrencyOS>(contractVersion["CurrencyOS"]);
+    mockCurrencyOS = await getFakeProxy<CurrencyOS>(
+      contractVersion["CurrencyOS"]
+    );
     const PledgeLib = (
       await (<PledgeLib__factory>(
         await ethers.getContractFactory("PledgeLib")
@@ -88,7 +90,11 @@ describe("contract PriorityRegistry", function () {
     priorityRegistry = await getLinkedProxy<
       PriorityRegistryV6,
       PriorityRegistryV6__factory
-    >(contractVersion["PriorityRegistry"], [yamatoDummy.address], ["PledgeLib"]);
+    >(
+      contractVersion["PriorityRegistry"],
+      [yamatoDummy.address],
+      ["PledgeLib"]
+    );
 
     await (
       await yamatoDummy.setPriorityRegistry(priorityRegistry.address)

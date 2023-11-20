@@ -21,7 +21,9 @@ describe("contract Pool", function () {
     accounts = await ethers.getSigners();
     let mockYamato = await getFakeProxy<Yamato>(contractVersion["Yamato"]);
     mockYamato.permitDeps.returns(false);
-    pool = await getProxy<Pool, Pool__factory>(contractVersion["Pool"], [mockYamato.address]);
+    pool = await getProxy<Pool, Pool__factory>(contractVersion["Pool"], [
+      mockYamato.address,
+    ]);
   });
 
   beforeEach(async () => {

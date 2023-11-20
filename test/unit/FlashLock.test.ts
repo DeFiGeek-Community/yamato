@@ -102,20 +102,22 @@ describe("FlashLock :: contract Yamato", () => {
 
     PriceFeed = await getProxy<PriceFeedV3, PriceFeedV3__factory>(
       contractVersion["PriceFeed"],
-      [ChainLinkEthUsd.address, ChainLinkUsdJpy.address],
+      [ChainLinkEthUsd.address, ChainLinkUsdJpy.address]
     );
 
     CJPY = await (<CJPY__factory>(
       await ethers.getContractFactory("CJPY")
     )).deploy();
 
-    FeePool = await getProxy<FeePool, FeePool__factory>(contractVersion["FeePool"], []);
+    FeePool = await getProxy<FeePool, FeePool__factory>(
+      contractVersion["FeePool"],
+      []
+    );
 
-    CurrencyOS = await getProxy<CurrencyOS, CurrencyOS__factory>(contractVersion["CurrencyOS"], [
-      CJPY.address,
-      PriceFeed.address,
-      FeePool.address,
-    ]);
+    CurrencyOS = await getProxy<CurrencyOS, CurrencyOS__factory>(
+      contractVersion["CurrencyOS"],
+      [CJPY.address, PriceFeed.address, FeePool.address]
+    );
 
     Yamato = await getLinkedProxy<Yamato, Yamato__factory>(
       contractVersion["Yamato"],
@@ -155,7 +157,9 @@ describe("FlashLock :: contract Yamato", () => {
       ["PledgeLib"]
     );
 
-    Pool = await getProxy<Pool, Pool__factory>(contractVersion["Pool"], [Yamato.address]);
+    Pool = await getProxy<Pool, Pool__factory>(contractVersion["Pool"], [
+      Yamato.address,
+    ]);
 
     PriorityRegistry = await getLinkedProxy<
       PriorityRegistry,

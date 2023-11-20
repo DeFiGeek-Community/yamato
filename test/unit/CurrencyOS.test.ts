@@ -58,13 +58,21 @@ describe("CurrencyOS", () => {
     mockYamatoDepositor = await getFakeProxy<YamatoDepositor>(
       contractVersion["YamatoDepositor"]
     );
-    mockYamatoBorrower = await getFakeProxy<YamatoBorrower>(contractVersion["YamatoBorrower"]);
-    mockYamatoRepayer = await getFakeProxy<YamatoRepayer>(contractVersion["YamatoRepayer"]);
+    mockYamatoBorrower = await getFakeProxy<YamatoBorrower>(
+      contractVersion["YamatoBorrower"]
+    );
+    mockYamatoRepayer = await getFakeProxy<YamatoRepayer>(
+      contractVersion["YamatoRepayer"]
+    );
     mockYamatoWithdrawer = await getFakeProxy<YamatoWithdrawer>(
       contractVersion["YamatoWithdrawer"]
     );
-    mockYamatoRedeemer = await getFakeProxy<YamatoRedeemer>(contractVersion["YamatoRedeemer"]);
-    mockYamatoSweeper = await getFakeProxy<YamatoSweeper>(contractVersion["YamatoSweeper"]);
+    mockYamatoRedeemer = await getFakeProxy<YamatoRedeemer>(
+      contractVersion["YamatoRedeemer"]
+    );
+    mockYamatoSweeper = await getFakeProxy<YamatoSweeper>(
+      contractVersion["YamatoSweeper"]
+    );
     mockYamato.depositor.returns(mockYamatoDepositor.address);
     mockYamato.borrower.returns(mockYamatoBorrower.address);
     mockYamato.repayer.returns(mockYamatoRepayer.address);
@@ -73,11 +81,10 @@ describe("CurrencyOS", () => {
     mockYamato.sweeper.returns(mockYamatoSweeper.address);
     mockYamato.permitDeps.returns(true);
 
-    currencyOS = await getProxy<CurrencyOS, CurrencyOS__factory>(contractVersion["CurrencyOS"], [
-      mockCJPY.address,
-      mockFeed.address,
-      mockFeePool.address,
-    ]);
+    currencyOS = await getProxy<CurrencyOS, CurrencyOS__factory>(
+      contractVersion["CurrencyOS"],
+      [mockCJPY.address, mockFeed.address, mockFeePool.address]
+    );
 
     mockCJPY.mint.returns(0);
     mockCJPY.burn.returns(0);

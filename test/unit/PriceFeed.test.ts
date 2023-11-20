@@ -146,7 +146,7 @@ describe("PriceFeed", function () {
 
     feed = await getProxy<PriceFeedV3, PriceFeedV3__factory>(
       contractVersion["PriceFeed"],
-      [mockAggregatorV3EthUsd.address, mockAggregatorV3JpyUsd.address],
+      [mockAggregatorV3EthUsd.address, mockAggregatorV3JpyUsd.address]
     );
 
     assertChainlink(
