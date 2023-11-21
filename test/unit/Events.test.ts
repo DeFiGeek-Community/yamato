@@ -173,7 +173,7 @@ describe("story Events", function () {
           mockPriorityRegistry.address
         )
       ).wait();
-      await (await yamato.setScoreRegistory(ScoreRegistry.address)).wait();
+      await (await yamato.setScoreRegistry(ScoreRegistry.address)).wait();
       PRICE = BigNumber.from(260000).mul(1e18 + "");
       MCR = BigNumber.from(130);
 

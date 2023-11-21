@@ -14,7 +14,7 @@ let chainlinkInitialRoundId = BigNumber.from("30000000000000000001").add(1);
 let priceDeviationRange = 0.01;
 let accounts;
 
-describe.only("OracleMockBase", function () {
+describe("OracleMockBase", function () {
   beforeEach(async () => {
     const spec1 = <ChainLinkMock__factory>(
       await ethers.getContractFactory("ChainLinkMock")

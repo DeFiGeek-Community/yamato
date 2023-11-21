@@ -180,7 +180,7 @@ describe("contract Yamato - pure func quickier tests", function () {
         mockPriorityRegistry.address
       )
     ).wait();
-    await (await yamato.setScoreRegistory(ScoreRegistry.address)).wait();
+    await (await yamato.setScoreRegistry(ScoreRegistry.address)).wait();
 
     // Note: Will use later for mintCurrency mockery test in borrow spec
     pool = await getProxy<Pool, Pool__factory>(contractVersion["Pool"], [
@@ -406,7 +406,7 @@ describe.only("contract Yamato", function () {
         mockPriorityRegistry.address
       )
     ).wait();
-    await (await yamato.setScoreRegistory(ScoreRegistry.address)).wait();
+    await (await yamato.setScoreRegistry(ScoreRegistry.address)).wait();
 
     // Note: Will use later for mintCurrency mockery test in borrow spec
     pool = await getProxy<Pool, Pool__factory>(contractVersion["Pool"], [

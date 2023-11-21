@@ -210,7 +210,7 @@ describe("MintCJPY :: contract Yamato", () => {
         PriorityRegistry.address
       )
     ).wait();
-    await (await Yamato.setScoreRegistory(ScoreRegistry.address)).wait();
+    await (await Yamato.setScoreRegistry(ScoreRegistry.address)).wait();
     await (await CurrencyOS.addYamato(Yamato.address)).wait();
     await (await CJPY.setCurrencyOS(CurrencyOS.address)).wait();
   });

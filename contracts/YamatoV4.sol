@@ -195,7 +195,7 @@ contract YamatoV4 is
         }
     }
 
-    function setScoreRegistory(address _scoreRegistry) external onlyGovernance {
+    function setScoreRegistry(address _scoreRegistry) external onlyGovernance {
         bytes32 SCORE_REGISTRY_KEY = bytes32(
             keccak256(abi.encode(SCORE_REGISTRY_SLOT_ID))
         );
