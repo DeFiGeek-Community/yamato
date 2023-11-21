@@ -10,7 +10,7 @@ import {
   PriceFeedV3,
   PriorityRegistry,
   PriorityRegistry__factory,
-  Yamato,
+  YamatoV4,
   YamatoDepositor,
   YamatoBorrower,
   YamatoRepayer,
@@ -18,7 +18,12 @@ import {
   YamatoRedeemer,
   YamatoSweeper,
   YamatoDummy,
-  Yamato__factory,
+  YMT,
+  VeYMT,
+  ScoreWeightController,
+  YmtMinter,
+  ScoreRegistry,
+  YamatoV4__factory,
   YamatoDepositor__factory,
   YamatoBorrower__factory,
   YamatoRepayer__factory,
@@ -26,9 +31,13 @@ import {
   YamatoRedeemer__factory,
   YamatoSweeper__factory,
   YamatoDummy__factory,
+  YMT__factory,
+  VeYMT__factory,
+  ScoreWeightController__factory,
+  YmtMinter__factory,
+  ScoreRegistry__factory,
   FeePool__factory,
   Pool__factory,
-  YMT,
 } from "../../typechain";
 import { encode, toERC20 } from "../param/helper";
 import {
@@ -49,7 +58,7 @@ describe("contract Yamato - pure func quickier tests", function () {
   let mockCJPY: FakeContract<CJPY>;
   let mockCurrencyOS: FakeContract<CurrencyOS>;
   let mockPriorityRegistry: FakeContract<PriorityRegistry>;
-  let yamato: Yamato;
+  let yamato: YamatoV4;
   let yamatoDepositor: YamatoDepositor;
   let yamatoBorrower: YamatoBorrower;
   let yamatoRepayer: YamatoRepayer;
@@ -57,6 +66,11 @@ describe("contract Yamato - pure func quickier tests", function () {
   let yamatoRedeemer: YamatoRedeemer;
   let yamatoSweeper: YamatoSweeper;
   let yamatoDummy: YamatoDummy;
+  let ScoreRegistry: ScoreRegistry;
+  let YmtMinter: YmtMinter;
+  let veYMT: VeYMT;
+  let YMT: YMT;
+  let ScoreWeightController: ScoreWeightController;
   let pool: Pool;
   let priorityRegistry: PriorityRegistry;
   let PRICE: BigNumber;
@@ -84,7 +98,7 @@ describe("contract Yamato - pure func quickier tests", function () {
     mockCurrencyOS.feePool.returns(mockFeePool.address);
     mockCurrencyOS.currency.returns(mockCJPY.address);
 
-    yamato = await getLinkedProxy<Yamato, Yamato__factory>(
+    yamato = await getLinkedProxy<YamatoV4, YamatoV4__factory>(
       contractVersion["Yamato"],
       [mockCurrencyOS.address],
       ["PledgeLib"]
@@ -133,6 +147,27 @@ describe("contract Yamato - pure func quickier tests", function () {
       contractVersion["PriorityRegistry"]
     );
 
+    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy();
+
+    veYMT = await (<VeYMT__factory>(
+      await ethers.getContractFactory("veYMT")
+    )).deploy(YMT.address);
+
+    ScoreWeightController = await getProxy<
+      ScoreWeightController,
+      ScoreWeightController__factory
+    >(contractVersion["ScoreWeightController"], [YMT.address, veYMT.address]);
+
+    YmtMinter = await getProxy<YmtMinter, YmtMinter__factory>(
+      contractVersion["YmtMinter"],
+      [YMT.address, ScoreWeightController.address]
+    );
+
+    ScoreRegistry = await getProxy<ScoreRegistry, ScoreRegistry__factory>(
+      contractVersion["ScoreRegistry"],
+      [YmtMinter.address, yamato.address]
+    );
+
     await (
       await yamato.setDeps(
         yamatoDepositor.address,
@@ -145,6 +180,7 @@ describe("contract Yamato - pure func quickier tests", function () {
         mockPriorityRegistry.address
       )
     ).wait();
+    await (await yamato.setScoreRegistory(ScoreRegistry.address)).wait();
 
     // Note: Will use later for mintCurrency mockery test in borrow spec
     pool = await getProxy<Pool, Pool__factory>(contractVersion["Pool"], [
@@ -240,7 +276,7 @@ describe("contract Yamato - pure func quickier tests", function () {
   });
 });
 
-describe("contract Yamato", function () {
+describe.only("contract Yamato", function () {
   let mockPool: FakeContract<Pool>;
   let mockFeePool: FakeContract<FeePool>;
   let mockFeed: FakeContract<PriceFeedV3>;
@@ -248,7 +284,7 @@ describe("contract Yamato", function () {
   let mockCJPY: FakeContract<CJPY>;
   let mockCurrencyOS: FakeContract<CurrencyOS>;
   let mockPriorityRegistry: FakeContract<PriorityRegistry>;
-  let yamato: Yamato;
+  let yamato: YamatoV4;
   let yamatoDepositor: YamatoDepositor;
   let yamatoBorrower: YamatoBorrower;
   let yamatoRepayer: YamatoRepayer;
@@ -258,6 +294,11 @@ describe("contract Yamato", function () {
   let yamatoDummy: YamatoDummy;
   let pool: Pool;
   let priorityRegistry: PriorityRegistry;
+  let ScoreRegistry: ScoreRegistry;
+  let YmtMinter: YmtMinter;
+  let veYMT: VeYMT;
+  let YMT: YMT;
+  let ScoreWeightController: ScoreWeightController;
   let PRICE: BigNumber;
   let MCR: BigNumber;
   let accounts: Signer[];
@@ -283,7 +324,7 @@ describe("contract Yamato", function () {
     mockCurrencyOS.feePool.returns(mockFeePool.address);
     mockCurrencyOS.currency.returns(mockCJPY.address);
 
-    yamato = await getLinkedProxy<Yamato, Yamato__factory>(
+    yamato = await getLinkedProxy<YamatoV4, YamatoV4__factory>(
       contractVersion["Yamato"],
       [mockCurrencyOS.address],
       ["PledgeLib"]
@@ -332,6 +373,27 @@ describe("contract Yamato", function () {
       contractVersion["PriorityRegistry"]
     );
 
+    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy();
+
+    veYMT = await (<VeYMT__factory>(
+      await ethers.getContractFactory("veYMT")
+    )).deploy(YMT.address);
+
+    ScoreWeightController = await getProxy<
+      ScoreWeightController,
+      ScoreWeightController__factory
+    >(contractVersion["ScoreWeightController"], [YMT.address, veYMT.address]);
+
+    YmtMinter = await getProxy<YmtMinter, YmtMinter__factory>(
+      contractVersion["YmtMinter"],
+      [YMT.address, ScoreWeightController.address]
+    );
+
+    ScoreRegistry = await getProxy<ScoreRegistry, ScoreRegistry__factory>(
+      contractVersion["ScoreRegistry"],
+      [YmtMinter.address, yamato.address]
+    );
+
     await (
       await yamato.setDeps(
         yamatoDepositor.address,
@@ -344,6 +406,7 @@ describe("contract Yamato", function () {
         mockPriorityRegistry.address
       )
     ).wait();
+    await (await yamato.setScoreRegistory(ScoreRegistry.address)).wait();
 
     // Note: Will use later for mintCurrency mockery test in borrow spec
     pool = await getProxy<Pool, Pool__factory>(contractVersion["Pool"], [

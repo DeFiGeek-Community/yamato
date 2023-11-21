@@ -7,12 +7,13 @@ export interface Version {
   FeePool: string;
   Import: string;
   Interfaces: string;
-  Minter: string;
+  YmtMinter: string;
   OracleMockBase: string;
   Pool: string;
   PriceFeed: string;
   PriorityRegistry: string;
   ScoreRegistry: string;
+  ScoreWeightController: string;
   TellorCallerMock: string;
   Vester: string;
   VesterFactory: string;
@@ -33,27 +34,28 @@ export const contractVersion: Version = {
   CJPY: "CJPY",
   ChainLinkMock: "ChainLinkMock",
   Currency: "Currency",
-  CurrencyOS: "CurrencyOSV2",
+  CurrencyOS: "CurrencyOSV3",
   Dependencies: "Dependencies",
   FeePool: "FeePool",
   Import: "Import",
   Interfaces: "Interfaces",
-  Minter: "Minter",
+  YmtMinter: "YmtMinter",
   OracleMockBase: "OracleMockBase",
   Pool: "PoolV2",
   PriceFeed: "PriceFeedV3",
   PriorityRegistry: "PriorityRegistryV6",
   ScoreRegistry: "ScoreRegistry",
+  ScoreWeightController: "ScoreWeightController",
   TellorCallerMock: "TellorCallerMock",
   Vester: "Vester",
   VesterFactory: "VesterFactory",
   YMT: "YMT",
-  Yamato: "YamatoV3",
-  YamatoBorrower: "YamatoBorrower",
+  Yamato: "YamatoV4",
+  YamatoBorrower: "YamatoBorrowerV2",
   YamatoDepositor: "YamatoDepositorV2",
-  YamatoRedeemer: "YamatoRedeemerV4",
-  YamatoRepayer: "YamatoRepayerV2",
-  YamatoSweeper: "YamatoSweeperV2",
+  YamatoRedeemer: "YamatoRedeemerV5",
+  YamatoRepayer: "YamatoRepayerV3",
+  YamatoSweeper: "YamatoSweeperV3",
   YamatoWithdrawer: "YamatoWithdrawerV2",
   YmtOS: "YmtOS",
   curveFork: "curveFork",

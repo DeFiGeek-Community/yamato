@@ -10,7 +10,7 @@ import {
   PriceFeedV3,
   PriorityRegistryV6,
   PriorityRegistryV6__factory,
-  Yamato,
+  YamatoV4,
   YamatoDepositor,
   YamatoBorrower,
   YamatoRepayer,
@@ -18,7 +18,12 @@ import {
   YamatoRedeemer,
   YamatoSweeper,
   YamatoDummy,
-  Yamato__factory,
+  YMT,
+  VeYMT,
+  ScoreWeightController,
+  YmtMinter,
+  ScoreRegistry,
+  YamatoV4__factory,
   YamatoDepositor__factory,
   YamatoBorrower__factory,
   YamatoRepayer__factory,
@@ -27,8 +32,12 @@ import {
   YamatoSweeper__factory,
   YamatoDummy__factory,
   FeePool__factory,
-  YMT,
   Pool__factory,
+  YMT__factory,
+  VeYMT__factory,
+  ScoreWeightController__factory,
+  YmtMinter__factory,
+  ScoreRegistry__factory,
 } from "../../typechain";
 import { encode, toERC20 } from "../param/helper";
 import { getFakeProxy, getLinkedProxy, getProxy } from "../../src/testUtil";
@@ -45,7 +54,7 @@ describe("story Events", function () {
     let mockCJPY: FakeContract<CJPY>;
     let mockCurrencyOS: FakeContract<CurrencyOS>;
     let mockPriorityRegistry: FakeContract<PriorityRegistryV6>;
-    let yamato: Yamato;
+    let yamato: YamatoV4;
     let yamatoDepositor: YamatoDepositor;
     let yamatoBorrower: YamatoBorrower;
     let yamatoRepayer: YamatoRepayer;
@@ -53,6 +62,11 @@ describe("story Events", function () {
     let yamatoRedeemer: YamatoRedeemer;
     let yamatoSweeper: YamatoSweeper;
     let priorityRegistry: PriorityRegistryV6;
+    let ScoreRegistry: ScoreRegistry;
+    let YmtMinter: YmtMinter;
+    let veYMT: VeYMT;
+    let YMT: YMT;
+    let ScoreWeightController: ScoreWeightController;
     let PRICE: BigNumber;
     let MCR: BigNumber;
     let accounts: Signer[];
@@ -85,7 +99,7 @@ describe("story Events", function () {
       mockCurrencyOS.feePool.returns(mockFeePool.address);
       mockCurrencyOS.currency.returns(mockCJPY.address);
 
-      yamato = await getLinkedProxy<Yamato, Yamato__factory>(
+      yamato = await getLinkedProxy<YamatoV4, YamatoV4__factory>(
         contractVersion["Yamato"],
         [mockCurrencyOS.address],
         ["PledgeLib"]
@@ -124,6 +138,29 @@ describe("story Events", function () {
         contractVersion["PriorityRegistry"]
       );
 
+      YMT = await (<YMT__factory>(
+        await ethers.getContractFactory("YMT")
+      )).deploy();
+
+      veYMT = await (<VeYMT__factory>(
+        await ethers.getContractFactory("veYMT")
+      )).deploy(YMT.address);
+
+      ScoreWeightController = await getProxy<
+        ScoreWeightController,
+        ScoreWeightController__factory
+      >(contractVersion["ScoreWeightController"], [YMT.address, veYMT.address]);
+
+      YmtMinter = await getProxy<YmtMinter, YmtMinter__factory>(
+        contractVersion["YmtMinter"],
+        [YMT.address, ScoreWeightController.address]
+      );
+
+      ScoreRegistry = await getProxy<ScoreRegistry, ScoreRegistry__factory>(
+        contractVersion["ScoreRegistry"],
+        [YmtMinter.address, yamato.address]
+      );
+
       await (
         await yamato.setDeps(
           yamatoDepositor.address,
@@ -136,7 +173,7 @@ describe("story Events", function () {
           mockPriorityRegistry.address
         )
       ).wait();
-
+      await (await yamato.setScoreRegistory(ScoreRegistry.address)).wait();
       PRICE = BigNumber.from(260000).mul(1e18 + "");
       MCR = BigNumber.from(130);
 
