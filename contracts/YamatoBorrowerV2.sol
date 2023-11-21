@@ -25,7 +25,7 @@ import "hardhat/console.sol";
 
 /// @title Yamato Borrower Contract
 
-contract YamatoBorrower is IYamatoBorrower, YamatoAction {
+contract YamatoBorrowerV2 is IYamatoBorrower, YamatoAction {
     using PledgeLib for IYamato.Pledge;
     using PledgeLib for uint256;
 

@@ -43,11 +43,7 @@ contract CurrencyOSV3 is ICurrencyOSV3, UUPSBase {
     function initialize(
         address currencyAddr,
         address feedAddr,
-        address feePoolAddr,
-        address ymatAddr,
-        address veymtAddr,
-        address minterAddr,
-        address scoreWeightControllerAddr
+        address feePoolAddr
     ) public initializer {
         __UUPSBase_init();
 
@@ -56,20 +52,10 @@ contract CurrencyOSV3 is ICurrencyOSV3, UUPSBase {
             keccak256(abi.encode(PRICEFEED_SLOT_ID))
         );
         bytes32 FEEPOOL_KEY = bytes32(keccak256(abi.encode(FEEPOOL_SLOT_ID)));
-        bytes32 YMT_KEY = bytes32(keccak256(abi.encode(YMT_SLOT_ID)));
-        bytes32 VEYMT_KEY = bytes32(keccak256(abi.encode(VEYMT_SLOT_ID)));
-        bytes32 MINTER_KEY = bytes32(keccak256(abi.encode(MINTER_SLOT_ID)));
-        bytes32 WEIGHT_CONTROLLER_KEY = bytes32(
-            keccak256(abi.encode(WEIGHT_CONTROLLER_SLOT_ID))
-        );
         assembly {
             sstore(CURRENCY_KEY, currencyAddr)
             sstore(PRICEFEED_KEY, feedAddr)
             sstore(FEEPOOL_KEY, feePoolAddr)
-            sstore(YMT_KEY, ymatAddr)
-            sstore(VEYMT_KEY, veymtAddr)
-            sstore(MINTER_KEY, minterAddr)
-            sstore(WEIGHT_CONTROLLER_KEY, scoreWeightControllerAddr)
         }
     }
 
@@ -79,6 +65,38 @@ contract CurrencyOSV3 is ICurrencyOSV3, UUPSBase {
         );
         assembly {
             sstore(PRICEFEED_KEY, feedAddr)
+        }
+    }
+
+    function setYMT(address ymtAddr) external onlyGovernance {
+        bytes32 YMT_KEY = bytes32(keccak256(abi.encode(YMT_SLOT_ID)));
+        assembly {
+            sstore(YMT_KEY, ymtAddr)
+        }
+    }
+
+    function setVeYMT(address veymtAddr) external onlyGovernance {
+        bytes32 VEYMT_KEY = bytes32(keccak256(abi.encode(VEYMT_SLOT_ID)));
+        assembly {
+            sstore(VEYMT_KEY, veymtAddr)
+        }
+    }
+
+    function setYmtMinter(address minterAddr) external onlyGovernance {
+        bytes32 MINTER_KEY = bytes32(keccak256(abi.encode(MINTER_SLOT_ID)));
+        assembly {
+            sstore(MINTER_KEY, minterAddr)
+        }
+    }
+
+    function setScoreWeightController(
+        address scoreWeightControllerAddr
+    ) external onlyGovernance {
+        bytes32 WEIGHT_CONTROLLER_KEY = bytes32(
+            keccak256(abi.encode(WEIGHT_CONTROLLER_SLOT_ID))
+        );
+        assembly {
+            sstore(WEIGHT_CONTROLLER_KEY, scoreWeightControllerAddr)
         }
     }
 

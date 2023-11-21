@@ -118,6 +118,7 @@ contract YamatoV4 is
         ==============================
         - initialize
         - setDeps
+        - setScreRegistory
     */
     function initialize(address _currencyOS) public initializer {
         bytes32 CURRENCY_OS_KEY = bytes32(
@@ -141,8 +142,7 @@ contract YamatoV4 is
         address _yamatoRedeemer,
         address _yamatoSweeper,
         address _pool,
-        address _priorityRegistry,
-        address _scoreRegistry
+        address _priorityRegistry
     ) external onlyGovernance {
         /*
             [ Deployment Order ]
@@ -183,9 +183,6 @@ contract YamatoV4 is
         bytes32 PRIORITY_REGISTRY_KEY = bytes32(
             keccak256(abi.encode(PRIORITY_REGISTRY_SLOT_ID))
         );
-        bytes32 SCORE_REGISTRY_KEY = bytes32(
-            keccak256(abi.encode(SCORE_REGISTRY_SLOT_ID))
-        );
         assembly {
             sstore(YAMATO_DEPOSITOR_KEY, _yamatoDepositor)
             sstore(YAMATO_BORROWER_KEY, _yamatoBorrower)
@@ -195,6 +192,14 @@ contract YamatoV4 is
             sstore(YAMATO_SWEEPER_KEY, _yamatoSweeper)
             sstore(POOL_KEY, _pool)
             sstore(PRIORITY_REGISTRY_KEY, _priorityRegistry)
+        }
+    }
+
+    function setScoreRegistory(address _scoreRegistry) external onlyGovernance {
+        bytes32 SCORE_REGISTRY_KEY = bytes32(
+            keccak256(abi.encode(SCORE_REGISTRY_SLOT_ID))
+        );
+        assembly {
             sstore(SCORE_REGISTRY_KEY, _scoreRegistry)
         }
     }

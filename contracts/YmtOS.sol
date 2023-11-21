@@ -1,4 +1,5 @@
 pragma solidity 0.8.4;
+// This contract is not in use.
 
 /*
  * SPDX-License-Identifier: GPL-3.0-or-later
@@ -11,6 +12,7 @@ pragma solidity 0.8.4;
 
 import "./veYMT.sol";
 import "./Interfaces/IYMT.sol";
+import "./Interfaces/IveYMTOld.sol";
 import "./Interfaces/IYamato.sol";
 import "./Interfaces/IYmtOS.sol";
 import "./Dependencies/UUPSBase.sol";
@@ -102,7 +104,7 @@ contract YmtOS is IYmtOS, UUPSBase {
         uint256 _cycle = getLastCycle();
         uint256 _at = _cycle * CYCLE_SIZE;
         uint256[2] memory _range = getLastCycleBlockRange();
-        uint256 _mintableInTimeframe = IveYMT(veYMT()).mintableInTimeframe(
+        uint256 _mintableInTimeframe = IveYMTOld(veYMT()).mintableInTimeframe(
             _range[0],
             _range[1]
         );
@@ -177,7 +179,7 @@ contract YmtOS is IYmtOS, UUPSBase {
         IYamato.Pledge memory _pledge,
         uint256 _at
     ) public view returns (uint256) {
-        uint256 veScore = IveYMT(veYMT()).balanceOfAt(_pledge.owner, _at);
+        uint256 veScore = IveYMTOld(veYMT()).balanceOfAt(_pledge.owner, _at);
 
         // TODO: Do some magic :)
 

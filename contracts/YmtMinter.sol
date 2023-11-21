@@ -11,6 +11,7 @@ pragma solidity 0.8.4;
 import "./Interfaces/IYMT.sol";
 import "./Interfaces/IScoreRegistry.sol";
 import "./Interfaces/IScoreController.sol";
+import "./Dependencies/UUPSBase.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 

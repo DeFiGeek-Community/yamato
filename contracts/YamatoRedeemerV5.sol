@@ -28,7 +28,7 @@ import "hardhat/console.sol";
 
 /// @title Yamato Redeemer Contract
 
-contract YamatoRedeemerV is IYamatoRedeemerV4, YamatoAction {
+contract YamatoRedeemerV5 is IYamatoRedeemerV4, YamatoAction {
     using PledgeLib for IYamato.Pledge;
     using PledgeLib for uint256;
 
