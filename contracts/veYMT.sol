@@ -85,7 +85,7 @@ contract veYMT is ReentrancyGuard {
 
     string public name;
     string public symbol;
-    uint256 public decimals;
+    uint8 public decimals;
 
     // Checker for whitelisted (smart contract) wallets which are allowed to deposit
     // The goal is to prevent tokenizing the escrow
@@ -107,12 +107,7 @@ contract veYMT is ReentrancyGuard {
         controller = msg.sender;
         transfersEnabled = true;
 
-        uint256 decimalsFromToken = IYMT(tokenAddr_).decimals();
-        require(
-            decimalsFromToken <= 255,
-            "Decimals should be less than or equal to 255"
-        );
-        decimals = decimalsFromToken;
+        decimals = IYMT(tokenAddr_).decimals();
 
         name = "Voting-escrowed Yamato";
         symbol = "veYMT";
