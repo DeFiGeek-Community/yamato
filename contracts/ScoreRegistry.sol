@@ -24,8 +24,6 @@ contract ScoreRegistry is YamatoAction {
         uint256 workingBalance,
         uint256 workingSupply
     );
-    event CommitOwnership(address indexed admin);
-    event ApplyOwnership(address indexed admin);
 
     // to avoid "stack too deep"
     struct CheckPointParameters {
@@ -43,9 +41,6 @@ contract ScoreRegistry is YamatoAction {
     // Constants
     uint256 public constant TOKENLESS_PRODUCTION = 40;
     uint256 public constant WEEK = 604800;
-
-    // Score
-    address public admin;
 
     address public token;
     address public votingEscrow;
@@ -83,7 +78,6 @@ contract ScoreRegistry is YamatoAction {
         votingEscrow = IScoreController(scoreController).votingEscrow();
 
         periodTimestamp[int128(0)] = block.timestamp;
-        admin = msg.sender;
 
         // Assuming you have the YMT interface defined somewhere for the following line
         inflationRate = IYMT(token).rate();
@@ -243,7 +237,7 @@ contract ScoreRegistry is YamatoAction {
         updateScoreLimit(addr_, _balance, _totalSupply);
     }
 
-    function setKilled(bool isKilled_) external onlyAdmin {
+    function setKilled(bool isKilled_) external onlyGovernance {
         isKilled = isKilled_;
     }
 
@@ -255,8 +249,4 @@ contract ScoreRegistry is YamatoAction {
         return a < b ? a : b;
     }
 
-    modifier onlyAdmin() {
-        require(msg.sender == admin, "only owner");
-        _;
-    }
 }

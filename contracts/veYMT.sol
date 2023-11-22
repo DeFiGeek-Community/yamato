@@ -87,11 +87,6 @@ contract veYMT is ReentrancyGuard {
     string public symbol;
     uint8 public decimals;
 
-    // Checker for whitelisted (smart contract) wallets which are allowed to deposit
-    // The goal is to prevent tokenizing the escrow
-    address public futureSmartWalletChecker;
-    address public smartWalletChecker;
-
     address public admin;
     address public futureAdmin;
 
@@ -130,21 +125,6 @@ contract veYMT is ReentrancyGuard {
         require(_admin != address(0), "admin not set");
         admin = _admin;
         emit ApplyOwnership(_admin);
-    }
-
-    /***
-     * @notice Set an external contract to check for approved smart contract wallets
-     * @param addr_ Address of Smart contract checker
-     */
-    function commitSmartWalletChecker(address addr_) external onlyAdmin {
-        futureSmartWalletChecker = addr_;
-    }
-
-    /***
-     * @notice Apply setting external contract to check approved smart contract wallets
-     */
-    function applySmartWalletChecker() external onlyAdmin {
-        smartWalletChecker = futureSmartWalletChecker;
     }
 
     /***

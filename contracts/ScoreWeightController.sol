@@ -33,8 +33,6 @@ contract ScoreWeightController is UUPSBase {
         uint256 end;
     }
 
-    event CommitOwnership(address admin);
-    event ApplyOwnership(address admin);
     event AddType(string name, int128 typeId);
     event NewTypeWeight(
         int128 typeId,
@@ -59,10 +57,6 @@ contract ScoreWeightController is UUPSBase {
 
     uint256 constant MULTIPLIER = 10 ** 18;
 
-    // Can and will be a smart contract
-    address public admin;
-    // Can and will be a smart contract
-    address public futureAdmin;
     // YMT token
     address public token;
     // Voting escrow
@@ -117,29 +111,9 @@ contract ScoreWeightController is UUPSBase {
         require(votingEscrow_ != address(0));
 
         __UUPSBase_init();
-        admin = msg.sender;
         token = token_;
         votingEscrow = votingEscrow_;
         timeTotal = (block.timestamp / WEEK) * WEEK;
-    }
-
-    /***
-     * @notice Transfer ownership of ScoreController to `addr`
-     * @param addr_ Address to have ownership transferred to
-     */
-    function commitTransferOwnership(address addr_) external onlyAdmin {
-        futureAdmin = addr_;
-        emit CommitOwnership(addr_);
-    }
-
-    /***
-     * @notice Apply pending ownership transfer
-     */
-    function applyTransferOwnership() external onlyAdmin {
-        address _admin = futureAdmin;
-        require(_admin != address(0), "admin not set");
-        admin = _admin;
-        emit ApplyOwnership(_admin);
     }
 
     /***
@@ -324,7 +298,7 @@ contract ScoreWeightController is UUPSBase {
         address addr_,
         int128 scoreType_,
         uint256 weight_
-    ) external onlyAdmin {
+    ) external onlyGovernance {
         require(
             (scoreType_ >= 0) && (scoreType_ < nScoreTypes),
             "score_type 0 means unset"
@@ -470,7 +444,7 @@ contract ScoreWeightController is UUPSBase {
      *@param name_ Name of score type
      *@param weight_ Weight of score type
      */
-    function addType(string memory name_, uint256 weight_) external onlyAdmin {
+    function addType(string memory name_, uint256 weight_) external onlyGovernance {
         int128 _typeId = nScoreTypes;
         scoreTypeNames[_typeId] = name_;
         unchecked {
@@ -490,7 +464,7 @@ contract ScoreWeightController is UUPSBase {
     function changeTypeWeight(
         int128 typeId_,
         uint256 weight_
-    ) external onlyAdmin {
+    ) external onlyGovernance {
         _changeTypeWeight(typeId_, weight_);
     }
 
@@ -532,7 +506,7 @@ contract ScoreWeightController is UUPSBase {
     function changeScoreWeight(
         address addr_,
         uint256 weight_
-    ) external onlyAdmin {
+    ) external onlyGovernance {
         _changeScoreWeight(addr_, weight_);
     }
 
@@ -689,10 +663,5 @@ contract ScoreWeightController is UUPSBase {
 
     function max(uint256 _a, uint256 _b) internal pure returns (uint256) {
         return _a >= _b ? _a : _b;
-    }
-
-    modifier onlyAdmin() {
-        require(admin == msg.sender, "admin only");
-        _;
     }
 }
