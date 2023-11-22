@@ -216,7 +216,7 @@ contract ScoreRegistry is YamatoAction {
         );
         checkpoint(addr_);
         uint256 _balance = IYamato(yamato()).getPledge(addr_).debt;
-        uint256 _totalSupply = IYamatoV4(yamato()).totalDebt();
+        uint256 _totalSupply = IYamatoV4(yamato()).getTotalDebt();
         updateScoreLimit(addr_, _balance, _totalSupply);
         return true;
     }
@@ -239,7 +239,7 @@ contract ScoreRegistry is YamatoAction {
         );
 
         checkpoint(addr_);
-        uint256 _totalSupply = IYamatoV4(yamato()).totalDebt();
+        uint256 _totalSupply = IYamatoV4(yamato()).getTotalDebt();
         updateScoreLimit(addr_, _balance, _totalSupply);
     }
 

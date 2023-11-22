@@ -21,5 +21,5 @@ interface IYamatoV4 {
 
     function scoreRegistry() external view returns (address);
 
-    function totalDebt() external view returns (uint256);
+    function getTotalDebt() external view returns (uint256);
 }

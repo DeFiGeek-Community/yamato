@@ -449,6 +449,10 @@ contract YamatoV4 is
         return (pledge.coll, pledge.debt, pledge.isCreated, flashlocks[owner]);
     }
 
+    function getTotalDebt() public view override returns (uint256) {
+        return totalDebt;
+    }
+
     // @dev Yamato.sol must override it with correct logic.
     function yamato() public view override returns (address) {
         return address(this);
