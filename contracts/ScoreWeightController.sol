@@ -67,7 +67,7 @@ contract ScoreWeightController is UUPSBase {
     mapping(int128 => string) public scoreTypeNames;
 
     // Needed for enumeration
-    address[1000000000] public scores;
+    mapping(int128 => address) public scores;
 
     // we increment values by 1 prior to storing them here so we can rely on a value
     // of zero as meaning the score has not been set    mapping(address => int128) scoreTypes;
@@ -90,13 +90,13 @@ contract ScoreWeightController is UUPSBase {
 
     mapping(int128 => mapping(uint256 => Point)) public pointsSum; // type_id -> time -> Point
     mapping(int128 => mapping(uint256 => uint256)) public changesSum; // type_id -> time -> slope
-    uint256[1000000000] public timeSum; // type_id -> last scheduled time (next week)
+    mapping(int128 => uint256) public timeSum; // type_id -> last scheduled time (next week)
 
     mapping(uint256 => uint256) public pointsTotal; // time -> total weight
     uint256 public timeTotal; // last scheduled time
 
     mapping(int128 => mapping(uint256 => uint256)) public pointsTypeWeight; // type_id -> time -> type weight
-    uint256[1000000000] public timeTypeWeight; // type_id -> last scheduled time (next week)
+    mapping(int128 => uint256) public timeTypeWeight; // type_id -> last scheduled time (next week)
 
     /***
      *@notice Contract constructor
@@ -135,8 +135,7 @@ contract ScoreWeightController is UUPSBase {
      *@return Type weight
      */
     function _getTypeWeight(int128 scoreType_) internal returns (uint256) {
-        uint256 _scoreType = uint256(uint128(scoreType_));
-        uint256 _t = timeTypeWeight[_scoreType];
+        uint256 _t = timeTypeWeight[scoreType_];
         if (_t > 0) {
             uint256 _w = pointsTypeWeight[scoreType_][_t];
             for (uint256 i; i < 500; ) {
@@ -146,7 +145,7 @@ contract ScoreWeightController is UUPSBase {
                 _t += WEEK;
                 pointsTypeWeight[scoreType_][_t] = _w;
                 if (_t > block.timestamp) {
-                    timeTypeWeight[_scoreType] = _t;
+                    timeTypeWeight[scoreType_] = _t;
                 }
                 unchecked {
                     ++i;
@@ -165,8 +164,7 @@ contract ScoreWeightController is UUPSBase {
      *@return Sum of weights
      */
     function _getSum(int128 scoreType_) internal returns (uint256) {
-        uint256 _scoreType = uint256(uint128(scoreType_));
-        uint256 _t = timeSum[_scoreType];
+        uint256 _t = timeSum[scoreType_];
         if (_t > 0) {
             Point memory _pt = pointsSum[scoreType_][_t];
             for (uint256 i; i < 500; ) {
@@ -185,7 +183,7 @@ contract ScoreWeightController is UUPSBase {
                 }
                 pointsSum[scoreType_][_t] = _pt;
                 if (_t > block.timestamp) {
-                    timeSum[_scoreType] = _t;
+                    timeSum[scoreType_] = _t;
                 }
                 unchecked {
                     ++i;
@@ -308,8 +306,7 @@ contract ScoreWeightController is UUPSBase {
         unchecked {
             nScores = _n + 1;
         }
-        scores[uint256(uint128(_n))] = addr_;
-        uint256 _scoreType = uint256(uint128(scoreType_));
+        scores[_n] = addr_;
         scoreTypes_[addr_] = scoreType_ + 1;
         uint256 _nextTime;
         unchecked {
@@ -322,14 +319,14 @@ contract ScoreWeightController is UUPSBase {
             uint256 _oldTotal = _getTotal();
 
             pointsSum[scoreType_][_nextTime].bias = weight_ + _oldSum;
-            timeSum[_scoreType] = _nextTime;
+            timeSum[scoreType_] = _nextTime;
             pointsTotal[_nextTime] = _oldTotal + (_typeWeight * weight_);
             timeTotal = _nextTime;
 
             pointsWeight[addr_][_nextTime].bias = weight_;
         }
-        if (timeSum[_scoreType] == 0) {
-            timeSum[_scoreType] = _nextTime;
+        if (timeSum[scoreType_] == 0) {
+            timeSum[scoreType_] = _nextTime;
         }
         timeWeight[addr_] = _nextTime;
 
@@ -425,7 +422,6 @@ contract ScoreWeightController is UUPSBase {
         unchecked {
             _nextTime = ((block.timestamp + WEEK) / WEEK) * WEEK;
         }
-        uint256 _typeId = uint256(uint128(typeId_));
 
         _totalWeight =
             _totalWeight +
@@ -434,7 +430,7 @@ contract ScoreWeightController is UUPSBase {
         pointsTotal[_nextTime] = _totalWeight;
         pointsTypeWeight[typeId_][_nextTime] = weight_;
         timeTotal = _nextTime;
-        timeTypeWeight[_typeId] = _nextTime;
+        timeTypeWeight[typeId_] = _nextTime;
 
         emit NewTypeWeight(typeId_, _nextTime, weight_, _totalWeight);
     }
@@ -486,7 +482,7 @@ contract ScoreWeightController is UUPSBase {
 
         uint256 newSum = _oldSum + weight_ - _oldScoreWeight;
         pointsSum[_scoreType][_nextTime].bias = newSum;
-        timeSum[uint256(uint128(_scoreType))] = _nextTime;
+        timeSum[_scoreType] = _nextTime;
 
         _totalWeight =
             _totalWeight +
@@ -637,8 +633,7 @@ contract ScoreWeightController is UUPSBase {
      *@return Type weight
      */
     function getTypeWeight(int128 typeId_) external view returns (uint256) {
-        uint256 _typeId = uint256(uint128(typeId_));
-        return pointsTypeWeight[typeId_][timeTypeWeight[_typeId]];
+        return pointsTypeWeight[typeId_][timeTypeWeight[typeId_]];
     }
 
     /***
@@ -657,8 +652,7 @@ contract ScoreWeightController is UUPSBase {
     function getWeightsSumPerType(
         int128 typeId_
     ) external view returns (uint256) {
-        uint256 _typeId = uint256(uint128(typeId_));
-        return pointsSum[typeId_][timeSum[_typeId]].bias;
+        return pointsSum[typeId_][timeSum[typeId_]].bias;
     }
 
     function max(uint256 _a, uint256 _b) internal pure returns (uint256) {
