@@ -72,8 +72,8 @@ contract ScoreRegistry is YamatoAction {
     int128 public period;
 
     // Using dynamic array instead of fixed 100000000000000000000000000000 array to avoid warning about collisions
-    uint256[100000000000000000000000000000] public periodTimestamp;
-    uint256[100000000000000000000000000000] public integrateInvSupply;
+    mapping(int128=>uint256) public periodTimestamp;
+    mapping(int128=>uint256)  public integrateInvSupply;
 
     function initialize(address minter_, address yamato_) public initializer {
         __YamatoAction_init(yamato_);
@@ -82,7 +82,7 @@ contract ScoreRegistry is YamatoAction {
         scoreController = IYmtMinter(minter).controller();
         votingEscrow = IScoreController(scoreController).votingEscrow();
 
-        periodTimestamp[0] = block.timestamp;
+        periodTimestamp[int128(0)] = block.timestamp;
         admin = msg.sender;
 
         // Assuming you have the YMT interface defined somewhere for the following line
@@ -94,9 +94,9 @@ contract ScoreRegistry is YamatoAction {
         CheckPointParameters memory _st;
 
         _st.period = period;
-        _st.periodTime = periodTimestamp[uint256(uint128(_st.period))];
+        _st.periodTime = periodTimestamp[_st.period];
         _st.integrateInvSupply = integrateInvSupply[
-            uint256(uint128(_st.period))
+            _st.period
         ];
 
         _st.rate = inflationRate;
@@ -165,8 +165,8 @@ contract ScoreRegistry is YamatoAction {
 
         _st.period += 1;
         period = _st.period;
-        periodTimestamp[uint256(uint128(_st.period))] = block.timestamp;
-        integrateInvSupply[uint256(uint128(_st.period))] = _st
+        periodTimestamp[_st.period] = block.timestamp;
+        integrateInvSupply[_st.period] = _st
             .integrateInvSupply;
 
         uint256 _workingBalance = workingBalances[addr];
@@ -248,7 +248,7 @@ contract ScoreRegistry is YamatoAction {
     }
 
     function integrateCheckpoint() external view returns (uint256) {
-        return periodTimestamp[uint256(uint128(period))];
+        return periodTimestamp[period];
     }
 
     function min(uint256 a, uint256 b) internal pure returns (uint256) {
