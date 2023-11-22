@@ -276,7 +276,7 @@ describe("contract Yamato - pure func quickier tests", function () {
   });
 });
 
-describe.only("contract Yamato", function () {
+describe("contract Yamato", function () {
   let mockPool: FakeContract<Pool>;
   let mockFeePool: FakeContract<FeePool>;
   let mockFeed: FakeContract<PriceFeedV3>;
