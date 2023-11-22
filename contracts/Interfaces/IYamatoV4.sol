@@ -20,4 +20,6 @@ interface IYamatoV4 {
     function CHECKPOINT_BUFFER() external view returns (uint256);
 
     function scoreRegistry() external view returns (address);
+
+    function totalDebt() external view returns (uint256);
 }

@@ -14,6 +14,7 @@ import "./Interfaces/IScoreController.sol";
 import "./Interfaces/IYMT.sol";
 import "./Interfaces/IYmtMinter.sol";
 import "./Interfaces/IveYMT.sol";
+import "./Interfaces/IYamatoV4.sol";
 
 contract ScoreRegistry is YamatoAction {
     event UpdateLiquidityLimit(
@@ -42,10 +43,6 @@ contract ScoreRegistry is YamatoAction {
     // Constants
     uint256 public constant TOKENLESS_PRODUCTION = 40;
     uint256 public constant WEEK = 604800;
-
-    // ERC20
-    mapping(address => uint256) public balanceOf;
-    uint256 public totalSupply;
 
     // Score
     address public admin;
@@ -218,7 +215,9 @@ contract ScoreRegistry is YamatoAction {
             "dev: unauthorized"
         );
         checkpoint(addr_);
-        updateScoreLimit(addr_, balanceOf[addr_], totalSupply);
+        uint256 _balance = IYamato(yamato()).getPledge(addr_).debt;
+        uint256 _totalSupply = IYamatoV4(yamato()).totalDebt();
+        updateScoreLimit(addr_, _balance, _totalSupply);
         return true;
     }
 
@@ -228,7 +227,7 @@ contract ScoreRegistry is YamatoAction {
             addr_,
             IveYMT(votingEscrow).userPointEpoch(addr_)
         );
-        uint256 _balance = balanceOf[addr_];
+        uint256 _balance = IYamato(yamato()).getPledge(addr_).debt;
 
         require(
             IveYMT(votingEscrow).balanceOf(addr_) == 0 || _tVe > _tLast,
@@ -240,7 +239,8 @@ contract ScoreRegistry is YamatoAction {
         );
 
         checkpoint(addr_);
-        updateScoreLimit(addr_, balanceOf[addr_], totalSupply);
+        uint256 _totalSupply = IYamatoV4(yamato()).totalDebt();
+        updateScoreLimit(addr_, _balance, _totalSupply);
     }
 
     function setKilled(bool isKilled_) external onlyAdmin {
