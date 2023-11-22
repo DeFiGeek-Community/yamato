@@ -17,7 +17,7 @@ import "./Interfaces/IveYMT.sol";
 import "./Interfaces/IYamatoV4.sol";
 
 contract ScoreRegistry is YamatoAction {
-    event UpdateLiquidityLimit(
+    event UpdateScoreLimit(
         address user,
         uint256 originalBalance,
         uint256 originalSupply,
@@ -194,7 +194,7 @@ contract ScoreRegistry is YamatoAction {
         uint256 _workingSupply = workingSupply + _lim - _oldBal;
         workingSupply = _workingSupply;
 
-        emit UpdateLiquidityLimit(
+        emit UpdateScoreLimit(
             addr_,
             debt_,
             totaldebt_,
