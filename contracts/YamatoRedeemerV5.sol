@@ -244,14 +244,10 @@ contract YamatoRedeemerV5 is IYamatoRedeemerV4, YamatoAction {
             _scoreRegistry.updateScoreLimit(
                 _pledge.owner,
                 _pledge.debt,
-                totalDebt - vars._toBeRedeemed
+                totalDebt - vars._toBeRedeemed,
+                _pledge.getICR(priceFeed())
             );
         }
-
-        /*
-            8. Update score
-        */
-        // _scoreRegistry.updateScoreLimit(_args.sender, _pledge.debt, totalDebt - vars._toBeRedeemed);
 
         /*
             Handle compensations

@@ -29,6 +29,8 @@ import "hardhat/console.sol";
 /// @title Yamato Repayer Contract
 
 contract YamatoRepayerV3 is IYamatoRepayer, YamatoAction {
+    using PledgeLib for IYamato.Pledge;
+
     function initialize(address _yamato) public initializer {
         __YamatoAction_init(_yamato);
     }
@@ -94,7 +96,8 @@ contract YamatoRepayerV3 is IYamatoRepayer, YamatoAction {
         _scoreRegistry.updateScoreLimit(
             _sender,
             pledge.debt,
-            totalDebt - _repayAmountInCurrency
+            totalDebt - _repayAmountInCurrency,
+            pledge.getICR(priceFeed())
         );
 
         /*

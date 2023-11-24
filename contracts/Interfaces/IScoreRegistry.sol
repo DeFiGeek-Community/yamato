@@ -14,7 +14,8 @@ interface IScoreRegistry {
     function updateScoreLimit(
         address addr_,
         uint256 debt_,
-        uint256 totaldebt_
+        uint256 totalDebt_,
+        uint256 collateralRatio_
     ) external;
 
     function userCheckpoint(address addr_) external returns (bool);

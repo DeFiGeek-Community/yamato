@@ -161,7 +161,8 @@ contract YamatoSweeperV3 is IYamatoSweeper, YamatoAction {
             _scoreRegistry.updateScoreLimit(
                 _pledge.owner,
                 _pledge.debt,
-                totalDebt - vars._toBeSwept
+                totalDebt - vars._toBeSwept,
+                _pledge.getICR(priceFeed())
             );
         }
 

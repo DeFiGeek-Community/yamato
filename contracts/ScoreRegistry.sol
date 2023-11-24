@@ -10,6 +10,7 @@ pragma solidity 0.8.4;
 
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "./Dependencies/YamatoAction.sol";
+import "./Dependencies/PledgeLib.sol";
 import "./Interfaces/IScoreController.sol";
 import "./Interfaces/IYMT.sol";
 import "./Interfaces/IYmtMinter.sol";
@@ -17,10 +18,13 @@ import "./Interfaces/IveYMT.sol";
 import "./Interfaces/IYamatoV4.sol";
 
 contract ScoreRegistry is YamatoAction {
+    using PledgeLib for IYamato.Pledge;
+
     event UpdateScoreLimit(
         address user,
         uint256 originalBalance,
         uint256 originalSupply,
+        uint256 collateralRatio,
         uint256 workingBalance,
         uint256 workingSupply
     );
@@ -175,7 +179,8 @@ contract ScoreRegistry is YamatoAction {
     function updateScoreLimit(
         address addr_,
         uint256 debt_,
-        uint256 totaldebt_
+        uint256 totalDebt_,
+        uint256 collateralRatio_
     ) public onlyYamato {
         uint256 _votingBalance = IveYMT(votingEscrow).balanceOf(addr_);
         uint256 _votingTotal = IveYMT(votingEscrow).totalSupply();
@@ -183,25 +188,49 @@ contract ScoreRegistry is YamatoAction {
         uint256 _lim = (debt_ * TOKENLESS_PRODUCTION) / 100;
         if (_votingTotal > 0) {
             _lim +=
-                (((totaldebt_ * _votingBalance) / _votingTotal) *
+                (((totalDebt_ * _votingBalance) / _votingTotal) *
                     (100 - TOKENLESS_PRODUCTION)) /
                 100;
         }
 
         _lim = min(debt_, _lim);
         uint256 _oldBal = workingBalances[addr_];
-        workingBalances[addr_] = _lim;
-        uint256 _workingSupply = workingSupply + _lim - _oldBal;
+
+        // Apply the coefficient based on the collateral ratio provided
+        uint256 coefficient = calculateCoefficient(collateralRatio_);
+
+        // Adjust the limit based on the coefficient
+        uint256 _limit = (_lim * coefficient) / 1e18;
+
+        workingBalances[addr_] = _limit;
+        uint256 _workingSupply = workingSupply + _limit - _oldBal;
         workingSupply = _workingSupply;
 
         emit UpdateScoreLimit(
             addr_,
             debt_,
-            totaldebt_,
-            _lim,
+            totalDebt_,
+            collateralRatio_,
+            _limit,
             _workingSupply
         );
     }
+
+    function calculateCoefficient(uint256 collateralRatio_) internal pure returns (uint256) {
+        uint256 _collateralRatio = collateralRatio_;
+        if (_collateralRatio >= 25000) {
+            return 2.5e18;
+        } else if (_collateralRatio >= 20000) {
+            return 2e18;
+        } else if (_collateralRatio >= 15000) {
+            return 1.5e18;
+        } else if (_collateralRatio >= 13000) {
+            return 1e18;
+        } else {
+            return 0;
+        }
+    }
+
 
     function userCheckpoint(address addr_) external onlyYamato returns (bool) {
         require(
@@ -209,9 +238,11 @@ contract ScoreRegistry is YamatoAction {
             "dev: unauthorized"
         );
         checkpoint(addr_);
-        uint256 _balance = IYamato(yamato()).getPledge(addr_).debt;
+        IYamato.Pledge memory _pledge = IYamato(yamato()).getPledge(addr_);
+        uint256 _collateralRatio = _pledge.getICR(priceFeed());
+        uint256 _balance = _pledge.debt;
         uint256 _totalSupply = IYamatoV4(yamato()).getTotalDebt();
-        updateScoreLimit(addr_, _balance, _totalSupply);
+        updateScoreLimit(addr_, _balance, _totalSupply, _collateralRatio);
         return true;
     }
 
@@ -221,20 +252,23 @@ contract ScoreRegistry is YamatoAction {
             addr_,
             IveYMT(votingEscrow).userPointEpoch(addr_)
         );
-        uint256 _balance = IYamato(yamato()).getPledge(addr_).debt;
+        IYamato.Pledge memory _pledge = IYamato(yamato()).getPledge(addr_);
+        uint256 _balance = _pledge.debt;
+        uint256 _collateralRatio = _pledge.getICR(priceFeed());
+        uint256 coefficient = calculateCoefficient(_collateralRatio);
 
         require(
             IveYMT(votingEscrow).balanceOf(addr_) == 0 || _tVe > _tLast,
             "Not allowed"
         );
         require(
-            workingBalances[addr_] > (_balance * TOKENLESS_PRODUCTION) / 100,
+            workingBalances[addr_] > (((_balance * TOKENLESS_PRODUCTION) / 100) * coefficient) / 1e18,
             "Not needed"
         );
 
         checkpoint(addr_);
         uint256 _totalSupply = IYamatoV4(yamato()).getTotalDebt();
-        updateScoreLimit(addr_, _balance, _totalSupply);
+        updateScoreLimit(addr_, _balance, _totalSupply, _collateralRatio);
     }
 
     function setKilled(bool isKilled_) external onlyGovernance {

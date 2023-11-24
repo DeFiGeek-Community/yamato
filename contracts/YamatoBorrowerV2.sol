@@ -105,7 +105,8 @@ contract YamatoBorrowerV2 is IYamatoBorrower, YamatoAction {
         _scoreRegistry.updateScoreLimit(
             _sender,
             pledge.debt,
-            totalDebt + _borrowAmountInCurrency
+            totalDebt + _borrowAmountInCurrency,
+            pledge.getICR(priceFeed())
         );
 
         /*
