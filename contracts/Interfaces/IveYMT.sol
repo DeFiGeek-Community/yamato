@@ -9,6 +9,14 @@ pragma solidity 0.8.4;
 //solhint-disable no-inline-assembly
 
 interface IveYMT {
+
+    struct Point {
+        int128 bias;
+        int128 slope;
+        uint256 ts;
+        uint256 blk;
+}
+
     function totalSupply() external view returns (uint256);
 
     function getLastUserSlope(address addr_) external view returns (int128);
@@ -30,4 +38,15 @@ interface IveYMT {
         address addr,
         uint256 epoch
     ) external view returns (uint256);
+
+    function epoch() external view returns (uint256);
+
+    function userPointHistory(
+        address addr,
+        uint256 loc
+    ) external view returns (Point memory);
+
+    function pointHistory(uint256 loc) external view returns (Point memory);
+
+    function checkpoint() external;
 }
