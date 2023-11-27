@@ -185,10 +185,10 @@ contract FeePoolV2 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
     }
 
     /***
-     * @notice Get the veYNWK balance for `user_` at `timestamp_`
+     * @notice Get the veYMT balance for `user_` at `timestamp_`
      * @param user_ Address to query balance for
      * @param timestamp_ Epoch time
-     * @return uint256 veYNWK balance
+     * @return uint256 veYMT balance
      */
     function veForAt(
         address user_,
@@ -241,7 +241,7 @@ contract FeePoolV2 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
     }
 
     /***
-     * @notice Update the veCRV total supply checkpoint
+     * @notice Update the veYMT total supply checkpoint
      * @dev The checkpoint is also updated by the first claimant each new epoch week. This function may be called independently of a claim, to reduce claiming gas costs.
      */
     function checkpointTotalSupply() external {
@@ -402,8 +402,8 @@ contract FeePoolV2 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
 
     /***
      * @notice Claim fees for `msg.sender`
-     * @dev Each call to claim look at a maximum of 50 user veCRV points.
-         For accounts with many veCRV related actions, this function
+     * @dev Each call to claim look at a maximum of 50 user veYMT points.
+         For accounts with many veYMT related actions, this function
          may need to be called more than once to claim all available
          fees. In the `Claimed` event that fires, if `claim_epoch` is
          less than `max_epoch`, the account may claim again.
@@ -442,8 +442,8 @@ contract FeePoolV2 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
 
     /***
      * @notice Claim fees for `addr_`
-     * @dev Each call to claim look at a maximum of 50 user veCRV points.
-         For accounts with many veCRV related actions, this function
+     * @dev Each call to claim look at a maximum of 50 user veYMT points.
+         For accounts with many veYMT related actions, this function
          may need to be called more than once to claim all available
          fees. In the `Claimed` event that fires, if `claim_epoch` is
          less than `max_epoch`, the account may claim again.
@@ -555,7 +555,7 @@ contract FeePoolV2 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
     }
 
     /***
-     * @notice Recover ERC20 tokens from this contract
+     * @notice Recover native token from this contract
      * @dev Tokens are sent to the emergency return address.
      * @return bool success
      */
