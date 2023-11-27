@@ -43,7 +43,7 @@ contract ScoreRegistry is YamatoAction {
     }
 
     // Constants
-    uint256 public constant TOKENLESS_PRODUCTION = 40;
+    uint256 public constant TOKENLESS_PRODUCTION = 4;
     uint256 public constant WEEK = 604800;
 
     address public token;
@@ -182,12 +182,12 @@ contract ScoreRegistry is YamatoAction {
         uint256 _votingBalance = IveYMT(votingEscrow).balanceOf(addr_);
         uint256 _votingTotal = IveYMT(votingEscrow).totalSupply();
 
-        uint256 _lim = (debt_ * TOKENLESS_PRODUCTION) / 100;
+        uint256 _lim = (debt_ * TOKENLESS_PRODUCTION) / 10;
         if (_votingTotal > 0) {
             _lim +=
                 (((totalDebt_ * _votingBalance) / _votingTotal) *
-                    (100 - TOKENLESS_PRODUCTION)) /
-                100;
+                    (10 - TOKENLESS_PRODUCTION)) /
+                10;
         }
 
         _lim = min(debt_, _lim);
@@ -197,7 +197,7 @@ contract ScoreRegistry is YamatoAction {
         uint256 coefficient = calculateCoefficient(collateralRatio_);
 
         // Adjust the limit based on the coefficient
-        uint256 _limit = (_lim * coefficient) / 1e18;
+        uint256 _limit = (_lim * coefficient) / 10;
 
         workingBalances[addr_] = _limit;
         uint256 _workingSupply = workingSupply + _limit - _oldBal;
@@ -217,17 +217,11 @@ contract ScoreRegistry is YamatoAction {
         uint256 collateralRatio_
     ) internal pure returns (uint256) {
         uint256 _collateralRatio = collateralRatio_;
-        if (_collateralRatio >= 25000) {
-            return 2.5e18;
-        } else if (_collateralRatio >= 20000) {
-            return 2e18;
-        } else if (_collateralRatio >= 15000) {
-            return 1.5e18;
-        } else if (_collateralRatio >= 13000) {
-            return 1e18;
-        } else {
-            return 0;
-        }
+        if (_collateralRatio >= 25000) return 25;
+        if (_collateralRatio >= 20000) return 20;
+        if (_collateralRatio >= 15000) return 15;
+        if (_collateralRatio >= 13000) return 10;
+        return 0;
     }
 
     function userCheckpoint(address addr_) external onlyYamato returns (bool) {
@@ -261,8 +255,7 @@ contract ScoreRegistry is YamatoAction {
         );
         require(
             workingBalances[addr_] >
-                (((_balance * TOKENLESS_PRODUCTION) / 100) * coefficient) /
-                    1e18,
+                (((_balance * TOKENLESS_PRODUCTION) / 10) * coefficient) / 10,
             "Not needed"
         );
 
