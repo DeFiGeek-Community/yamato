@@ -9,13 +9,12 @@ pragma solidity 0.8.4;
 //solhint-disable no-inline-assembly
 
 interface IveYMT {
-
     struct Point {
         int128 bias;
         int128 slope;
         uint256 ts;
         uint256 blk;
-}
+    }
 
     function totalSupply() external view returns (uint256);
 

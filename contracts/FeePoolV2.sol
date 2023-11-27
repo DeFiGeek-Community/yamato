@@ -14,7 +14,6 @@ import "./Dependencies/UUPSBase.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 
-
 contract FeePoolV2 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
     uint256 public constant WEEK = 7 * 86400;
     uint256 public constant TOKEN_CHECKPOINT_DEADLINE = 1 hours;
@@ -119,7 +118,8 @@ contract FeePoolV2 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
         require(
             msg.sender == governance ||
                 (canCheckpointToken &&
-                    block.timestamp > lastTokenTime + TOKEN_CHECKPOINT_DEADLINE),
+                    block.timestamp >
+                    lastTokenTime + TOKEN_CHECKPOINT_DEADLINE),
             "Unauthorized"
         );
         _checkpointToken();
@@ -328,7 +328,12 @@ contract FeePoolV2 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
             _weekCursor = _startTime;
         }
 
-        IveYMT.Point memory _oldUserPoint = IveYMT.Point({bias: 0, slope: 0, ts: 0, blk: 0});
+        IveYMT.Point memory _oldUserPoint = IveYMT.Point({
+            bias: 0,
+            slope: 0,
+            ts: 0,
+            blk: 0
+        });
 
         // Iterate over weeks
         for (uint256 i; i < 50; ) {
@@ -345,7 +350,12 @@ contract FeePoolV2 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
                     blk: _userPoint.blk
                 });
                 if (_userEpoch > _maxUserEpoch) {
-                    _userPoint = IveYMT.Point({bias: 0, slope: 0, ts: 0, blk: 0});
+                    _userPoint = IveYMT.Point({
+                        bias: 0,
+                        slope: 0,
+                        ts: 0,
+                        blk: 0
+                    });
                 } else {
                     _userPoint = IveYMT(ve_).userPointHistory(
                         addr_,
@@ -409,7 +419,8 @@ contract FeePoolV2 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
         uint256 _lastTokenTime = lastTokenTime;
 
         if (
-            canCheckpointToken && (block.timestamp > _lastTokenTime + TOKEN_CHECKPOINT_DEADLINE)
+            canCheckpointToken &&
+            (block.timestamp > _lastTokenTime + TOKEN_CHECKPOINT_DEADLINE)
         ) {
             _checkpointToken();
             _lastTokenTime = block.timestamp;
@@ -449,7 +460,8 @@ contract FeePoolV2 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
         uint256 _lastTokenTime = lastTokenTime;
 
         if (
-            canCheckpointToken && (block.timestamp > _lastTokenTime + TOKEN_CHECKPOINT_DEADLINE)
+            canCheckpointToken &&
+            (block.timestamp > _lastTokenTime + TOKEN_CHECKPOINT_DEADLINE)
         ) {
             _checkpointToken();
             _lastTokenTime = block.timestamp;
@@ -488,7 +500,8 @@ contract FeePoolV2 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
         uint256 _lastTokenTime = lastTokenTime;
 
         if (
-            canCheckpointToken && (block.timestamp > _lastTokenTime + TOKEN_CHECKPOINT_DEADLINE)
+            canCheckpointToken &&
+            (block.timestamp > _lastTokenTime + TOKEN_CHECKPOINT_DEADLINE)
         ) {
             _checkpointToken();
             _lastTokenTime = block.timestamp;
@@ -506,10 +519,7 @@ contract FeePoolV2 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
             uint256 _amount = _claim(_addr, veYMT(), _lastTokenTime);
             if (_amount != 0) {
                 (bool success, ) = payable(_addr).call{value: _amount}("");
-                require(
-                    success,
-                    "Transfer failed"
-                );
+                require(success, "Transfer failed");
                 _total += _amount;
             }
             unchecked {
@@ -538,11 +548,10 @@ contract FeePoolV2 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
      */
     function killMe() external onlyGovernance {
         isKilled = true;
-        (bool success, ) = payable(governance).call{value: address(this).balance}("");
-        require(
-            success,
-            "Transfer failed"
-        );
+        (bool success, ) = payable(governance).call{
+            value: address(this).balance
+        }("");
+        require(success, "Transfer failed");
     }
 
     /***
@@ -551,11 +560,10 @@ contract FeePoolV2 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
      * @return bool success
      */
     function recoverBalance() external onlyGovernance returns (bool) {
-        (bool success, ) = payable(governance).call{value: address(this).balance}("");
-        require(
-            success,
-            "Transfer failed"
-        );
+        (bool success, ) = payable(governance).call{
+            value: address(this).balance
+        }("");
+        require(success, "Transfer failed");
         return true;
     }
 

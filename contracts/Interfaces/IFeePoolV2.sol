@@ -10,5 +10,4 @@ pragma solidity 0.8.4;
 //solhint-disable no-inline-assembly
 interface IFeePoolV2 {
     function veYMT() external view returns (address);
-
 }

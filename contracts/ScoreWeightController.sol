@@ -440,7 +440,10 @@ contract ScoreWeightController is UUPSBase {
      *@param name_ Name of score type
      *@param weight_ Weight of score type
      */
-    function addType(string memory name_, uint256 weight_) external onlyGovernance {
+    function addType(
+        string memory name_,
+        uint256 weight_
+    ) external onlyGovernance {
         int128 _typeId = nScoreTypes;
         scoreTypeNames[_typeId] = name_;
         unchecked {

@@ -71,8 +71,8 @@ contract ScoreRegistry is YamatoAction {
     int128 public period;
 
     // Using dynamic array instead of fixed 100000000000000000000000000000 array to avoid warning about collisions
-    mapping(int128=>uint256) public periodTimestamp;
-    mapping(int128=>uint256)  public integrateInvSupply;
+    mapping(int128 => uint256) public periodTimestamp;
+    mapping(int128 => uint256) public integrateInvSupply;
 
     function initialize(address minter_, address yamato_) public initializer {
         __YamatoAction_init(yamato_);
@@ -93,9 +93,7 @@ contract ScoreRegistry is YamatoAction {
 
         _st.period = period;
         _st.periodTime = periodTimestamp[_st.period];
-        _st.integrateInvSupply = integrateInvSupply[
-            _st.period
-        ];
+        _st.integrateInvSupply = integrateInvSupply[_st.period];
 
         _st.rate = inflationRate;
         _st.prevFutureEpoch = futureEpochTime;
@@ -164,8 +162,7 @@ contract ScoreRegistry is YamatoAction {
         _st.period += 1;
         period = _st.period;
         periodTimestamp[_st.period] = block.timestamp;
-        integrateInvSupply[_st.period] = _st
-            .integrateInvSupply;
+        integrateInvSupply[_st.period] = _st.integrateInvSupply;
 
         uint256 _workingBalance = workingBalances[addr];
         integrateFraction[addr] +=
@@ -216,7 +213,9 @@ contract ScoreRegistry is YamatoAction {
         );
     }
 
-    function calculateCoefficient(uint256 collateralRatio_) internal pure returns (uint256) {
+    function calculateCoefficient(
+        uint256 collateralRatio_
+    ) internal pure returns (uint256) {
         uint256 _collateralRatio = collateralRatio_;
         if (_collateralRatio >= 25000) {
             return 2.5e18;
@@ -230,7 +229,6 @@ contract ScoreRegistry is YamatoAction {
             return 0;
         }
     }
-
 
     function userCheckpoint(address addr_) external onlyYamato returns (bool) {
         require(
@@ -262,7 +260,9 @@ contract ScoreRegistry is YamatoAction {
             "Not allowed"
         );
         require(
-            workingBalances[addr_] > (((_balance * TOKENLESS_PRODUCTION) / 100) * coefficient) / 1e18,
+            workingBalances[addr_] >
+                (((_balance * TOKENLESS_PRODUCTION) / 100) * coefficient) /
+                    1e18,
             "Not needed"
         );
 
@@ -282,5 +282,4 @@ contract ScoreRegistry is YamatoAction {
     function min(uint256 a, uint256 b) internal pure returns (uint256) {
         return a < b ? a : b;
     }
-
 }
