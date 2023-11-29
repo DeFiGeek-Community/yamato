@@ -64,7 +64,7 @@ contract ScoreWeightController is UUPSBase {
     mapping(address => uint256) public voteUserPower; // Total vote power used by user
     mapping(address => mapping(address => uint256)) public lastUserVote; // Last user vote's timestamp for each score address
 
-    // Past and scheduled points for score weight, total weight
+    // Past and scheduled points for score weight, sum of weights per type, total weight
     // Point is for bias+slope
     // changes_* are for changes in slope
     // time_* are for the last change timestamp
@@ -151,7 +151,7 @@ contract ScoreWeightController is UUPSBase {
     }
 
     /***
-     *@notice Add Currency `addr` of with weight `weight`
+     *@notice Add Currency `addr` of type `score_type` with weight `weight`
      *@param addr_ Score address
      *@param weight_ Score weight
      */
@@ -279,7 +279,7 @@ contract ScoreWeightController is UUPSBase {
 
     /***
      *@notice Change weight of score `addr` to `weight`
-     *@param addr_ `ScoreWeightController` contract address
+     *@param addr_ `ScoreController` contract address
      *@param weight_ New Score weight
      */
     function changeScoreWeight(
@@ -397,7 +397,7 @@ contract ScoreWeightController is UUPSBase {
     }
 
     /***
-     *@notice Get current total (weighted) weight
+     *@notice Get current total (type-weighted) weight
      *@return Total weight
      */
     function getTotalWeight() external view returns (uint256) {

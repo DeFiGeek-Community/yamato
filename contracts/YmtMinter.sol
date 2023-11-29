@@ -10,7 +10,7 @@ pragma solidity 0.8.4;
 
 import "./Interfaces/IYMT.sol";
 import "./Interfaces/IScoreRegistry.sol";
-import "./Interfaces/IScoreWeightController.sol";
+import "./Interfaces/IScoreController.sol";
 import "./Dependencies/UUPSBase.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
@@ -47,7 +47,7 @@ contract YmtMinter is
 
     function _mintFor(address scoreAddr_, address for_) internal {
         require(
-            IScoreWeightController(controller).timeWeight(scoreAddr_) != 0,
+            IScoreController(controller).scoreTypes(scoreAddr_) >= 0,
             "dev: score is not added"
         );
 

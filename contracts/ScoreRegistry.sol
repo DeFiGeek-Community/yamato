@@ -11,7 +11,7 @@ pragma solidity 0.8.4;
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "./Dependencies/YamatoAction.sol";
 import "./Dependencies/PledgeLib.sol";
-import "./Interfaces/IScoreWeightController.sol";
+import "./Interfaces/IScoreController.sol";
 import "./Interfaces/IYMT.sol";
 import "./Interfaces/IYmtMinter.sol";
 import "./Interfaces/IveYMT.sol";
@@ -79,7 +79,7 @@ contract ScoreRegistry is YamatoAction {
         minter = minter_;
         token = IYmtMinter(minter).token();
         scoreController = IYmtMinter(minter).controller();
-        votingEscrow = IScoreWeightController(scoreController).votingEscrow();
+        votingEscrow = IScoreController(scoreController).votingEscrow();
 
         periodTimestamp[int128(0)] = block.timestamp;
 
@@ -112,7 +112,7 @@ contract ScoreRegistry is YamatoAction {
 
         if (block.timestamp > _st.periodTime) {
             uint256 _workingSupply = workingSupply;
-            IScoreWeightController(scoreController).checkpointScore(address(this));
+            IScoreController(scoreController).checkpointScore(address(this));
             uint256 _prevWeekTime = _st.periodTime;
             uint256 _weekTime = min(
                 ((_st.periodTime + WEEK) / WEEK) * WEEK,
@@ -121,7 +121,7 @@ contract ScoreRegistry is YamatoAction {
 
             for (uint256 i = 0; i < 500; ) {
                 uint256 dt = _weekTime - _prevWeekTime;
-                uint256 w = IScoreWeightController(scoreController)
+                uint256 w = IScoreController(scoreController)
                     .scoreRelativeWeight(
                         address(this),
                         (_prevWeekTime / WEEK) * WEEK
