@@ -182,22 +182,23 @@ contract ScoreRegistry is YamatoAction {
         uint256 _votingBalance = IveYMT(votingEscrow).balanceOf(addr_);
         uint256 _votingTotal = IveYMT(votingEscrow).totalSupply();
 
-        uint256 _lim = (debt_ * TOKENLESS_PRODUCTION) / 10;
+        uint256 _limit = (debt_ * TOKENLESS_PRODUCTION) / 10;
         if (_votingTotal > 0) {
-            _lim +=
+            _limit +=
                 (((totalDebt_ * _votingBalance) / _votingTotal) *
                     (10 - TOKENLESS_PRODUCTION)) /
                 10;
         }
 
-        _lim = min(debt_, _lim);
+        _limit = min(debt_, _limit);
         uint256 _oldBal = workingBalances[addr_];
 
-        // Apply the coefficient based on the collateral ratio provided
-        uint256 coefficient = calculateCoefficient(collateralRatio_);
-
-        // Adjust the limit based on the coefficient
-        uint256 _limit = (_lim * coefficient) / 10;
+        if(debt_ > 0){
+            // Apply the coefficient based on the collateral ratio provided
+            uint256 coefficient = calculateCoefficient(collateralRatio_);
+            // Adjust the limit based on the coefficient
+            _limit = (_limit * coefficient) / 10;
+        }
 
         workingBalances[addr_] = _limit;
         uint256 _workingSupply = workingSupply + _limit - _oldBal;
