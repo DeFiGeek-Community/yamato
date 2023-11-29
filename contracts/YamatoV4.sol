@@ -23,7 +23,7 @@ import "./Dependencies/SafeMath.sol";
 import "./Interfaces/IYamato.sol";
 import "./Interfaces/IYamatoV4.sol";
 import "./Interfaces/IFeePool.sol";
-import "./Interfaces/ICurrencyOS.sol";
+import "./Interfaces/ICurrencyOSV3.sol";
 import "hardhat/console.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
@@ -573,7 +573,7 @@ contract YamatoV4 is
 
     /// @dev Yamato.sol must override it with correct logic.
     function feePool() public view override returns (address) {
-        return ICurrencyOS(currencyOS()).feePool();
+        return ICurrencyOSV3(currencyOS()).feePool();
     }
 
     /// @dev Yamato.sol must override it with correct logic.
@@ -583,7 +583,7 @@ contract YamatoV4 is
         override(IYamato, YamatoBase)
         returns (address)
     {
-        return ICurrencyOS(currencyOS()).priceFeed();
+        return ICurrencyOSV3(currencyOS()).priceFeed();
     }
 
     /// @dev All YamatoStores and YamatoActions except Yamato.sol are NOT needed to modify these funcs. Just write the same signature and don't fill inside. Yamato.sol must override it with correct logic.
@@ -591,7 +591,7 @@ contract YamatoV4 is
         address _sender
     ) public view override(IYamato, YamatoBase) returns (bool) {
         bool permit;
-        address[10] memory deps = getDeps();
+        address[11] memory deps = getDeps();
         for (uint256 i = 0; i < deps.length; i++) {
             if (_sender == deps[i]) permit = true;
         }
@@ -599,7 +599,7 @@ contract YamatoV4 is
     }
 
     /// @dev Get package-deps to check onlyYamato-permitDeps logic
-    function getDeps() public view returns (address[10] memory) {
+    function getDeps() public view returns (address[11] memory) {
         return [
             address(this),
             depositor(),
@@ -610,7 +610,8 @@ contract YamatoV4 is
             sweeper(),
             pool(),
             priorityRegistry(),
-            scoreRegistry()
+            scoreRegistry(),
+            ICurrencyOSV3(currencyOS()).minter()
         ];
     }
 
