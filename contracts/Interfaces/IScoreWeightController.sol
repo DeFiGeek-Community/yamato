@@ -8,8 +8,7 @@ pragma solidity 0.8.4;
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 
-interface IScoreController {
-    function scoreTypes(address addr_) external view returns (uint256);
+interface IScoreWeightController {
 
     function votingEscrow() external view returns (address);
 
@@ -21,8 +20,6 @@ interface IScoreController {
 
     function userCheckpoint(address addr_) external returns (bool);
 
-    function addType(string memory name_, uint256 weight_) external;
-
     function addCurrency(
         address addr_,
         int128 scoreType_,
@@ -33,4 +30,6 @@ interface IScoreController {
         address addr,
         uint256 time
     ) external view returns (uint256);
+
+    function timeWeight(address addr_) external view returns (uint256);
 }
