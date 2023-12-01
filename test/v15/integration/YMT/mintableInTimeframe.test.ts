@@ -27,14 +27,17 @@ describe("YMT", function () {
   let snapshot: SnapshotRestorer;
   const year = Constants.year;
 
-  beforeEach(async function () {
-    snapshot = await takeSnapshot();
+  before(async function () {
     accounts = await ethers.getSigners();
     const Token = await ethers.getContractFactory("YMT");
     token = await Token.deploy();
 
     await increaseTime(BigNumber.from(86401));
     await token.updateMiningParameters();
+  });
+
+  beforeEach(async () => {
+    snapshot = await takeSnapshot();
   });
 
   afterEach(async () => {

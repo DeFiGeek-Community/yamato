@@ -21,14 +21,17 @@ describe("YMT", function () {
   let token: Contract;
   let snapshot: SnapshotRestorer;
 
-  beforeEach(async function () {
-    snapshot = await takeSnapshot();
+  before(async function () {
     accounts = await ethers.getSigners();
     const Token = await ethers.getContractFactory("YMT");
     token = await Token.deploy();
 
     await increaseTime(86401);
     await token.updateMiningParameters();
+  });
+
+  beforeEach(async () => {
+    snapshot = await takeSnapshot();
   });
 
   afterEach(async () => {
