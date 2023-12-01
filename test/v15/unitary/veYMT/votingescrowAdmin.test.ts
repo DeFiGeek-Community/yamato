@@ -7,7 +7,7 @@ import {
 } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 
-describe.only("veYMT", () => {
+describe("veYMT", () => {
   let veYMT: Contract;
   let token: Contract;
   let accounts: SignerWithAddress[];
