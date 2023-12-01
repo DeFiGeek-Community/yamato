@@ -56,7 +56,7 @@ const WEEK = 86400 * 7;
 const MONTH = 86400 * 30;
 const W = BigNumber.from(10).pow(18);
 
-describe.only("YmtMinter integration", function () {
+describe("YmtMinter integration", function () {
   let accounts: SignerWithAddress[];
   let mockFeePool: FakeContract<FeePool>;
   let mockFeed: FakeContract<PriceFeedV3>;
