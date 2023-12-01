@@ -11,7 +11,7 @@ pragma solidity 0.8.4;
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "./Dependencies/YamatoAction.sol";
 import "./Dependencies/PledgeLib.sol";
-import "./Interfaces/IScoreController.sol";
+import "./Interfaces/IScoreWeightController.sol";
 import "./Interfaces/IYMT.sol";
 import "./Interfaces/IYmtMinter.sol";
 import "./Interfaces/IveYMT.sol";
@@ -79,7 +79,7 @@ contract ScoreRegistry is YamatoAction {
         minter = minter_;
         token = IYmtMinter(minter).token();
         scoreController = IYmtMinter(minter).controller();
-        votingEscrow = IScoreController(scoreController).votingEscrow();
+        votingEscrow = IScoreWeightController(scoreController).veYMT();
 
         periodTimestamp[int128(0)] = block.timestamp;
 
@@ -112,7 +112,7 @@ contract ScoreRegistry is YamatoAction {
 
         if (block.timestamp > _st.periodTime) {
             uint256 _workingSupply = workingSupply;
-            IScoreController(scoreController).checkpointScore(address(this));
+            IScoreWeightController(scoreController).checkpointScore(address(this));
             uint256 _prevWeekTime = _st.periodTime;
             uint256 _weekTime = min(
                 ((_st.periodTime + WEEK) / WEEK) * WEEK,
@@ -121,7 +121,7 @@ contract ScoreRegistry is YamatoAction {
 
             for (uint256 i = 0; i < 500; ) {
                 uint256 dt = _weekTime - _prevWeekTime;
-                uint256 w = IScoreController(scoreController)
+                uint256 w = IScoreWeightController(scoreController)
                     .scoreRelativeWeight(
                         address(this),
                         (_prevWeekTime / WEEK) * WEEK
@@ -217,11 +217,10 @@ contract ScoreRegistry is YamatoAction {
     function calculateCoefficient(
         uint256 collateralRatio_
     ) internal pure returns (uint256) {
-        uint256 _collateralRatio = collateralRatio_;
-        if (_collateralRatio >= 25000) return 25;
-        if (_collateralRatio >= 20000) return 20;
-        if (_collateralRatio >= 15000) return 15;
-        if (_collateralRatio >= 13000) return 10;
+        if (collateralRatio_ >= 25000) return 25;
+        if (collateralRatio_ >= 20000) return 20;
+        if (collateralRatio_ >= 15000) return 15;
+        if (collateralRatio_ >= 13000) return 10;
         return 0;
     }
 
