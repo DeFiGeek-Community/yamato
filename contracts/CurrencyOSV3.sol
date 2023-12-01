@@ -22,7 +22,7 @@ contract CurrencyOSV3 is ICurrencyOSV3, UUPSBase {
     string constant FEEPOOL_SLOT_ID = "deps.FeePool";
     string constant YMT_SLOT_ID = "deps.YMT";
     string constant VEYMT_SLOT_ID = "deps.veYMT";
-    string constant MINTER_SLOT_ID = "deps.Minter";
+    string constant YMT_MINTER_SLOT_ID = "deps.ymtMinter";
     string constant WEIGHT_CONTROLLER_SLOT_ID = "deps.ScoreWeightController";
 
     /*
@@ -83,9 +83,9 @@ contract CurrencyOSV3 is ICurrencyOSV3, UUPSBase {
     }
 
     function setYmtMinter(address ymtMinterAddr) external onlyGovernance {
-        bytes32 MINTER_KEY = bytes32(keccak256(abi.encode(MINTER_SLOT_ID)));
+        bytes32 YMT_MINTER_KEY = bytes32(keccak256(abi.encode(YMT_MINTER_SLOT_ID)));
         assembly {
-            sstore(MINTER_KEY, ymtMinterAddr)
+            sstore(YMT_MINTER_KEY, ymtMinterAddr)
         }
     }
 
@@ -177,9 +177,9 @@ contract CurrencyOSV3 is ICurrencyOSV3, UUPSBase {
     }
 
     function ymtMinter() public view override returns (address _ymtMinter) {
-        bytes32 MINTER_KEY = bytes32(keccak256(abi.encode(MINTER_SLOT_ID)));
+        bytes32 YMT_MINTER_KEY = bytes32(keccak256(abi.encode(YMT_MINTER_SLOT_ID)));
         assembly {
-            _ymtMinter := sload(MINTER_KEY)
+            _ymtMinter := sload(YMT_MINTER_KEY)
         }
     }
 

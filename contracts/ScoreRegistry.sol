@@ -42,14 +42,14 @@ contract ScoreRegistry is YamatoAction {
         uint256 workingSupply;
     }
 
+    string constant YMT_SLOT_ID = "deps.YMT";
+    string constant VEYMT_SLOT_ID = "deps.veYMT";
+    string constant YMT_MINTER_SLOT_ID = "deps.ymtMinter";
+    string constant WEIGHT_CONTROLLER_SLOT_ID = "deps.ScoreWeightController";
+
     // Constants
     uint256 public constant TOKENLESS_PRODUCTION = 4;
     uint256 public constant WEEK = 604800;
-
-    address public token;
-    address public votingEscrow;
-    address public ymtMinter;
-    address public scoreController;
 
     bool public isKilled;
 
@@ -70,22 +70,34 @@ contract ScoreRegistry is YamatoAction {
     // The goal is to be able to calculate ∫(rate * balance / totalSupply dt) from 0 till checkpoint
     int128 public period;
 
-    // Using dynamic array instead of fixed 100000000000000000000000000000 array to avoid warning about collisions
     mapping(int128 => uint256) public periodTimestamp;
     mapping(int128 => uint256) public integrateInvSupply;
 
-    function initialize(address ymtMinter_, address yamato_) public initializer {
-        __YamatoAction_init(yamato_);
-        ymtMinter = ymtMinter_;
-        token = IYmtMinter(ymtMinter).token();
-        scoreController = IYmtMinter(ymtMinter).controller();
-        votingEscrow = IScoreWeightController(scoreController).veYMT();
+    function initialize(address ymtMinterAddr, address yamatoAddr) public initializer {
+        __YamatoAction_init(yamatoAddr);
+
+        bytes32 YMT_KEY = bytes32(keccak256(abi.encode(YMT_SLOT_ID)));
+        bytes32 VEYMT_KEY = bytes32(keccak256(abi.encode(VEYMT_SLOT_ID)));
+        bytes32 YMT_MINTER_KEY = bytes32(keccak256(abi.encode(YMT_MINTER_SLOT_ID)));
+        bytes32 WEIGHT_CONTROLLER_KEY = bytes32(
+            keccak256(abi.encode(WEIGHT_CONTROLLER_SLOT_ID))
+        );
+        address ymtAddr = IYmtMinter(ymtMinterAddr).YMT();
+        address scoreWeightControllerAddr = IYmtMinter(ymtMinterAddr).scoreWeightController();
+        address veYmtAddr = IScoreWeightController(scoreWeightControllerAddr).veYMT();
+
+        assembly {
+            sstore(YMT_KEY, ymtAddr)
+            sstore(VEYMT_KEY, veYmtAddr)
+            sstore(YMT_MINTER_KEY, ymtMinterAddr)
+            sstore(WEIGHT_CONTROLLER_KEY, scoreWeightControllerAddr)
+        }
 
         periodTimestamp[int128(0)] = block.timestamp;
 
         // Assuming you have the YMT interface defined somewhere for the following line
-        inflationRate = IYMT(token).rate();
-        futureEpochTime = IYMT(token).futureEpochTimeWrite();
+        inflationRate = IYMT(ymtAddr).rate();
+        futureEpochTime = IYMT(ymtAddr).futureEpochTimeWrite();
     }
 
     function checkpoint(address addr) public onlyYamato {
@@ -100,8 +112,8 @@ contract ScoreRegistry is YamatoAction {
         _st.newRate = _st.rate;
 
         if (_st.prevFutureEpoch >= _st.periodTime) {
-            futureEpochTime = IYMT(token).futureEpochTimeWrite();
-            _st.newRate = IYMT(token).rate();
+            futureEpochTime = IYMT(YMT()).futureEpochTimeWrite();
+            _st.newRate = IYMT(YMT()).rate();
             inflationRate = _st.newRate;
         }
 
@@ -112,7 +124,7 @@ contract ScoreRegistry is YamatoAction {
 
         if (block.timestamp > _st.periodTime) {
             uint256 _workingSupply = workingSupply;
-            IScoreWeightController(scoreController).checkpointScore(address(this));
+            IScoreWeightController(scoreWeightController()).checkpointScore(address(this));
             uint256 _prevWeekTime = _st.periodTime;
             uint256 _weekTime = min(
                 ((_st.periodTime + WEEK) / WEEK) * WEEK,
@@ -121,7 +133,7 @@ contract ScoreRegistry is YamatoAction {
 
             for (uint256 i = 0; i < 500; ) {
                 uint256 dt = _weekTime - _prevWeekTime;
-                uint256 w = IScoreWeightController(scoreController)
+                uint256 w = IScoreWeightController(scoreWeightController())
                     .scoreRelativeWeight(
                         address(this),
                         (_prevWeekTime / WEEK) * WEEK
@@ -179,8 +191,8 @@ contract ScoreRegistry is YamatoAction {
         uint256 totalDebt_,
         uint256 collateralRatio_
     ) public onlyYamato {
-        uint256 _votingBalance = IveYMT(votingEscrow).balanceOf(addr_);
-        uint256 _votingTotal = IveYMT(votingEscrow).totalSupply();
+        uint256 _votingBalance = IveYMT(veYMT()).balanceOf(addr_);
+        uint256 _votingTotal = IveYMT(veYMT()).totalSupply();
 
         uint256 _limit = (debt_ * TOKENLESS_PRODUCTION) / 10;
         if (_votingTotal > 0) {
@@ -226,7 +238,7 @@ contract ScoreRegistry is YamatoAction {
 
     function userCheckpoint(address addr_) external onlyYamato returns (bool) {
         require(
-            msg.sender == addr_ || msg.sender == ymtMinter,
+            msg.sender == addr_ || msg.sender == ymtMinter(),
             "dev: unauthorized"
         );
         checkpoint(addr_);
@@ -240,9 +252,9 @@ contract ScoreRegistry is YamatoAction {
 
     function kick(address addr_) external {
         uint256 _tLast = integrateCheckpointOf[addr_];
-        uint256 _tVe = IveYMT(votingEscrow).userPointHistoryTs(
+        uint256 _tVe = IveYMT(veYMT()).userPointHistoryTs(
             addr_,
-            IveYMT(votingEscrow).userPointEpoch(addr_)
+            IveYMT(veYMT()).userPointEpoch(addr_)
         );
         IYamato.Pledge memory _pledge = IYamato(yamato()).getPledge(addr_);
         uint256 _balance = _pledge.debt;
@@ -250,7 +262,7 @@ contract ScoreRegistry is YamatoAction {
         uint256 coefficient = calculateCoefficient(_collateralRatio);
 
         require(
-            IveYMT(votingEscrow).balanceOf(addr_) == 0 || _tVe > _tLast,
+            IveYMT(veYMT()).balanceOf(addr_) == 0 || _tVe > _tLast,
             "Not allowed"
         );
         require(
@@ -274,5 +286,44 @@ contract ScoreRegistry is YamatoAction {
 
     function min(uint256 a, uint256 b) internal pure returns (uint256) {
         return a < b ? a : b;
+    }
+
+    /*
+        =====================
+        Getter Functions
+        =====================
+    */
+    function YMT() public view returns (address _YMT) {
+        bytes32 YMT_KEY = bytes32(keccak256(abi.encode(YMT_SLOT_ID)));
+        assembly {
+            _YMT := sload(YMT_KEY)
+        }
+    }
+
+    function veYMT() public view returns (address _veYMT) {
+        bytes32 VEYMT_KEY = bytes32(keccak256(abi.encode(VEYMT_SLOT_ID)));
+        assembly {
+            _veYMT := sload(VEYMT_KEY)
+        }
+    }
+
+    function ymtMinter() public view returns (address _ymtMinter) {
+        bytes32 YMT_MINTER_KEY = bytes32(keccak256(abi.encode(YMT_MINTER_SLOT_ID)));
+        assembly {
+            _ymtMinter := sload(YMT_MINTER_KEY)
+        }
+    }
+
+    function scoreWeightController()
+        public
+        view
+        returns (address _scoreWeightController)
+    {
+        bytes32 WEIGHT_CONTROLLER_KEY = bytes32(
+            keccak256(abi.encode(WEIGHT_CONTROLLER_SLOT_ID))
+        );
+        assembly {
+            _scoreWeightController := sload(WEIGHT_CONTROLLER_KEY)
+        }
     }
 }

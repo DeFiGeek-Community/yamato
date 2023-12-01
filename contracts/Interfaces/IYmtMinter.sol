@@ -9,9 +9,9 @@ pragma solidity 0.8.4;
 //solhint-disable no-inline-assembly
 
 interface IYmtMinter {
-    function token() external view returns (address);
+    function YMT() external view returns (address);
 
-    function controller() external view returns (address);
+    function scoreWeightController() external view returns (address);
 
     function minted(
         address user_,

@@ -26,8 +26,8 @@ contract YmtMinter is
 {
     event Minted(address indexed recipient, address score, uint256 minted);
 
-    address public token;
-    address public controller;
+    string constant YMT_SLOT_ID = "deps.YMT";
+    string constant WEIGHT_CONTROLLER_SLOT_ID = "deps.ScoreWeightController";
 
     // user -> score -> value
     mapping(address => mapping(address => uint256)) public minted; // minted amount of user from specific score.
@@ -36,19 +36,25 @@ contract YmtMinter is
     mapping(address => mapping(address => bool)) public allowedToMintFor; // A can mint for B if [A => B => true].
 
     function initialize(
-        address _token,
-        address _controller
+        address ymtAddr,
+        address scoreWeightControllerAddr
     ) public initializer {
-        token = _token;
-        controller = _controller;
         __UUPSBase_init();
         __ReentrancyGuard_init();
         __Pausable_init();
+        bytes32 YMT_KEY = bytes32(keccak256(abi.encode(YMT_SLOT_ID)));
+        bytes32 WEIGHT_CONTROLLER_KEY = bytes32(
+            keccak256(abi.encode(WEIGHT_CONTROLLER_SLOT_ID))
+        );
+        assembly {
+            sstore(YMT_KEY, ymtAddr)
+            sstore(WEIGHT_CONTROLLER_KEY, scoreWeightControllerAddr)
+        }
     }
 
     function _mintFor(address scoreAddr_, address for_) internal {
         require(
-            IScoreWeightController(controller).scores(scoreAddr_) > 0,
+            IScoreWeightController(scoreWeightController()).scores(scoreAddr_) > 0,
             "dev: score is not added"
         );
 
@@ -57,7 +63,7 @@ contract YmtMinter is
         uint256 _toMint = totalMint - minted[for_][scoreAddr_];
 
         if (_toMint != 0) {
-            IYMT(token).mint(for_, _toMint);
+            IYMT(YMT()).mint(for_, _toMint);
             minted[for_][scoreAddr_] = totalMint;
 
             emit Minted(for_, scoreAddr_, totalMint);
@@ -124,6 +130,31 @@ contract YmtMinter is
             _unpause();
         } else {
             _pause();
+        }
+    }
+
+    /*
+        =====================
+        Getter Functions
+        =====================
+    */
+    function YMT() public view returns (address _YMT) {
+        bytes32 YMT_KEY = bytes32(keccak256(abi.encode(YMT_SLOT_ID)));
+        assembly {
+            _YMT := sload(YMT_KEY)
+        }
+    }
+
+    function scoreWeightController()
+        public
+        view
+        returns (address _scoreWeightController)
+    {
+        bytes32 WEIGHT_CONTROLLER_KEY = bytes32(
+            keccak256(abi.encode(WEIGHT_CONTROLLER_SLOT_ID))
+        );
+        assembly {
+            _scoreWeightController := sload(WEIGHT_CONTROLLER_KEY)
         }
     }
 }

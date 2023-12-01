@@ -112,6 +112,11 @@ contract ScoreWeightController is UUPSBase {
         // Add to V2.0
     }
 
+    /*
+        =====================
+        Getter Functions
+        =====================
+    */
     function YMT() public view returns (address ymtAddr) {
         bytes32 YMT_LEY = bytes32(
             keccak256(abi.encode(YMT_SLOT_ID))
