@@ -83,17 +83,17 @@ contract YmtMinter is
      *@param scoreAddrs_ List of `LiquidityScore` addresses
      *@dev address[8]: 8 has randomly decided and has no meaning.
      */
-    function mintMany(address[8] memory scoreAddrs_) external nonReentrant {
-        for (uint256 i; i < 8; ) {
-            if (scoreAddrs_[i] == address(0)) {
-                break;
-            }
-            _mintFor(scoreAddrs_[i], msg.sender);
-            unchecked {
-                ++i;
-            }
-        }
-    }
+    // function mintMany(address[8] memory scoreAddrs_) external nonReentrant {
+    //     for (uint256 i; i < 8; ) {
+    //         if (scoreAddrs_[i] == address(0)) {
+    //             break;
+    //         }
+    //         _mintFor(scoreAddrs_[i], msg.sender);
+    //         unchecked {
+    //             ++i;
+    //         }
+    //     }
+    // }
 
     /***
      *@notice Mint tokens for `for_`
