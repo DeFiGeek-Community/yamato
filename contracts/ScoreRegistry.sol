@@ -48,7 +48,7 @@ contract ScoreRegistry is YamatoAction {
 
     address public token;
     address public votingEscrow;
-    address public minter;
+    address public ymtMinter;
     address public scoreController;
 
     bool public isKilled;
@@ -74,11 +74,11 @@ contract ScoreRegistry is YamatoAction {
     mapping(int128 => uint256) public periodTimestamp;
     mapping(int128 => uint256) public integrateInvSupply;
 
-    function initialize(address minter_, address yamato_) public initializer {
+    function initialize(address ymtMinter_, address yamato_) public initializer {
         __YamatoAction_init(yamato_);
-        minter = minter_;
-        token = IYmtMinter(minter).token();
-        scoreController = IYmtMinter(minter).controller();
+        ymtMinter = ymtMinter_;
+        token = IYmtMinter(ymtMinter).token();
+        scoreController = IYmtMinter(ymtMinter).controller();
         votingEscrow = IScoreWeightController(scoreController).veYMT();
 
         periodTimestamp[int128(0)] = block.timestamp;
@@ -226,7 +226,7 @@ contract ScoreRegistry is YamatoAction {
 
     function userCheckpoint(address addr_) external onlyYamato returns (bool) {
         require(
-            msg.sender == addr_ || msg.sender == minter,
+            msg.sender == addr_ || msg.sender == ymtMinter,
             "dev: unauthorized"
         );
         checkpoint(addr_);

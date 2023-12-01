@@ -16,10 +16,10 @@ import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
  */
 contract YMT is ERC20Permit {
     event UpdateMiningParameters(uint256 time, uint256 rate, uint256 supply);
-    event SetMinter(address minter);
+    event SetMinter(address ymtMinter);
     event SetAdmin(address admin);
 
-    address public minter;
+    address public ymtMinter;
     address public admin;
 
     // General constants
@@ -183,16 +183,16 @@ contract YMT is ERC20Permit {
         return to_mint;
     }
 
-    // @notice Set the minter address
-    // @dev Only callable once, when minter has not yet been set
-    // @param _minter Address of the minter
-    function setMinter(address _minter) external onlyAdmin {
+    // @notice Set the ymtMinter address
+    // @dev Only callable once, when ymtMinter has not yet been set
+    // @param _ymtMinter Address of the ymtMinter
+    function setMinter(address _ymtMinter) external onlyAdmin {
         require(
-            _minter != address(0),
-            "dev: can set the minter only once, at creation"
-        ); // dev: can set the minter only once, at creation
-        minter = _minter;
-        emit SetMinter(_minter);
+            _ymtMinter != address(0),
+            "dev: can set the ymtMinter only once, at creation"
+        ); // dev: can set the ymtMinter only once, at creation
+        ymtMinter = _ymtMinter;
+        emit SetMinter(_ymtMinter);
     }
 
     // @notice Set the new admin.
@@ -209,7 +209,7 @@ contract YMT is ERC20Permit {
     // @param _value The amount that will be created
     // @return bool success
     function mint(address _to, uint256 _value) external returns (bool) {
-        require(msg.sender == minter, "dev: minter only"); // dev: minter only
+        require(msg.sender == ymtMinter, "dev: ymtMinter only"); // dev: ymtMinter only
         require(_to != address(0), "dev: zero address"); // dev: zero address
 
         if (block.timestamp >= startEpochTime + RATE_REDUCTION_TIME) {

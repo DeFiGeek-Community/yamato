@@ -22,7 +22,7 @@ interface ICurrencyOSV3 {
 
     function veYMT() external view returns (address);
 
-    function minter() external view returns (address);
+    function ymtMinter() external view returns (address);
 
     function scoreWeightController() external view returns (address);
 }

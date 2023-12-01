@@ -75,17 +75,17 @@ contract CurrencyOSV3 is ICurrencyOSV3, UUPSBase {
         }
     }
 
-    function setVeYMT(address veymtAddr) external onlyGovernance {
+    function setVeYMT(address veYmtAddr) external onlyGovernance {
         bytes32 VEYMT_KEY = bytes32(keccak256(abi.encode(VEYMT_SLOT_ID)));
         assembly {
-            sstore(VEYMT_KEY, veymtAddr)
+            sstore(VEYMT_KEY, veYmtAddr)
         }
     }
 
-    function setYmtMinter(address minterAddr) external onlyGovernance {
+    function setYmtMinter(address ymtMinterAddr) external onlyGovernance {
         bytes32 MINTER_KEY = bytes32(keccak256(abi.encode(MINTER_SLOT_ID)));
         assembly {
-            sstore(MINTER_KEY, minterAddr)
+            sstore(MINTER_KEY, ymtMinterAddr)
         }
     }
 
@@ -176,10 +176,10 @@ contract CurrencyOSV3 is ICurrencyOSV3, UUPSBase {
         }
     }
 
-    function minter() public view override returns (address _minter) {
+    function ymtMinter() public view override returns (address _ymtMinter) {
         bytes32 MINTER_KEY = bytes32(keccak256(abi.encode(MINTER_SLOT_ID)));
         assembly {
-            _minter := sload(MINTER_KEY)
+            _ymtMinter := sload(MINTER_KEY)
         }
     }
 

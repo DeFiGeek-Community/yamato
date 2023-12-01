@@ -611,7 +611,7 @@ contract YamatoV4 is
             pool(),
             priorityRegistry(),
             scoreRegistry(),
-            ICurrencyOSV3(currencyOS()).minter()
+            ICurrencyOSV3(currencyOS()).ymtMinter()
         ];
     }
 

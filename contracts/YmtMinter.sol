@@ -32,7 +32,7 @@ contract YmtMinter is
     // user -> score -> value
     mapping(address => mapping(address => uint256)) public minted; // minted amount of user from specific score.
 
-    // minter -> user -> can mint?
+    // ymtMinter -> user -> can mint?
     mapping(address => mapping(address => bool)) public allowedToMintFor; // A can mint for B if [A => B => true].
 
     function initialize(
