@@ -20,8 +20,7 @@ const MAX_EXAMPLES = 10;
 
 describe("FeePoolV2", function () {
   let accounts: SignerWithAddress[];
-  let token: Contract;
-  let coinA: Contract;
+  let YMT: Contract;
   let veYMT: Contract;
   let feePool: Contract;
   let snapshot: SnapshotRestorer;
@@ -30,22 +29,18 @@ describe("FeePoolV2", function () {
     snapshot = await takeSnapshot();
     accounts = await ethers.getSigners();
 
-    const FeePool = await ethers.getContractFactory("FeePoolV2");
-    const YMT = await ethers.getContractFactory("YMT");
+    const ymt = await ethers.getContractFactory("YMT");
     const VeYMT = await ethers.getContractFactory("veYMT");
 
-    token = await YMT.deploy();
-    await token.deployed();
+    YMT = await ymt.deploy();
+    await YMT.deployed();
 
-    veYMT = await VeYMT.deploy(token.address);
+    veYMT = await VeYMT.deploy(YMT.address);
     await veYMT.deployed();
 
-    const now = BigNumber.from(
-      (await ethers.provider.getBlock("latest")).timestamp
-    );
     feePool = await getProxy<FeePool, FeePool__factory>(
       contractVersion["FeePool"],
-      [now]
+      [await time.latest()]
     );
     await feePool.setVeYMT(veYMT.address);
   });
@@ -72,10 +67,10 @@ describe("FeePoolV2", function () {
     const stLocktime = generateUniqueRandomNumbers(MAX_EXAMPLES, 1, 52);
     const stSleep = generateUniqueRandomNumbers(MAX_EXAMPLES, 1, 30);
     for (let i = 0; i < MAX_EXAMPLES; i++) {
-      await token
+      await YMT
         .connect(accounts[i])
         .approve(veYMT.address, ethers.constants.MaxUint256);
-      await token
+      await YMT
         .connect(accounts[0])
         .transfer(await accounts[i].address, ethers.utils.parseEther("1000"));
     }

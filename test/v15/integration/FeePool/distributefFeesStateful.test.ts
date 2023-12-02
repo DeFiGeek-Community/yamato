@@ -62,12 +62,11 @@ describe("FeePoolV2", function () {
   let accounts: SignerWithAddress[];
   let veYMT: Contract;
   let feePool: Contract;
-  let token: Contract;
+  let YMT: Contract;
 
   let lockedUntil: { [key: string]: number } = {};
   let fees: { [key: number]: BigNumber } = {}; // timestamp -> amount
   let userClaims: { [key: string]: { [key: number]: BigNumber[] } } = {}; // address -> timestamp -> [claimed, timeCursor]
-  let claimAmount = [];
   let totalFees: BigNumber = ethers.utils.parseEther("1");
 
   let snapshot: SnapshotRestorer;
@@ -81,22 +80,21 @@ describe("FeePoolV2", function () {
     userClaims = {};
     totalFees = ethers.utils.parseEther("1");
 
-    const YMT = await ethers.getContractFactory("YMT");
+    const ymt = await ethers.getContractFactory("YMT");
     const VeYMT = await ethers.getContractFactory("veYMT");
-    const FeePool = await ethers.getContractFactory("FeePoolV2");
 
-    token = await YMT.deploy();
-    await token.deployed();
+    YMT = await ymt.deploy();
+    await YMT.deployed();
 
-    veYMT = await VeYMT.deploy(token.address);
+    veYMT = await VeYMT.deploy(YMT.address);
     await veYMT.deployed();
 
     for (let i = 0; i < ACCOUNT_NUM; i++) {
-      // ensure accounts[:5] all have tokens that may be locked
-      await token
+      // ensure accounts[:5] all have YMTs that may be locked
+      await YMT
         .connect(accounts[0])
         .transfer(accounts[i].address, ethers.utils.parseEther("10000000"));
-      await token
+      await YMT
         .connect(accounts[i])
         .approve(veYMT.address, two_to_the_256_minus_1);
 
@@ -120,13 +118,9 @@ describe("FeePoolV2", function () {
     // a week later we deploy the fee feePool
     await time.increase(WEEK);
 
-    const now = BigNumber.from(
-      (await ethers.provider.getBlock("latest")).timestamp
-    );
-
     feePool = await getProxy<FeePool, FeePool__factory>(
       contractVersion["FeePool"],
-      [now]
+      [await time.latest()]
     );
     await feePool.setVeYMT(veYMT.address);
   });
