@@ -101,6 +101,10 @@ contract ScoreRegistry is YamatoAction {
     }
 
     function checkpoint(address addr) public onlyYamato {
+        _checkpoint(addr);
+    }
+
+    function _checkpoint(address addr) private {
         CheckPointParameters memory _st;
 
         _st.period = period;
@@ -191,6 +195,15 @@ contract ScoreRegistry is YamatoAction {
         uint256 totalDebt_,
         uint256 collateralRatio_
     ) public onlyYamato {
+        _updateScoreLimit(addr_, debt_, totalDebt_, collateralRatio_);
+    }
+
+    function _updateScoreLimit(
+        address addr_,
+        uint256 debt_,
+        uint256 totalDebt_,
+        uint256 collateralRatio_
+    ) private {
         uint256 _votingBalance = IveYMT(veYMT()).balanceOf(addr_);
         uint256 _votingTotal = IveYMT(veYMT()).totalSupply();
 
@@ -236,17 +249,17 @@ contract ScoreRegistry is YamatoAction {
         return 0;
     }
 
-    function userCheckpoint(address addr_) external onlyYamato returns (bool) {
+    function userCheckpoint(address addr_) external returns (bool) {
         require(
             msg.sender == addr_ || msg.sender == ymtMinter(),
             "dev: unauthorized"
         );
-        checkpoint(addr_);
+        _checkpoint(addr_);
         IYamato.Pledge memory _pledge = IYamato(yamato()).getPledge(addr_);
         uint256 _collateralRatio = _pledge.getICR(priceFeed());
         uint256 _balance = _pledge.debt;
         uint256 _totalSupply = IYamatoV4(yamato()).getTotalDebt();
-        updateScoreLimit(addr_, _balance, _totalSupply, _collateralRatio);
+        _updateScoreLimit(addr_, _balance, _totalSupply, _collateralRatio);
         return true;
     }
 
@@ -271,9 +284,9 @@ contract ScoreRegistry is YamatoAction {
             "Not needed"
         );
 
-        checkpoint(addr_);
+        _checkpoint(addr_);
         uint256 _totalSupply = IYamatoV4(yamato()).getTotalDebt();
-        updateScoreLimit(addr_, _balance, _totalSupply, _collateralRatio);
+        _updateScoreLimit(addr_, _balance, _totalSupply, _collateralRatio);
     }
 
     function setKilled(bool isKilled_) external onlyGovernance {
@@ -290,7 +303,7 @@ contract ScoreRegistry is YamatoAction {
 
     /*
         =====================
-        Getter Functions
+        Address Getter Functions
         =====================
     */
     function YMT() public view returns (address _YMT) {

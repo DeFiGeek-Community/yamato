@@ -591,7 +591,7 @@ contract YamatoV4 is
         address _sender
     ) public view override(IYamato, YamatoBase) returns (bool) {
         bool permit;
-        address[11] memory deps = getDeps();
+        address[10] memory deps = getDeps();
         for (uint256 i = 0; i < deps.length; i++) {
             if (_sender == deps[i]) permit = true;
         }
@@ -599,7 +599,7 @@ contract YamatoV4 is
     }
 
     /// @dev Get package-deps to check onlyYamato-permitDeps logic
-    function getDeps() public view returns (address[11] memory) {
+    function getDeps() public view returns (address[10] memory) {
         return [
             address(this),
             depositor(),
@@ -610,8 +610,7 @@ contract YamatoV4 is
             sweeper(),
             pool(),
             priorityRegistry(),
-            scoreRegistry(),
-            ICurrencyOSV3(currencyOS()).ymtMinter()
+            scoreRegistry()
         ];
     }
 
