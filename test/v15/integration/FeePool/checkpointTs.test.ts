@@ -10,12 +10,15 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import {
   FeePool,
   FeePool__factory,
+  YMT__factory,
+  VeYMT__factory,
 } from "../../../../typechain";
 import { getProxy } from "../../../../src/testUtil";
 import { contractVersion } from "../../../param/version";
 import Constants from "../../Constants";
 
 const week = Constants.week;
+const MAX_UINT256 = Constants.MAX_UINT256;
 const MAX_EXAMPLES = 10;
 
 describe("FeePoolV2", function () {
@@ -25,24 +28,24 @@ describe("FeePoolV2", function () {
   let feePool: Contract;
   let snapshot: SnapshotRestorer;
 
-  beforeEach(async function () {
-    snapshot = await takeSnapshot();
+  before(async function () {
     accounts = await ethers.getSigners();
 
-    const ymt = await ethers.getContractFactory("YMT");
-    const VeYMT = await ethers.getContractFactory("veYMT");
+    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy();
 
-    YMT = await ymt.deploy();
-    await YMT.deployed();
-
-    veYMT = await VeYMT.deploy(YMT.address);
-    await veYMT.deployed();
+    veYMT = await (<VeYMT__factory>(
+      await ethers.getContractFactory("veYMT")
+    )).deploy(YMT.address);
 
     feePool = await getProxy<FeePool, FeePool__factory>(
       contractVersion["FeePool"],
       [await time.latest()]
     );
     await feePool.setVeYMT(veYMT.address);
+  });
+
+  beforeEach(async () => {
+    snapshot = await takeSnapshot();
   });
 
   afterEach(async () => {
@@ -69,7 +72,7 @@ describe("FeePoolV2", function () {
     for (let i = 0; i < MAX_EXAMPLES; i++) {
       await YMT
         .connect(accounts[i])
-        .approve(veYMT.address, ethers.constants.MaxUint256);
+        .approve(veYMT.address, MAX_UINT256);
       await YMT
         .connect(accounts[0])
         .transfer(await accounts[i].address, ethers.utils.parseEther("1000"));
@@ -78,7 +81,7 @@ describe("FeePoolV2", function () {
     let finalLock = 0;
     for (let i = 0; i < MAX_EXAMPLES; i++) {
       const sleepTime = Math.floor(stSleep[i] * 86400);
-      await ethers.provider.send("evm_increaseTime", [sleepTime]);
+      await time.increase(sleepTime);
       const lockTime = (await time.latest()) + sleepTime + week * stLocktime[i];
       finalLock = Math.max(finalLock, lockTime);
 
@@ -98,8 +101,6 @@ describe("FeePoolV2", function () {
 
       const weekBlock = await time.latestBlock();
 
-      await ethers.provider.send("evm_increaseTime", [1]);
-
       // Max: 42 weeks
       // doing checkpoint 3 times is enough
       for (let i = 0; i < 3; i++) {
@@ -108,7 +109,7 @@ describe("FeePoolV2", function () {
 
       const expected = await veYMT.totalSupplyAt(weekBlock);
       const actual = await feePool.veSupply(weekEpoch);
-      console.log(`expected: ${expected} actual: ${actual}`);
+      // console.log(`expected: ${expected} actual: ${actual}`);
       expect(actual).to.equal(expected);
     }
   });

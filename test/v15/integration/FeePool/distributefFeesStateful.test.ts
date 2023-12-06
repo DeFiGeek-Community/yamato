@@ -10,6 +10,8 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import {
   FeePool,
   FeePool__factory,
+  YMT__factory,
+  VeYMT__factory,
 } from "../../../../typechain";
 import { getProxy } from "../../../../src/testUtil";
 import { contractVersion } from "../../../param/version";
@@ -57,7 +59,7 @@ function getRandomsTime(): BigNumber {
 }
 // ------------------------------------------------
 
-describe("FeePoolV2", function () {
+describe.only("FeePoolV2", function () {
   let accounts: SignerWithAddress[];
   let veYMT: Contract;
   let feePool: Contract;
@@ -66,12 +68,11 @@ describe("FeePoolV2", function () {
   let lockedUntil: { [key: string]: number } = {};
   let fees: { [key: number]: BigNumber } = {}; // timestamp -> amount
   let userClaims: { [key: string]: { [key: number]: BigNumber[] } } = {}; // address -> timestamp -> [claimed, timeCursor]
-  let totalFees: BigNumber = ethers.utils.parseEther("1");
+  let totalFees: BigNumber;
 
   let snapshot: SnapshotRestorer;
 
-  beforeEach(async () => {
-    snapshot = await takeSnapshot();
+  before(async () => {
     accounts = (await ethers.getSigners()).slice(0, ACCOUNT_NUM);
 
     lockedUntil = {};
@@ -79,14 +80,11 @@ describe("FeePoolV2", function () {
     userClaims = {};
     totalFees = ethers.utils.parseEther("1");
 
-    const ymt = await ethers.getContractFactory("YMT");
-    const VeYMT = await ethers.getContractFactory("veYMT");
+    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy();
 
-    YMT = await ymt.deploy();
-    await YMT.deployed();
-
-    veYMT = await VeYMT.deploy(YMT.address);
-    await veYMT.deployed();
+    veYMT = await (<VeYMT__factory>(
+      await ethers.getContractFactory("veYMT")
+    )).deploy(YMT.address);
 
     for (let i = 0; i < ACCOUNT_NUM; i++) {
       // ensure accounts[:5] all have YMTs that may be locked
@@ -108,12 +106,6 @@ describe("FeePoolV2", function () {
         (await time.latest()) + year * 2
       );
 
-    lockedUntil = {
-      [accounts[0].address]: (
-        await veYMT.lockedEnd(accounts[0].address)
-      ).toNumber(),
-    };
-
     // a week later we deploy the fee feePool
     await time.increase(week);
 
@@ -122,6 +114,16 @@ describe("FeePoolV2", function () {
       [await time.latest()]
     );
     await feePool.setVeYMT(veYMT.address);
+  });
+
+  beforeEach(async () => {
+    snapshot = await takeSnapshot();
+
+    lockedUntil = {
+      [accounts[0].address]: (
+        await veYMT.lockedEnd(accounts[0].address)
+      ).toNumber(),
+    };
   });
 
   afterEach(async () => {
@@ -402,7 +404,7 @@ describe("FeePoolV2", function () {
     // Because tokens for current week are obtained in the next week
     // And that is by design
     await feePool.checkpointToken();
-    await ethers.provider.send("evm_increaseTime", [week * 2]);
+    await time.increase(week * 2);
     await feePool.checkpointToken();
     const balanceList = [];
     for (const acct of accounts) {
