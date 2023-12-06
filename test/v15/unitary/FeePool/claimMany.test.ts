@@ -1,6 +1,5 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { Contract } from "ethers";
 import {
   time,
   takeSnapshot,
@@ -8,36 +7,40 @@ import {
 } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import {
-  FeePool,
-  FeePool__factory,
+  FeePoolV2,
+  FeePoolV2__factory,
+  YMT,
+  YMT__factory,
+  VeYMT,
+  VeYMT__factory,
 } from "../../../../typechain";
 import { getProxy } from "../../../../src/testUtil";
 import { contractVersion } from "../../../param/version";
 import Constants from "../../Constants";
+import { gasCostOf } from "../../testHelpers";
 
 const week = Constants.week;
+const ten_to_the_19 = Constants.ten_to_the_19;
+const ZERO_ADDRESS = Constants.ZERO_ADDRESS;
 
 describe("FeePoolV2", () => {
   let alice, bob, charlie: SignerWithAddress;
 
-  let feePool: Contract;
-  let veYMT: Contract;
-  let YMT: Contract;
+  let feePool: FeePoolV2;
+  let veYMT: VeYMT;
+  let YMT: YMT;
   let snapshot: SnapshotRestorer;
 
   before(async function () {
     [alice, bob, charlie] = await ethers.getSigners();
 
-    const ymt = await ethers.getContractFactory("YMT");
-    const VeYMT = await ethers.getContractFactory("veYMT");
+    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy();
 
-    YMT = await ymt.deploy();
-    await YMT.deployed();
+    veYMT = await (<VeYMT__factory>(
+      await ethers.getContractFactory("veYMT")
+    )).deploy(YMT.address);
 
-    veYMT = await VeYMT.deploy(YMT.address);
-    await veYMT.deployed();
-
-    feePool = await getProxy<FeePool, FeePool__factory>(
+    feePool = await getProxy<FeePoolV2, FeePoolV2__factory>(
       contractVersion["FeePool"],
       [await time.latest()]
     );
@@ -53,7 +56,7 @@ describe("FeePoolV2", () => {
     await time.increase(week);
     await alice.sendTransaction({
       to: feePool.address,
-      value: ethers.utils.parseEther("10"),
+      value: ten_to_the_19,
     });
   });
 
@@ -64,11 +67,6 @@ describe("FeePoolV2", () => {
   afterEach(async () => {
     await snapshot.restore();
   });
-
-  async function gasCostOf(tx) {
-    const receipt = await tx.wait()
-    return receipt.gasUsed.mul(receipt.effectiveGasPrice)
-  }
 
   describe("test_claim_many", () => {
     it("test_claim_many", async function () {
@@ -82,7 +80,7 @@ describe("FeePoolV2", () => {
         .connect(alice)
         .claimMany(
           [alice.address, bob.address, charlie.address].concat(
-            Array(17).fill(ethers.constants.AddressZero)
+            Array(17).fill(ZERO_ADDRESS)
           )
         );
       let balances = [
@@ -114,10 +112,10 @@ describe("FeePoolV2", () => {
       expect(expected).to.above(0);
 
       const balanceBefore = await ethers.provider.getBalance(alice.address);
-      const tx = await feePool.connect(alice).claimMany(Array(20).fill(alice.address));
+      const tx3 = await feePool.connect(alice).claimMany(Array(20).fill(alice.address));
 
       const balanceAfter = await ethers.provider.getBalance(alice.address);
-      const gas = await gasCostOf(tx);
+      const gas = await gasCostOf(tx3);
       expect(balanceAfter.sub(balanceBefore).add(gas)).to.be.eq(expected);
     });
   });

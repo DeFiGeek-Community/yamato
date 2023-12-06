@@ -1,6 +1,5 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { Contract } from "ethers";
 import {
   time,
   takeSnapshot,
@@ -8,37 +7,41 @@ import {
 } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import {
-  FeePool,
-  FeePool__factory,
+  FeePoolV2,
+  FeePoolV2__factory,
+  YMT,
+  YMT__factory,
+  VeYMT,
+  VeYMT__factory,
 } from "../../../../typechain";
 import { getProxy } from "../../../../src/testUtil";
 import { contractVersion } from "../../../param/version";
 import Constants from "../../Constants";
+import { gasCostOf } from "../../testHelpers";
 
 const day = Constants.day;
 const week = Constants.week;
+const ten_to_the_18 = Constants.ten_to_the_18;
+const ten_to_the_19 = Constants.ten_to_the_19;
 
-describe("FeePoolV2", () => {
+describe.only("FeePoolV2", () => {
   let alice, bob, charlie: SignerWithAddress;
 
-  let feePool: Contract;
-  let veYMT: Contract;
-  let YMT: Contract;
+  let feePool: FeePoolV2;
+  let veYMT: VeYMT;
+  let YMT: YMT;
   let snapshot: SnapshotRestorer;
 
   before(async function () {
     [alice, bob, charlie] = await ethers.getSigners();
 
-    const ymt = await ethers.getContractFactory("YMT");
-    const VeYMT = await ethers.getContractFactory("veYMT");
+    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy();
 
-    YMT = await ymt.deploy();
-    await YMT.deployed();
+    veYMT = await (<VeYMT__factory>(
+      await ethers.getContractFactory("veYMT")
+    )).deploy(YMT.address);
 
-    veYMT = await VeYMT.deploy(YMT.address);
-    await veYMT.deployed();
-
-    feePool = await getProxy<FeePool, FeePool__factory>(
+    feePool = await getProxy<FeePoolV2, FeePoolV2__factory>(
       contractVersion["FeePool"],
       [await time.latest()]
     );
@@ -53,11 +56,6 @@ describe("FeePoolV2", () => {
     await snapshot.restore();
   });
 
-  async function gasCostOf(tx) {
-    const receipt = await tx.wait()
-    return receipt.gasUsed.mul(receipt.effectiveGasPrice)
-  }
-
   describe("test_fee_distribution", () => {
     it("test_deposited_after", async function () {
       const amount = ethers.utils.parseEther("1000");
@@ -67,7 +65,7 @@ describe("FeePoolV2", () => {
         for (let j = 0; j < 7; j++) {
           await bob.sendTransaction({
             to: feePool.address,
-            value: ethers.utils.parseEther("1"),
+            value: ten_to_the_18,
           });
           await feePool.checkpointToken();
           await feePool.checkpointTotalSupply();
@@ -99,7 +97,7 @@ describe("FeePoolV2", () => {
         .createLock(amount, (await time.latest()) + 8 * week);
       await time.increase(week);
 
-      feePool = await getProxy<FeePool, FeePool__factory>(
+      feePool = await getProxy<FeePoolV2, FeePoolV2__factory>(
         contractVersion["FeePool"],
         [await time.latest()]
       );
@@ -109,7 +107,7 @@ describe("FeePoolV2", () => {
         for (let j = 0; j < 7; j++) {
           await bob.sendTransaction({
             to: feePool.address,
-            value: ethers.utils.parseEther("1"),
+            value: ten_to_the_18,
           });
           await feePool.checkpointToken();
           await feePool.checkpointTotalSupply();
@@ -143,7 +141,7 @@ describe("FeePoolV2", () => {
       const startTime = await time.latest();
       await time.increase(week * 5);
 
-      feePool = await getProxy<FeePool, FeePool__factory>(
+      feePool = await getProxy<FeePoolV2, FeePoolV2__factory>(
         contractVersion["FeePool"],
         [await time.latest()]
       );
@@ -151,7 +149,7 @@ describe("FeePoolV2", () => {
 
       await bob.sendTransaction({
         to: feePool.address,
-        value: ethers.utils.parseEther("10"),
+        value: ten_to_the_19,
       });
 
       await feePool.checkpointToken();
@@ -187,7 +185,7 @@ describe("FeePoolV2", () => {
 
       await time.increase(2 * week);
 
-      feePool = await getProxy<FeePool, FeePool__factory>(
+      feePool = await getProxy<FeePoolV2, FeePoolV2__factory>(
         contractVersion["FeePool"],
         [startTime]
       );
@@ -195,7 +193,7 @@ describe("FeePoolV2", () => {
 
       await bob.sendTransaction({
         to: feePool.address,
-        value: ethers.utils.parseEther("10"),
+        value: ten_to_the_19,
       });
 
       await feePool.checkpointToken();
@@ -235,7 +233,7 @@ describe("FeePoolV2", () => {
 
       await time.increase(5 * week);
 
-      feePool = await getProxy<FeePool, FeePool__factory>(
+      feePool = await getProxy<FeePoolV2, FeePoolV2__factory>(
         contractVersion["FeePool"],
         [startTime]
       );
@@ -243,7 +241,7 @@ describe("FeePoolV2", () => {
 
       await bob.sendTransaction({
         to: feePool.address,
-        value: ethers.utils.parseEther("10"),
+        value: ten_to_the_19,
       });
 
       await feePool.checkpointToken();
@@ -263,7 +261,7 @@ describe("FeePoolV2", () => {
 
       expect(balanceAlice).to.equal(balanceBob);
       expect(balanceAlice.add(balanceBob)).to.be.closeTo(
-        ethers.utils.parseEther("10"),
+        ten_to_the_19,
         20
       );
     });

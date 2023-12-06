@@ -1,6 +1,5 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { Contract } from "ethers";
 import {
   time,
   takeSnapshot,
@@ -8,8 +7,12 @@ import {
 } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import {
-  FeePool,
-  FeePool__factory,
+  FeePoolV2,
+  FeePoolV2__factory,
+  YMT,
+  YMT__factory,
+  VeYMT,
+  VeYMT__factory,
 } from "../../../../typechain";
 import { getProxy } from "../../../../src/testUtil";
 import { contractVersion } from "../../../param/version";
@@ -17,28 +20,26 @@ import Constants from "../../Constants";
 
 const week = Constants.week;
 const year = Constants.year;
+const MAX_UINT256 = Constants.MAX_UINT256;
 
 describe("FeePoolV2", () => {
   let alice, bob, charlie: SignerWithAddress;
 
-  let feePool: Contract;
-  let veYMT: Contract;
-  let token: Contract;
+  let feePool: FeePoolV2;
+  let veYMT: VeYMT;
+  let YMT: YMT;
   let snapshot: SnapshotRestorer;
 
   before(async function () {
     [alice, bob, charlie] = await ethers.getSigners();
 
-    const YMT = await ethers.getContractFactory("YMT");
-    const VeYMT = await ethers.getContractFactory("veYMT");
+    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy();
 
-    token = await YMT.deploy();
-    await token.deployed();
+    veYMT = await (<VeYMT__factory>(
+      await ethers.getContractFactory("veYMT")
+    )).deploy(YMT.address);
 
-    veYMT = await VeYMT.deploy(token.address);
-    await veYMT.deployed();
-
-    feePool = await getProxy<FeePool, FeePool__factory>(
+    feePool = await getProxy<FeePoolV2, FeePoolV2__factory>(
       contractVersion["FeePool"],
       [await time.latest()]
     );
@@ -59,7 +60,7 @@ describe("FeePoolV2", () => {
 
   describe("test_checkpoints", () => {
     beforeEach(async function () {
-      await token.approve(veYMT.address, ethers.constants.MaxUint256);
+      await YMT.approve(veYMT.address, MAX_UINT256);
       await veYMT.createLock(
         ethers.utils.parseEther("1000"),
         (await time.latest()) + week * 52
