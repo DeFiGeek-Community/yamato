@@ -58,10 +58,9 @@ const ten_to_the_18 = Constants.ten_to_the_18;
 const ten_to_the_20 = Constants.ten_to_the_20;
 const ten_to_the_21 = Constants.ten_to_the_21;
 const MAX_UINT256 = Constants.MAX_UINT256;
-const SCALE = ten_to_the_20;
 const zero = Constants.zero;
 const week = Constants.week;
-const YEAR = Constants.year;
+const year = Constants.year;
 const MIN_AMOUNT = 10000;
 
 describe("ScoreRegistry", function () {
@@ -198,7 +197,7 @@ describe("ScoreRegistry", function () {
 
     await scoreWeightController.addCurrency(
       scoreRegistry.address,
-      ethers.utils.parseEther("10")
+      ten_to_the_18
     );
   });
 
@@ -244,37 +243,35 @@ describe("ScoreRegistry", function () {
   }
 
   describe("Gauge Integral Calculations", function () {
-    /**
-     * テスト: test_gauge_integral
-     * 1. AliceとBobの保有量と積分の初期化を行う。
-     * 2. 現在のブロックのタイムスタンプと初期レートを取得する。
-     * 3. タイプを追加し、その重みを変更する。
-     * 4. LPトークンをAliceとBobに均等に送信する。
-     * 5. 積分の更新処理を行うための補助関数「update_integral」を定義する。
-     * 6. Bobが預金または引き出しを繰り返し行い、Aliceがそれをランダムに行う10回のループを開始する。
-     *    a. ランダムな時間を経過させるシミュレーションを行う。
-     *    b. Bobがランダムに預金または引き出しを行う。
-     *    c. 20%の確率でAliceも預金または引き出しを行う。
-     *    d. 同じ秒数でのユーザーチェックポイントの更新が影響しないことを確認する。
-     *    e. AliceとBobの保有量が正しいことを確認する。
-     *    f. もう一度、ランダムな時間を経過させるシミュレーションを行う。
-     *    g. Aliceのユーザーチェックポイントを更新し、積分を更新する。
-     * 7. テストが終了する。
-     */
+  /**
+   * テスト: Gauge Integral Calculations
+   * 1. AliceとBobの保有量と積分の初期化を行う。
+   * 2. 現在のブロックのタイムスタンプと初期レートを取得する。
+   * 3. scoreWeightControllerを使って、scoreRegistryにタイプを追加し、その重みを変更する。
+   * 4. AliceとBobがそれぞれETHをデポジットし、流動性を提供する。
+   * 5. 積分の更新処理を行うための補助関数「update_integral」を定義する。
+   * 6. Bobが預金または引き出しを繰り返し行い、Aliceがそれをランダムに行う40回のループを開始する。
+   *    a. ランダムな時間を経過させるシミュレーションを行う。
+   *    b. Bobがランダムに預金または引き出しを行う。
+   *    c. 20%の確率でAliceも預金または引き出しを行う。
+   *    d. 同じ秒数でのユーザーチェックポイントの更新が影響しないことを確認する。
+   *    e. AliceとBobの保有量が正しいことを確認する。
+   *    f. もう一度、ランダムな時間を経過させるシミュレーションを行う。
+   *    g. Aliceのユーザーチェックポイントを更新し、積分を更新する。
+   * 7. Aliceの報酬が正しいことを確認する。
+   */
     it("should correctly calculate user integrals over randomized actions", async () => {
       // AliceとBobの保有量と積分を初期化
-      let alice_staked = BigNumber.from("0");
-      let bob_staked = BigNumber.from("0");
-      let integral = BigNumber.from("0");
+      let alice_staked = zero;
+      let bob_staked = zero;
+      let integral = zero;
 
       // 最新のブロックのタイムスタンプを取得
-      let checkpoint = BigNumber.from(
-        (await ethers.provider.getBlock("latest")).timestamp
-      );
+      let checkpoint = BigNumber.from(await time.latest());
       // 初期レートの取得
       let checkpoint_rate = await YMT.rate();
-      let checkpoint_supply = BigNumber.from("0");
-      let checkpoint_balance = BigNumber.from("0");
+      let checkpoint_supply = zero;
+      let checkpoint_balance = zero;
 
       await scoreWeightController.addCurrency(
         scoreRegistry.address,
@@ -293,7 +290,7 @@ describe("ScoreRegistry", function () {
         let t1 = BigNumber.from(await time.latest());
         let rate1 = await YMT.rate();
         let t_epoch = await YMT.startEpochTime();
-        let rate_x_time = BigNumber.from("0");
+        let rate_x_time = zero;
 
         // checkpoint >= t_epoch
         if (checkpoint.gte(t_epoch)) {
@@ -308,7 +305,7 @@ describe("ScoreRegistry", function () {
         }
 
         // checkpoint_supply > 0
-        if (checkpoint_supply.gt(BigNumber.from("0"))) {
+        if (checkpoint_supply.gt(zero)) {
           // integral + rate_x_time * checkpoint_balance / checkpoint_supply
           integral = integral.add(
             rate_x_time.mul(checkpoint_balance).div(checkpoint_supply)
@@ -326,8 +323,8 @@ describe("ScoreRegistry", function () {
         let is_alice = Math.random() < 0.2;
 
         // ランダムな時間経過をシミュレート
-        let dt = randomValue(1, Math.floor(YEAR / 5))
-        await ethers.provider.send("evm_increaseTime", [dt]);
+        let dt = randomValue(1, Math.floor(year / 5))
+        await time.increase(dt);
 
         // Bobの処理
         let is_withdraw = i > 0 && Math.random() < 0.5;
@@ -354,13 +351,13 @@ describe("ScoreRegistry", function () {
           const alice_balance = Number(await CJPY.balanceOf(accounts[1].address))
           let is_withdraw_alice = alice_balance > 0 && Math.random() > 0.5;
           if (is_withdraw_alice) {
-            // 引き出し処理
+            // 払い戻し処理
             let amount_alice = randomBigValue(1, Math.floor(alice_balance / 10) + 1)
             await yamato.connect(accounts[1]).repay(amount_alice);
             await update_integral();
             alice_staked = alice_staked.sub(amount_alice);
           } else {
-            // 預金処理
+            // 借入処理
             let amount_alice = randomBigValue(1 + MIN_AMOUNT, alice_balance + 1 + MIN_AMOUNT)
             await yamato
               .connect(accounts[1])
@@ -392,8 +389,8 @@ describe("ScoreRegistry", function () {
         );
 
         // ランダムな時間経過をさらにシミュレート
-        dt = randomValue(1, Math.floor(YEAR / 20))
-        await ethers.provider.send("evm_increaseTime", [dt]);
+        dt = randomValue(1, Math.floor(year / 20))
+        await time.increase(dt);
 
         await scoreRegistry
           .connect(accounts[1])
@@ -406,26 +403,24 @@ describe("ScoreRegistry", function () {
   });
 
   /**
-   * test_mining_with_votelock の全体的な流れ:
+   * "Mining with Vote Locking" テストの全体的な流れ:
    *
    * 1. 2週間と5秒の時間を進める。
    * 2. ゲージとコントローラーをセットアップし、適切なレートを設定する。
-   * 3. AliceとBobにトークンを転送し、それぞれのアドレスに関連する承認を設定する。
+   * 3. AliceとBobにトークンを転送し、veYMTコントラクトに対する承認を設定する。
    * 4. Aliceは投票のエスクローにトークンをロックすることで、BOOSTを取得する。
-   * 5. AliceとBobはそれぞれ流動性をデポジットする。
+   * 5. AliceとBobはそれぞれETHをデポジットし、流動性を提供する。
    * 6. Aliceの投票ロックの存在とBobの投票ロックの不在を確認する。
-   * 7. 時間をさらに進め、両方のユーザーのチェックポイントを更新する。
+   * 7. 4週間の時間を進め、両方のユーザーのチェックポイントを更新する。
    * 8. 4週間後、AliceとBobの投票エスクローのバランスが0であることを確認する。
    * 9. Aliceが投票ロックでTokenを獲得したため、AliceはBobの2.5倍のリワードを獲得することを確認する。
-   * 10. さらに時間を進め、両方のユーザーのチェックポイントを更新する。
+   * 10. さらに4週間の時間を進め、両方のユーザーのチェックポイントを更新する。
    * 11. 最終的に、AliceとBobが同じ量のリワードを獲得していることを確認する。
    */
   describe("Mining with Vote Locking", function () {
     it("should distribute rewards according to vote lock status", async () => {
       // 2週間と5秒時間を進める
-      await ethers.provider.send("evm_increaseTime", [
-        week * 2 + 5,
-      ]);
+      await time.increase(week * 2 + 5);
 
       // ゲージをコントローラーに接続して適切なレートなどを設定する
       await scoreWeightController.addCurrency(
@@ -451,7 +446,7 @@ describe("ScoreRegistry", function () {
       for (let i = 0; i < 3; i++) {
         await yamato
           .connect(accounts[i])
-          .deposit({ value: ethers.utils.parseEther("100") });
+          .deposit({ value: ten_to_the_20 });
       }
       // AliceとBobが一部の流動性をデポジットする
       await ethers.provider.send("evm_setAutomine", [false]);
@@ -472,9 +467,7 @@ describe("ScoreRegistry", function () {
       // 時間を進めてチェックポイントを更新する
       now = await time.latest();
 
-      await ethers.provider.send("evm_setNextBlockTimestamp", [
-        now + week * 4,
-      ]);
+      await time.setNextBlockTimestamp(now + week * 4);
 
       // チェックポイント更新
       await ethers.provider.send("evm_setAutomine", [false]);
@@ -505,9 +498,7 @@ describe("ScoreRegistry", function () {
       // 時間を進めてチェックポイントを更新: 今は誰もがTokenを投票ロックしていない
       now = await time.latest();
 
-      await ethers.provider.send("evm_setNextBlockTimestamp", [
-        now + week * 4,
-      ]);
+      await time.setNextBlockTimestamp(now + week * 4);
 
       await ethers.provider.send("evm_setAutomine", [false]);
       await scoreRegistry.connect(accounts[2]).userCheckpoint(accounts[2].address);
