@@ -54,7 +54,7 @@ import Constants from "../../Constants";
 
 chai.use(smock.matchers);
 
-describe.only("ScoreRegistry kick", function () {
+describe("ScoreRegistry kick", function () {
   let mockFeePool: FakeContract<FeePool>;
   let mockFeed: FakeContract<PriceFeedV3>;
   let CJPY: CJPY;
