@@ -16,6 +16,7 @@ import {
 import { getProxy } from "../../../../src/testUtil";
 import { contractVersion } from "../../../param/version";
 import Constants from "../../Constants";
+import { randomValue, getRandomAccountNum, getRandomWeeks, getRandomAmounts, getRandomsTime } from "../../testHelpers";
 
 // 参考) brownie Stateful Tests
 // https://eth-brownie.readthedocs.io/en/stable/tests-hypothesis-stateful.html
@@ -26,37 +27,7 @@ const STATEFUL_STEP_COUNT = 30;
 const week = Constants.week;
 const year = Constants.year;
 const MAX_UINT256 = Constants.MAX_UINT256;
-const MOUNT_DECIMALS = 3;
 
-// Helper functions to generate random variables ----->
-function randomBigValue(min: number, max: number): BigNumber {
-  return BigNumber.from(
-    Math.floor(Math.random() * (max - min) + min).toString()
-  );
-}
-function randomValue(min: number, max: number): number {
-  return Math.floor(Math.random() * (max - min) + min);
-}
-function getRandomAccountNum(): number {
-  // Corresponds strategy("address", length=5)
-  let rdm = Math.floor(Math.random() * ACCOUNT_NUM); //0~9 integer
-  return rdm;
-}
-function getRandomWeeks(): BigNumber {
-  // Corresponds strategy("uint256", min_value=1, max_value=12)
-  return randomBigValue(1, 12);
-}
-function getRandomAmounts(): BigNumber {
-  // Corresponds strategy("decimal", min_value=1, max_value=100, places=3)
-  return randomBigValue(
-    1 * 10 ** MOUNT_DECIMALS,
-    100 * 10 ** MOUNT_DECIMALS
-  ).mul(BigNumber.from(10).pow(18 - MOUNT_DECIMALS));
-}
-function getRandomsTime(): BigNumber {
-  // Corresponds strategy("uint256", min_value=0, max_value=86400 * 3)
-  return randomBigValue(0, 86400 * 3);
-}
 // ------------------------------------------------
 
 describe("FeePoolV2", function () {

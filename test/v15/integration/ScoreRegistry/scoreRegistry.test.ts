@@ -51,6 +51,7 @@ import {
 } from "../../../../src/testUtil";
 import { contractVersion } from "../../../param/version";
 import Constants from "../../Constants";
+import { randomBigValue, randomValue, fee, approx } from "../../testHelpers";
 
 chai.use(smock.matchers);
 
@@ -208,39 +209,6 @@ describe("ScoreRegistry", function () {
   afterEach(async () => {
     await snapshot.restore();
   });
-
-  function randomBigValue(min: number, max: number): BigNumber {
-    return BigNumber.from(
-      Math.floor(Math.random() * (max - min) + min).toString()
-    );
-  }
-
-  function randomValue(min: number, max: number): number {
-    return Math.floor(Math.random() * (max - min) + min);
-  }
-
-  function fee(amount : BigNumber): BigNumber {
-    return amount.sub((amount.div(1000)))
-  }
-
-  function approx(value: BigNumber, target: BigNumber, tol: BigNumber) {
-    if (value.isZero() && target.isZero()) {
-      return true;
-    }
-
-    const diff = value.sub(target).abs();
-    const sum = value.add(target);
-    const ratio = diff.mul(2).mul(BigNumber.from(SCALE)).div(sum);
-
-    // console.log(
-    //   `Value: ${value.toString()}, Target: ${target.toString()}, Tol: ${tol.toString()}`
-    // );
-    // console.log(
-    //   `Diff: ${diff.toString()}, Sum: ${sum.toString()}, Ratio: ${ratio.toString()}`
-    // );
-
-    return ratio.lte(tol);
-  }
 
   describe("Gauge Integral Calculations", function () {
   /**

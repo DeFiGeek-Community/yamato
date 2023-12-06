@@ -51,6 +51,7 @@ import {
 } from "../../../../src/testUtil";
 import { contractVersion } from "../../../param/version";
 import Constants from "../../Constants";
+import { generateUniqueRandomNumbers, approx } from "../../testHelpers";
 
 chai.use(smock.matchers);
 
@@ -211,38 +212,6 @@ describe("YmtMinter components", function () {
   afterEach(async () => {
     await snapshot.restore();
   });
-
-  function generateUniqueRandomNumbers(
-    count: number,
-    min: number,
-    max: number
-  ): number[] {
-    const set = new Set<number>();
-    while (set.size < count) {
-      const randomValue = Math.floor(Math.random() * (max - min + 1)) + min;
-      set.add(randomValue);
-    }
-    return Array.from(set);
-  }
-
-  function approx(value: BigNumber, target: BigNumber, tol: BigNumber) {
-    if (value.isZero() && target.isZero()) {
-      return true;
-    }
-
-    const diff = value.sub(target).abs();
-    const sum = value.add(target);
-    const ratio = diff.mul(2).mul(ten_to_the_20).div(sum);
-
-    // console.log(
-    //   `Value: ${value.toString()}, Target: ${target.toString()}, Tol: ${tol.toString()}`
-    // );
-    // console.log(
-    //   `Diff: ${diff.toString()}, Sum: ${sum.toString()}, Ratio: ${ratio.toString()}`
-    // );
-
-    return ratio.lte(tol);
-  }
 
   for (let i = 0; i < NUMBER_OF_ATTEMPTS; i++) {
     // 持続時間に基づく報酬の分布をテストする

@@ -16,6 +16,7 @@ import {
 import { getProxy } from "../../../../src/testUtil";
 import { contractVersion } from "../../../param/version";
 import Constants from "../../Constants";
+import { generateUniqueRandomNumbers } from "../../testHelpers";
 
 const week = Constants.week;
 const MAX_UINT256 = Constants.MAX_UINT256;
@@ -51,19 +52,6 @@ describe("FeePoolV2", function () {
   afterEach(async () => {
     await snapshot.restore();
   });
-
-  function generateUniqueRandomNumbers(
-    count: number,
-    min: number,
-    max: number
-  ): number[] {
-    const set = new Set<number>();
-    while (set.size < count) {
-      const randomValue = Math.floor(Math.random() * (max - min + 1)) + min;
-      set.add(randomValue);
-    }
-    return Array.from(set);
-  }
 
   it("test checkpoint total supply", async function () {
     const stAmount = generateUniqueRandomNumbers(MAX_EXAMPLES, 1e4, 100 * 1e4);
