@@ -13,9 +13,10 @@ import {
 } from "../../../../typechain";
 import { getProxy } from "../../../../src/testUtil";
 import { contractVersion } from "../../../param/version";
+import Constants from "../../Constants";
 
-const DAY = 86400;
-const WEEK = DAY * 7;
+const day = Constants.day;
+const week = Constants.week;
 
 describe("FeePoolV2", () => {
   let alice, bob, charlie: SignerWithAddress;
@@ -70,15 +71,15 @@ describe("FeePoolV2", () => {
           });
           await feePool.checkpointToken();
           await feePool.checkpointTotalSupply();
-          await time.increase(DAY);
+          await time.increase(day);
         }
       }
 
-      await time.increase(WEEK);
+      await time.increase(week);
       await veYMT
         .connect(alice)
-        .createLock(amount, (await time.latest()) + 3 * WEEK);
-      await time.increase(2 * WEEK);
+        .createLock(amount, (await time.latest()) + 3 * week);
+      await time.increase(2 * week);
 
       await feePool.connect(alice)["claim()"]();
 
@@ -92,11 +93,11 @@ describe("FeePoolV2", () => {
       const amount = ethers.utils.parseEther("1000");
       await YMT.connect(alice).approve(veYMT.address, amount.mul(10));
 
-      await time.increase(WEEK);
+      await time.increase(week);
       await veYMT
         .connect(alice)
-        .createLock(amount, (await time.latest()) + 8 * WEEK);
-      await time.increase(WEEK);
+        .createLock(amount, (await time.latest()) + 8 * week);
+      await time.increase(week);
 
       feePool = await getProxy<FeePool, FeePool__factory>(
         contractVersion["FeePool"],
@@ -112,11 +113,11 @@ describe("FeePoolV2", () => {
           });
           await feePool.checkpointToken();
           await feePool.checkpointTotalSupply();
-          await time.increase(DAY);
+          await time.increase(day);
         }
       }
 
-      await time.increase(WEEK);
+      await time.increase(week);
       await feePool.checkpointToken();
       const balanceAlice = await ethers.provider.getBalance(alice.address);
       const tx = await feePool.connect(alice)["claim()"]();
@@ -137,10 +138,10 @@ describe("FeePoolV2", () => {
 
       await veYMT
         .connect(alice)
-        .createLock(amount, (await time.latest()) + 8 * WEEK);
-      await time.increase(WEEK);
+        .createLock(amount, (await time.latest()) + 8 * week);
+      await time.increase(week);
       const startTime = await time.latest();
-      await time.increase(WEEK * 5);
+      await time.increase(week * 5);
 
       feePool = await getProxy<FeePool, FeePool__factory>(
         contractVersion["FeePool"],
@@ -154,7 +155,7 @@ describe("FeePoolV2", () => {
       });
 
       await feePool.checkpointToken();
-      await time.increase(WEEK);
+      await time.increase(week);
       await feePool.checkpointToken();
       let balanceAlice = await ethers.provider.getBalance(alice.address);
       const tx = await feePool.connect(alice)["claim()"]();
@@ -170,21 +171,21 @@ describe("FeePoolV2", () => {
       await YMT.approve(veYMT.address, amount.mul(10));
 
       const currentTimestamp = await time.latest();
-      await veYMT.createLock(amount, currentTimestamp + 4 * WEEK);
+      await veYMT.createLock(amount, currentTimestamp + 4 * week);
 
-      await time.increase(WEEK);
+      await time.increase(week);
 
       const startTime = await time.latest();
 
-      await time.increase(3 * WEEK);
+      await time.increase(3 * week);
 
       await veYMT.connect(alice).withdraw();
-      const excludeTime = Math.floor((await time.latest()) / WEEK) * WEEK;
+      const excludeTime = Math.floor((await time.latest()) / week) * week;
       await veYMT
         .connect(alice)
-        .createLock(amount, (await time.latest()) + 4 * WEEK);
+        .createLock(amount, (await time.latest()) + 4 * week);
 
-      await time.increase(2 * WEEK);
+      await time.increase(2 * week);
 
       feePool = await getProxy<FeePool, FeePool__factory>(
         contractVersion["FeePool"],
@@ -199,7 +200,7 @@ describe("FeePoolV2", () => {
 
       await feePool.checkpointToken();
 
-      await time.increase(WEEK);
+      await time.increase(week);
 
       await feePool.checkpointToken();
 
@@ -225,14 +226,14 @@ describe("FeePoolV2", () => {
       const currentTimestamp = await time.latest();
       await veYMT
         .connect(alice)
-        .createLock(amount, currentTimestamp + 8 * WEEK);
-      await veYMT.connect(bob).createLock(amount, currentTimestamp + 8 * WEEK);
+        .createLock(amount, currentTimestamp + 8 * week);
+      await veYMT.connect(bob).createLock(amount, currentTimestamp + 8 * week);
 
-      await time.increase(WEEK);
+      await time.increase(week);
 
       const startTime = await time.latest();
 
-      await time.increase(5 * WEEK);
+      await time.increase(5 * week);
 
       feePool = await getProxy<FeePool, FeePool__factory>(
         contractVersion["FeePool"],
@@ -247,7 +248,7 @@ describe("FeePoolV2", () => {
 
       await feePool.checkpointToken();
 
-      await time.increase(WEEK);
+      await time.increase(week);
 
       await feePool.checkpointToken();
 

@@ -7,11 +7,11 @@ import {
 import { Contract } from "ethers";
 import Constants from "../../Constants";
 
+const YEAR = Constants.YEAR;
+
 describe("YMT", function () {
   let token: Contract;
   let snapshot: SnapshotRestorer;
-
-  const YEAR = Constants.YEAR;
 
   before(async function () {
     const Token = await ethers.getContractFactory("YMT");

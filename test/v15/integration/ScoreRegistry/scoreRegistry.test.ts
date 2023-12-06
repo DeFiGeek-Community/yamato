@@ -54,6 +54,16 @@ import Constants from "../../Constants";
 
 chai.use(smock.matchers);
 
+const ten_to_the_18 = Constants.ten_to_the_18;
+const ten_to_the_20 = Constants.ten_to_the_20;
+const ten_to_the_21 = Constants.ten_to_the_21;
+const MAX_UINT256 = Constants.MAX_UINT256;
+const SCALE = ten_to_the_20;
+const zero = Constants.zero;
+const week = Constants.week;
+const YEAR = Constants.year;
+const MIN_AMOUNT = 10000;
+
 describe("ScoreRegistry", function () {
   let mockFeePool: FakeContract<FeePool>;
   let mockFeed: FakeContract<PriceFeedV3>;
@@ -76,18 +86,6 @@ describe("ScoreRegistry", function () {
   let PRICE: BigNumber;
   let accounts: SignerWithAddress[];
   let snapshot: SnapshotRestorer;
-  const ten_to_the_18 = Constants.ten_to_the_18;
-  const ten_to_the_20 = Constants.ten_to_the_20;
-  const ten_to_the_21 = Constants.ten_to_the_21;
-  const MAX_UINT256 = Constants.MAX_UINT256;
-  const zero = Constants.zero;
-  const week = Constants.week;
-  const WEEK = Constants.WEEK;
-
-  const DAY = 86400;
-  const YEAR = DAY * 365;
-  const MIN_AMOUNT = 10000;
-  const SCALE = BigNumber.from((1e20).toString());
 
   beforeEach(async () => {
     accounts = await ethers.getSigners();

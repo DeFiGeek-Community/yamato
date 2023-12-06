@@ -8,14 +8,14 @@ import { BigNumber, Contract } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import Constants from "../../Constants";
 
+const week = Constants.week;
+const year = Constants.year;
+const YEAR = Constants.YEAR;
+
 describe("YMT", function () {
   let accounts: SignerWithAddress[];
   let token: Contract;
   let snapshot: SnapshotRestorer;
-
-  const week = Constants.week;
-  const YEAR = Constants.YEAR;
-  const year = Constants.year;
 
   before(async function () {
     accounts = await ethers.getSigners();

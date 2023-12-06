@@ -7,8 +7,9 @@ import {
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import Constants from "../../Constants";
 
-const WEEK = 86400 * 7;
+const week = Constants.week;
 
 describe("Voting Escrow tests", function () {
   let accounts: SignerWithAddress[];
@@ -42,12 +43,12 @@ describe("Voting Escrow tests", function () {
   });
 
   for (
-    let st_initial = WEEK * 2;
-    st_initial <= WEEK * 52;
-    st_initial += WEEK * 2
+    let st_initial = week * 2;
+    st_initial <= week * 52;
+    st_initial += week * 2
   ) {
     it(`create lock with zero balance: Lock ${Math.floor(
-      st_initial / WEEK
+      st_initial / week
     )} Week`, async () => {
       const expectedUnlock = (await time.latest()) + st_initial;
       await veYMT
@@ -71,14 +72,14 @@ describe("Voting Escrow tests", function () {
   }
 
   for (
-    let st_initial = WEEK * 2;
-    st_initial <= WEEK * 52;
-    st_initial += WEEK * 2
+    let st_initial = week * 2;
+    st_initial <= week * 52;
+    st_initial += week * 2
   ) {
-    for (let st_extend = WEEK; st_extend <= WEEK * 2; st_extend += WEEK) {
+    for (let st_extend = week; st_extend <= week * 2; st_extend += week) {
       it(`increase unlock with zero balance: Lock ${Math.floor(
-        st_initial / WEEK
-      )} Week, extend: ${Math.floor(st_extend / WEEK)} Week`, async () => {
+        st_initial / week
+      )} Week, extend: ${Math.floor(st_extend / week)} Week`, async () => {
         await veYMT
           .connect(accounts[0])
           .createLock(

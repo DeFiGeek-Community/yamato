@@ -7,14 +7,15 @@ import {
 import { Contract } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { BigNumber } from "ethers";
+import Constants from "../../Constants";
+
+const year = Constants.year;
 
 // Assuming you have a helper function to increase blockchain time
 async function increaseTime(duration: number) {
   await ethers.provider.send("evm_increaseTime", [duration]);
   await ethers.provider.send("evm_mine", []);
 }
-
-const YEAR = 365 * 24 * 60 * 60; // seconds in a year
 
 describe("YMT", function () {
   let accounts: SignerWithAddress[];
@@ -40,7 +41,7 @@ describe("YMT", function () {
 
   describe("YMT MintIntegration", function () {
     it("should mint the correct amount", async function () {
-      const duration = YEAR; // Replace with dynamic value as needed
+      const duration = year; // Replace with dynamic value as needed
       await token.setMinter(accounts[0].address);
       const creationTime = await token.startEpochTime();
       const initialSupply = await token.totalSupply();
@@ -59,7 +60,7 @@ describe("YMT", function () {
     });
 
     it("should revert on overmint", async function () {
-      const duration = YEAR; // Replace with dynamic value as needed
+      const duration = year; // Replace with dynamic value as needed
       await token.setMinter(accounts[0].address);
       const creationTime = await token.startEpochTime();
       const rate = await token.rate();
@@ -81,14 +82,14 @@ describe("YMT", function () {
       let balance = BigNumber.from(0);
       let epochStart = await token.startEpochTime();
 
-      const durations = [YEAR * 0.33, YEAR * 0.5, YEAR * 0.7]; // Replace with dynamic values as needed
+      const durations = [year * 0.33, year * 0.5, year * 0.7]; // Replace with dynamic values as needed
 
       for (const time of durations) {
         await increaseTime(time);
 
         if (
           (await ethers.provider.getBlock("latest")).timestamp - epochStart >
-          YEAR
+          year
         ) {
           await token.updateMiningParameters();
           epochStart = await token.startEpochTime();

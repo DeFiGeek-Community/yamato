@@ -54,6 +54,13 @@ import Constants from "../../Constants";
 
 chai.use(smock.matchers);
 
+const ten_to_the_18 = Constants.ten_to_the_18;
+const ten_to_the_17 = Constants.ten_to_the_17;
+const zero = Constants.zero;
+const WEEK = Constants.WEEK;
+const month = Constants.month;
+const week = Constants.week;
+
 describe("YmtMinter", function () {
   let mockFeePool: FakeContract<FeePool>;
   let mockFeed: FakeContract<PriceFeedV3>;
@@ -77,13 +84,6 @@ describe("YmtMinter", function () {
   let accounts: SignerWithAddress[];
   let ownerAddress: string;
   let snapshot: SnapshotRestorer;
-
-  const ten_to_the_18 = Constants.ten_to_the_18;
-  const ten_to_the_17 = Constants.ten_to_the_17;
-  const zero = Constants.zero;
-  const WEEK = Constants.WEEK;
-  const month = Constants.month;
-  const week = Constants.week;
 
   before(async function () {
     accounts = await ethers.getSigners();

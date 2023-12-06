@@ -13,10 +13,10 @@ import {
 } from "../../../../typechain";
 import { getProxy } from "../../../../src/testUtil";
 import { contractVersion } from "../../../param/version";
+import Constants from "../../Constants";
 
-const DAY = 86400;
-const WEEK = DAY * 7;
-const YEAR = DAY * 365;
+const week = Constants.week;
+const year = Constants.year;
 
 describe("FeePoolV2", () => {
   let alice, bob, charlie: SignerWithAddress;
@@ -62,13 +62,13 @@ describe("FeePoolV2", () => {
       await token.approve(veYMT.address, ethers.constants.MaxUint256);
       await veYMT.createLock(
         ethers.utils.parseEther("1000"),
-        (await time.latest()) + WEEK * 52
+        (await time.latest()) + week * 52
       );
     });
     it("test_checkpoint_total_supply", async function () {
       const startTime = await feePool.timeCursor();
       const weekEpoch =
-        Math.floor(((await time.latest()) + WEEK) / WEEK) * WEEK;
+        Math.floor(((await time.latest()) + week) / week) * week;
 
       await time.increaseTo(weekEpoch);
 
@@ -84,19 +84,19 @@ describe("FeePoolV2", () => {
 
     it("test_advance_time_cursor", async function () {
       const startTime = (await feePool.timeCursor()).toNumber();
-      await time.increase(YEAR);
+      await time.increase(year);
       await feePool.checkpointTotalSupply();
       const newTimeCursor = (await feePool.timeCursor()).toNumber();
-      expect(newTimeCursor).to.equal(startTime + WEEK * 20);
-      expect(await feePool.veSupply(startTime + WEEK * 19)).to.be.above(0);
-      expect(await feePool.veSupply(startTime + WEEK * 20)).to.equal(0);
+      expect(newTimeCursor).to.equal(startTime + week * 20);
+      expect(await feePool.veSupply(startTime + week * 19)).to.be.above(0);
+      expect(await feePool.veSupply(startTime + week * 20)).to.equal(0);
 
       await feePool.checkpointTotalSupply();
 
-      expect(await feePool.timeCursor()).to.equal(startTime + WEEK * 40);
-      expect(await feePool.veSupply(startTime + WEEK * 20)).to.be.above(0);
-      expect(await feePool.veSupply(startTime + WEEK * 39)).to.be.above(0);
-      expect(await feePool.veSupply(startTime + WEEK * 40)).to.equal(0);
+      expect(await feePool.timeCursor()).to.equal(startTime + week * 40);
+      expect(await feePool.veSupply(startTime + week * 20)).to.be.above(0);
+      expect(await feePool.veSupply(startTime + week * 39)).to.be.above(0);
+      expect(await feePool.veSupply(startTime + week * 40)).to.equal(0);
     });
 
     it("test_claim_checkpoints_total_supply", async function () {
@@ -105,14 +105,14 @@ describe("FeePoolV2", () => {
       await feePool.connect(alice)["claim()"]();
 
       expect((await feePool.timeCursor()).toNumber()).to.equal(
-        start_time + WEEK
+        start_time + week
       );
     });
 
     it("test_toggle_allow_checkpoint", async function () {
       const lastTokenTime = (await feePool.lastTokenTime()).toNumber();
 
-      await time.increase(WEEK);
+      await time.increase(week);
 
       await feePool.connect(alice)["claim()"]();
       expect((await feePool.lastTokenTime()).toNumber()).to.equal(

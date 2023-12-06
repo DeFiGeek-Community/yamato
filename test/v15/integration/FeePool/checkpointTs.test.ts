@@ -13,9 +13,9 @@ import {
 } from "../../../../typechain";
 import { getProxy } from "../../../../src/testUtil";
 import { contractVersion } from "../../../param/version";
+import Constants from "../../Constants";
 
-const DAY = 86400;
-const WEEK = DAY * 7;
+const week = Constants.week;
 const MAX_EXAMPLES = 10;
 
 describe("FeePoolV2", function () {
@@ -79,7 +79,7 @@ describe("FeePoolV2", function () {
     for (let i = 0; i < MAX_EXAMPLES; i++) {
       const sleepTime = Math.floor(stSleep[i] * 86400);
       await ethers.provider.send("evm_increaseTime", [sleepTime]);
-      const lockTime = (await time.latest()) + sleepTime + WEEK * stLocktime[i];
+      const lockTime = (await time.latest()) + sleepTime + week * stLocktime[i];
       finalLock = Math.max(finalLock, lockTime);
 
       await veYMT
@@ -92,7 +92,7 @@ describe("FeePoolV2", function () {
 
     while ((await time.latest()) < finalLock) {
       const weekEpoch =
-        Math.floor(((await time.latest()) + WEEK) / WEEK) * WEEK; // WEEK * WEEK;
+        Math.floor(((await time.latest()) + week) / week) * week; // week * week;
 
       await time.increaseTo(weekEpoch);
 

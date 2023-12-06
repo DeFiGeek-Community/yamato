@@ -13,9 +13,9 @@ import {
 } from "../../../../typechain";
 import { getProxy } from "../../../../src/testUtil";
 import { contractVersion } from "../../../param/version";
+import Constants from "../../Constants";
 
-const DAY = 86400;
-const WEEK = DAY * 7;
+const week = Constants.week;
 
 describe("FeePoolV2", () => {
   let alice, bob, charlie: SignerWithAddress;
@@ -48,9 +48,9 @@ describe("FeePoolV2", () => {
       await YMT.connect(alice).transfer(acct.address, amount);
       await veYMT
         .connect(acct)
-        .createLock(amount, (await time.latest()) + 8 * WEEK);
+        .createLock(amount, (await time.latest()) + 8 * week);
     }
-    await time.increase(WEEK);
+    await time.increase(week);
     await alice.sendTransaction({
       to: feePool.address,
       value: ethers.utils.parseEther("10"),
@@ -73,7 +73,7 @@ describe("FeePoolV2", () => {
   describe("test_claim_many", () => {
     it("test_claim_many", async function () {
       await feePool.checkpointToken();
-      await time.increase(WEEK);
+      await time.increase(week);
       await feePool.checkpointToken();
 
       const snapshot = await takeSnapshot();
@@ -106,7 +106,7 @@ describe("FeePoolV2", () => {
     });
     it("test_claim_many_same_account", async function () {
       await feePool.checkpointToken();
-      await time.increase(WEEK);
+      await time.increase(week);
       await feePool.checkpointToken();
 
       const expected = await feePool.connect(alice).callStatic["claim()"]();

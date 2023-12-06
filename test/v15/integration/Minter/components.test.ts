@@ -50,14 +50,14 @@ import {
   getLinkedProxy,
 } from "../../../../src/testUtil";
 import { contractVersion } from "../../../param/version";
+import Constants from "../../Constants";
 
 chai.use(smock.matchers);
 
-const ACCOUNT_NUM = 4;
 const NUMBER_OF_ATTEMPTS = 20;
-const SCALE = BigNumber.from((1e20).toString());
-const WEEK = 86400 * 7;
-const MONTH = 86400 * 30;
+const SCALE = Constants.ten_to_the_20;
+const week = Constants.week;
+const month = Constants.month;
 
 describe("YmtMinter components", function () {
   let mockFeePool: FakeContract<FeePool>;
@@ -251,10 +251,10 @@ describe("YmtMinter components", function () {
 
   for (let i = 0; i < NUMBER_OF_ATTEMPTS; i++) {
     it(`tests duration ${i}`, async function () {
-      const stDuration = generateUniqueRandomNumbers(3, WEEK, MONTH);
+      const stDuration = generateUniqueRandomNumbers(3, week, month);
       const depositTime: number[] = [];
 
-      await time.increase(WEEK);
+      await time.increase(week);
 
       for (let i = 0; i < 3; i++) {
         await yamato
@@ -348,7 +348,7 @@ describe("YmtMinter components", function () {
         depositTime.push(await time.latest());
       }
 
-      await time.increase(MONTH);
+      await time.increase(month);
 
       const balances: BigNumber[] = [];
       for (let i = 0; i < 3; i++) {

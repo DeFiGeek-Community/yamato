@@ -7,15 +7,14 @@ import {
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import Constants from "../../Constants";
 
 const ACCOUNT_NUM = 10;
 const MAX_EXAMPLES = 30; // テストの試行回数
 const STATEFUL_STEP_COUNT = 20; // ruleの実行回数
-const YEAR = BigNumber.from(86400 * 365);
-const WEEK = BigNumber.from(86400 * 7);
-const two_to_the_256_minus_1 = BigNumber.from("2")
-  .pow(BigNumber.from("256"))
-  .sub(BigNumber.from("1"));
+const YEAR = Constants.YEAR;
+const WEEK = Constants.WEEK;
+const NAX_UINT256 = Constants.MAX_UINT256;
 const ten_to_the_40 = BigNumber.from(
   "10000000000000000000000000000000000000000"
 );
@@ -54,7 +53,7 @@ describe("veYMT", function () {
         ._mintForTesting(accounts[i].address, ten_to_the_40);
       await token
         .connect(accounts[i])
-        .approve(veYMT.address, two_to_the_256_minus_1);
+        .approve(veYMT.address, NAX_UINT256);
     }
 
     //setup

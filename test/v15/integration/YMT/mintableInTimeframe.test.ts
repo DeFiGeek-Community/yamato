@@ -8,13 +8,15 @@ import {
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import Constants from "../../Constants";
 
+const year = Constants.year;
+const YEAR = Constants.YEAR;
+
 async function increaseTime(duration: BigNumber) {
   await ethers.provider.send("evm_increaseTime", [duration.toNumber()]);
   await ethers.provider.send("evm_mine", []);
 }
 
 // Constants
-const YEAR = Constants.YEAR;
 const INITIAL_RATE = BigNumber.from(55000000);
 const YEAR_1_SUPPLY = INITIAL_RATE.mul(BigNumber.from(10).pow(18))
   .div(YEAR)
@@ -25,7 +27,6 @@ describe("YMT", function () {
   let accounts: SignerWithAddress[];
   let token: Contract;
   let snapshot: SnapshotRestorer;
-  const year = Constants.year;
 
   before(async function () {
     accounts = await ethers.getSigners();

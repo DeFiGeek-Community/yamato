@@ -54,6 +54,8 @@ import Constants from "../../Constants";
 
 chai.use(smock.matchers);
 
+const year = Constants.year;
+
 describe("ScoreRegistry checkpoint", function () {
   let mockFeePool: FakeContract<FeePool>;
   let mockFeed: FakeContract<PriceFeedV3>;
@@ -76,7 +78,6 @@ describe("ScoreRegistry checkpoint", function () {
   let PRICE: BigNumber;
   let accounts: SignerWithAddress[];
   let snapshot: SnapshotRestorer;
-  const year = Constants.year;
 
   before(async function () {
     accounts = await ethers.getSigners();

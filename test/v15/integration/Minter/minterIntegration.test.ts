@@ -50,11 +50,11 @@ import {
   getLinkedProxy,
 } from "../../../../src/testUtil";
 import { contractVersion } from "../../../param/version";
+import Constants from "../../Constants";
 
-const SCALE = BigNumber.from(10).pow(20);
-const WEEK = 86400 * 7;
-const MONTH = 86400 * 30;
-const W = BigNumber.from(10).pow(18);
+const week = Constants.week;
+const month = Constants.month;
+const ten_to_the_18 = Constants.ten_to_the_18;
 
 describe("YmtMinter integration", function () {
   let accounts: SignerWithAddress[];
@@ -195,7 +195,7 @@ describe("YmtMinter integration", function () {
     await scoreWeightController
       .addCurrency(
         scoreRegistry.address,
-        W
+        ten_to_the_18
       );
   });
 
@@ -209,7 +209,7 @@ describe("YmtMinter integration", function () {
 
   function getICR(pledge, price){
     const {coll, debt} = pledge;
-    const collInCurrency = (coll.mul(price)).div(W);
+    const collInCurrency = (coll.mul(price)).div(ten_to_the_18);
     return (BigNumber.from("10000").mul(collInCurrency)).div(debt);
   }
 
@@ -240,7 +240,7 @@ describe("YmtMinter integration", function () {
     }
 
     // For weights to activate
-    await time.increase(WEEK);
+    await time.increase(week);
 
     // Bob and Charlie deposit to gauges with different weights
     for(let i = 0; i < 5; i++){    
@@ -249,7 +249,7 @@ describe("YmtMinter integration", function () {
         .borrow(ethers.utils.parseEther(amount));
     }
     // mockFeed.fetchPrice.returns(PRICE = BigNumber.from(180000).mul(1e18 + ""));
-    await time.increase(MONTH);
+    await time.increase(month);
     
     const ICRs = [];
     for(let i = 0; i < 5; i++){
@@ -261,7 +261,7 @@ describe("YmtMinter integration", function () {
     // Claim for Bob now
     await ymtMinter.connect(accounts[1]).mint(scoreRegistry.address);
     const bobTokens = await YMT.balanceOf(accounts[1].address);
-    await time.increase(MONTH);
+    await time.increase(month);
     
     // This won't give anything
     await ymtMinter.connect(accounts[1]).mint(scoreRegistry.address);

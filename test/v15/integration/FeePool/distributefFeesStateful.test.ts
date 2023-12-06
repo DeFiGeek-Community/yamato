@@ -13,6 +13,7 @@ import {
 } from "../../../../typechain";
 import { getProxy } from "../../../../src/testUtil";
 import { contractVersion } from "../../../param/version";
+import Constants from "../../Constants";
 
 // 参考) brownie Stateful Tests
 // https://eth-brownie.readthedocs.io/en/stable/tests-hypothesis-stateful.html
@@ -20,11 +21,9 @@ import { contractVersion } from "../../../param/version";
 const ACCOUNT_NUM = 5;
 const MAX_EXAMPLES = 50;
 const STATEFUL_STEP_COUNT = 30;
-const WEEK = 86400 * 7;
-const YEAR = 86400 * 365;
-const two_to_the_256_minus_1 = BigNumber.from("2")
-  .pow(BigNumber.from("256"))
-  .sub(BigNumber.from("1"));
+const week = Constants.week;
+const year = Constants.year;
+const MAX_UINT256 = Constants.MAX_UINT256;
 const MOUNT_DECIMALS = 3;
 
 // Helper functions to generate random variables ----->
@@ -96,7 +95,7 @@ describe("FeePoolV2", function () {
         .transfer(accounts[i].address, ethers.utils.parseEther("10000000"));
       await YMT
         .connect(accounts[i])
-        .approve(veYMT.address, two_to_the_256_minus_1);
+        .approve(veYMT.address, MAX_UINT256);
 
       userClaims[accounts[i].address] = [];
     }
@@ -106,7 +105,7 @@ describe("FeePoolV2", function () {
       .connect(accounts[0])
       .createLock(
         ethers.utils.parseEther("10000000"),
-        (await time.latest()) + YEAR * 2
+        (await time.latest()) + year * 2
       );
 
     lockedUntil = {
@@ -116,7 +115,7 @@ describe("FeePoolV2", function () {
     };
 
     // a week later we deploy the fee feePool
-    await time.increase(WEEK);
+    await time.increase(week);
 
     feePool = await getProxy<FeePool, FeePool__factory>(
       contractVersion["FeePool"],
@@ -184,7 +183,7 @@ describe("FeePoolV2", function () {
 
     if (!(await _checkActiveLock(stAcct))) {
       const until =
-        (Math.floor((await time.latest()) / WEEK) + stWeeks.toNumber()) * WEEK;
+        (Math.floor((await time.latest()) / week) + stWeeks.toNumber()) * week;
       await veYMT.connect(stAcct).createLock(stAmount, until);
       lockedUntil[stAcct.address] = until;
     }
@@ -222,12 +221,12 @@ describe("FeePoolV2", function () {
 
     if (await _checkActiveLock(stAcct)) {
       const until =
-        (Math.floor((await veYMT.lockedEnd(stAcct.address)).toNumber() / WEEK) +
+        (Math.floor((await veYMT.lockedEnd(stAcct.address)).toNumber() / week) +
           stWeeks.toNumber()) *
-        WEEK;
+        week;
       const newUntil = Math.min(
         until,
-        Math.floor(((await time.latest()) + YEAR * 4) / WEEK) * WEEK
+        Math.floor(((await time.latest()) + year * 4) / week) * week
       );
       await veYMT.connect(stAcct).increaseUnlockTime(newUntil);
       lockedUntil[stAcct.address] = newUntil;
@@ -297,7 +296,7 @@ describe("FeePoolV2", function () {
     // const ue = await feePool.userEpochOf(stAcct.address);
     // const up = await veYMT.userPointHistory(stAcct.address, ue);
     // console.log(`Week:
-    //     ${Math.floor(((await time.latest()) - t0) / WEEK)}
+    //     ${Math.floor(((await time.latest()) - t0) / week)}
 
     //     Point: ${up}
     //     `);
@@ -403,7 +402,7 @@ describe("FeePoolV2", function () {
     // Because tokens for current week are obtained in the next week
     // And that is by design
     await feePool.checkpointToken();
-    await ethers.provider.send("evm_increaseTime", [WEEK * 2]);
+    await ethers.provider.send("evm_increaseTime", [week * 2]);
     await feePool.checkpointToken();
     const balanceList = [];
     for (const acct of accounts) {
@@ -412,7 +411,7 @@ describe("FeePoolV2", function () {
       //   const ue = await feePool.userEpochOf(acct.address);
       //   const up = await veYMT.userPointHistory(acct.address, ue);
       //   console.log(`Week:
-      //     ${Math.floor(((await time.latest()) - t0) / WEEK)}
+      //     ${Math.floor(((await time.latest()) - t0) / week)}
 
       //     Point: ${up}
       //     `);
@@ -425,12 +424,12 @@ describe("FeePoolV2", function () {
     }
 
     const t0: number = (await feePool.startTime()).toNumber();
-    const t1: number = Math.floor((await time.latest()) / WEEK) * WEEK;
+    const t1: number = Math.floor((await time.latest()) / week) * week;
 
     const tokensPerUserPerWeek = [];
     for (const acct of accounts) {
       tokensPerUserPerWeek[acct.address] = [];
-      for (let w = t0; w < t1 + WEEK; w += WEEK) {
+      for (let w = t0; w < t1 + week; w += week) {
         const tokens = (await feePool.tokensPerWeek(w))
           .mul(await feePool.veForAt(acct.address, w))
           .div(await feePool.veSupply(w));
