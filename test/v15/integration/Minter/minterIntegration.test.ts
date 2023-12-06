@@ -229,7 +229,8 @@ describe("YmtMinter integration", function () {
     return diff.lte(tolerance);
   }
 
-  it(`tests mint collateral ratio`, async function () {
+  // 担保比率をテストする
+  it(`should test the mint collateral ratio`, async function () {
     const amount = "100000";
     await YMT.setMinter(ymtMinter.address);
     const ethAmounts = ["1.5", "1.25", "1", "0.75", "0.65"];

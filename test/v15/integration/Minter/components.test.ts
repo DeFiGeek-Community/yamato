@@ -55,9 +55,11 @@ import Constants from "../../Constants";
 chai.use(smock.matchers);
 
 const NUMBER_OF_ATTEMPTS = 20;
-const SCALE = Constants.ten_to_the_20;
+const ten_to_the_20 = Constants.ten_to_the_20;
+const ten_to_the_18 = Constants.ten_to_the_18;
 const week = Constants.week;
 const month = Constants.month;
+const zero = Constants.zero;
 
 describe("YmtMinter components", function () {
   let mockFeePool: FakeContract<FeePool>;
@@ -80,12 +82,10 @@ describe("YmtMinter components", function () {
   let priorityRegistry: PriorityRegistry;
   let PRICE: BigNumber;
   let accounts: SignerWithAddress[];
-  let ownerAddress: string;
   let snapshot: SnapshotRestorer;
 
   before(async function () {
     accounts = await ethers.getSigners();
-    ownerAddress = await accounts[0].getAddress();
 
     mockFeePool = await getFakeProxy<FeePool>(contractVersion["FeePool"]);
     mockFeed = await getFakeProxy<PriceFeedV3>(contractVersion["PriceFeed"]);
@@ -193,19 +193,14 @@ describe("YmtMinter components", function () {
     mockFeed.getPrice.returns(PRICE);
     mockFeed.lastGoodPrice.returns(PRICE);
 
-
-    // await scoreWeightController.addType(
-    //   "Currency",
-    //   ethers.utils.parseEther("1")
-    // );
     await scoreWeightController.addCurrency(
       scoreRegistry.address,
-      ethers.utils.parseEther("10")
+      ten_to_the_18
     );
     for (let i = 0; i < 4; i++) {
       await yamato
         .connect(accounts[i])
-        .deposit({ value: ethers.utils.parseEther("100") });
+        .deposit({ value: ten_to_the_20 });
     }
   });
 
@@ -237,7 +232,7 @@ describe("YmtMinter components", function () {
 
     const diff = value.sub(target).abs();
     const sum = value.add(target);
-    const ratio = diff.mul(2).mul(BigNumber.from(SCALE)).div(sum);
+    const ratio = diff.mul(2).mul(ten_to_the_20).div(sum);
 
     // console.log(
     //   `Value: ${value.toString()}, Target: ${target.toString()}, Tol: ${tol.toString()}`
@@ -250,7 +245,8 @@ describe("YmtMinter components", function () {
   }
 
   for (let i = 0; i < NUMBER_OF_ATTEMPTS; i++) {
-    it(`tests duration ${i}`, async function () {
+    // 持続時間に基づく報酬の分布をテストする
+    it(`should test reward distribution based on duration [Attempt ${i}]`, async function () {
       const stDuration = generateUniqueRandomNumbers(3, week, month);
       const depositTime: number[] = [];
 
@@ -259,7 +255,7 @@ describe("YmtMinter components", function () {
       for (let i = 0; i < 3; i++) {
         await yamato
           .connect(accounts[i + 1])
-          .borrow(ethers.utils.parseEther("1"));
+          .borrow(ten_to_the_18);
         depositTime.push(await time.latest());
 
         //   await showGaugeInfo();
@@ -282,7 +278,7 @@ describe("YmtMinter components", function () {
 
       const totalMinted: BigNumber = balances.reduce(
         (a: BigNumber, b: BigNumber) => a.add(b),
-        ethers.BigNumber.from(0)
+        zero
       );
       const weight1 = Math.floor(durations[0]);
       const weight2 = Math.floor(weight1 + (durations[1] - durations[0]) * 1.5);
@@ -294,21 +290,21 @@ describe("YmtMinter components", function () {
       );
       console.log(
         `Balance 1: ${balances[0]} (${balances[0]
-          .mul(SCALE)
+          .mul(ten_to_the_20)
           .div(totalMinted)}) Weight 1: ${weight1.toString()} (${
           (100 * weight1) / totalWeight
         }%)`
       );
       console.log(
         `Balance 2: ${balances[1]} (${balances[1]
-          .mul(SCALE)
+          .mul(ten_to_the_20)
           .div(totalMinted)}) Weight 2: ${weight2.toString()} (${
           (100 * weight2) / totalWeight
         }%)`
       );
       console.log(
         `Balance 3: ${balances[2]} (${balances[2]
-          .mul(SCALE)
+          .mul(ten_to_the_20)
           .div(totalMinted)}) Weight 3: ${weight3.toString()} (${
           (100 * weight3) / totalWeight
         }%)`
@@ -316,30 +312,31 @@ describe("YmtMinter components", function () {
 
       expect(
         approx(
-          balances[0].mul(SCALE).div(totalMinted),
-          BigNumber.from(weight1).mul(SCALE).div(totalWeight),
-          BigNumber.from(10).pow(18) // = (10 ** -4) * SCALE
+          balances[0].mul(ten_to_the_20).div(totalMinted),
+          BigNumber.from(weight1).mul(ten_to_the_20).div(totalWeight),
+          ten_to_the_18
         )
       ).to.be.true;
       expect(
         approx(
-          balances[1].mul(SCALE).div(totalMinted),
-          BigNumber.from(weight2).mul(SCALE).div(totalWeight),
-          BigNumber.from(10).pow(18) // = (10 ** -4) * SCALE
+          balances[1].mul(ten_to_the_20).div(totalMinted),
+          BigNumber.from(weight2).mul(ten_to_the_20).div(totalWeight),
+          ten_to_the_18
         )
       ).to.be.true;
       expect(
         approx(
-          balances[2].mul(SCALE).div(totalMinted),
-          BigNumber.from(weight3).mul(SCALE).div(totalWeight),
-          BigNumber.from(10).pow(18) // = (10 ** -4) * SCALE
+          balances[2].mul(ten_to_the_20).div(totalMinted),
+          BigNumber.from(weight3).mul(ten_to_the_20).div(totalWeight),
+          ten_to_the_18
         )
       ).to.be.true;
     });
   }
 
   for (let i = 0; i < NUMBER_OF_ATTEMPTS; i++) {
-    it(`tests amounts ${i}`, async function () {
+    // 借入額に基づく報酬の分布をテストする
+    it(`should test reward distribution based on borrowed amounts [Attempt ${i}]`, async function () {
       const stAmounts = generateUniqueRandomNumbers(3, 1e17, 1e18);
       const depositTime: number[] = [];
 
@@ -365,7 +362,7 @@ describe("YmtMinter components", function () {
       );
       const totalMinted: BigNumber = balances.reduce(
         (a: BigNumber, b: BigNumber) => a.add(b),
-        ethers.BigNumber.from(0)
+        zero
       );
 
       console.log(
@@ -373,21 +370,21 @@ describe("YmtMinter components", function () {
       );
       console.log(
         `Balance 1: ${balances[0]} (${balances[0]
-          .mul(SCALE)
+          .mul(ten_to_the_20)
           .div(totalMinted)}) Deposited 1: ${stAmounts[0].toString()} (${
           (100 * stAmounts[0]) / totalDeposited
         }%)`
       );
       console.log(
         `Balance 2: ${balances[1]} (${balances[1]
-          .mul(SCALE)
+          .mul(ten_to_the_20)
           .div(totalMinted)}) Deposited 2: ${stAmounts[1].toString()} (${
           (100 * stAmounts[1]) / totalDeposited
         }%)`
       );
       console.log(
         `Balance 3: ${balances[2]} (${balances[2]
-          .mul(SCALE)
+          .mul(ten_to_the_20)
           .div(totalMinted)}) Deposited 3: ${stAmounts[2].toString()} (${
           (100 * stAmounts[2]) / totalDeposited
         }%)`
@@ -395,29 +392,29 @@ describe("YmtMinter components", function () {
 
       expect(
         approx(
-          balances[0].mul(SCALE).div(totalMinted),
+          balances[0].mul(ten_to_the_20).div(totalMinted),
           BigNumber.from(stAmounts[0].toString())
-            .mul(SCALE)
+            .mul(ten_to_the_20)
             .div(totalDeposited.toString()),
-          BigNumber.from(10).pow(18) // = (10 ** -4) * SCALE
+          ten_to_the_18
         )
       ).to.be.true;
       expect(
         approx(
-          balances[1].mul(SCALE).div(totalMinted),
+          balances[1].mul(ten_to_the_20).div(totalMinted),
           BigNumber.from(stAmounts[1].toString())
-            .mul(SCALE)
+            .mul(ten_to_the_20)
             .div(totalDeposited.toString()),
-          BigNumber.from(10).pow(18) // = (10 ** -4) * SCALE
+          ten_to_the_18
         )
       ).to.be.true;
       expect(
         approx(
-          balances[2].mul(SCALE).div(totalMinted),
+          balances[2].mul(ten_to_the_20).div(totalMinted),
           BigNumber.from(stAmounts[2].toString())
-            .mul(SCALE)
+            .mul(ten_to_the_20)
             .div(totalDeposited.toString()),
-          BigNumber.from(10).pow(18) // = (10 ** -4) * SCALE
+          ten_to_the_18
         )
       ).to.be.true;
     });

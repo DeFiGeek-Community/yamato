@@ -59,7 +59,7 @@ function getRandomsTime(): BigNumber {
 }
 // ------------------------------------------------
 
-describe.only("FeePoolV2", function () {
+describe("FeePoolV2", function () {
   let accounts: SignerWithAddress[];
   let veYMT: Contract;
   let feePool: Contract;
