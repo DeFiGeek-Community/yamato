@@ -23,7 +23,7 @@ const INITIAL_RATE = BigNumber.from(55000000);
 const YEAR_1_SUPPLY = INITIAL_RATE.mul(ten_to_the_18)
   .div(YEAR)
   .mul(YEAR);
-const INITIAL_SUPPLY = BigNumber.from(450000000);
+const INITIAL_SUPPLY = Constants.INITIAL_SUPPLY;
 
 describe("YMT", function () {
   let accounts: SignerWithAddress[];
