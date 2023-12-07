@@ -1,40 +1,41 @@
 import { ethers } from "hardhat";
 import { expect } from "chai";
-import { BigNumber, Contract } from "ethers";
+import { BigNumber } from "ethers";
 import {
+  time,
   takeSnapshot,
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {
+  YMT,
+  YMT__factory,
+} from "../../../../typechain";
 import Constants from "../../Constants";
 
 const year = Constants.year;
 const YEAR = Constants.YEAR;
-
-async function increaseTime(duration: BigNumber) {
-  await ethers.provider.send("evm_increaseTime", [duration.toNumber()]);
-  await ethers.provider.send("evm_mine", []);
-}
+const ten_to_the_18 = Constants.ten_to_the_18;
+const ten_to_the_16 = Constants.ten_to_the_16;
 
 // Constants
 const INITIAL_RATE = BigNumber.from(55000000);
-const YEAR_1_SUPPLY = INITIAL_RATE.mul(BigNumber.from(10).pow(18))
+const YEAR_1_SUPPLY = INITIAL_RATE.mul(ten_to_the_18)
   .div(YEAR)
   .mul(YEAR);
 const INITIAL_SUPPLY = BigNumber.from(450000000);
 
-describe("YMT", function () {
+describe.only("YMT", function () {
   let accounts: SignerWithAddress[];
-  let token: Contract;
+  let YMT: YMT;
   let snapshot: SnapshotRestorer;
 
   before(async function () {
     accounts = await ethers.getSigners();
-    const Token = await ethers.getContractFactory("YMT");
-    token = await Token.deploy();
+    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy();
 
-    await increaseTime(BigNumber.from(86401));
-    await token.updateMiningParameters();
+    await time.increase(BigNumber.from(86401));
+    await YMT.updateMiningParameters();
   });
 
   beforeEach(async () => {
@@ -53,22 +54,22 @@ describe("YMT", function () {
       }
 
       // Adjust precision for BigNumber
-      const precisionAdjusted = BigNumber.from(10).pow(18).mul(precision);
+      const precisionAdjusted = ten_to_the_18.mul(precision);
 
       return a.sub(b).abs().lte(a.add(b).div(precisionAdjusted));
     }
 
     // Helper function for theoretical supply calculation
-    async function theoreticalSupply(token: Contract): Promise<BigNumber> {
-      const epoch = await token.miningEpoch();
-      const q = BigNumber.from(10).pow(18).div(BigNumber.from(2).pow(2)); // Equivalent to 1/2**0.25
-      let S = INITIAL_SUPPLY.mul(BigNumber.from(10).pow(18));
+    async function theoreticalSupply(YMT: YMT): Promise<BigNumber> {
+      const epoch = await YMT.miningEpoch();
+      const q = ten_to_the_18.div(BigNumber.from(2).pow(2)); // Equivalent to 1/2**0.25
+      let S = INITIAL_SUPPLY.mul(ten_to_the_18);
 
       if (epoch.gt(0)) {
         S = S.add(
-          YEAR_1_SUPPLY.mul(BigNumber.from(10).pow(18))
-            .mul(BigNumber.from(10).pow(18).sub(q.pow(epoch)))
-            .div(BigNumber.from(10).pow(18).sub(q))
+          YEAR_1_SUPPLY.mul(ten_to_the_18)
+            .mul(ten_to_the_18.sub(q.pow(epoch)))
+            .div(ten_to_the_18.sub(q))
         );
       }
 
@@ -76,32 +77,33 @@ describe("YMT", function () {
         YEAR_1_SUPPLY.div(YEAR)
           .mul(q.pow(epoch))
           .mul(
-            (await ethers.provider.getBlock("latest")).timestamp -
-              (await token.startEpochTime())
+            await time.latest() -
+              Number(await YMT.startEpochTime())
           )
       );
 
       return S;
     }
 
-    it("test_mintable_in_timeframe", async function () {
-      const t0 = Number(await token.startEpochTime());
+    it("should calculate mintable amount correctly for a given timeframe", async function () {
+      // 与えられた時間枠で正しく発行可能な量を計算する
+      const t0 = Number(await YMT.startEpochTime());
 
       // Ensure the exponentiation stays within safe integer limits
       const exponent = BigNumber.from(10).pow(1); // Adjust the exponent as necessary
-      await increaseTime(exponent);
+      await time.increase(exponent);
 
-      let t1 = (await ethers.provider.getBlock("latest")).timestamp;
+      let t1 = await time.latest();
       if (t1 - t0 >= year) {
-        await token.updateMiningParameters();
+        await YMT.updateMiningParameters();
       }
-      t1 = (await ethers.provider.getBlock("latest")).timestamp;
+      t1 = await time.latest();
 
-      const availableSupply = await token.availableSupply();
-      const mintable = await token.mintableInTimeframe(t0, t1);
+      const availableSupply = await YMT.availableSupply();
+      const mintable = await YMT.mintableInTimeframe(t0, t1);
       expect(
         availableSupply
-          .sub(INITIAL_SUPPLY.mul(Constants.ten_to_the_18))
+          .sub(INITIAL_SUPPLY.mul(ten_to_the_18))
           .gte(mintable)
       ).to.equal(true);
       if (t1 == t0) {
@@ -110,7 +112,7 @@ describe("YMT", function () {
         const tolerance = BigNumber.from("10000000"); // Adjust as needed for precision
         expect(
           availableSupply
-            .sub(INITIAL_SUPPLY.mul(Constants.ten_to_the_18))
+            .sub(INITIAL_SUPPLY.mul(ten_to_the_18))
             .div(mintable)
             .sub(1)
         ).to.be.lt(tolerance);
@@ -120,15 +122,16 @@ describe("YMT", function () {
       // const theoreticalSupply = BigNumber.from("EXPECTED_SUPPLY_CALCULATION");
       expect(
         approx(
-          await theoreticalSupply(token),
+          await theoreticalSupply(YMT),
           availableSupply,
-          Constants.ten_to_the_16
+          ten_to_the_16
         )
       ).to.equal(true);
     });
 
-    it("test_random_range_year_one", async function () {
-      const creationTime = await token.startEpochTime();
+    it("should calculate mintable amount for a random range within the first year", async function () {
+      // 最初の年内のランダムな範囲に対して発行可能な量を計算する
+      const creationTime = await YMT.startEpochTime();
       const time1 = BigNumber.from(Math.floor(Math.random() * YEAR.toNumber()));
       const time2 = BigNumber.from(Math.floor(Math.random() * YEAR.toNumber()));
       const [start, end] = [creationTime.add(time1), creationTime.add(time2)];
@@ -136,12 +139,13 @@ describe("YMT", function () {
       const rate = YEAR_1_SUPPLY.div(YEAR);
 
       expect(
-        await token.mintableInTimeframe(sortedTimes[0], sortedTimes[1])
+        await YMT.mintableInTimeframe(sortedTimes[0], sortedTimes[1])
       ).to.equal(rate.mul(sortedTimes[1].sub(sortedTimes[0])));
     });
 
-    it("test_random_range_multiple_epochs", async function () {
-      const creationTime = await token.startEpochTime();
+    it("should calculate mintable amount for a range spanning multiple epochs", async function () {
+      // 複数のエポックにまたがる範囲に対して発行可能な量を計算する
+      const creationTime = await YMT.startEpochTime();
       const start = creationTime.add(YEAR.mul(2));
       const duration = YEAR.mul(2);
       const end = start.add(duration);
@@ -154,33 +158,34 @@ describe("YMT", function () {
       );
 
       for (let i = startEpoch.toNumber(); i < endEpoch.toNumber(); i++) {
-        await increaseTime(YEAR);
-        await token.updateMiningParameters();
+        await time.increase(YEAR);
+        await YMT.updateMiningParameters();
       }
 
-      const mintable = await token.mintableInTimeframe(start, end);
+      const mintable = await YMT.mintableInTimeframe(start, end);
       if (startEpoch.eq(endEpoch)) {
         const expectedMintable = rate.mul(end.sub(start));
-        expect(approx(mintable, expectedMintable, Constants.ten_to_the_16)).to
+        expect(approx(mintable, expectedMintable, ten_to_the_16)).to
           .be.true;
       } else {
         expect(mintable.lt(rate.mul(end))).to.be.true;
       }
     });
 
-    it("test_available_supply", async function () {
+    it("should calculate available supply correctly", async function () {
+      // 利用可能な供給量を正しく計算する
       const duration = BigNumber.from(100000);
-      const creationTime = await token.startEpochTime();
-      const initialSupply = await token.totalSupply();
-      const rate = await token.rate();
+      const creationTime = await YMT.startEpochTime();
+      const initialSupply = await YMT.totalSupply();
+      const rate = await YMT.rate();
 
-      await increaseTime(duration);
+      await time.increase(duration);
 
       const now = BigNumber.from(
-        (await ethers.provider.getBlock("latest")).timestamp
+        await time.latest()
       );
       const expected = initialSupply.add(now.sub(creationTime).mul(rate));
-      expect(await token.availableSupply()).to.equal(expected);
+      expect(await YMT.availableSupply()).to.equal(expected);
     });
   });
 });

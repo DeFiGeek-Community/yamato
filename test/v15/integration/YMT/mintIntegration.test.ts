@@ -1,34 +1,31 @@
 import { ethers } from "hardhat";
 import { expect } from "chai";
+import { BigNumber } from "ethers";
 import {
+  time,
   takeSnapshot,
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
-import { Contract } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { BigNumber } from "ethers";
+import {
+  YMT,
+  YMT__factory,
+} from "../../../../typechain";
 import Constants from "../../Constants";
 
 const year = Constants.year;
 
-// Assuming you have a helper function to increase blockchain time
-async function increaseTime(duration: number) {
-  await ethers.provider.send("evm_increaseTime", [duration]);
-  await ethers.provider.send("evm_mine", []);
-}
-
 describe("YMT", function () {
   let accounts: SignerWithAddress[];
-  let token: Contract;
+  let YMT: YMT;
   let snapshot: SnapshotRestorer;
 
   before(async function () {
     accounts = await ethers.getSigners();
-    const Token = await ethers.getContractFactory("YMT");
-    token = await Token.deploy();
+    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy();
 
-    await increaseTime(86401);
-    await token.updateMiningParameters();
+    await time.increase(86401);
+    await YMT.updateMiningParameters();
   });
 
   beforeEach(async () => {
@@ -39,70 +36,66 @@ describe("YMT", function () {
     await snapshot.restore();
   });
 
-  describe("YMT MintIntegration", function () {
-    it("should mint the correct amount", async function () {
-      const duration = year; // Replace with dynamic value as needed
-      await token.setMinter(accounts[0].address);
-      const creationTime = await token.startEpochTime();
-      const initialSupply = await token.totalSupply();
-      const rate = await token.rate();
+  describe("YMT Mint Integration Tests", function () {
+    it("should mint the correct amount of tokens", async function () {
+      // 指定された期間に応じて正しい量のトークンを発行する
+      const duration = year;
+      await YMT.setMinter(accounts[0].address);
+      const creationTime = await YMT.startEpochTime();
+      const initialSupply = await YMT.totalSupply();
+      const rate = await YMT.rate();
 
-      await increaseTime(duration);
+      await time.increase(duration);
 
-      const currentTime = BigNumber.from(
-        (await ethers.provider.getBlock("latest")).timestamp
-      );
+      const currentTime = BigNumber.from(await time.latest());
       const amount = currentTime.sub(creationTime).mul(rate);
-      await token.mint(accounts[1].address, amount);
+      await YMT.mint(accounts[1].address, amount);
 
-      expect(await token.balanceOf(accounts[1].address)).to.equal(amount);
-      expect(await token.totalSupply()).to.equal(initialSupply.add(amount));
+      expect(await YMT.balanceOf(accounts[1].address)).to.equal(amount);
+      expect(await YMT.totalSupply()).to.equal(initialSupply.add(amount));
     });
 
-    it("should revert on overmint", async function () {
-      const duration = year; // Replace with dynamic value as needed
-      await token.setMinter(accounts[0].address);
-      const creationTime = await token.startEpochTime();
-      const rate = await token.rate();
+    it("should revert when trying to mint more than the available amount", async function () {
+      // 利用可能な量を超えるトークンを発行しようとした場合にリバートする
+      const duration = year;
+      await YMT.setMinter(accounts[0].address);
+      const creationTime = await YMT.startEpochTime();
+      const rate = await YMT.rate();
 
-      await increaseTime(duration);
+      await time.increase(duration);
 
-      const currentTime = BigNumber.from(
-        (await ethers.provider.getBlock("latest")).timestamp
-      );
+      const currentTime = BigNumber.from(await time.latest());
       const amount = currentTime.sub(creationTime).add(2).mul(rate);
-      await expect(token.mint(accounts[1].address, amount)).to.be.revertedWith(
+      await expect(YMT.mint(accounts[1].address, amount)).to.be.revertedWith(
         "dev: exceeds allowable mint amount"
       );
     });
 
-    it("should mint multiple times correctly", async function () {
-      await token.setMinter(accounts[0].address);
-      let totalSupply = await token.totalSupply();
+    it("should accurately mint tokens multiple times", async function () {
+      // 複数回にわたって正確にトークンを発行する
+      await YMT.setMinter(accounts[0].address);
+      let totalSupply = await YMT.totalSupply();
       let balance = BigNumber.from(0);
-      let epochStart = await token.startEpochTime();
+      let epochStart = Number(await YMT.startEpochTime());
 
-      const durations = [year * 0.33, year * 0.5, year * 0.7]; // Replace with dynamic values as needed
+      const durations = [year * 0.33, year * 0.5, year * 0.7];
 
-      for (const time of durations) {
-        await increaseTime(time);
+      for (const duration of durations) {
+        await time.increase(duration);
 
-        if (
-          (await ethers.provider.getBlock("latest")).timestamp - epochStart >
-          year
-        ) {
-          await token.updateMiningParameters();
-          epochStart = await token.startEpochTime();
+        if (await time.latest() - epochStart > year) {
+          await YMT.updateMiningParameters();
+          epochStart = Number(await YMT.startEpochTime());
         }
 
-        const amount = (await token.availableSupply()).sub(totalSupply);
-        await token.mint(accounts[1].address, amount);
+        const amount = (await YMT.availableSupply()).sub(totalSupply);
+        await YMT.mint(accounts[1].address, amount);
 
         balance = balance.add(amount);
         totalSupply = totalSupply.add(amount);
 
-        expect(await token.balanceOf(accounts[1].address)).to.equal(balance);
-        expect(await token.totalSupply()).to.equal(totalSupply);
+        expect(await YMT.balanceOf(accounts[1].address)).to.equal(balance);
+        expect(await YMT.totalSupply()).to.equal(totalSupply);
       }
     });
   });
