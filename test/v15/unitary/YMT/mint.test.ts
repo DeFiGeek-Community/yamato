@@ -1,11 +1,16 @@
 import { ethers } from "hardhat";
 import { expect } from "chai";
 import {
+  time,
   takeSnapshot,
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
-import { BigNumber, Contract } from "ethers";
+import { BigNumber } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {
+  YMT,
+  YMT__factory,
+} from "../../../../typechain";
 import Constants from "../../Constants";
 
 const week = Constants.week;
@@ -13,15 +18,14 @@ const ZERO_ADDRESS = Constants.ZERO_ADDRESS;
 
 describe("YMT", function () {
   let accounts: SignerWithAddress[];
-  let token: Contract;
+  let YMT: YMT;
   let snapshot: SnapshotRestorer;
 
   before(async function () {
     accounts = await ethers.getSigners();
-    const Token = await ethers.getContractFactory("YMT");
-    token = await Token.deploy();
-    await ethers.provider.send("evm_increaseTime", [86401]);
-    await token.updateMiningParameters();
+    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy();
+    await time.increase(86401);
+    await YMT.updateMiningParameters();
   });
 
   beforeEach(async () => {
@@ -32,72 +36,74 @@ describe("YMT", function () {
     await snapshot.restore();
   });
 
-  describe("YMT Mint", function () {
-    it("test_available_supply", async function () {
-      const creationTime = await token.startEpochTime();
-      const initialSupply = await token.totalSupply();
-      const rate = await token.rate();
+  describe("YMT Mint Tests", function () {
+    it("should match the available supply with expected supply", async function () {
+      // 現在の供給量と期待される供給量が一致するかテストする
+      const creationTime = await YMT.startEpochTime();
+      const initialSupply = await YMT.totalSupply();
+      const rate = await YMT.rate();
 
-      await ethers.provider.send("evm_increaseTime", [week]);
-      await ethers.provider.send("evm_mine", []);
+      await time.increase(week);
 
       const currentBlock = BigNumber.from(
-        (await ethers.provider.getBlock("latest")).timestamp
+        await time.latest()
       );
-      // const currentBlock = await ethers.provider.getBlock('latest');
       const expected = initialSupply.add(
         currentBlock.sub(creationTime).mul(rate)
       );
-      expect(await token.availableSupply()).to.equal(expected);
+      expect(await YMT.availableSupply()).to.equal(expected);
     });
 
-    it("test_mint", async function () {
-      await token.setMinter(accounts[0].address);
-      const creationTime = await token.startEpochTime();
-      const initialSupply = await token.totalSupply();
-      const rate = await token.rate();
+    it("should mint the correct amount to a user", async function () {
+      // ユーザーに正しい量をミントするかテストする
+      await YMT.setMinter(accounts[0].address);
+      const creationTime = await YMT.startEpochTime();
+      const initialSupply = await YMT.totalSupply();
+      const rate = await YMT.rate();
 
-      await ethers.provider.send("evm_increaseTime", [week]);
+      await time.increase(week);
 
       const currentTime = BigNumber.from(
-        (await ethers.provider.getBlock("latest")).timestamp
+        await time.latest()
       );
       const amount = currentTime.sub(creationTime).mul(rate);
-      await token.mint(accounts[1].address, amount);
+      await YMT.mint(accounts[1].address, amount);
 
-      expect(await token.balanceOf(accounts[1].address)).to.equal(amount);
-      expect(await token.totalSupply()).to.equal(initialSupply.add(amount));
+      expect(await YMT.balanceOf(accounts[1].address)).to.equal(amount);
+      expect(await YMT.totalSupply()).to.equal(initialSupply.add(amount));
     });
 
-    it("test_overmint", async function () {
-      await token.setMinter(accounts[0].address);
-      const creationTime = await token.startEpochTime();
-      const rate = await token.rate();
+    it("should revert minting when amount exceeds limit", async function () {
+      // 限度を超えたミントはリバートされるかテストする
+      await YMT.setMinter(accounts[0].address);
+      const creationTime = await YMT.startEpochTime();
+      const rate = await YMT.rate();
 
-      await ethers.provider.send("evm_increaseTime", [week]);
-      await ethers.provider.send("evm_mine", []);
+      await time.increase(week);
 
       const currentTime = BigNumber.from(
-        (await ethers.provider.getBlock("latest")).timestamp
+        await time.latest()
       );
       const amount = currentTime.sub(creationTime).add(2).mul(rate);
-      await expect(token.mint(accounts[1].address, amount)).to.be.revertedWith(
+      await expect(YMT.mint(accounts[1].address, amount)).to.be.revertedWith(
         "dev: exceeds allowable mint amount"
       );
     });
 
-    it("test_ymtMinter_only", async function () {
-      await token.setMinter(accounts[0].address);
+    it("should only allow minting from ymtMinter", async function () {
+      // ymtMinterからのみミントが許可されるかテストする
+      await YMT.setMinter(accounts[0].address);
       await expect(
-        token.connect(accounts[1]).mint(accounts[1].address, 0)
+        YMT.connect(accounts[1]).mint(accounts[1].address, 0)
       ).to.be.revertedWith("dev: ymtMinter only");
     });
 
-    it("test_zero_address", async function () {
-      await token.setMinter(accounts[0].address);
-      await expect(token.mint(ZERO_ADDRESS, 0)).to.be.revertedWith(
+    it("should revert minting to a zero address", async function () {
+      // ゼロアドレスへのミントがリバートされるかテストする
+      await YMT.setMinter(accounts[0].address);
+      await expect(YMT.mint(ZERO_ADDRESS, 0)).to.be.revertedWith(
         "dev: zero address"
-      );
+        );
     });
   });
 });

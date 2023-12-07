@@ -1,11 +1,15 @@
 import { ethers } from "hardhat";
 import { expect } from "chai";
 import {
+  time,
   takeSnapshot,
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
-import { BigNumber, Contract } from "ethers";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import { BigNumber } from "ethers";
+import {
+  YMT,
+  YMT__factory,
+} from "../../../../typechain";
 import Constants from "../../Constants";
 
 const week = Constants.week;
@@ -13,14 +17,11 @@ const year = Constants.year;
 const YEAR = Constants.YEAR;
 
 describe("YMT", function () {
-  let accounts: SignerWithAddress[];
-  let token: Contract;
+  let YMT: YMT;
   let snapshot: SnapshotRestorer;
 
   before(async function () {
-    accounts = await ethers.getSigners();
-    const Token = await ethers.getContractFactory("YMT");
-    token = await Token.deploy();
+    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy();
   });
 
   beforeEach(async () => {
@@ -31,91 +32,73 @@ describe("YMT", function () {
     await snapshot.restore();
   });
 
-  describe("YMT EpochTimeSupply", function () {
-    it("test_start_epoch_time_write", async function () {
-      const creationTime: BigNumber = await token.startEpochTime();
-      await ethers.provider.send("evm_increaseTime", [year]);
-      await ethers.provider.send("evm_mine", []);
+  describe("YMT Epoch Time and Supply Tests", function () {
+    it("should update start epoch time correctly", async function () {
+      // 開始エポック時間が正しく更新されるかを確認するテスト
+      const creationTime: BigNumber = await YMT.startEpochTime();
+      await time.increase(year);
 
-      expect(await token.startEpochTime()).to.equal(creationTime);
+      expect(await YMT.startEpochTime()).to.equal(creationTime);
 
-      await token.startEpochTimeWrite();
+      await YMT.startEpochTimeWrite();
 
-      expect(await token.startEpochTime()).to.equal(creationTime.add(YEAR));
+      expect(await YMT.startEpochTime()).to.equal(creationTime.add(YEAR));
     });
 
-    it("test_start_epoch_time_write_same_epoch", async function () {
-      await token.startEpochTimeWrite();
-      await token.startEpochTimeWrite();
+    it("should not update epoch time in the same epoch", async function () {
+      // 同じエポック内で開始エポック時間が更新されないことを確認するテスト
+      await YMT.startEpochTimeWrite();
+      await YMT.startEpochTimeWrite();
     });
 
-    it("test_update_mining_parameters", async function () {
-      const creationTime = await token.startEpochTime();
-      const now = BigNumber.from(
-        (await ethers.provider.getBlock("latest")).timestamp
-      );
+    it("should update mining parameters correctly", async function () {
+      // マイニングパラメータが正しく更新されるかを確認するテスト
+      const creationTime = await YMT.startEpochTime();
+      const now = BigNumber.from(await time.latest());
       const newEpoch = creationTime.add(YEAR).sub(now);
-      await ethers.provider.send("evm_increaseTime", [newEpoch.toNumber()]);
-      await token.updateMiningParameters();
+      await time.increase(newEpoch);
+      await YMT.updateMiningParameters();
     });
 
-    it("test_update_mining_parameters_same_epoch", async function () {
-      const creationTime = await token.startEpochTime();
-      const now = BigNumber.from(
-        (await ethers.provider.getBlock("latest")).timestamp
-      );
+    it("should not update mining parameters too soon", async function () {
+      // マイニングパラメータが早すぎる場合に更新されないことを確認するテスト
+      const creationTime = await YMT.startEpochTime();
+      const now = BigNumber.from(await time.latest());
       const newEpoch = creationTime.add(YEAR).sub(now);
-      await ethers.provider.send("evm_increaseTime", [
-        newEpoch.sub(BigNumber.from("3")).toNumber(),
-      ]);
-      await expect(token.updateMiningParameters()).to.be.revertedWith(
-        "dev: too soon!"
-      );
+      await time.increase(newEpoch.sub(BigNumber.from("3")));
+      await expect(YMT.updateMiningParameters()).to.be.revertedWith("dev: too soon!");
     });
 
-    it("test_mintable_in_timeframe_end_before_start", async function () {
-      const creationTime = await token.startEpochTime();
-      await expect(
-        token.mintableInTimeframe(creationTime.add(1), creationTime)
-      ).to.be.revertedWith("dev: start > end");
+    it("should revert mintable timeframe if end is before start", async function () {
+      // 終了時間が開始時間より前の場合にmintable timeframeがリバートされることを確認するテスト
+      const creationTime = await YMT.startEpochTime();
+      await expect(YMT.mintableInTimeframe(creationTime.add(1), creationTime)).to.be.revertedWith("dev: start > end");
     });
 
-    it("test_mintable_in_timeframe_multiple_epochs", async function () {
-      const creationTime = await token.startEpochTime();
+    it("should calculate mintable amount over multiple epochs", async function () {
+      // 複数のエポックにわたるmintableな量を計算するテスト
+      const creationTime = await YMT.startEpochTime();
 
       // Two epochs should not raise
-      const mintable = BigNumber.from("19").div(BigNumber.from("10"));
-      await token.mintableInTimeframe(
-        creationTime,
-        creationTime
-          .add(YEAR)
-          .mul(BigNumber.from("19").div(BigNumber.from("10")))
-      );
+      await YMT.mintableInTimeframe(creationTime, creationTime.add(YEAR).mul(BigNumber.from("19").div(BigNumber.from("10"))));
 
       // Three epochs should raise
-      await expect(
-        token.mintableInTimeframe(
-          creationTime,
-          creationTime
-            .add(YEAR)
-            .mul(BigNumber.from("21").div(BigNumber.from("10")))
-        )
-      ).to.be.revertedWith("dev: too far in future");
+      await expect(YMT.mintableInTimeframe(creationTime, creationTime.add(YEAR).mul(BigNumber.from("21").div(BigNumber.from("10"))))).to.be.revertedWith("dev: too far in future");
     });
 
-    it("test_available_supply", async function () {
-      const creationTime = await token.startEpochTime();
-      const initialSupply = await token.totalSupply();
-      const rate = await token.rate();
-      await ethers.provider.send("evm_increaseTime", [week]);
+    it("should calculate available supply correctly", async function () {
+      // 利用可能な供給量が正しく計算されるかを確認するテスト
+      const creationTime = await YMT.startEpochTime();
+      const initialSupply = await YMT.totalSupply();
+      const rate = await YMT.rate();
+      await time.increase(week);
 
-      const latestBlock = await ethers.provider.getBlock("latest");
-      const currentTime = BigNumber.from(latestBlock.timestamp);
+      const currentTime = BigNumber.from(await time.latest());
 
       const timeElapsed = currentTime.sub(creationTime);
       const expected = initialSupply.add(timeElapsed.mul(rate));
 
-      expect(await token.availableSupply()).to.equal(expected);
+      expect(await YMT.availableSupply()).to.equal(expected);
     });
   });
 });

@@ -1,21 +1,25 @@
 import { ethers } from "hardhat";
 import { expect } from "chai";
 import {
+  time,
   takeSnapshot,
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
-import { Contract } from "ethers";
+import { BigNumber } from "ethers";
+import {
+  YMT,
+  YMT__factory,
+} from "../../../../typechain";
 import Constants from "../../Constants";
 
 const YEAR = Constants.YEAR;
 
 describe("YMT", function () {
-  let token: Contract;
+  let YMT: YMT;
   let snapshot: SnapshotRestorer;
 
   before(async function () {
-    const Token = await ethers.getContractFactory("YMT");
-    token = await Token.deploy();
+    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy();
   });
 
   beforeEach(async () => {
@@ -26,53 +30,53 @@ describe("YMT", function () {
     await snapshot.restore();
   });
 
-  describe("YMT InflationDelay", function () {
-    it("test_rate", async function () {
-      expect(await token.rate()).to.equal(0);
+  describe("YMT Inflation Delay Tests", function () {
+    it("should correctly calculate rate after delay", async function () {
+      // 遅延後のレートが正しく計算されるかを確認するテスト
+      expect(await YMT.rate()).to.equal(0);
 
-      await ethers.provider.send("evm_increaseTime", [86401]);
-      await ethers.provider.send("evm_mine", []);
+      await time.increase(86401);
 
-      await token.updateMiningParameters();
+      await YMT.updateMiningParameters();
 
-      expect(await token.rate()).to.be.gt(0);
+      expect(await YMT.rate()).to.be.gt(0);
     });
 
-    it("test_start_epoch_time", async function () {
-      const creationTime = await token.startEpochTime();
-      // const now = BigNumber.from((await ethers.provider.getBlock("latest")).timestamp);
-      // expect(creationTime).to.equal(now.add("86392").sub(YEAR));
+    it("should correctly set start epoch time after delay", async function () {
+      // 遅延後に開始エポック時間が正しく設定されるかを確認するテスト
+      const creationTime = await YMT.startEpochTime();
+      const now = BigNumber.from(await time.latest());
+      expect(creationTime).to.equal(now.add("86400").sub(YEAR));
 
-      await ethers.provider.send("evm_increaseTime", [86401]);
-      await ethers.provider.send("evm_mine", []);
+      await time.increase(86401);
 
-      await token.updateMiningParameters();
+      await YMT.updateMiningParameters();
 
-      expect(await token.startEpochTime()).to.equal(creationTime.add(YEAR));
+      expect(await YMT.startEpochTime()).to.equal(creationTime.add(YEAR));
     });
 
-    it("test_mining_epoch", async function () {
-      expect(await token.miningEpoch()).to.equal(-1);
+    it("should correctly update mining epoch after delay", async function () {
+      // 遅延後にマイニングエポックが正しく更新されるかを確認するテスト
+      expect(await YMT.miningEpoch()).to.equal(-1);
 
-      await ethers.provider.send("evm_increaseTime", [86401]);
-      await ethers.provider.send("evm_mine", []);
+      await time.increase(86401);
 
-      await token.updateMiningParameters();
+      await YMT.updateMiningParameters();
 
-      expect(await token.miningEpoch()).to.equal(0);
+      expect(await YMT.miningEpoch()).to.equal(0);
     });
 
-    it("test_available_supply", async function () {
-      expect(await token.availableSupply()).to.equal(
+    it("should correctly update available supply after delay", async function () {
+      // 遅延後に利用可能な供給量が正しく更新されるかを確認するテスト
+      expect(await YMT.availableSupply()).to.equal(
         ethers.utils.parseEther("450000000")
       );
 
-      await ethers.provider.send("evm_increaseTime", [86401]);
-      await ethers.provider.send("evm_mine", []);
+      await time.increase(86401);
 
-      await token.updateMiningParameters();
+      await YMT.updateMiningParameters();
 
-      expect(await token.availableSupply()).to.be.gt(
+      expect(await YMT.availableSupply()).to.be.gt(
         ethers.utils.parseEther("450000000")
       );
     });

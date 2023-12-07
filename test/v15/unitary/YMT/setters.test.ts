@@ -4,46 +4,55 @@ import {
   takeSnapshot,
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
-import { Contract } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {
+  YMT,
+  YMT__factory,
+} from "../../../../typechain";
 
 describe("YMT", function () {
   let accounts: SignerWithAddress[];
-  let token: Contract;
+  let YMT: YMT;
   let snapshot: SnapshotRestorer;
 
-  beforeEach(async function () {
-    snapshot = await takeSnapshot();
+  before(async function () {
     accounts = await ethers.getSigners();
-    const Token = await ethers.getContractFactory("YMT");
-    token = await Token.deploy();
+    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy();
+  });
+
+  beforeEach(async () => {
+    snapshot = await takeSnapshot();
   });
 
   afterEach(async () => {
     await snapshot.restore();
   });
 
-  describe("YMT Setters", function () {
-    it("should revert when non-admin tries to set ymtMinter", async function () {
+  describe("YMT Setters Tests", function () {
+    it("non-admin should not be able to set ymtMinter", async function () {
+      // 非管理者がymtMinterを設定できないことを確認するテスト
       await expect(
-        token.connect(accounts[1]).setMinter(accounts[2].address)
+        YMT.connect(accounts[1]).setMinter(accounts[2].address)
       ).to.be.revertedWith("dev: admin only");
     });
 
-    it("should revert when non-admin tries to set admin", async function () {
+    it("non-admin should not be able to set admin", async function () {
+      // 非管理者がadminを設定できないことを確認するテスト
       await expect(
-        token.connect(accounts[1]).setAdmin(accounts[2].address)
+        YMT.connect(accounts[1]).setAdmin(accounts[2].address)
       ).to.be.revertedWith("dev: admin only");
     });
 
-    it("should allow admin to set ymtMinter", async function () {
-      await token.connect(accounts[0]).setMinter(accounts[1].address);
-      expect(await token.ymtMinter()).to.equal(accounts[1].address);
+    it("admin should be able to set ymtMinter", async function () {
+      // 管理者がymtMinterを設定できることを確認するテスト
+      await YMT.setMinter(accounts[1].address);
+      expect(await YMT.ymtMinter()).to.equal(accounts[1].address);
     });
 
-    it("should allow admin to set admin", async function () {
-      await token.connect(accounts[0]).setAdmin(accounts[1].address);
-      expect(await token.admin()).to.equal(accounts[1].address);
+    it("admin should be able to set admin", async function () {
+      // 管理者がadminを設定できることを確認するテスト
+      await YMT.setAdmin(accounts[1].address);
+      expect(await YMT.admin()).to.equal(accounts[1].address);
     });
   });
 });
