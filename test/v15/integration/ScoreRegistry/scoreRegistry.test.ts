@@ -210,23 +210,23 @@ describe("ScoreRegistry", function () {
   });
 
   describe("Gauge Integral Calculations", function () {
-  /**
-   * テスト: Gauge Integral Calculations
-   * 1. AliceとBobの保有量と積分の初期化を行う。
-   * 2. 現在のブロックのタイムスタンプと初期レートを取得する。
-   * 3. scoreWeightControllerを使って、scoreRegistryにタイプを追加し、その重みを変更する。
-   * 4. AliceとBobがそれぞれETHをデポジットし、流動性を提供する。
-   * 5. 積分の更新処理を行うための補助関数「update_integral」を定義する。
-   * 6. Bobが預金または引き出しを繰り返し行い、Aliceがそれをランダムに行う40回のループを開始する。
-   *    a. ランダムな時間を経過させるシミュレーションを行う。
-   *    b. Bobがランダムに預金または引き出しを行う。
-   *    c. 20%の確率でAliceも預金または引き出しを行う。
-   *    d. 同じ秒数でのユーザーチェックポイントの更新が影響しないことを確認する。
-   *    e. AliceとBobの保有量が正しいことを確認する。
-   *    f. もう一度、ランダムな時間を経過させるシミュレーションを行う。
-   *    g. Aliceのユーザーチェックポイントを更新し、積分を更新する。
-   * 7. Aliceの報酬が正しいことを確認する。
-   */
+    /**
+     * テスト: Gauge Integral Calculations
+     * 1. AliceとBobの保有量と積分の初期化を行う。
+     * 2. 現在のブロックのタイムスタンプと初期レートを取得する。
+     * 3. scoreWeightControllerを使って、scoreRegistryにタイプを追加し、その重みを変更する。
+     * 4. AliceとBobがそれぞれETHをデポジットし、流動性を提供する。
+     * 5. 積分の更新処理を行うための補助関数「update_integral」を定義する。
+     * 6. Bobが預金または引き出しを繰り返し行い、Aliceがそれをランダムに行う40回のループを開始する。
+     *    a. ランダムな時間を経過させるシミュレーションを行う。
+     *    b. Bobがランダムに預金または引き出しを行う。
+     *    c. 20%の確率でAliceも預金または引き出しを行う。
+     *    d. 同じ秒数でのユーザーチェックポイントの更新が影響しないことを確認する。
+     *    e. AliceとBobの保有量が正しいことを確認する。
+     *    f. もう一度、ランダムな時間を経過させるシミュレーションを行う。
+     *    g. Aliceのユーザーチェックポイントを更新し、積分を更新する。
+     * 7. Aliceの報酬が正しいことを確認する。
+     */
     it("should correctly calculate user integrals over randomized actions", async () => {
       // AliceとBobの保有量と積分を初期化
       let alice_staked = zero;
@@ -290,24 +290,25 @@ describe("ScoreRegistry", function () {
         let is_alice = Math.random() < 0.2;
 
         // ランダムな時間経過をシミュレート
-        let dt = randomValue(1, Math.floor(year / 5))
+        let dt = randomValue(1, Math.floor(year / 5));
         await time.increase(dt);
 
         // Bobの処理
         let is_withdraw = i > 0 && Math.random() < 0.5;
-        const bob_balance = Number(await CJPY.balanceOf(accounts[2].address))
+        const bob_balance = Number(await CJPY.balanceOf(accounts[2].address));
         if (is_withdraw) {
           // 引き出し処理
-          let amount = randomBigValue(1, bob_balance + 1)
+          let amount = randomBigValue(1, bob_balance + 1);
           await yamato.connect(accounts[2]).repay(amount);
           await update_integral();
           bob_staked = bob_staked.sub(amount);
         } else {
           // 預金処理
-          let amount = randomBigValue(1 + MIN_AMOUNT, Math.floor(bob_balance / 10) + 1 + MIN_AMOUNT);
-          await yamato
-            .connect(accounts[2])
-            .borrow(amount);
+          let amount = randomBigValue(
+            1 + MIN_AMOUNT,
+            Math.floor(bob_balance / 10) + 1 + MIN_AMOUNT
+          );
+          await yamato.connect(accounts[2]).borrow(amount);
           await update_integral();
 
           bob_staked = bob_staked.add(fee(amount));
@@ -315,20 +316,26 @@ describe("ScoreRegistry", function () {
 
         // Aliceの処理
         if (is_alice) {
-          const alice_balance = Number(await CJPY.balanceOf(accounts[1].address))
+          const alice_balance = Number(
+            await CJPY.balanceOf(accounts[1].address)
+          );
           let is_withdraw_alice = alice_balance > 0 && Math.random() > 0.5;
           if (is_withdraw_alice) {
             // 払い戻し処理
-            let amount_alice = randomBigValue(1, Math.floor(alice_balance / 10) + 1)
+            let amount_alice = randomBigValue(
+              1,
+              Math.floor(alice_balance / 10) + 1
+            );
             await yamato.connect(accounts[1]).repay(amount_alice);
             await update_integral();
             alice_staked = alice_staked.sub(amount_alice);
           } else {
             // 借入処理
-            let amount_alice = randomBigValue(1 + MIN_AMOUNT, alice_balance + 1 + MIN_AMOUNT)
-            await yamato
-              .connect(accounts[1])
-              .borrow(amount_alice);
+            let amount_alice = randomBigValue(
+              1 + MIN_AMOUNT,
+              alice_balance + 1 + MIN_AMOUNT
+            );
+            await yamato.connect(accounts[1]).borrow(amount_alice);
             await update_integral();
 
             alice_staked = alice_staked.add(fee(amount_alice));
@@ -351,19 +358,19 @@ describe("ScoreRegistry", function () {
         expect(await CJPY.balanceOf(accounts[1].address)).to.equal(
           alice_staked
         );
-        expect(await CJPY.balanceOf(accounts[2].address)).to.equal(
-          bob_staked
-        );
+        expect(await CJPY.balanceOf(accounts[2].address)).to.equal(bob_staked);
 
         // ランダムな時間経過をさらにシミュレート
-        dt = randomValue(1, Math.floor(year / 20))
+        dt = randomValue(1, Math.floor(year / 20));
         await time.increase(dt);
 
         await scoreRegistry
           .connect(accounts[1])
           .userCheckpoint(accounts[1].address);
         await update_integral();
-        const reward = await scoreRegistry.integrateFraction(accounts[1].address);
+        const reward = await scoreRegistry.integrateFraction(
+          accounts[1].address
+        );
         expect(approx(reward, integral, Constants.ten_to_the_18)).to.be.true;
       }
     });
@@ -403,17 +410,13 @@ describe("ScoreRegistry", function () {
       await YMT.connect(accounts[2]).approve(veYMT.address, MAX_UINT256);
 
       // Aliceがescrowにデポジットする。AliceはBOOSTを持っていることになる
-      let t = await time.latest()
+      let t = await time.latest();
 
-      await veYMT
-        .connect(accounts[1])
-        .createLock(ten_to_the_20, t + (week * 2));
+      await veYMT.connect(accounts[1]).createLock(ten_to_the_20, t + week * 2);
 
       // ETHをdeposit
       for (let i = 0; i < 3; i++) {
-        await yamato
-          .connect(accounts[i])
-          .deposit({ value: ten_to_the_20 });
+        await yamato.connect(accounts[i]).deposit({ value: ten_to_the_20 });
       }
       // AliceとBobが一部の流動性をデポジットする
       await ethers.provider.send("evm_setAutomine", [false]);
@@ -421,7 +424,7 @@ describe("ScoreRegistry", function () {
       await yamato.connect(accounts[2]).borrow(ten_to_the_21);
       await ethers.provider.send("evm_mine", []);
       await ethers.provider.send("evm_setAutomine", [true]);
-      let now = await time.latest()
+      let now = await time.latest();
 
       // 現在、Aliceは投票ロックを持っているが、Bobは持っていないことを確認する
       expect(
@@ -438,8 +441,12 @@ describe("ScoreRegistry", function () {
 
       // チェックポイント更新
       await ethers.provider.send("evm_setAutomine", [false]);
-      await scoreRegistry.connect(accounts[2]).userCheckpoint(accounts[2].address);
-      await scoreRegistry.connect(accounts[1]).userCheckpoint(accounts[1].address);
+      await scoreRegistry
+        .connect(accounts[2])
+        .userCheckpoint(accounts[2].address);
+      await scoreRegistry
+        .connect(accounts[1])
+        .userCheckpoint(accounts[1].address);
       await ethers.provider.send("evm_mine", []);
       await ethers.provider.send("evm_setAutomine", [true]);
 
@@ -456,7 +463,9 @@ describe("ScoreRegistry", function () {
       let rewards_alice = await scoreRegistry.integrateFraction(
         accounts[1].address
       );
-      let rewards_bob = await scoreRegistry.integrateFraction(accounts[2].address);
+      let rewards_bob = await scoreRegistry.integrateFraction(
+        accounts[2].address
+      );
 
       expect(
         rewards_alice.mul(BigNumber.from("10000000000000000")).div(rewards_bob)
@@ -468,14 +477,20 @@ describe("ScoreRegistry", function () {
       await time.setNextBlockTimestamp(now + week * 4);
 
       await ethers.provider.send("evm_setAutomine", [false]);
-      await scoreRegistry.connect(accounts[2]).userCheckpoint(accounts[2].address);
-      await scoreRegistry.connect(accounts[1]).userCheckpoint(accounts[1].address);
+      await scoreRegistry
+        .connect(accounts[2])
+        .userCheckpoint(accounts[2].address);
+      await scoreRegistry
+        .connect(accounts[1])
+        .userCheckpoint(accounts[1].address);
       await ethers.provider.send("evm_mine", []);
       await ethers.provider.send("evm_setAutomine", [true]);
       let old_rewards_alice = rewards_alice;
       let old_rewards_bob = rewards_bob;
       // 今、AliceはBobと同じ量を獲得した
-      rewards_alice = await scoreRegistry.integrateFraction(accounts[1].address);
+      rewards_alice = await scoreRegistry.integrateFraction(
+        accounts[1].address
+      );
       rewards_bob = await scoreRegistry.integrateFraction(accounts[2].address);
 
       let d_alice = rewards_alice.sub(old_rewards_alice);
@@ -484,5 +499,4 @@ describe("ScoreRegistry", function () {
       expect(d_alice.sub(d_bob)).to.equal(zero);
     });
   });
-
 });

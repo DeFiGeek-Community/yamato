@@ -59,12 +59,11 @@ describe("FeePoolV2", function () {
     const stLocktime = generateUniqueRandomNumbers(MAX_EXAMPLES, 1, 52);
     const stSleep = generateUniqueRandomNumbers(MAX_EXAMPLES, 1, 30);
     for (let i = 0; i < MAX_EXAMPLES; i++) {
-      await YMT
-        .connect(accounts[i])
-        .approve(veYMT.address, MAX_UINT256);
-      await YMT
-        .connect(accounts[0])
-        .transfer(await accounts[i].address, ethers.utils.parseEther("1000"));
+      await YMT.connect(accounts[i]).approve(veYMT.address, MAX_UINT256);
+      await YMT.connect(accounts[0]).transfer(
+        await accounts[i].address,
+        ethers.utils.parseEther("1000")
+      );
     }
 
     let finalLock = 0;

@@ -7,10 +7,7 @@ import {
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import {
-  YMT,
-  YMT__factory,
-} from "../../../../typechain";
+import { YMT, YMT__factory } from "../../../../typechain";
 import Constants from "../../Constants";
 
 const year = Constants.year;
@@ -20,9 +17,7 @@ const ten_to_the_16 = Constants.ten_to_the_16;
 
 // Constants
 const INITIAL_RATE = BigNumber.from(55000000);
-const YEAR_1_SUPPLY = INITIAL_RATE.mul(ten_to_the_18)
-  .div(YEAR)
-  .mul(YEAR);
+const YEAR_1_SUPPLY = INITIAL_RATE.mul(ten_to_the_18).div(YEAR).mul(YEAR);
 const INITIAL_SUPPLY = Constants.INITIAL_SUPPLY;
 
 describe("YMT", function () {
@@ -76,10 +71,7 @@ describe("YMT", function () {
       S = S.add(
         YEAR_1_SUPPLY.div(YEAR)
           .mul(q.pow(epoch))
-          .mul(
-            await time.latest() -
-              Number(await YMT.startEpochTime())
-          )
+          .mul((await time.latest()) - Number(await YMT.startEpochTime()))
       );
 
       return S;
@@ -102,9 +94,7 @@ describe("YMT", function () {
       const availableSupply = await YMT.availableSupply();
       const mintable = await YMT.mintableInTimeframe(t0, t1);
       expect(
-        availableSupply
-          .sub(INITIAL_SUPPLY.mul(ten_to_the_18))
-          .gte(mintable)
+        availableSupply.sub(INITIAL_SUPPLY.mul(ten_to_the_18)).gte(mintable)
       ).to.equal(true);
       if (t1 == t0) {
         expect(mintable).to.equal(BigNumber.from(0));
@@ -121,11 +111,7 @@ describe("YMT", function () {
       // Replace this with the actual theoretical supply calculation
       // const theoreticalSupply = BigNumber.from("EXPECTED_SUPPLY_CALCULATION");
       expect(
-        approx(
-          await theoreticalSupply(YMT),
-          availableSupply,
-          ten_to_the_16
-        )
+        approx(await theoreticalSupply(YMT), availableSupply, ten_to_the_16)
       ).to.equal(true);
     });
 
@@ -165,8 +151,7 @@ describe("YMT", function () {
       const mintable = await YMT.mintableInTimeframe(start, end);
       if (startEpoch.eq(endEpoch)) {
         const expectedMintable = rate.mul(end.sub(start));
-        expect(approx(mintable, expectedMintable, ten_to_the_16)).to
-          .be.true;
+        expect(approx(mintable, expectedMintable, ten_to_the_16)).to.be.true;
       } else {
         expect(mintable.lt(rate.mul(end))).to.be.true;
       }
@@ -181,9 +166,7 @@ describe("YMT", function () {
 
       await time.increase(duration);
 
-      const now = BigNumber.from(
-        await time.latest()
-      );
+      const now = BigNumber.from(await time.latest());
       const expected = initialSupply.add(now.sub(creationTime).mul(rate));
       expect(await YMT.availableSupply()).to.equal(expected);
     });

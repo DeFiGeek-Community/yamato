@@ -85,7 +85,9 @@ describe("FeePoolV2", () => {
           )
         );
       let balances = [
-        (await ethers.provider.getBalance(alice.address)).add(await gasCostOf(tx1)),
+        (await ethers.provider.getBalance(alice.address)).add(
+          await gasCostOf(tx1)
+        ),
         await ethers.provider.getBalance(bob.address),
         await ethers.provider.getBalance(charlie.address),
       ];
@@ -95,13 +97,18 @@ describe("FeePoolV2", () => {
       const gas = [];
       for (let acct of [alice, bob, charlie]) {
         const tx2 = await feePool.connect(acct)["claim()"]();
-        gas.push(await gasCostOf(tx2))
+        gas.push(await gasCostOf(tx2));
       }
 
-      expect((await ethers.provider.getBalance(alice.address)).add(gas[0])).to.be.eq(balances[0]);
-      expect((await ethers.provider.getBalance(bob.address)).add(gas[1])).to.be.eq(balances[1]);
-      expect((await ethers.provider.getBalance(charlie.address)).add(gas[2])).to.be.eq(balances[2]);
-
+      expect(
+        (await ethers.provider.getBalance(alice.address)).add(gas[0])
+      ).to.be.eq(balances[0]);
+      expect(
+        (await ethers.provider.getBalance(bob.address)).add(gas[1])
+      ).to.be.eq(balances[1]);
+      expect(
+        (await ethers.provider.getBalance(charlie.address)).add(gas[2])
+      ).to.be.eq(balances[2]);
     });
 
     it("should correctly claim multiple times for the same account", async function () {
@@ -115,7 +122,9 @@ describe("FeePoolV2", () => {
       expect(expected).to.above(0);
 
       const balanceBefore = await ethers.provider.getBalance(alice.address);
-      const tx3 = await feePool.connect(alice).claimMany(Array(20).fill(alice.address));
+      const tx3 = await feePool
+        .connect(alice)
+        .claimMany(Array(20).fill(alice.address));
 
       const balanceAfter = await ethers.provider.getBalance(alice.address);
       const gas = await gasCostOf(tx3);

@@ -5,10 +5,7 @@ import {
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import {
-  YMT,
-  YMT__factory,
-} from "../../../../typechain";
+import { YMT, YMT__factory } from "../../../../typechain";
 
 describe("YMT", function () {
   let accounts: SignerWithAddress[];
@@ -29,7 +26,6 @@ describe("YMT", function () {
   });
 
   describe("YMT Setters Tests", function () {
-
     // 非管理者がymtMinterを設定できないことを確認するテスト
     it("non-admin should not be able to set ymtMinter", async function () {
       await expect(

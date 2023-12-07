@@ -199,17 +199,23 @@ describe("ScoreRegistry checkpoint", function () {
   // ユーザーのチェックポイント機能をテスト
   it("Test user checkpoint", async function () {
     // userCheckpoint関数がスコアレジストリに存在すると仮定
-    await scoreRegistry.connect(accounts[1]).userCheckpoint(accounts[1].address);
+    await scoreRegistry
+      .connect(accounts[1])
+      .userCheckpoint(accounts[1].address);
   });
 
   // 新しい期間でのユーザーチェックポイント機能をテスト
   it("Test user checkpoint in new period", async function () {
-    await scoreRegistry.connect(accounts[1]).userCheckpoint(accounts[1].address);
+    await scoreRegistry
+      .connect(accounts[1])
+      .userCheckpoint(accounts[1].address);
 
     // ブロックチェーン上で時間を進める
     await time.increase(year * 1.1);
 
-    await scoreRegistry.connect(accounts[1]).userCheckpoint(accounts[1].address);
+    await scoreRegistry
+      .connect(accounts[1])
+      .userCheckpoint(accounts[1].address);
   });
 
   // 誤ったアカウントでのユーザーチェックポイント機能をテスト

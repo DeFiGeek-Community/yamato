@@ -66,7 +66,7 @@ describe("FeePoolV2", () => {
       await feePool.connect(alice).killMe();
       expect(await feePool.isKilled()).to.be.true;
     });
-  
+
     it("should kill the fee pool multiple times", async function () {
       // 複数回のFeePool Killテスト
       await feePool.connect(alice).killMe();
@@ -86,7 +86,9 @@ describe("FeePoolV2", () => {
       balance = balance.sub(await gasCostOf(tx));
 
       expect(await feePool.governance()).to.equal(alice.address);
-      expect(await ethers.provider.getBalance(alice.address)).to.equal(balance.add(31337));
+      expect(await ethers.provider.getBalance(alice.address)).to.equal(
+        balance.add(31337)
+      );
     });
 
     it("should transfer tokens on multiple pool killings", async function () {
@@ -109,7 +111,9 @@ describe("FeePoolV2", () => {
       balance = balance.sub(await gasCostOf(tx2));
 
       expect(await feePool.governance()).to.equal(alice.address);
-      expect(await ethers.provider.getBalance(alice.address)).to.equal(balance.add(40000));
+      expect(await ethers.provider.getBalance(alice.address)).to.equal(
+        balance.add(40000)
+      );
     });
 
     for (let idx = 1; idx <= 2; idx++) {

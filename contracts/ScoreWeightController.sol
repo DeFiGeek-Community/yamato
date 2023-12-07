@@ -32,20 +32,13 @@ contract ScoreWeightController is UUPSBase {
      *@param _token `Token` contract address
      *@param _votingEscrow `VotingEscrow` contract address
      */
-    function initialize(
-        address ymtAddr,
-        address veYmtAddr
-    ) public initializer {
+    function initialize(address ymtAddr, address veYmtAddr) public initializer {
         require(ymtAddr != address(0));
         require(veYmtAddr != address(0));
 
         __UUPSBase_init();
-        bytes32 YMT_LEY = bytes32(
-            keccak256(abi.encode(YMT_SLOT_ID))
-        );
-        bytes32 VEYMT_LEY = bytes32(
-            keccak256(abi.encode(VEYMT_SLOT_ID))
-        );
+        bytes32 YMT_LEY = bytes32(keccak256(abi.encode(YMT_SLOT_ID)));
+        bytes32 VEYMT_LEY = bytes32(keccak256(abi.encode(VEYMT_SLOT_ID)));
         assembly {
             sstore(YMT_LEY, ymtAddr)
             sstore(VEYMT_LEY, veYmtAddr)
@@ -118,18 +111,14 @@ contract ScoreWeightController is UUPSBase {
         =====================
     */
     function YMT() public view returns (address ymtAddr) {
-        bytes32 YMT_LEY = bytes32(
-            keccak256(abi.encode(YMT_SLOT_ID))
-        );
+        bytes32 YMT_LEY = bytes32(keccak256(abi.encode(YMT_SLOT_ID)));
         assembly {
             ymtAddr := sload(YMT_LEY)
         }
     }
 
     function veYMT() public view returns (address ymtAddr) {
-        bytes32 VEYMT_LEY = bytes32(
-            keccak256(abi.encode(VEYMT_SLOT_ID))
-        );
+        bytes32 VEYMT_LEY = bytes32(keccak256(abi.encode(VEYMT_SLOT_ID)));
         assembly {
             ymtAddr := sload(VEYMT_LEY)
         }

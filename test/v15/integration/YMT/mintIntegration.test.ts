@@ -7,10 +7,7 @@ import {
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import {
-  YMT,
-  YMT__factory,
-} from "../../../../typechain";
+import { YMT, YMT__factory } from "../../../../typechain";
 import Constants from "../../Constants";
 
 const year = Constants.year;
@@ -37,7 +34,6 @@ describe("YMT", function () {
   });
 
   describe("YMT Mint Integration Tests", function () {
-
     // 指定された期間に応じて正しい量のトークンを発行する
     it("should mint the correct amount of tokens", async function () {
       const duration = year;
@@ -84,7 +80,7 @@ describe("YMT", function () {
       for (const duration of durations) {
         await time.increase(duration);
 
-        if (await time.latest() - epochStart > year) {
+        if ((await time.latest()) - epochStart > year) {
           await YMT.updateMiningParameters();
           epochStart = Number(await YMT.startEpochTime());
         }

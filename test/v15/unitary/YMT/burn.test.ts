@@ -6,10 +6,7 @@ import {
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import {
-  YMT,
-  YMT__factory,
-} from "../../../../typechain";
+import { YMT, YMT__factory } from "../../../../typechain";
 
 describe("YMT", function () {
   let accounts: SignerWithAddress[];
@@ -30,7 +27,6 @@ describe("YMT", function () {
   });
 
   describe("YMT Burn Function Tests", function () {
-
     // 特定の量のトークンを正しくburnさせるテスト
     it("should correctly burn a specific amount of tokens", async function () {
       const balance: BigNumber = await YMT.balanceOf(accounts[0].address);
@@ -71,9 +67,9 @@ describe("YMT", function () {
     it("should revert if burning more than the total supply", async function () {
       const initialSupply: BigNumber = await YMT.totalSupply();
 
-      await expect(
-        YMT.burn(initialSupply.add(1))
-      ).to.be.revertedWith("ERC20: burn amount exceeds balance");
+      await expect(YMT.burn(initialSupply.add(1))).to.be.revertedWith(
+        "ERC20: burn amount exceeds balance"
+      );
     });
   });
 });

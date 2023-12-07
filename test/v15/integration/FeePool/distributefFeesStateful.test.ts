@@ -16,7 +16,13 @@ import {
 import { getProxy } from "../../../../src/testUtil";
 import { contractVersion } from "../../../param/version";
 import Constants from "../../Constants";
-import { randomValue, getRandomAccountNum, getRandomWeeks, getRandomAmounts, getRandomsTime } from "../../testHelpers";
+import {
+  randomValue,
+  getRandomAccountNum,
+  getRandomWeeks,
+  getRandomAmounts,
+  getRandomsTime,
+} from "../../testHelpers";
 
 // 参考) brownie Stateful Tests
 // https://eth-brownie.readthedocs.io/en/stable/tests-hypothesis-stateful.html
@@ -59,12 +65,11 @@ describe("FeePoolV2", function () {
 
     for (let i = 0; i < ACCOUNT_NUM; i++) {
       // ensure accounts[:5] all have YMTs that may be locked
-      await YMT
-        .connect(accounts[0])
-        .transfer(accounts[i].address, ethers.utils.parseEther("10000000"));
-      await YMT
-        .connect(accounts[i])
-        .approve(veYMT.address, MAX_UINT256);
+      await YMT.connect(accounts[0]).transfer(
+        accounts[i].address,
+        ethers.utils.parseEther("10000000")
+      );
+      await YMT.connect(accounts[i]).approve(veYMT.address, MAX_UINT256);
 
       userClaims[accounts[i].address] = [];
     }
@@ -211,7 +216,7 @@ describe("FeePoolV2", function () {
     stAmount?: BigNumber,
     stTime?: BigNumber
   ) {
-    console.log("ruleIncreaseLockAmount")
+    console.log("ruleIncreaseLockAmount");
 
     /*
     Increase the amount of an existing user lock.
@@ -244,7 +249,7 @@ describe("FeePoolV2", function () {
   }
 
   async function ruleClaimFees(stAcct?: SignerWithAddress, stTime?: BigNumber) {
-    console.log("ruleClaimFees")
+    console.log("ruleClaimFees");
     /*
     Claim fees for a user.
 
@@ -277,7 +282,9 @@ describe("FeePoolV2", function () {
 
     const claimed = await ethers.provider.getBalance(stAcct.address);
     const tx = await feePool.connect(stAcct)["claim()"]();
-    const newClaimed = (await ethers.provider.getBalance(stAcct.address)).sub(claimed);
+    const newClaimed = (await ethers.provider.getBalance(stAcct.address)).sub(
+      claimed
+    );
     userClaims[stAcct.address][tx.blockNumber] = [
       newClaimed,
       await feePool.timeCursorOf(stAcct.address),
@@ -285,7 +292,7 @@ describe("FeePoolV2", function () {
   }
 
   async function ruleTransferFees(stAmount?: BigNumber, stTime?: BigNumber) {
-    console.log("ruleTransferFees")
+    console.log("ruleTransferFees");
     /*
     Transfer fees into the feePool and make a checkpoint.
 
@@ -327,7 +334,7 @@ describe("FeePoolV2", function () {
     stAmount?: BigNumber,
     stTime?: BigNumber
   ) {
-    console.log("ruleTransferFeesWithoutCheckpoint")
+    console.log("ruleTransferFeesWithoutCheckpoint");
 
     /*
     Transfer fees into the feePool without checkpointing.
@@ -389,10 +396,12 @@ describe("FeePoolV2", function () {
       //     Point: ${up}
       //     `);
       // <----
-      balanceList[acct.address] = await ethers.provider.getBalance(acct.address);
+      balanceList[acct.address] = await ethers.provider.getBalance(
+        acct.address
+      );
       const claimTx = await feePool.connect(acct)["claim()"]();
-      const receipt = await claimTx.wait()
-      const gasCost = receipt.gasUsed.mul(receipt.effectiveGasPrice)
+      const receipt = await claimTx.wait();
+      const gasCost = receipt.gasUsed.mul(receipt.effectiveGasPrice);
       balanceList[acct.address] = balanceList[acct.address].sub(gasCost);
     }
 
@@ -445,7 +454,11 @@ describe("FeePoolV2", function () {
     // -------------------------------------------
 
     for (const acct of accounts) {
-      expect((await ethers.provider.getBalance(acct.address)).sub(BigNumber.from(balanceList[acct.address]))).to.equal(
+      expect(
+        (await ethers.provider.getBalance(acct.address)).sub(
+          BigNumber.from(balanceList[acct.address])
+        )
+      ).to.equal(
         tokensPerUserPerWeek[acct.address].reduce(
           (a: BigNumber, b: BigNumber) => a.add(b),
           BigNumber.from("0")

@@ -54,7 +54,8 @@ contract YmtMinter is
 
     function _mintFor(address scoreAddr_, address for_) internal {
         require(
-            IScoreWeightController(scoreWeightController()).scores(scoreAddr_) > 0,
+            IScoreWeightController(scoreWeightController()).scores(scoreAddr_) >
+                0,
             "dev: score is not added"
         );
 

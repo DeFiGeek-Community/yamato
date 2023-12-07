@@ -198,9 +198,7 @@ describe("YmtMinter components", function () {
       ten_to_the_18
     );
     for (let i = 0; i < 4; i++) {
-      await yamato
-        .connect(accounts[i])
-        .deposit({ value: ten_to_the_20 });
+      await yamato.connect(accounts[i]).deposit({ value: ten_to_the_20 });
     }
   });
 
@@ -221,9 +219,7 @@ describe("YmtMinter components", function () {
       await time.increase(week);
 
       for (let i = 0; i < 3; i++) {
-        await yamato
-          .connect(accounts[i + 1])
-          .borrow(ten_to_the_18);
+        await yamato.connect(accounts[i + 1]).borrow(ten_to_the_18);
         depositTime.push(await time.latest());
 
         //   await showGaugeInfo();

@@ -221,14 +221,9 @@ describe("ScoreRegistry kick", function () {
     await YMT.connect(accounts[1]).approve(veYMT.address, MAX_UINT256);
     await veYMT
       .connect(accounts[1])
-      .createLock(
-        LOCK_AMOUNT,
-        await time.latest() + 4 * week
-      );
+      .createLock(LOCK_AMOUNT, (await time.latest()) + 4 * week);
 
-    await yamato
-      .connect(accounts[1])
-      .borrow(DEPOSIT_AMOUNT);
+    await yamato.connect(accounts[1]).borrow(DEPOSIT_AMOUNT);
 
     // ゲージ内のアリスのワーキングバランスをチェック
     expect(await scoreRegistry.workingBalances(accounts[1].address)).to.equal(

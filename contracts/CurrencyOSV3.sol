@@ -83,7 +83,9 @@ contract CurrencyOSV3 is ICurrencyOSV3, UUPSBase {
     }
 
     function setYmtMinter(address ymtMinterAddr) external onlyGovernance {
-        bytes32 YMT_MINTER_KEY = bytes32(keccak256(abi.encode(YMT_MINTER_SLOT_ID)));
+        bytes32 YMT_MINTER_KEY = bytes32(
+            keccak256(abi.encode(YMT_MINTER_SLOT_ID))
+        );
         assembly {
             sstore(YMT_MINTER_KEY, ymtMinterAddr)
         }
@@ -177,7 +179,9 @@ contract CurrencyOSV3 is ICurrencyOSV3, UUPSBase {
     }
 
     function ymtMinter() public view override returns (address _ymtMinter) {
-        bytes32 YMT_MINTER_KEY = bytes32(keccak256(abi.encode(YMT_MINTER_SLOT_ID)));
+        bytes32 YMT_MINTER_KEY = bytes32(
+            keccak256(abi.encode(YMT_MINTER_SLOT_ID))
+        );
         assembly {
             _ymtMinter := sload(YMT_MINTER_KEY)
         }

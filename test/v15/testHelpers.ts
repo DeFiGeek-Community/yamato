@@ -36,7 +36,11 @@ export function fee(amount: BigNumber): BigNumber {
   return amount.sub(amount.div(1000));
 }
 
-export function approx(value: BigNumber, target: BigNumber, tol: BigNumber): boolean {
+export function approx(
+  value: BigNumber,
+  target: BigNumber,
+  tol: BigNumber
+): boolean {
   if (value.isZero() && target.isZero()) {
     return true;
   }
@@ -62,6 +66,6 @@ export function generateUniqueRandomNumbers(
 }
 
 export async function gasCostOf(tx) {
-  const receipt = await tx.wait()
-  return receipt.gasUsed.mul(receipt.effectiveGasPrice)
+  const receipt = await tx.wait();
+  return receipt.gasUsed.mul(receipt.effectiveGasPrice);
 }

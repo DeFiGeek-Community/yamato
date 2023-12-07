@@ -120,10 +120,10 @@ describe("veYMT", function () {
     const totalSupply = await veYMT["totalSupply()"]();
     const aliceBalance = await veYMT["balanceOf(address)"](alice.address);
 
-    expect(approx(totalSupply, amount.div(MAXTIME).mul(week - 2 * hour), TOL)).to
-      .be.true;
-    expect(approx(aliceBalance, amount.div(MAXTIME).mul(week - 2 * hour), TOL)).to
-      .be.true;
+    expect(approx(totalSupply, amount.div(MAXTIME).mul(week - 2 * hour), TOL))
+      .to.be.true;
+    expect(approx(aliceBalance, amount.div(MAXTIME).mul(week - 2 * hour), TOL))
+      .to.be.true;
     expect(await veYMT["balanceOf(address)"](bob.address)).to.equal(0);
 
     t0 = await time.latest();
@@ -362,7 +362,8 @@ describe("veYMT", function () {
       stages["alice_deposit"].blockNumber
     );
 
-    expect(approx(wAlice, amount.div(MAXTIME).mul(week - hour), TOL)).to.be.true;
+    expect(approx(wAlice, amount.div(MAXTIME).mul(week - hour), TOL)).to.be
+      .true;
     expect(
       await veYMT.balanceOfAt(bob.address, stages["alice_deposit"].blockNumber)
     ).to.equal(0);

@@ -6,10 +6,7 @@ import {
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
 import { BigNumber } from "ethers";
-import {
-  YMT,
-  YMT__factory,
-} from "../../../../typechain";
+import { YMT, YMT__factory } from "../../../../typechain";
 import Constants from "../../Constants";
 
 const YEAR = Constants.YEAR;
@@ -31,7 +28,6 @@ describe("YMT", function () {
   });
 
   describe("YMT Inflation Delay Tests", function () {
-
     // 遅延後のレートが正しく計算されるかを確認するテスト
     it("should correctly calculate rate after delay", async function () {
       expect(await YMT.rate()).to.equal(0);

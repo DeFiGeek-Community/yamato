@@ -6,10 +6,7 @@ import {
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
 import { BigNumber } from "ethers";
-import {
-  YMT,
-  YMT__factory,
-} from "../../../../typechain";
+import { YMT, YMT__factory } from "../../../../typechain";
 import Constants from "../../Constants";
 
 const week = Constants.week;
@@ -33,7 +30,6 @@ describe("YMT", function () {
   });
 
   describe("YMT Epoch Time and Supply Tests", function () {
-
     // 開始エポック時間が正しく更新されるかを確認するテスト
     it("should update start epoch time correctly", async function () {
       const creationTime: BigNumber = await YMT.startEpochTime();
@@ -67,13 +63,17 @@ describe("YMT", function () {
       const now = BigNumber.from(await time.latest());
       const newEpoch = creationTime.add(YEAR).sub(now);
       await time.increase(newEpoch.sub(BigNumber.from("3")));
-      await expect(YMT.updateMiningParameters()).to.be.revertedWith("dev: too soon!");
+      await expect(YMT.updateMiningParameters()).to.be.revertedWith(
+        "dev: too soon!"
+      );
     });
 
     // 終了時間が開始時間より前の場合にmintable timeframeがリバートされることを確認するテスト
     it("should revert mintable timeframe if end is before start", async function () {
       const creationTime = await YMT.startEpochTime();
-      await expect(YMT.mintableInTimeframe(creationTime.add(1), creationTime)).to.be.revertedWith("dev: start > end");
+      await expect(
+        YMT.mintableInTimeframe(creationTime.add(1), creationTime)
+      ).to.be.revertedWith("dev: start > end");
     });
 
     // 複数のエポックにわたるmintableな量を計算するテスト
@@ -81,10 +81,22 @@ describe("YMT", function () {
       const creationTime = await YMT.startEpochTime();
 
       // Two epochs should not raise
-      await YMT.mintableInTimeframe(creationTime, creationTime.add(YEAR).mul(BigNumber.from("19").div(BigNumber.from("10"))));
+      await YMT.mintableInTimeframe(
+        creationTime,
+        creationTime
+          .add(YEAR)
+          .mul(BigNumber.from("19").div(BigNumber.from("10")))
+      );
 
       // Three epochs should raise
-      await expect(YMT.mintableInTimeframe(creationTime, creationTime.add(YEAR).mul(BigNumber.from("21").div(BigNumber.from("10"))))).to.be.revertedWith("dev: too far in future");
+      await expect(
+        YMT.mintableInTimeframe(
+          creationTime,
+          creationTime
+            .add(YEAR)
+            .mul(BigNumber.from("21").div(BigNumber.from("10")))
+        )
+      ).to.be.revertedWith("dev: too far in future");
     });
 
     // 利用可能な供給量が正しく計算されるかを確認するテスト

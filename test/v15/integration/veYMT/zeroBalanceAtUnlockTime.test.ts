@@ -32,9 +32,7 @@ describe("veYMT", function () {
       await ethers.getContractFactory("veYMT")
     )).deploy(YMT.address);
 
-    await YMT
-      .connect(accounts[0])
-      .approve(veYMT.address, ten_to_the_18);
+    await YMT.connect(accounts[0]).approve(veYMT.address, ten_to_the_18);
   });
 
   beforeEach(async () => {
@@ -87,10 +85,7 @@ describe("veYMT", function () {
       )} Week, extend: ${Math.floor(st_extend / week)} Week`, async () => {
         await veYMT
           .connect(accounts[0])
-          .createLock(
-            ten_to_the_18,
-            (await time.latest()) + st_initial
-          );
+          .createLock(ten_to_the_18, (await time.latest()) + st_initial);
 
         const initialUnlock = (
           await veYMT.locked(accounts[0].address)
@@ -103,7 +98,9 @@ describe("veYMT", function () {
           await veYMT.locked(accounts[0].address)
         )[1];
 
-        await time.increase(Number(extendedActualUnlock) - (await time.latest()) - 5);
+        await time.increase(
+          Number(extendedActualUnlock) - (await time.latest()) - 5
+        );
 
         expect(
           await veYMT["balanceOf(address)"](accounts[0].address)

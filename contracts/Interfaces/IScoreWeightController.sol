@@ -9,17 +9,13 @@ pragma solidity 0.8.4;
 //solhint-disable no-inline-assembly
 
 interface IScoreWeightController {
-
     function veYMT() external view returns (address);
 
     function checkpointScore(address addr) external;
 
     function checkpoint(address addr_) external;
 
-    function addCurrency(
-        address addr_,
-        uint256 weight_
-    ) external;
+    function addCurrency(address addr_, uint256 weight_) external;
 
     function scoreRelativeWeight(
         address addr,

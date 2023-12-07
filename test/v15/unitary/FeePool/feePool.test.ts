@@ -85,7 +85,9 @@ describe("FeePoolV2", () => {
       const balanceBefore = await ethers.provider.getBalance(alice.address);
       const tx = await feePool.connect(alice)["claim()"]();
       const balanceAfter = await ethers.provider.getBalance(alice.address);
-      expect(balanceAfter.sub(balanceBefore).add(await gasCostOf(tx))).to.be.eq(0);
+      expect(balanceAfter.sub(balanceBefore).add(await gasCostOf(tx))).to.be.eq(
+        0
+      );
     });
 
     it("should correctly claim during deposit", async function () {
@@ -121,7 +123,7 @@ describe("FeePoolV2", () => {
       await feePool.checkpointToken();
       const balanceAlice = await ethers.provider.getBalance(alice.address);
       const tx = await feePool.connect(alice)["claim()"]();
-      const gasCost = await gasCostOf(tx)
+      const gasCost = await gasCostOf(tx);
       const afterBalanceAlice = await ethers.provider.getBalance(alice.address);
 
       expect(afterBalanceAlice.sub(balanceAlice).add(gasCost)).to.be.closeTo(
@@ -160,10 +162,10 @@ describe("FeePoolV2", () => {
       await feePool.checkpointToken();
       let balanceAlice = await ethers.provider.getBalance(alice.address);
       const tx = await feePool.connect(alice)["claim()"]();
-      balanceAlice = (await ethers.provider.getBalance(alice.address)).sub(balanceAlice).add(await gasCostOf(tx));
-      expect(
-        Number(balanceAlice) - 10 ** 18
-      ).to.be.gte(10 ** 18);
+      balanceAlice = (await ethers.provider.getBalance(alice.address))
+        .sub(balanceAlice)
+        .add(await gasCostOf(tx));
+      expect(Number(balanceAlice) - 10 ** 18).to.be.gte(10 ** 18);
     });
 
     it("should correctly claim on double deposit", async function () {
@@ -261,14 +263,15 @@ describe("FeePoolV2", () => {
       const txAlice = await feePool.connect(alice)["claim()"]();
       const txBob = await feePool.connect(bob)["claim()"]();
 
-      balanceAlice = (await ethers.provider.getBalance(alice.address)).sub(balanceAlice).add(await gasCostOf(txAlice));
-      balanceBob = (await ethers.provider.getBalance(bob.address)).sub(balanceBob).add(await gasCostOf(txBob));
+      balanceAlice = (await ethers.provider.getBalance(alice.address))
+        .sub(balanceAlice)
+        .add(await gasCostOf(txAlice));
+      balanceBob = (await ethers.provider.getBalance(bob.address))
+        .sub(balanceBob)
+        .add(await gasCostOf(txBob));
 
       expect(balanceAlice).to.equal(balanceBob);
-      expect(balanceAlice.add(balanceBob)).to.be.closeTo(
-        ten_to_the_19,
-        20
-      );
+      expect(balanceAlice.add(balanceBob)).to.be.closeTo(ten_to_the_19, 20);
     });
   });
 });

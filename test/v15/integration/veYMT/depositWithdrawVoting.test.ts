@@ -43,7 +43,9 @@ describe("veYMT", function () {
   before(async () => {
     accounts = (await ethers.getSigners()).slice(0, ACCOUNT_NUM);
 
-    token = await (<MockToken__factory>await ethers.getContractFactory("MockToken")).deploy("Test Token", "TST", 18);
+    token = await (<MockToken__factory>(
+      await ethers.getContractFactory("MockToken")
+    )).deploy("Test Token", "TST", 18);
 
     veYMT = await (<VeYMT__factory>(
       await ethers.getContractFactory("veYMT")
@@ -54,9 +56,7 @@ describe("veYMT", function () {
       await token
         .connect(accounts[i])
         ._mintForTesting(accounts[i].address, ten_to_the_40);
-      await token
-        .connect(accounts[i])
-        .approve(veYMT.address, NAX_UINT256);
+      await token.connect(accounts[i]).approve(veYMT.address, NAX_UINT256);
     }
   });
 

@@ -213,12 +213,9 @@ describe("YmtMinter", function () {
   });
 
   describe("YmtMinter Behavior", function () {
-
     // 借入を行い、時間を進めた後にmintを実行
     it("Basic mint functionality test", async () => {
-      await yamato
-        .connect(accounts[1])
-        .borrow(ten_to_the_17);
+      await yamato.connect(accounts[1]).borrow(ten_to_the_17);
 
       await time.increase(month);
 
@@ -234,9 +231,7 @@ describe("YmtMinter", function () {
 
     // 借入を行い、時間を進めた後にmintを実行
     it("Mint immediately after setup", async () => {
-      await yamato
-        .connect(accounts[1])
-        .borrow(ten_to_the_18);
+      await yamato.connect(accounts[1]).borrow(ten_to_the_18);
 
       let t0 = BigNumber.from(await time.latest());
       let moment = t0.add(WEEK).div(WEEK).mul(WEEK).add("5");
@@ -257,9 +252,7 @@ describe("YmtMinter", function () {
 
     // 同じscoreRegistryでの複数のmint操作をテスト
     it("Multiple mint operations on the same scoreRegistry", async () => {
-      await yamato
-        .connect(accounts[1])
-        .borrow(ten_to_the_18);
+      await yamato.connect(accounts[1]).borrow(ten_to_the_18);
       await time.increase(month);
       await ymtMinter.connect(accounts[1]).mint(scoreRegistry.address);
       let balance = await YMT.balanceOf(accounts[1].address);
@@ -277,29 +270,29 @@ describe("YmtMinter", function () {
 
     // 引き出し後のmintをテスト
     it("Test minting after withdrawing", async () => {
-      await yamato
-        .connect(accounts[1])
-        .borrow(ten_to_the_18);
+      await yamato.connect(accounts[1]).borrow(ten_to_the_18);
 
       await time.increase(week * 2);
-      const balance = await CJPY.connect(accounts[1]).balanceOf(accounts[1].address);
+      const balance = await CJPY.connect(accounts[1]).balanceOf(
+        accounts[1].address
+      );
       await CJPY.transfer(accounts[1].address, ten_to_the_18.sub(balance));
       await yamato.connect(accounts[1]).repay(ten_to_the_18);
       await ymtMinter.connect(accounts[1]).mint(scoreRegistry.address);
 
-      expect(
-        (await YMT.balanceOf(accounts[1].address)).gt(zero)
-      ).to.equal(true);
+      expect((await YMT.balanceOf(accounts[1].address)).gt(zero)).to.equal(
+        true
+      );
     });
 
     // 引き出し後の複数回のmintをテスト
     it("Test multiple mints after withdrawing", async () => {
-      await yamato
-        .connect(accounts[1])
-        .borrow(ten_to_the_18);
+      await yamato.connect(accounts[1]).borrow(ten_to_the_18);
 
       await time.increase(10);
-      const CJPY_balance = await CJPY.connect(accounts[1]).balanceOf(accounts[1].address);
+      const CJPY_balance = await CJPY.connect(accounts[1]).balanceOf(
+        accounts[1].address
+      );
       await CJPY.transfer(accounts[1].address, ten_to_the_18.sub(CJPY_balance));
       await yamato.connect(accounts[1]).repay(ten_to_the_18);
       await ymtMinter.connect(accounts[1]).mint(scoreRegistry.address);
@@ -330,9 +323,7 @@ describe("YmtMinter", function () {
 
     // インフレ開始前のmintをテスト
     it("Test minting before inflation begins", async () => {
-      await yamato
-        .connect(accounts[1])
-        .borrow(ten_to_the_18);
+      await yamato.connect(accounts[1]).borrow(ten_to_the_18);
       const startEpochTime = await YMT.startEpochTime();
       const currentTime = await time.latest();
       const timeToSleep = startEpochTime.sub(currentTime).sub(5);
@@ -340,12 +331,10 @@ describe("YmtMinter", function () {
       // 時間を戻す
       await ethers.provider.send("evm_increaseTime", [timeToSleep.toNumber()]);
       await ethers.provider.send("evm_mine", []);
-      
+
       await ymtMinter.connect(accounts[1]).mint(scoreRegistry.address);
 
-      expect(await YMT.balanceOf(accounts[1].address)).to.equal(
-        zero
-      );
+      expect(await YMT.balanceOf(accounts[1].address)).to.equal(zero);
       expect(
         await ymtMinter.minted(accounts[1].address, scoreRegistry.address)
       ).to.equal(zero);
@@ -376,9 +365,7 @@ describe("YmtMinter", function () {
 
     // 他のユーザーのためにmintを行う関数をテスト
     it("Test minting on behalf of another user", async () => {
-      await yamato
-        .connect(accounts[1])
-        .borrow(ten_to_the_17);
+      await yamato.connect(accounts[1]).borrow(ten_to_the_17);
 
       await time.increase(month);
 
@@ -406,9 +393,7 @@ describe("YmtMinter", function () {
 
     // 承認なしでのmintFor関数をテスト
     it("Test mintFor function when not approved", async () => {
-      await yamato
-        .connect(accounts[1])
-        .borrow(ten_to_the_17);
+      await yamato.connect(accounts[1]).borrow(ten_to_the_17);
 
       await time.increase(month);
 

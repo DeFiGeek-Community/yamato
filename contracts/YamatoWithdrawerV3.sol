@@ -42,7 +42,8 @@ contract YamatoWithdrawerV3 is IYamatoWithdrawer, YamatoAction {
         */
         IPriceFeedV3(priceFeed()).fetchPrice();
         IYamato.Pledge memory pledge = IYamato(yamato()).getPledge(_sender);
-        (uint256 totalColl, uint256 totalDebt, , , , ) = IYamato(yamato()).getStates();
+        (uint256 totalColl, uint256 totalDebt, , , , ) = IYamato(yamato())
+            .getStates();
 
         /*
             scoreRegistry checkpoint
@@ -50,7 +51,7 @@ contract YamatoWithdrawerV3 is IYamatoWithdrawer, YamatoAction {
         IScoreRegistry _scoreRegistry = IScoreRegistry(
             IYamatoV4(yamato()).scoreRegistry()
         );
-        if(pledge.debt > 0){
+        if (pledge.debt > 0) {
             _scoreRegistry.checkpoint(_sender);
         }
 
@@ -119,7 +120,7 @@ contract YamatoWithdrawerV3 is IYamatoWithdrawer, YamatoAction {
         /*
             Update score
         */
-        if(pledge.debt > 0){
+        if (pledge.debt > 0) {
             _scoreRegistry.updateScoreLimit(
                 _sender,
                 pledge.debt,

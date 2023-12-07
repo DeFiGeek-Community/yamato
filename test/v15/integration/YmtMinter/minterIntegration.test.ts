@@ -188,14 +188,16 @@ describe("YmtMinter integration", function () {
 
     await yamato.deposit({ value: ethers.utils.parseEther("100") });
     await yamato.borrow(ethers.utils.parseEther("100000"));
-    for(let i = 0; i < 5; i++){
-      await CJPY.transfer(accounts[i + 1].address, ethers.utils.parseEther("10000"));
-    }
-    await scoreWeightController
-      .addCurrency(
-        scoreRegistry.address,
-        ten_to_the_18
+    for (let i = 0; i < 5; i++) {
+      await CJPY.transfer(
+        accounts[i + 1].address,
+        ethers.utils.parseEther("10000")
       );
+    }
+    await scoreWeightController.addCurrency(
+      scoreRegistry.address,
+      ten_to_the_18
+    );
   });
 
   beforeEach(async () => {
@@ -206,10 +208,10 @@ describe("YmtMinter integration", function () {
     await snapshot.restore();
   });
 
-  function getICR(pledge, price){
-    const {coll, debt} = pledge;
-    const collInCurrency = (coll.mul(price)).div(ten_to_the_18);
-    return (BigNumber.from("10000").mul(collInCurrency)).div(debt);
+  function getICR(pledge, price) {
+    const { coll, debt } = pledge;
+    const collInCurrency = coll.mul(price).div(ten_to_the_18);
+    return BigNumber.from("10000").mul(collInCurrency).div(debt);
   }
 
   function calculateCoefficient(collateralRatio) {
@@ -218,7 +220,7 @@ describe("YmtMinter integration", function () {
     if (collateralRatio >= 15000) return BigNumber.from("15");
     if (collateralRatio >= 13000) return BigNumber.from("10");
     return BigNumber.from("0");
-}
+  }
 
   function approxEqual(actual, expected, tolerance) {
     // 差の絶対値を計算
@@ -233,7 +235,7 @@ describe("YmtMinter integration", function () {
     const amount = "100000";
     await YMT.setMinter(ymtMinter.address);
     const ethAmounts = ["1.5", "1.25", "1", "0.75", "0.65"];
-    for(let i = 0; i < 5; i++){
+    for (let i = 0; i < 5; i++) {
       await yamato
         .connect(accounts[i + 1])
         .deposit({ value: ethers.utils.parseEther(ethAmounts[i]) });
@@ -243,41 +245,48 @@ describe("YmtMinter integration", function () {
     await time.increase(week);
 
     // Bob and Charlie deposit to gauges with different weights
-    for(let i = 0; i < 5; i++){    
+    for (let i = 0; i < 5; i++) {
       await yamato
         .connect(accounts[i + 1])
         .borrow(ethers.utils.parseEther(amount));
     }
     // mockFeed.fetchPrice.returns(PRICE = BigNumber.from(180000).mul(1e18 + ""));
     await time.increase(month);
-    
+
     const ICRs = [];
-    for(let i = 0; i < 5; i++){
+    for (let i = 0; i < 5; i++) {
       const pledge = await yamato.getPledge(accounts[i + 1].address);
       ICRs.push(Number(getICR(pledge, PRICE)));
-      await yamato.connect(accounts[i + 1]).repay(ethers.utils.parseEther(amount));
+      await yamato
+        .connect(accounts[i + 1])
+        .repay(ethers.utils.parseEther(amount));
     }
 
     // Claim for Bob now
     await ymtMinter.connect(accounts[1]).mint(scoreRegistry.address);
     const bobTokens = await YMT.balanceOf(accounts[1].address);
     await time.increase(month);
-    
+
     // This won't give anything
     await ymtMinter.connect(accounts[1]).mint(scoreRegistry.address);
     expect(await YMT.balanceOf(accounts[1].address)).to.equal(bobTokens);
 
     let tokens = [];
-    for(let i = 0; i < 5; i++) {
+    for (let i = 0; i < 5; i++) {
       await ymtMinter.connect(accounts[i + 1]).mint(scoreRegistry.address);
       const token = await YMT.balanceOf(accounts[i + 1].address);
       console.log("tokenBalance:", Number(token));
       tokens.push(token);
     }
-    for(let i = 0; i < 5; i++) {
-      const ratio = calculateCoefficient(ICRs[i])
-      expect(approxEqual(tokens[i], (tokens[4].mul(ratio)).div(BigNumber.from("10")), BigNumber.from(10).pow(19))).to.be.true;
+    for (let i = 0; i < 5; i++) {
+      const ratio = calculateCoefficient(ICRs[i]);
+      expect(
+        approxEqual(
+          tokens[i],
+          tokens[4].mul(ratio).div(BigNumber.from("10")),
+          BigNumber.from(10).pow(19)
+        )
+      ).to.be.true;
     }
   });
 });
-

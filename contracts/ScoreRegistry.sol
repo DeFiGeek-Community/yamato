@@ -73,18 +73,25 @@ contract ScoreRegistry is YamatoAction {
     mapping(int128 => uint256) public periodTimestamp;
     mapping(int128 => uint256) public integrateInvSupply;
 
-    function initialize(address ymtMinterAddr, address yamatoAddr) public initializer {
+    function initialize(
+        address ymtMinterAddr,
+        address yamatoAddr
+    ) public initializer {
         __YamatoAction_init(yamatoAddr);
 
         bytes32 YMT_KEY = bytes32(keccak256(abi.encode(YMT_SLOT_ID)));
         bytes32 VEYMT_KEY = bytes32(keccak256(abi.encode(VEYMT_SLOT_ID)));
-        bytes32 YMT_MINTER_KEY = bytes32(keccak256(abi.encode(YMT_MINTER_SLOT_ID)));
+        bytes32 YMT_MINTER_KEY = bytes32(
+            keccak256(abi.encode(YMT_MINTER_SLOT_ID))
+        );
         bytes32 WEIGHT_CONTROLLER_KEY = bytes32(
             keccak256(abi.encode(WEIGHT_CONTROLLER_SLOT_ID))
         );
         address ymtAddr = IYmtMinter(ymtMinterAddr).YMT();
-        address scoreWeightControllerAddr = IYmtMinter(ymtMinterAddr).scoreWeightController();
-        address veYmtAddr = IScoreWeightController(scoreWeightControllerAddr).veYMT();
+        address scoreWeightControllerAddr = IYmtMinter(ymtMinterAddr)
+            .scoreWeightController();
+        address veYmtAddr = IScoreWeightController(scoreWeightControllerAddr)
+            .veYMT();
 
         assembly {
             sstore(YMT_KEY, ymtAddr)
@@ -128,7 +135,9 @@ contract ScoreRegistry is YamatoAction {
 
         if (block.timestamp > _st.periodTime) {
             uint256 _workingSupply = workingSupply;
-            IScoreWeightController(scoreWeightController()).checkpointScore(address(this));
+            IScoreWeightController(scoreWeightController()).checkpointScore(
+                address(this)
+            );
             uint256 _prevWeekTime = _st.periodTime;
             uint256 _weekTime = min(
                 ((_st.periodTime + WEEK) / WEEK) * WEEK,
@@ -218,7 +227,7 @@ contract ScoreRegistry is YamatoAction {
         _limit = min(debt_, _limit);
         uint256 _oldBal = workingBalances[addr_];
 
-        if(debt_ > 0){
+        if (debt_ > 0) {
             // Apply the coefficient based on the collateral ratio provided
             uint256 coefficient = calculateCoefficient(collateralRatio_);
             // Adjust the limit based on the coefficient
@@ -321,7 +330,9 @@ contract ScoreRegistry is YamatoAction {
     }
 
     function ymtMinter() public view returns (address _ymtMinter) {
-        bytes32 YMT_MINTER_KEY = bytes32(keccak256(abi.encode(YMT_MINTER_SLOT_ID)));
+        bytes32 YMT_MINTER_KEY = bytes32(
+            keccak256(abi.encode(YMT_MINTER_SLOT_ID))
+        );
         assembly {
             _ymtMinter := sload(YMT_MINTER_KEY)
         }

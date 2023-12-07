@@ -52,8 +52,7 @@ describe("veYMT", () => {
 
   // commitTransferOwnershipテスト
   it("Successful commitment of transfer ownership", async function () {
-    await veYMT
-      .commitTransferOwnership(accounts[1].address);
+    await veYMT.commitTransferOwnership(accounts[1].address);
 
     expect(await veYMT.admin()).to.equal(accounts[0].address);
     expect(await veYMT.futureAdmin()).to.equal(accounts[1].address);
@@ -61,8 +60,7 @@ describe("veYMT", () => {
 
   // commitTransferOwnershipテスト
   it("Successful application of transfer ownership", async function () {
-    await veYMT
-      .commitTransferOwnership(accounts[1].address);
+    await veYMT.commitTransferOwnership(accounts[1].address);
     await veYMT.applyTransferOwnership();
 
     expect(await veYMT.admin()).to.equal(accounts[1].address);
@@ -70,8 +68,8 @@ describe("veYMT", () => {
 
   // コミットなしでのapplyTransferOwnership関数テスト
   it("Apply transfer ownership without commit", async function () {
-    await expect(
-      veYMT.applyTransferOwnership()
-    ).to.be.revertedWith("admin not set");
+    await expect(veYMT.applyTransferOwnership()).to.be.revertedWith(
+      "admin not set"
+    );
   });
 });

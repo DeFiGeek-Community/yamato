@@ -7,10 +7,7 @@ import {
 } from "@nomicfoundation/hardhat-network-helpers";
 import { BigNumber } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import {
-  YMT,
-  YMT__factory,
-} from "../../../../typechain";
+import { YMT, YMT__factory } from "../../../../typechain";
 import Constants from "../../Constants";
 
 const week = Constants.week;
@@ -37,7 +34,6 @@ describe("YMT", function () {
   });
 
   describe("YMT Mint Tests", function () {
-
     // 現在の供給量と期待される供給量が一致するかテストする
     it("should match the available supply with expected supply", async function () {
       const creationTime = await YMT.startEpochTime();
@@ -46,9 +42,7 @@ describe("YMT", function () {
 
       await time.increase(week);
 
-      const currentBlock = BigNumber.from(
-        await time.latest()
-      );
+      const currentBlock = BigNumber.from(await time.latest());
       const expected = initialSupply.add(
         currentBlock.sub(creationTime).mul(rate)
       );
@@ -64,9 +58,7 @@ describe("YMT", function () {
 
       await time.increase(week);
 
-      const currentTime = BigNumber.from(
-        await time.latest()
-      );
+      const currentTime = BigNumber.from(await time.latest());
       const amount = currentTime.sub(creationTime).mul(rate);
       await YMT.mint(accounts[1].address, amount);
 
@@ -82,9 +74,7 @@ describe("YMT", function () {
 
       await time.increase(week);
 
-      const currentTime = BigNumber.from(
-        await time.latest()
-      );
+      const currentTime = BigNumber.from(await time.latest());
       const amount = currentTime.sub(creationTime).add(2).mul(rate);
       await expect(YMT.mint(accounts[1].address, amount)).to.be.revertedWith(
         "dev: exceeds allowable mint amount"
@@ -104,7 +94,7 @@ describe("YMT", function () {
       await YMT.setMinter(accounts[0].address);
       await expect(YMT.mint(ZERO_ADDRESS, 0)).to.be.revertedWith(
         "dev: zero address"
-        );
+      );
     });
   });
 });
