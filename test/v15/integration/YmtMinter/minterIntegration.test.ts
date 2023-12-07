@@ -182,7 +182,6 @@ describe("YmtMinter integration", function () {
 
     PRICE = BigNumber.from(200000).mul(1e18 + "");
 
-    // CJPY.balanceOf.returns(PRICE.mul(1).mul(100).div(MCR));
     mockFeed.fetchPrice.returns(PRICE);
     mockFeed.getPrice.returns(PRICE);
     mockFeed.lastGoodPrice.returns(PRICE);

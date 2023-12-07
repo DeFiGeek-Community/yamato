@@ -33,8 +33,9 @@ describe("YMT", function () {
   });
 
   describe("YMT Epoch Time and Supply Tests", function () {
+
+    // 開始エポック時間が正しく更新されるかを確認するテスト
     it("should update start epoch time correctly", async function () {
-      // 開始エポック時間が正しく更新されるかを確認するテスト
       const creationTime: BigNumber = await YMT.startEpochTime();
       await time.increase(year);
 
@@ -45,14 +46,14 @@ describe("YMT", function () {
       expect(await YMT.startEpochTime()).to.equal(creationTime.add(YEAR));
     });
 
+    // 同じエポック内で開始エポック時間が更新されないことを確認するテスト
     it("should not update epoch time in the same epoch", async function () {
-      // 同じエポック内で開始エポック時間が更新されないことを確認するテスト
       await YMT.startEpochTimeWrite();
       await YMT.startEpochTimeWrite();
     });
 
+    // マイニングパラメータが正しく更新されるかを確認するテスト
     it("should update mining parameters correctly", async function () {
-      // マイニングパラメータが正しく更新されるかを確認するテスト
       const creationTime = await YMT.startEpochTime();
       const now = BigNumber.from(await time.latest());
       const newEpoch = creationTime.add(YEAR).sub(now);
@@ -60,8 +61,8 @@ describe("YMT", function () {
       await YMT.updateMiningParameters();
     });
 
+    // マイニングパラメータが早すぎる場合に更新されないことを確認するテスト
     it("should not update mining parameters too soon", async function () {
-      // マイニングパラメータが早すぎる場合に更新されないことを確認するテスト
       const creationTime = await YMT.startEpochTime();
       const now = BigNumber.from(await time.latest());
       const newEpoch = creationTime.add(YEAR).sub(now);
@@ -69,14 +70,14 @@ describe("YMT", function () {
       await expect(YMT.updateMiningParameters()).to.be.revertedWith("dev: too soon!");
     });
 
+    // 終了時間が開始時間より前の場合にmintable timeframeがリバートされることを確認するテスト
     it("should revert mintable timeframe if end is before start", async function () {
-      // 終了時間が開始時間より前の場合にmintable timeframeがリバートされることを確認するテスト
       const creationTime = await YMT.startEpochTime();
       await expect(YMT.mintableInTimeframe(creationTime.add(1), creationTime)).to.be.revertedWith("dev: start > end");
     });
 
+    // 複数のエポックにわたるmintableな量を計算するテスト
     it("should calculate mintable amount over multiple epochs", async function () {
-      // 複数のエポックにわたるmintableな量を計算するテスト
       const creationTime = await YMT.startEpochTime();
 
       // Two epochs should not raise
@@ -86,8 +87,8 @@ describe("YMT", function () {
       await expect(YMT.mintableInTimeframe(creationTime, creationTime.add(YEAR).mul(BigNumber.from("21").div(BigNumber.from("10"))))).to.be.revertedWith("dev: too far in future");
     });
 
+    // 利用可能な供給量が正しく計算されるかを確認するテスト
     it("should calculate available supply correctly", async function () {
-      // 利用可能な供給量が正しく計算されるかを確認するテスト
       const creationTime = await YMT.startEpochTime();
       const initialSupply = await YMT.totalSupply();
       const rate = await YMT.rate();

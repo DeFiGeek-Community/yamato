@@ -85,8 +85,8 @@ describe("YMT", function () {
       return S;
     }
 
+    // 与えられた時間枠で正しく発行可能な量を計算する
     it("should calculate mintable amount correctly for a given timeframe", async function () {
-      // 与えられた時間枠で正しく発行可能な量を計算する
       const t0 = Number(await YMT.startEpochTime());
 
       // Ensure the exponentiation stays within safe integer limits
@@ -129,8 +129,8 @@ describe("YMT", function () {
       ).to.equal(true);
     });
 
+    // 最初の年内のランダムな範囲に対して発行可能な量を計算する
     it("should calculate mintable amount for a random range within the first year", async function () {
-      // 最初の年内のランダムな範囲に対して発行可能な量を計算する
       const creationTime = await YMT.startEpochTime();
       const time1 = BigNumber.from(Math.floor(Math.random() * YEAR.toNumber()));
       const time2 = BigNumber.from(Math.floor(Math.random() * YEAR.toNumber()));
@@ -143,8 +143,8 @@ describe("YMT", function () {
       ).to.equal(rate.mul(sortedTimes[1].sub(sortedTimes[0])));
     });
 
+    // 複数のエポックにまたがる範囲に対して発行可能な量を計算する
     it("should calculate mintable amount for a range spanning multiple epochs", async function () {
-      // 複数のエポックにまたがる範囲に対して発行可能な量を計算する
       const creationTime = await YMT.startEpochTime();
       const start = creationTime.add(YEAR.mul(2));
       const duration = YEAR.mul(2);
@@ -172,8 +172,8 @@ describe("YMT", function () {
       }
     });
 
+    // 利用可能な供給量を正しく計算する
     it("should calculate available supply correctly", async function () {
-      // 利用可能な供給量を正しく計算する
       const duration = BigNumber.from(100000);
       const creationTime = await YMT.startEpochTime();
       const initialSupply = await YMT.totalSupply();

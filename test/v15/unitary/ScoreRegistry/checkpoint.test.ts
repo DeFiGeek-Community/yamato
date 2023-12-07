@@ -183,7 +183,6 @@ describe("ScoreRegistry checkpoint", function () {
 
     PRICE = BigNumber.from(260000).mul(1e18 + "");
 
-    // CJPY.balanceOf.returns(PRICE.mul(1).mul(100).div(MCR));
     mockFeed.fetchPrice.returns(PRICE);
     mockFeed.getPrice.returns(PRICE);
     mockFeed.lastGoodPrice.returns(PRICE);
@@ -197,22 +196,25 @@ describe("ScoreRegistry checkpoint", function () {
     await snapshot.restore();
   });
 
-  it("test_user_checkpoint", async function () {
-    // Assuming `userCheckpoint` is a function on your contract
+  // ユーザーのチェックポイント機能をテスト
+  it("Test user checkpoint", async function () {
+    // userCheckpoint関数がスコアレジストリに存在すると仮定
     await scoreRegistry.connect(accounts[1]).userCheckpoint(accounts[1].address);
   });
 
-  it("test_user_checkpoint_new_period", async function () {
+  // 新しい期間でのユーザーチェックポイント機能をテスト
+  it("Test user checkpoint in new period", async function () {
     await scoreRegistry.connect(accounts[1]).userCheckpoint(accounts[1].address);
 
-    // Increase the time on the blockchain
+    // ブロックチェーン上で時間を進める
     await time.increase(year * 1.1);
 
     await scoreRegistry.connect(accounts[1]).userCheckpoint(accounts[1].address);
   });
 
-  it("test_user_checkpoint_wrong_account", async function () {
-    // Expect the transaction to be reverted with the specified error message
+  // 誤ったアカウントでのユーザーチェックポイント機能をテスト
+  it("Test user checkpoint with wrong account", async function () {
+    // 指定されたエラーメッセージでトランザクションがリバートされることを期待
     await expect(
       scoreRegistry.connect(accounts[1]).userCheckpoint(accounts[2].address)
     ).to.be.revertedWith("dev: unauthorized");

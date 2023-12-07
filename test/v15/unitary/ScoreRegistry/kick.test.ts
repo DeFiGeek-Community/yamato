@@ -186,7 +186,6 @@ describe("ScoreRegistry kick", function () {
 
     PRICE = BigNumber.from(260000).mul(1e18 + "");
 
-    // CJPY.balanceOf.returns(PRICE.mul(1).mul(100).div(MCR));
     mockFeed.fetchPrice.returns(PRICE);
     mockFeed.getPrice.returns(PRICE);
     mockFeed.lastGoodPrice.returns(PRICE);
@@ -213,48 +212,49 @@ describe("ScoreRegistry kick", function () {
     await snapshot.restore();
   });
 
-  it("test kick functionality", async function () {
-    // Forward time by 2 weeks + 5 seconds
+  // キック機能をテスト
+  it("Test kick functionality", async function () {
+    // 2週間と5秒進める
     await time.increase(2 * week + 5);
 
-    // Alice approves tokens to voting escrow and creates a lock
+    // アリスがトークンを承認し、ロックを作成
     await YMT.connect(accounts[1]).approve(veYMT.address, MAX_UINT256);
     await veYMT
       .connect(accounts[1])
       .createLock(
         LOCK_AMOUNT,
-        (await ethers.provider.getBlock("latest")).timestamp + 4 * week
+        await time.latest() + 4 * week
       );
 
     await yamato
       .connect(accounts[1])
       .borrow(DEPOSIT_AMOUNT);
 
-    // Check working balance of Alice in Gauge
+    // ゲージ内のアリスのワーキングバランスをチェック
     expect(await scoreRegistry.workingBalances(accounts[1].address)).to.equal(
       DEPOSIT_AMOUNT.mul("25").div("10")
     );
 
-    // Forward time by 1 week
+    // 1週間進める
     await time.increase(week);
 
-    // Bob tries to kick Alice but should fail because it's not allowed yet
+    // ボブがアリスをキックしようとするが、まだ許可されていないため失敗する
     await expect(
       scoreRegistry.connect(accounts[1]).kick(accounts[1].address)
     ).to.be.revertedWith("Not allowed");
 
-    // Forward time by 4 weeks
+    // 4週間進める
     await time.increase(4 * week);
 
-    // Now Bob kicks Alice
+    // ボブがアリスをキックする
     await scoreRegistry.connect(accounts[1]).kick(accounts[1].address);
 
-    // Check the working balance of Alice after kick
+    // キック後のアリスのワーキングバランスをチェック
     expect(await scoreRegistry.workingBalances(accounts[1].address)).to.equal(
       LOCK_AMOUNT.mul(4).mul("25").div("10")
     );
 
-    // Trying to kick again should fail as it's not needed
+    // 再度キックしようとすると、必要がないため失敗する
     await expect(
       scoreRegistry.connect(accounts[1]).kick(accounts[1].address)
     ).to.be.revertedWith("Not needed");

@@ -37,8 +37,9 @@ describe("YMT", function () {
   });
 
   describe("YMT Mint Tests", function () {
+
+    // 現在の供給量と期待される供給量が一致するかテストする
     it("should match the available supply with expected supply", async function () {
-      // 現在の供給量と期待される供給量が一致するかテストする
       const creationTime = await YMT.startEpochTime();
       const initialSupply = await YMT.totalSupply();
       const rate = await YMT.rate();
@@ -54,8 +55,8 @@ describe("YMT", function () {
       expect(await YMT.availableSupply()).to.equal(expected);
     });
 
+    // ユーザーに正しい量をミントするかテストする
     it("should mint the correct amount to a user", async function () {
-      // ユーザーに正しい量をミントするかテストする
       await YMT.setMinter(accounts[0].address);
       const creationTime = await YMT.startEpochTime();
       const initialSupply = await YMT.totalSupply();
@@ -73,8 +74,8 @@ describe("YMT", function () {
       expect(await YMT.totalSupply()).to.equal(initialSupply.add(amount));
     });
 
+    // 限度を超えたミントはリバートされるかテストする
     it("should revert minting when amount exceeds limit", async function () {
-      // 限度を超えたミントはリバートされるかテストする
       await YMT.setMinter(accounts[0].address);
       const creationTime = await YMT.startEpochTime();
       const rate = await YMT.rate();
@@ -90,16 +91,16 @@ describe("YMT", function () {
       );
     });
 
+    // ymtMinterからのみミントが許可されるかテストする
     it("should only allow minting from ymtMinter", async function () {
-      // ymtMinterからのみミントが許可されるかテストする
       await YMT.setMinter(accounts[0].address);
       await expect(
         YMT.connect(accounts[1]).mint(accounts[1].address, 0)
       ).to.be.revertedWith("dev: ymtMinter only");
     });
 
+    // ゼロアドレスへのミントがリバートされるかテストする
     it("should revert minting to a zero address", async function () {
-      // ゼロアドレスへのミントがリバートされるかテストする
       await YMT.setMinter(accounts[0].address);
       await expect(YMT.mint(ZERO_ADDRESS, 0)).to.be.revertedWith(
         "dev: zero address"

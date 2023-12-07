@@ -37,8 +37,9 @@ describe("YMT", function () {
   });
 
   describe("YMT Mint Integration Tests", function () {
+
+    // 指定された期間に応じて正しい量のトークンを発行する
     it("should mint the correct amount of tokens", async function () {
-      // 指定された期間に応じて正しい量のトークンを発行する
       const duration = year;
       await YMT.setMinter(accounts[0].address);
       const creationTime = await YMT.startEpochTime();
@@ -55,8 +56,8 @@ describe("YMT", function () {
       expect(await YMT.totalSupply()).to.equal(initialSupply.add(amount));
     });
 
+    // 利用可能な量を超えるトークンを発行しようとした場合にリバートする
     it("should revert when trying to mint more than the available amount", async function () {
-      // 利用可能な量を超えるトークンを発行しようとした場合にリバートする
       const duration = year;
       await YMT.setMinter(accounts[0].address);
       const creationTime = await YMT.startEpochTime();
@@ -71,8 +72,8 @@ describe("YMT", function () {
       );
     });
 
+    // 複数回にわたって正確にトークンを発行する
     it("should accurately mint tokens multiple times", async function () {
-      // 複数回にわたって正確にトークンを発行する
       await YMT.setMinter(accounts[0].address);
       let totalSupply = await YMT.totalSupply();
       let balance = BigNumber.from(0);

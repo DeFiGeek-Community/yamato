@@ -29,28 +29,29 @@ describe("YMT", function () {
   });
 
   describe("YMT Setters Tests", function () {
+
+    // 非管理者がymtMinterを設定できないことを確認するテスト
     it("non-admin should not be able to set ymtMinter", async function () {
-      // 非管理者がymtMinterを設定できないことを確認するテスト
       await expect(
         YMT.connect(accounts[1]).setMinter(accounts[2].address)
       ).to.be.revertedWith("dev: admin only");
     });
 
+    // 非管理者がadminを設定できないことを確認するテスト
     it("non-admin should not be able to set admin", async function () {
-      // 非管理者がadminを設定できないことを確認するテスト
       await expect(
         YMT.connect(accounts[1]).setAdmin(accounts[2].address)
       ).to.be.revertedWith("dev: admin only");
     });
 
+    // 管理者がymtMinterを設定できることを確認するテスト
     it("admin should be able to set ymtMinter", async function () {
-      // 管理者がymtMinterを設定できることを確認するテスト
       await YMT.setMinter(accounts[1].address);
       expect(await YMT.ymtMinter()).to.equal(accounts[1].address);
     });
 
+    // 管理者がadminを設定できることを確認するテスト
     it("admin should be able to set admin", async function () {
-      // 管理者がadminを設定できることを確認するテスト
       await YMT.setAdmin(accounts[1].address);
       expect(await YMT.admin()).to.equal(accounts[1].address);
     });

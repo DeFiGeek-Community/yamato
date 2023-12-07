@@ -30,8 +30,9 @@ describe("YMT", function () {
   });
 
   describe("YMT Burn Function Tests", function () {
+
+    // 特定の量のトークンを正しくburnさせるテスト
     it("should correctly burn a specific amount of tokens", async function () {
-      // 特定の量のトークンを正しく燃焼させるテスト
       const balance: BigNumber = await YMT.balanceOf(accounts[0].address);
       const initialSupply: BigNumber = await YMT.totalSupply();
 
@@ -43,8 +44,8 @@ describe("YMT", function () {
       expect(await YMT.totalSupply()).to.equal(initialSupply.sub(31337));
     });
 
+    // 非管理者が自分のトークンをburnさせることを許可するテスト
     it("should allow non-admin to burn their tokens", async function () {
-      // 非管理者が自分のトークンを燃焼させることを許可するテスト
       const initialSupply: BigNumber = await YMT.totalSupply();
 
       await YMT.transfer(accounts[1].address, 1000000);
@@ -56,8 +57,8 @@ describe("YMT", function () {
       expect(await YMT.totalSupply()).to.equal(initialSupply.sub(31337));
     });
 
+    // トークン供給の全量を正しくburnさせるテスト
     it("should correctly burn the entire token supply", async function () {
-      // トークン供給の全量を正しく燃焼させるテスト
       const initialSupply: BigNumber = await YMT.totalSupply();
 
       await YMT.burn(initialSupply);
@@ -66,8 +67,8 @@ describe("YMT", function () {
       expect(await YMT.totalSupply()).to.equal(0);
     });
 
+    // 総供給量を超える量をburnさせようとした場合にリバートするテスト
     it("should revert if burning more than the total supply", async function () {
-      // 総供給量を超える量を燃焼させようとした場合にリバートするテスト
       const initialSupply: BigNumber = await YMT.totalSupply();
 
       await expect(
