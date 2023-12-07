@@ -1,30 +1,31 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { Contract } from "ethers";
 import {
   takeSnapshot,
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {
+  YMT,
+  YMT__factory,
+  VeYMT,
+  VeYMT__factory,
+} from "../../../../typechain";
 
 describe("veYMT", () => {
-  let veYMT: Contract;
-  let token: Contract;
   let accounts: SignerWithAddress[];
+  let veYMT: VeYMT;
+  let YMT: YMT;
   let snapshot: SnapshotRestorer;
 
   before(async function () {
-    snapshot = await takeSnapshot();
-    const YMT = await ethers.getContractFactory("YMT");
-    const VeYMT = await ethers.getContractFactory("veYMT");
-
-    token = await YMT.deploy();
-    await token.deployed();
-
-    veYMT = await VeYMT.deploy(token.address);
-    await veYMT.deployed();
-
     accounts = await ethers.getSigners();
+
+    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy();
+
+    veYMT = await (<VeYMT__factory>(
+      await ethers.getContractFactory("veYMT")
+    )).deploy(YMT.address);
   });
 
   beforeEach(async () => {
@@ -35,39 +36,42 @@ describe("veYMT", () => {
     await snapshot.restore();
   });
 
-  it("test_commit_admin_only", async function () {
+  // 管理者権限がない場合のapplyTransferOwnership関数テスト
+  it("Commit ownership transfer by non-admin", async function () {
     await expect(
       veYMT.connect(accounts[1]).commitTransferOwnership(accounts[1].address)
     ).to.be.revertedWith("admin only");
   });
 
-  it("test_apply_admin_only", async function () {
+  // 管理者権限がない場合のapplyTransferOwnership関数テスト
+  it("Apply ownership transfer by non-admin", async function () {
     await expect(
       veYMT.connect(accounts[1]).applyTransferOwnership()
     ).to.be.revertedWith("admin only");
   });
 
-  it("test_commit_transfer_ownership", async function () {
+  // commitTransferOwnershipテスト
+  it("Successful commitment of transfer ownership", async function () {
     await veYMT
-      .connect(accounts[0])
       .commitTransferOwnership(accounts[1].address);
 
     expect(await veYMT.admin()).to.equal(accounts[0].address);
     expect(await veYMT.futureAdmin()).to.equal(accounts[1].address);
   });
 
-  it("test_apply_transfer_ownership", async function () {
+  // commitTransferOwnershipテスト
+  it("Successful application of transfer ownership", async function () {
     await veYMT
-      .connect(accounts[0])
       .commitTransferOwnership(accounts[1].address);
-    await veYMT.connect(accounts[0]).applyTransferOwnership();
+    await veYMT.applyTransferOwnership();
 
     expect(await veYMT.admin()).to.equal(accounts[1].address);
   });
 
-  it("test_apply_without_commit", async function () {
+  // コミットなしでのapplyTransferOwnership関数テスト
+  it("Apply transfer ownership without commit", async function () {
     await expect(
-      veYMT.connect(accounts[0]).applyTransferOwnership()
+      veYMT.applyTransferOwnership()
     ).to.be.revertedWith("admin not set");
   });
 });

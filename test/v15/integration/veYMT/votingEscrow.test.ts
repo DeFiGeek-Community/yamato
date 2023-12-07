@@ -79,8 +79,8 @@ describe("veYMT", function () {
     await snapshot.restore();
   });
 
+  // AliceとBobの投票権の変化をテストし、期待通りの動作を確認する
   it("test voting powers", async function () {
-    // AliceとBobの投票権の変化をテストし、期待通りの動作を確認する
     const amount: BigNumber = ethers.utils.parseEther("1000");
     await YMT.connect(alice).transfer(bob.address, amount);
     const stages: { [key: string]: Stage | Stage[] } = {};
@@ -99,7 +99,7 @@ describe("veYMT", function () {
     // Move to timing which is good for testing - beginning of a UTC week
     await time.increase(timeToNextWeek);
 
-    await ethers.provider.send("evm_increaseTime", [hour]);
+    await time.increase(hour);
 
     stages["before_deposits"] = {
       blockNumber: await time.latestBlock(),
@@ -169,7 +169,7 @@ describe("veYMT", function () {
       });
     }
     // console.log("alice_in_0", stages["alice_in_0"]);
-    await ethers.provider.send("evm_increaseTime", [hour]);
+    await time.increase(hour);
 
     expect(await veYMT["balanceOf(address)"](alice.address)).to.equal(0);
     await veYMT.connect(alice).withdraw();
