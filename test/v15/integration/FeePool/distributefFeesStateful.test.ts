@@ -467,7 +467,8 @@ describe("FeePoolV2", function () {
 
   describe("test_deposit_withdraw_voting", function () {
     for (let i = 0; i < MAX_EXAMPLES; i++) {
-      it(`should distributes fee ${i}`, async () => {
+      it(`should distribute fee correctly in example ${i}`, async () => {
+        // 複数のアカウントに対して預金と引き出しのテストを実行し、FeeのETHが正しく分配されることを確認
         // Corresponds initializer initialize_new_lock and initialize_transfer_fees
         // https://eth-brownie.readthedocs.io/en/stable/tests-hypothesis-stateful.html#initializers
         // initialize_new_lock: This is equivalent to `rule_new_lock` to make it more likely we have at least 2 accounts locked at the start of the test run.

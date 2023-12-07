@@ -1,6 +1,5 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { Contract } from "ethers";
 import {
   time,
   takeSnapshot,
@@ -56,23 +55,27 @@ describe("FeePoolV2", () => {
       accounts = await ethers.getSigners();
     });
 
-    it("test_assumptions", async function () {
+    it("should verify initial assumptions", async function () {
+      // 基本的な初期値の確認テスト
       expect(await feePool.isKilled()).to.be.false;
       expect(await feePool.governance()).to.equal(alice.address);
     });
 
-    it("test_kill", async function () {
+    it("should kill the fee pool", async function () {
+      // FeePoolの Killテスト
+      await feePool.connect(alice).killMe();
+      expect(await feePool.isKilled()).to.be.true;
+    });
+  
+    it("should kill the fee pool multiple times", async function () {
+      // 複数回のFeePool Killテスト
+      await feePool.connect(alice).killMe();
       await feePool.connect(alice).killMe();
       expect(await feePool.isKilled()).to.be.true;
     });
 
-    it("test_multi_kill", async function () {
-      await feePool.connect(alice).killMe();
-      await feePool.connect(alice).killMe();
-      expect(await feePool.isKilled()).to.be.true;
-    });
-
-    it("test_killing_transfers_tokens", async function () {
+    it("should transfer tokens when killing the pool", async function () {
+      // FeePool kill時のトークン転送テスト
       await alice.sendTransaction({
         to: feePool.address,
         value: 31337,
@@ -86,7 +89,8 @@ describe("FeePoolV2", () => {
       expect(await ethers.provider.getBalance(alice.address)).to.equal(balance.add(31337));
     });
 
-    it("test_multi_kill_token_transfer", async function () {
+    it("should transfer tokens on multiple pool killings", async function () {
+      // 複数回のFeePool kill時のトークン転送テスト
       await bob.sendTransaction({
         to: feePool.address,
         value: 10000,
@@ -109,24 +113,28 @@ describe("FeePoolV2", () => {
     });
 
     for (let idx = 1; idx <= 2; idx++) {
-      it(`test_only_admin_for_account_index_${idx}`, async function () {
+      // 一般ユーザーによるFeePool Killテスト
+      it(`should only allow admin to kill the pool for account index ${idx}`, async function () {
         await expect(feePool.connect(accounts[idx]).killMe()).to.be.reverted;
       });
 
-      it(`test_cannot_claim_after_killed_for_account_index_${idx}`, async function () {
+      it(`should not allow claims after the pool is killed for account index ${idx}`, async function () {
+        // FeePool kill後のclaimテスト
         await feePool.connect(alice).killMe();
         await expect(feePool.connect(accounts[idx])["claim()"]()).to.be
           .reverted;
       });
 
-      it(`test_cannot_claim_for_after_killed_for_account_index_${idx}`, async function () {
+      it(`should not allow claims for specific user after the pool is killed for account index ${idx}`, async function () {
+        // FeePool kill後の特定ユーザーに対するclaimテスト
         await feePool.connect(alice).killMe();
         await expect(
           feePool.connect(accounts[idx])["claim(address)"](alice.address)
         ).to.be.reverted;
       });
 
-      it(`test_cannot_claim_many_after_killed_for_account_index_${idx}`, async function () {
+      it(`should not allow multiple claims after the pool is killed for account index ${idx}`, async function () {
+        // FeePool kill後の複数ユーザーに対するclaimテスト
         await feePool.connect(alice).killMe();
         await expect(
           feePool

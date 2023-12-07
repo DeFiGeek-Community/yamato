@@ -53,7 +53,8 @@ describe("FeePoolV2", function () {
     await snapshot.restore();
   });
 
-  it("test checkpoint total supply", async function () {
+  it("should accurately checkpoint the total supply", async function () {
+    // 総供給量のチェックポイントを正確に行うテスト
     const stAmount = generateUniqueRandomNumbers(MAX_EXAMPLES, 1e4, 100 * 1e4);
     const stLocktime = generateUniqueRandomNumbers(MAX_EXAMPLES, 1, 52);
     const stSleep = generateUniqueRandomNumbers(MAX_EXAMPLES, 1, 30);

@@ -24,7 +24,7 @@ const week = Constants.week;
 const ten_to_the_18 = Constants.ten_to_the_18;
 const ten_to_the_19 = Constants.ten_to_the_19;
 
-describe.only("FeePoolV2", () => {
+describe("FeePoolV2", () => {
   let alice, bob, charlie: SignerWithAddress;
 
   let feePool: FeePoolV2;
@@ -57,7 +57,8 @@ describe.only("FeePoolV2", () => {
   });
 
   describe("test_fee_distribution", () => {
-    it("test_deposited_after", async function () {
+    it("should correctly claim after deposit", async function () {
+      // デポジット後のclaimテスト
       const amount = ethers.utils.parseEther("1000");
       await YMT.connect(alice).approve(veYMT.address, amount.mul(10));
 
@@ -87,7 +88,8 @@ describe.only("FeePoolV2", () => {
       expect(balanceAfter.sub(balanceBefore).add(await gasCostOf(tx))).to.be.eq(0);
     });
 
-    it("test_deposited_during", async function () {
+    it("should correctly claim during deposit", async function () {
+      // デポジット中のclaimテスト
       const amount = ethers.utils.parseEther("1000");
       await YMT.connect(alice).approve(veYMT.address, amount.mul(10));
 
@@ -128,7 +130,8 @@ describe.only("FeePoolV2", () => {
       );
     });
 
-    it("test_deposited_before", async function () {
+    it("should correctly claim before deposit", async function () {
+      // デポジット前のclaimテスト
       const [alice, bob] = await ethers.getSigners();
       const amount = ethers.utils.parseEther("1000");
 
@@ -163,7 +166,8 @@ describe.only("FeePoolV2", () => {
       ).to.be.gte(10 ** 18);
     });
 
-    it("test_deposited_twice", async function () {
+    it("should correctly claim on double deposit", async function () {
+      // 二重デポジットのclaimテスト
       const amount = ethers.utils.parseEther("1000");
 
       await YMT.approve(veYMT.address, amount.mul(10));
@@ -214,7 +218,8 @@ describe.only("FeePoolV2", () => {
       ).to.be.lt(10);
     });
 
-    it("test_deposited_parallel", async function () {
+    it("should correctly claim on parallel deposit", async function () {
+      // 並行デポジットのclaimテスト
       const amount = ethers.utils.parseEther("1000");
 
       await YMT.connect(alice).approve(veYMT.address, amount.mul(10));

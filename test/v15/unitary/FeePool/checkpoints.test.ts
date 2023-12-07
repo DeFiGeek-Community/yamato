@@ -23,7 +23,7 @@ const year = Constants.year;
 const MAX_UINT256 = Constants.MAX_UINT256;
 
 describe("FeePoolV2", () => {
-  let alice, bob, charlie: SignerWithAddress;
+  let alice: SignerWithAddress;
 
   let feePool: FeePoolV2;
   let veYMT: VeYMT;
@@ -31,7 +31,7 @@ describe("FeePoolV2", () => {
   let snapshot: SnapshotRestorer;
 
   before(async function () {
-    [alice, bob, charlie] = await ethers.getSigners();
+    [alice] = await ethers.getSigners();
 
     YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy();
 
@@ -66,7 +66,8 @@ describe("FeePoolV2", () => {
         (await time.latest()) + week * 52
       );
     });
-    it("test_checkpoint_total_supply", async function () {
+    it("should correctly checkpoint total supply", async function () {
+      // 合計供給量のチェックポイントをテストする
       const startTime = await feePool.timeCursor();
       const weekEpoch =
         Math.floor(((await time.latest()) + week) / week) * week;
@@ -83,7 +84,8 @@ describe("FeePoolV2", () => {
       );
     });
 
-    it("test_advance_time_cursor", async function () {
+    it("should advance time cursor correctly", async function () {
+      // 時間カーソルの進行をテストする
       const startTime = (await feePool.timeCursor()).toNumber();
       await time.increase(year);
       await feePool.checkpointTotalSupply();
@@ -100,7 +102,8 @@ describe("FeePoolV2", () => {
       expect(await feePool.veSupply(startTime + week * 40)).to.equal(0);
     });
 
-    it("test_claim_checkpoints_total_supply", async function () {
+    it("should claim and checkpoint total supply correctly", async function () {
+      // 合計供給量のチェックポイントと請求をテストする
       const start_time = (await feePool.timeCursor()).toNumber();
 
       await feePool.connect(alice)["claim()"]();
@@ -110,7 +113,8 @@ describe("FeePoolV2", () => {
       );
     });
 
-    it("test_toggle_allow_checkpoint", async function () {
+    it("should toggle allow checkpoint correctly", async function () {
+      // チェックポイント許可の切り替えをテストする
       const lastTokenTime = (await feePool.lastTokenTime()).toNumber();
 
       await time.increase(week);

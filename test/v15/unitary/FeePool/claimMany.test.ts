@@ -69,7 +69,8 @@ describe("FeePoolV2", () => {
   });
 
   describe("test_claim_many", () => {
-    it("test_claim_many", async function () {
+    it("should correctly claim for multiple accounts", async function () {
+      // 複数アカウントからclaimを行うテスト
       await feePool.checkpointToken();
       await time.increase(week);
       await feePool.checkpointToken();
@@ -102,7 +103,9 @@ describe("FeePoolV2", () => {
       expect((await ethers.provider.getBalance(charlie.address)).add(gas[2])).to.be.eq(balances[2]);
 
     });
-    it("test_claim_many_same_account", async function () {
+
+    it("should correctly claim multiple times for the same account", async function () {
+      // 同じアカウントから複数回のclaimを行うテスト
       await feePool.checkpointToken();
       await time.increase(week);
       await feePool.checkpointToken();
