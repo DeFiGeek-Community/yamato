@@ -1,37 +1,40 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { Contract } from "ethers";
 import {
   time,
   takeSnapshot,
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {
+  YMT,
+  YMT__factory,
+  VeYMT,
+  VeYMT__factory,
+} from "../../../../typechain";
 import Constants from "../../Constants";
 
 const week = Constants.week;
+const ten_to_the_18 = Constants.ten_to_the_18;
 
-describe("Voting Escrow tests", function () {
+describe("veYMT", function () {
   let accounts: SignerWithAddress[];
-  let veYMT: Contract;
-  let token: Contract;
+  let veYMT: VeYMT;
+  let YMT: YMT;
   let snapshot: SnapshotRestorer;
 
   before(async () => {
     accounts = await ethers.getSigners();
 
-    const YMT = await ethers.getContractFactory("YMT");
-    const VeYMT = await ethers.getContractFactory("veYMT");
+    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy();
 
-    token = await YMT.deploy();
-    await token.deployed();
+    veYMT = await (<VeYMT__factory>(
+      await ethers.getContractFactory("veYMT")
+    )).deploy(YMT.address);
 
-    veYMT = await VeYMT.deploy(token.address);
-    await veYMT.deployed();
-
-    await token
+    await YMT
       .connect(accounts[0])
-      .approve(veYMT.address, ethers.utils.parseEther("1"));
+      .approve(veYMT.address, ten_to_the_18);
   });
 
   beforeEach(async () => {
@@ -42,6 +45,7 @@ describe("Voting Escrow tests", function () {
     await snapshot.restore();
   });
 
+  // 様々な期間でロックを作成し、バランスがゼロになることを確認するテスト
   for (
     let st_initial = week * 2;
     st_initial <= week * 52;
@@ -53,11 +57,11 @@ describe("Voting Escrow tests", function () {
       const expectedUnlock = (await time.latest()) + st_initial;
       await veYMT
         .connect(accounts[0])
-        .createLock(ethers.utils.parseEther("1"), expectedUnlock);
+        .createLock(ten_to_the_18, expectedUnlock);
 
       const actualUnlock = (await veYMT.locked(accounts[0].address))[1];
 
-      await time.increase(actualUnlock - (await time.latest()) - 5);
+      await time.increase(Number(actualUnlock) - (await time.latest()) - 5);
 
       expect(
         await veYMT["balanceOf(address)"](accounts[0].address)
@@ -71,6 +75,7 @@ describe("Voting Escrow tests", function () {
     });
   }
 
+  // 様々な期間でロックを延長し、バランスがゼロになることを確認するテスト
   for (
     let st_initial = week * 2;
     st_initial <= week * 52;
@@ -83,7 +88,7 @@ describe("Voting Escrow tests", function () {
         await veYMT
           .connect(accounts[0])
           .createLock(
-            ethers.utils.parseEther("1"),
+            ten_to_the_18,
             (await time.latest()) + st_initial
           );
 
@@ -98,7 +103,7 @@ describe("Voting Escrow tests", function () {
           await veYMT.locked(accounts[0].address)
         )[1];
 
-        await time.increase(extendedActualUnlock - (await time.latest()) - 5);
+        await time.increase(Number(extendedActualUnlock) - (await time.latest()) - 5);
 
         expect(
           await veYMT["balanceOf(address)"](accounts[0].address)

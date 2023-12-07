@@ -1,12 +1,18 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { BigNumber, Contract } from "ethers";
+import { BigNumber } from "ethers";
 import {
   time,
   takeSnapshot,
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {
+  MockToken,
+  MockToken__factory,
+  VeYMT,
+  VeYMT__factory,
+} from "../../../../typechain";
 import Constants from "../../Constants";
 
 const ACCOUNT_NUM = 10;
@@ -15,36 +21,33 @@ const STATEFUL_STEP_COUNT = 20; // ruleの実行回数
 const YEAR = Constants.YEAR;
 const WEEK = Constants.WEEK;
 const NAX_UINT256 = Constants.MAX_UINT256;
+const zero = Constants.zero;
 const ten_to_the_40 = BigNumber.from(
   "10000000000000000000000000000000000000000"
 );
 
 describe("veYMT", function () {
   let accounts: SignerWithAddress[];
-  let veYMT: Contract;
-  let token: Contract;
+  let veYMT: VeYMT;
+  let token: MockToken;
 
   let stAccountN: number;
   let stAccount: SignerWithAddress;
-  let stValue: BigNumber = BigNumber.from("0");
+  let stValue: BigNumber = zero;
   let stLockDuration: BigNumber;
   let votingBalances: { [key: string]: BigNumber }[];
   let unlockTime: BigNumber;
 
   let snapshot: SnapshotRestorer;
 
-  beforeEach(async () => {
-    snapshot = await takeSnapshot();
+  before(async () => {
     accounts = (await ethers.getSigners()).slice(0, ACCOUNT_NUM);
 
-    const Token = await ethers.getContractFactory("MockToken");
-    const VeYMT = await ethers.getContractFactory("veYMT");
+    token = await (<MockToken__factory>await ethers.getContractFactory("MockToken")).deploy("Test Token", "TST", 18);
 
-    token = await Token.deploy("Test Token", "TST", 18);
-    await token.deployed();
-
-    veYMT = await VeYMT.deploy(token.address);
-    await veYMT.deployed();
+    veYMT = await (<VeYMT__factory>(
+      await ethers.getContractFactory("veYMT")
+    )).deploy(token.address);
 
     //init
     for (let i = 0; i < ACCOUNT_NUM; i++) {
@@ -55,12 +58,20 @@ describe("veYMT", function () {
         .connect(accounts[i])
         .approve(veYMT.address, NAX_UINT256);
     }
+  });
+
+  beforeEach(async () => {
+    snapshot = await takeSnapshot();
 
     //setup
     votingBalances = new Array(ACCOUNT_NUM).fill({
-      value: BigNumber.from("0"),
-      unlockTime: BigNumber.from("0"),
+      value: zero,
+      unlockTime: zero,
     });
+  });
+
+  afterEach(async () => {
+    await snapshot.restore();
   });
 
   //--------------------------------------------- functions -----------------------------------------------------------//
@@ -225,7 +236,7 @@ describe("veYMT", function () {
     } else {
       // console.log("--success, account:", stAccountN);
       await veYMT.connect(stAccount).withdraw();
-      votingBalances[stAccountN]["value"] = BigNumber.from("0");
+      votingBalances[stAccountN]["value"] = zero;
     }
   }
 
@@ -265,7 +276,7 @@ describe("veYMT", function () {
     }
 
     // console.log("invariant_escrow_current_balances");
-    let total_supply = BigNumber.from("0");
+    let total_supply = zero;
     let timestamp = BigNumber.from(await time.latest());
 
     for (let i = 0; i < ACCOUNT_NUM; i++) {
@@ -283,7 +294,7 @@ describe("veYMT", function () {
     expect(await veYMT["totalSupply()"]()).to.equal(total_supply);
 
     // console.log("invariant_historic_balances");
-    total_supply = BigNumber.from("0");
+    total_supply = zero;
     let blocknumber = (await time.latestBlock()) - 4;
     // console.log(blocknumber);
 
@@ -306,9 +317,9 @@ describe("veYMT", function () {
   ];
 
   describe("test_deposit_withdraw_voting", function () {
-    //set arbitral number of repeats
+    // 指定された回数だけテストを繰り返す
     for (let x = 0; x < MAX_EXAMPLES; x++) {
-      it(`Try ${x}`, async () => {
+      it(`should perform test iteration ${x}`, async () => {
         let steps = Math.floor(Math.random() * (STATEFUL_STEP_COUNT - 1)) + 1;
         for (let i = 0; i < steps; i++) {
           let n = (await rdmValue(func.length)).toNumber();
@@ -317,9 +328,5 @@ describe("veYMT", function () {
         }
       });
     }
-  });
-
-  afterEach(async () => {
-    await snapshot.restore();
   });
 });

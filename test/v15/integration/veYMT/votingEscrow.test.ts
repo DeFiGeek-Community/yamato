@@ -1,12 +1,18 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { BigNumber, Contract } from "ethers";
+import { BigNumber } from "ethers";
 import {
   time,
   takeSnapshot,
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {
+  YMT,
+  YMT__factory,
+  VeYMT,
+  VeYMT__factory,
+} from "../../../../typechain";
 import Constants from "../../Constants";
 
 type Stage = {
@@ -22,7 +28,7 @@ const MAXTIME = Constants.year * 4; // 126144000
 const SCALE = 1e20;
 const TOL = (120 / week) * SCALE;
 
-describe("Voting Powers Test", function () {
+describe("veYMT", function () {
   // Test voting power in the following scenario.
   // Alice:
   // ~~~~~~~
@@ -49,24 +55,20 @@ describe("Voting Powers Test", function () {
 
   // After the test is done, check all over again with balanceOfAt / totalSupplyAt
   let alice, bob: SignerWithAddress;
-  let veYMT: Contract;
-  let token: Contract;
+  let veYMT: VeYMT;
+  let YMT: YMT;
   let t0: number;
   let wTotal, wAlice, wBob: BigNumber;
   let snapshot: SnapshotRestorer;
 
   before(async function () {
-    snapshot = await takeSnapshot();
-    const YMT = await ethers.getContractFactory("YMT");
-    const VeYMT = await ethers.getContractFactory("veYMT");
-
-    token = await YMT.deploy();
-    await token.deployed();
-
-    veYMT = await VeYMT.deploy(token.address);
-    await veYMT.deployed();
-
     [alice, bob] = await ethers.getSigners();
+
+    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy();
+
+    veYMT = await (<VeYMT__factory>(
+      await ethers.getContractFactory("veYMT")
+    )).deploy(YMT.address);
   });
 
   beforeEach(async () => {
@@ -78,12 +80,13 @@ describe("Voting Powers Test", function () {
   });
 
   it("test voting powers", async function () {
+    // AliceとBobの投票権の変化をテストし、期待通りの動作を確認する
     const amount: BigNumber = ethers.utils.parseEther("1000");
-    await token.connect(alice).transfer(bob.address, amount);
+    await YMT.connect(alice).transfer(bob.address, amount);
     const stages: { [key: string]: Stage | Stage[] } = {};
 
-    await token.connect(alice).approve(veYMT.address, amount.mul(10));
-    await token.connect(bob).approve(veYMT.address, amount.mul(10));
+    await YMT.connect(alice).approve(veYMT.address, amount.mul(10));
+    await YMT.connect(bob).approve(veYMT.address, amount.mul(10));
 
     expect(await veYMT["totalSupply()"]()).to.equal(0);
     expect(await veYMT["balanceOf(address)"](alice.address)).to.equal(0);

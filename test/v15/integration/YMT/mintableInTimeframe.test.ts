@@ -25,7 +25,7 @@ const YEAR_1_SUPPLY = INITIAL_RATE.mul(ten_to_the_18)
   .mul(YEAR);
 const INITIAL_SUPPLY = BigNumber.from(450000000);
 
-describe.only("YMT", function () {
+describe("YMT", function () {
   let accounts: SignerWithAddress[];
   let YMT: YMT;
   let snapshot: SnapshotRestorer;
