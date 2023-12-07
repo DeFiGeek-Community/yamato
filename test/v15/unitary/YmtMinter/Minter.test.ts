@@ -82,12 +82,10 @@ describe("YmtMinter", function () {
   let priorityRegistry: PriorityRegistry;
   let PRICE: BigNumber;
   let accounts: SignerWithAddress[];
-  let ownerAddress: string;
   let snapshot: SnapshotRestorer;
 
   before(async function () {
     accounts = await ethers.getSigners();
-    ownerAddress = await accounts[0].getAddress();
 
     mockFeePool = await getFakeProxy<FeePool>(contractVersion["FeePool"]);
     mockFeed = await getFakeProxy<PriceFeedV3>(contractVersion["PriceFeed"]);
@@ -205,15 +203,6 @@ describe("YmtMinter", function () {
         .deposit({ value: ethers.utils.parseEther("100") });
     }
     await yamato.borrow(ethers.utils.parseEther("100000"));
-  
-    // for (const account of accounts) {
-    //   mockLpToken.transfer(account.address, ten_to_the_18);
-    // }
-    // for (let i = 1; i <= 3; i++) {
-    //   for (const gauge of threeScoreRegistry) {
-    //     await mockLpToken.connect(accounts[i]).approve(gauge, ten_to_the_18);
-    //   }
-    // }
   });
 
   beforeEach(async () => {
@@ -225,37 +214,34 @@ describe("YmtMinter", function () {
   });
 
   describe("YmtMinter Behavior", function () {
-    // Test basic mint functionality
-    it("test_mint", async () => {
+
+    // 借入を行い、時間を進めた後にmintを実行
+    it("Basic mint functionality test", async () => {
       await yamato
         .connect(accounts[1])
         .borrow(ten_to_the_17);
 
       await time.increase(month);
 
-      await ymtMinter.connect(accounts[1]).mint(scoreRegistry.address); //gauge_address, msg.sender, mint
+      await ymtMinter.connect(accounts[1]).mint(scoreRegistry.address); //scoreRegistry_address, msg.sender, mint
       let expected = await scoreRegistry.integrateFraction(accounts[1].address);
 
-      expect(expected.gt(BigNumber.from("0"))).to.be.equal(true);
+      expect(expected.gt(zero)).to.be.equal(true);
       expect(await YMT.balanceOf(accounts[1].address)).to.equal(expected);
       expect(
         await ymtMinter.minted(accounts[1].address, scoreRegistry.address)
       ).to.equal(expected);
     });
 
-    // Test minting immediately after setup
-    it("test_mint_immediate", async () => {
+    // 借入を行い、時間を進めた後にmintを実行
+    it("Mint immediately after setup", async () => {
       await yamato
         .connect(accounts[1])
         .borrow(ten_to_the_18);
 
-      let t0 = BigNumber.from(
-        (await ethers.provider.getBlock("latest")).timestamp
-      );
+      let t0 = BigNumber.from(await time.latest());
       let moment = t0.add(WEEK).div(WEEK).mul(WEEK).add("5");
-      await ethers.provider.send("evm_setNextBlockTimestamp", [
-        moment.toNumber(),
-      ]);
+      await time.setNextBlockTimestamp(moment);
 
       //mint
       expect(
@@ -270,8 +256,8 @@ describe("YmtMinter", function () {
       ).to.equal(balance);
     });
 
-    // Test multiple mint operations on the same gauge
-    it("test_mint_multiple_same_gauge", async () => {
+    // 同じscoreRegistryでの複数のmint操作をテスト
+    it("Multiple mint operations on the same scoreRegistry", async () => {
       await yamato
         .connect(accounts[1])
         .borrow(ten_to_the_18);
@@ -290,26 +276,8 @@ describe("YmtMinter", function () {
       ).to.equal(expected); //tracks fine
     });
 
-    // Test minting across multiple gauges
-    it("test_mint_multiple_gauges", async () => {
-      //setup
-      await yamato
-        .connect(accounts[1])
-        .borrow(ten_to_the_17);
-
-      await time.increase(month);
-
-
-      await ymtMinter.connect(accounts[1]).mint(scoreRegistry.address);
-
-      let minted = await ymtMinter.minted(accounts[1].address, scoreRegistry.address);
-      expect(minted).to.equal(
-        await scoreRegistry.integrateFraction(accounts[1].address)
-      );
-    });
-
-    // Test minting after withdrawing
-    it("test_mint_after_withdraw", async () => {
+    // 引き出し後のmintをテスト
+    it("Test minting after withdrawing", async () => {
       await yamato
         .connect(accounts[1])
         .borrow(ten_to_the_18);
@@ -321,12 +289,12 @@ describe("YmtMinter", function () {
       await ymtMinter.connect(accounts[1]).mint(scoreRegistry.address);
 
       expect(
-        (await YMT.balanceOf(accounts[1].address)).gt(BigNumber.from("0"))
+        (await YMT.balanceOf(accounts[1].address)).gt(zero)
       ).to.equal(true);
     });
 
-    // Test multiple mints after withdrawing
-    it("test_mint_multiple_after_withdraw", async () => {
+    // 引き出し後の複数回のmintをテスト
+    it("Test multiple mints after withdrawing", async () => {
       await yamato
         .connect(accounts[1])
         .borrow(ten_to_the_18);
@@ -345,8 +313,8 @@ describe("YmtMinter", function () {
       expect(await YMT.balanceOf(accounts[1].address)).to.equal(balance);
     });
 
-    // Test mint without any deposit
-    it("test_no_deposit", async () => {
+    // 預金なしでのmintをテスト
+    it("Test mint without any deposit", async () => {
       await ymtMinter.connect(accounts[1]).mint(scoreRegistry.address);
       expect(await YMT.balanceOf(accounts[1].address)).to.equal(zero);
       expect(
@@ -354,78 +322,38 @@ describe("YmtMinter", function () {
       ).to.equal(zero);
     });
 
-    // Test minting with an invalid gauge address
-    it("test_mint_not_a_gauge", async () => {
+    // 無効なscoreRegistryアドレスでのmintをテスト
+    it("Test minting with an invalid scoreRegistry address", async () => {
       await expect(ymtMinter.mint(accounts[1].address)).to.revertedWith(
         "dev: score is not added"
       );
     });
 
-    // Test minting before inflation begins
-    it("test_mint_before_inflation_begins", async function () {
+    // インフレ開始前のmintをテスト
+    it("Test minting before inflation begins", async () => {
       await yamato
         .connect(accounts[1])
         .borrow(ten_to_the_18);
       const startEpochTime = await YMT.startEpochTime();
       const currentTime = await time.latest();
-
       const timeToSleep = startEpochTime.sub(currentTime).sub(5);
-      await ethers.provider.send("evm_increaseTime", [timeToSleep.toNumber()]);
 
+      // 時間を戻す
+      await ethers.provider.send("evm_increaseTime", [timeToSleep.toNumber()]);
+      await ethers.provider.send("evm_mine", []);
+      
       await ymtMinter.connect(accounts[1]).mint(scoreRegistry.address);
 
       expect(await YMT.balanceOf(accounts[1].address)).to.equal(
-        BigNumber.from(0)
+        zero
       );
       expect(
         await ymtMinter.minted(accounts[1].address, scoreRegistry.address)
-      ).to.equal(BigNumber.from(0));
+      ).to.equal(zero);
     });
 
-    // Test mintMany function with multiple gauges
-    // it("test_mintMany_function_multiple_gauges", async () => {
-    //   //setup
-    //   await scoreRegistry
-    //     .connect(accounts[1])
-    //     .deposit(ten_to_the_17, accounts[1].address, false);
-    //   await gauges[1]
-    //     .connect(accounts[1])
-    //     .deposit(ten_to_the_17, accounts[1].address, false);
-    //   await gauges[2]
-    //     .connect(accounts[1])
-    //     .deposit(ten_to_the_17, accounts[1].address, false);
-
-    //   await time.increase(month);
-
-    //   let addresses = [
-    //     scoreRegistry.address,
-    //     threeScoreRegistry[1],
-    //     threeScoreRegistry[2],
-    //     ZERO_ADDRESS,
-    //     ZERO_ADDRESS,
-    //     ZERO_ADDRESS,
-    //     ZERO_ADDRESS,
-    //     ZERO_ADDRESS,
-    //   ];
-    //   await ymtMinter.connect(accounts[1]).mintMany(addresses);
-
-    //   //check
-    //   let total_minted = BigNumber.from("0");
-
-    //   for (let i = 0; i < 3; i++) {
-    //     let gauge = gauges[i];
-    //     let minted = await ymtMinter.minted(accounts[1].address, gauge.address);
-    //     expect(minted).to.equal(
-    //       await gauge.integrateFraction(accounts[1].address)
-    //     );
-    //     total_minted = total_minted.add(minted);
-    //   }
-
-    //   expect(await YMT.balanceOf(accounts[1].address)).to.equal(total_minted);
-    // });
-
-    // Test toggling of the mint approval function
-    it("test_toggleApproveMint_function", async () => {
+    // mint承認関数のトグルをテスト
+    it("Test toggling of the mint approval function", async () => {
       await ymtMinter
         .connect(accounts[1])
         .toggleApproveMint(accounts[2].address);
@@ -447,8 +375,8 @@ describe("YmtMinter", function () {
       ).to.equal(false);
     });
 
-    // Test minting on behalf of another user
-    it("test_mintFor_function", async () => {
+    // 他のユーザーのためにmintを行う関数をテスト
+    it("Test minting on behalf of another user", async () => {
       await yamato
         .connect(accounts[1])
         .borrow(ten_to_the_17);
@@ -470,15 +398,15 @@ describe("YmtMinter", function () {
         .mintFor(scoreRegistry.address, accounts[1].address);
 
       let expected = await scoreRegistry.integrateFraction(accounts[1].address);
-      expect(expected.gt(BigNumber.from("0"))).to.be.equal(true);
+      expect(expected.gt(zero)).to.be.equal(true);
       expect(await YMT.balanceOf(accounts[1].address)).to.equal(expected);
       expect(
         await ymtMinter.minted(accounts[1].address, scoreRegistry.address)
       ).to.equal(expected);
     });
 
-    // Test mintFor function when not approved
-    it("test_mintForFail_function", async () => {
+    // 承認なしでのmintFor関数をテスト
+    it("Test mintFor function when not approved", async () => {
       await yamato
         .connect(accounts[1])
         .borrow(ten_to_the_17);
