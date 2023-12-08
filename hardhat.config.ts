@@ -153,7 +153,8 @@ module.exports = {
   },
   paths: {
     // tests: "./test/unit",
-    tests: "./test/v15",
+    // tests: "./test/v15",
+    tests: "./test",
   },
   defender: {
     apiKey: process.env.DEFENDER_TEAM_API_KEY,
