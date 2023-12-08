@@ -21,7 +21,7 @@ import {
   YamatoSweeper,
   PriceFeedV3,
   CurrencyOS__factory,
-  FeePool__factory,
+  FeePoolV2__factory,
 } from "../../typechain";
 import { getFakeProxy, getProxy } from "../../src/testUtil";
 import { contractVersion } from "../param/version";

@@ -31,7 +31,7 @@ import {
   YamatoRedeemer__factory,
   YamatoSweeper__factory,
   YamatoDummy__factory,
-  FeePool__factory,
+  FeePoolV2__factory,
   Pool__factory,
   YMT__factory,
   VeYMT__factory,
@@ -156,9 +156,10 @@ describe("story Events", function () {
         [YMT.address, ScoreWeightController.address]
       );
 
-      ScoreRegistry = await getProxy<ScoreRegistry, ScoreRegistry__factory>(
+      ScoreRegistry = await getLinkedProxy<ScoreRegistry, ScoreRegistry__factory>(
         contractVersion["ScoreRegistry"],
-        [YmtMinter.address, yamato.address]
+        [YmtMinter.address, yamato.address],
+        ["PledgeLib"]
       );
 
       await (

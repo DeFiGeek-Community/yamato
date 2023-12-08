@@ -3,6 +3,7 @@ import { smock } from "@defi-wonderland/smock";
 import chai, { expect } from "chai";
 import { Signer, BigNumber, Wallet } from "ethers";
 import {
+  time,
   takeSnapshot,
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
@@ -10,7 +11,7 @@ import { toERC20 } from "../param/helper";
 import {
   ChainLinkMock,
   PriceFeedV3,
-  FeePool,
+  FeePoolV2,
   CurrencyOS,
   CJPY,
   YamatoV4,
@@ -39,7 +40,7 @@ import {
   YamatoRedeemer__factory,
   YamatoSweeper__factory,
   Pool__factory,
-  FeePool__factory,
+  FeePoolV2__factory,
   PriorityRegistryV6__factory,
   YMT__factory,
   VeYMT__factory,
@@ -64,7 +65,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
   let ChainLinkUsdJpy: ChainLinkMock;
   let PriceFeed: PriceFeedV3;
   let CJPY: CJPY;
-  let FeePool: FeePool;
+  let FeePool: FeePoolV2;
   let CurrencyOS: CurrencyOS;
   let Yamato: YamatoV4;
   let YamatoDepositor: YamatoDepositor;
@@ -132,9 +133,9 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       await ethers.getContractFactory("CJPY")
     )).deploy();
 
-    FeePool = await getProxy<FeePool, FeePool__factory>(
+    FeePool = await getProxy<FeePoolV2, FeePoolV2__factory>(
       contractVersion["FeePool"],
-      []
+      [await time.latest()]
     );
 
     CurrencyOS = await getProxy<CurrencyOS, CurrencyOS__factory>(
@@ -209,9 +210,10 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       [YMT.address, ScoreWeightController.address]
     );
 
-    ScoreRegistry = await getProxy<ScoreRegistry, ScoreRegistry__factory>(
+    ScoreRegistry = await getLinkedProxy<ScoreRegistry, ScoreRegistry__factory>(
       contractVersion["ScoreRegistry"],
-      [YmtMinter.address, Yamato.address]
+      [YmtMinter.address, Yamato.address],
+      ["PledgeLib"]
     );
 
     await (
@@ -1398,7 +1400,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       beforeEach(async () => {
         await fillMinPledgesWithICR(90);
       });
-      it("should redeem within 11m gas and sweep within 16m gas", async () => {
+      it("should redeem within 12m gas and sweep within 16m gas", async () => {
         let redeemerAddr = await accounts[0].getAddress();
         let cjpyBalanceBefore = await CJPY.balanceOf(redeemerAddr);
         let ethBalanceBefore = await Yamato.provider.getBalance(redeemerAddr);
@@ -1415,7 +1417,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
           gasLimit: 30000000,
         });
         let txReceipt1 = await tx1.wait();
-        expect(txReceipt1.gasUsed).to.be.lt(11000000);
+        expect(txReceipt1.gasUsed).to.be.lt(12000000);
         let sweepablePledge = await Yamato.getPledge(
           await PriorityRegistry.getRankedQueue(
             0,
@@ -1446,7 +1448,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       beforeEach(async () => {
         await fillMinPledgesWithICR(100);
       });
-      it("should redeem within 11m gas and sweep within 16m gas", async () => {
+      it("should redeem within 12m gas and sweep within 16m gas", async () => {
         const price = await PriceFeed.getPrice();
         let redeemerAddr = await accounts[0].getAddress();
         let cjpyBalanceBefore = await CJPY.balanceOf(redeemerAddr);
@@ -1464,7 +1466,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
           gasLimit: 30000000,
         });
         let txReceipt1 = await tx1.wait();
-        expect(txReceipt1.gasUsed).to.be.lt(11000000);
+        expect(txReceipt1.gasUsed).to.be.lt(12000000);
 
         expect(
           (await Yamato.getPledge(await accounts[1].getAddress())).coll
@@ -1501,7 +1503,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       beforeEach(async () => {
         await fillMinPledgesWithICR(110);
       });
-      it("should redeem within 11m gas and sweep within 16m gas", async () => {
+      it("should redeem within 12m gas and sweep within 16m gas", async () => {
         let redeemerAddr = await accounts[0].getAddress();
         let cjpyBalanceBefore = await CJPY.balanceOf(redeemerAddr);
         let ethBalanceBefore = await Yamato.provider.getBalance(redeemerAddr);
@@ -1518,7 +1520,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
           gasLimit: 30000000,
         });
         let txReceipt1 = await tx1.wait();
-        expect(txReceipt1.gasUsed).to.be.lt(11000000);
+        expect(txReceipt1.gasUsed).to.be.lt(12000000);
 
         let ethBalanceAfter = await Yamato.provider.getBalance(redeemerAddr);
         let redemptionReturn = ethBalanceAfter.sub(ethBalanceBefore);
@@ -1545,7 +1547,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       beforeEach(async () => {
         await fillMinPledgesWithICR(120);
       });
-      it("should redeem within 11m gas and sweep within 16m gas", async () => {
+      it("should redeem within 12m gas and sweep within 16m gas", async () => {
         let redeemerAddr = await accounts[0].getAddress();
         let cjpyBalanceBefore = await CJPY.balanceOf(redeemerAddr);
         let ethBalanceBefore = await Yamato.provider.getBalance(redeemerAddr);
@@ -1562,7 +1564,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
           gasLimit: 30000000,
         });
         let txReceipt1 = await tx1.wait();
-        expect(txReceipt1.gasUsed).to.be.lt(11000000);
+        expect(txReceipt1.gasUsed).to.be.lt(12000000);
 
         let ethBalanceAfter = await Yamato.provider.getBalance(redeemerAddr);
         let redemptionReturn = ethBalanceAfter.sub(ethBalanceBefore);

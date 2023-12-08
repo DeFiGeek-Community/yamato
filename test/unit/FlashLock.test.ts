@@ -3,6 +3,7 @@ import { smock } from "@defi-wonderland/smock";
 import chai, { expect } from "chai";
 import { Signer, BigNumber } from "ethers";
 import {
+  time,
   takeSnapshot,
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
@@ -10,7 +11,7 @@ import { toERC20 } from "../param/helper";
 import {
   ChainLinkMock,
   PriceFeedV3,
-  FeePool,
+  FeePoolV2,
   CurrencyOS,
   CJPY,
   YamatoV4,
@@ -30,7 +31,7 @@ import {
   SameBlockClient,
   ChainLinkMock__factory,
   PriceFeedV3__factory,
-  FeePool__factory,
+  FeePoolV2__factory,
   CurrencyOS__factory,
   CJPY__factory,
   YamatoV4__factory,
@@ -59,7 +60,7 @@ describe("FlashLock :: contract Yamato", () => {
   let ChainLinkUsdJpy: ChainLinkMock;
   let PriceFeed: PriceFeedV3;
   let CJPY: CJPY;
-  let FeePool: FeePool;
+  let FeePool: FeePoolV2;
   let CurrencyOS: CurrencyOS;
   let Yamato: YamatoV4;
   let YamatoDepositor: YamatoDepositor;
@@ -124,9 +125,9 @@ describe("FlashLock :: contract Yamato", () => {
       await ethers.getContractFactory("CJPY")
     )).deploy();
 
-    FeePool = await getProxy<FeePool, FeePool__factory>(
+    FeePool = await getProxy<FeePoolV2, FeePoolV2__factory>(
       contractVersion["FeePool"],
-      []
+      [await time.latest()]
     );
 
     CurrencyOS = await getProxy<CurrencyOS, CurrencyOS__factory>(
@@ -197,9 +198,10 @@ describe("FlashLock :: contract Yamato", () => {
       [YMT.address, ScoreWeightController.address]
     );
 
-    ScoreRegistry = await getProxy<ScoreRegistry, ScoreRegistry__factory>(
+    ScoreRegistry = await getLinkedProxy<ScoreRegistry, ScoreRegistry__factory>(
       contractVersion["ScoreRegistry"],
-      [YmtMinter.address, Yamato.address]
+      [YmtMinter.address, Yamato.address],
+      ["PledgeLib"]
     );
 
     await (
@@ -215,6 +217,7 @@ describe("FlashLock :: contract Yamato", () => {
       )
     ).wait();
     await (await Yamato.setScoreRegistry(ScoreRegistry.address)).wait();
+    await YMT.setMinter(YmtMinter.address);
     await (await CurrencyOS.addYamato(Yamato.address)).wait();
     await (await CJPY.setCurrencyOS(CurrencyOS.address)).wait();
 
