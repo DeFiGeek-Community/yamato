@@ -26,10 +26,10 @@ contract YMT is ERC20Permit {
     uint256 constant YEAR = 365 days;
 
     // Supply parameters
-    uint256 constant INITIAL_SUPPLY = 450_000_000;
-    uint256 constant INITIAL_RATE = (55_000_000 * 10 ** 18) / YEAR; // leading to 45% premine
+    uint256 constant INITIAL_SUPPLY = 450_000_000 * 10 ** 18;
+    uint256 constant INITIAL_RATE = (55_000_000 * 10 ** 18) / YEAR;
     uint256 constant RATE_REDUCTION_TIME = YEAR;
-    uint256 constant RATE_REDUCTION_COEFFICIENT = 1_111_111_111_111_111_111; // 10 * 1e18 / 9
+    uint256 constant RATE_REDUCTION_COEFFICIENT = 1_111_111_111_111_111_111;
     uint256 constant RATE_DENOMINATOR = 10 ** 18;
     uint256 constant INFLATION_DELAY = 1 days;
 
@@ -41,7 +41,7 @@ contract YMT is ERC20Permit {
     uint256 startEpochSupply;
 
     constructor() ERC20Permit("Yamato") ERC20("Yamato", "YMT") {
-        uint256 initSupply = INITIAL_SUPPLY * 10 ** decimals();
+        uint256 initSupply = INITIAL_SUPPLY;
         _mint(msg.sender, initSupply);
 
         admin = msg.sender;
@@ -64,7 +64,7 @@ contract YMT is ERC20Permit {
         startEpochTime += RATE_REDUCTION_TIME;
         miningEpoch += 1;
 
-        if (_rate == 0) {
+        if (_rate == 0 && miningEpoch < 1) {
             _rate = INITIAL_RATE;
         } else {
             _startEpochSupply += _rate * RATE_REDUCTION_TIME;
