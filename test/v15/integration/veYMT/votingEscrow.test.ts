@@ -519,34 +519,34 @@ describe("veYMT", function () {
     for (let i = initialBlock; i < latestBlock; i++) {
       let a = await veYMT.balanceOfAt(alice.address, `${i}`);
       let b = await veYMT.balanceOfAt(bob.address, `${i}`);
-      console.log(`Block ${i}: a: ${a.toString()} b: ${b.toString()}`);
+      // console.log(`Block ${i}: a: ${a.toString()} b: ${b.toString()}`);
     }
     const epoch = (await veYMT.epoch()).toNumber();
     const aliceEpoch = (await veYMT.userPointEpoch(alice.address)).toNumber();
     const bobEpoch = (await veYMT.userPointEpoch(bob.address)).toNumber();
     for (let i = 0; i <= epoch; i++) {
       let p = await veYMT.pointHistory(i);
-      console.log(
-        `epoch: ${i}: bias: ${p.bias.toString()} slope: ${p.slope.toString()} ts: ${p.ts.toString()} blk: ${p.blk.toString()}`
-      );
+      // console.log(
+      //   `epoch: ${i}: bias: ${p.bias.toString()} slope: ${p.slope.toString()} ts: ${p.ts.toString()} blk: ${p.blk.toString()}`
+      // );
     }
     for (let i = 0; i <= aliceEpoch; i++) {
       let p = await veYMT.userPointHistory(alice.address, i);
       let balanceAt = p.blk.isZero()
         ? 0
         : await veYMT.balanceOfAt(alice.address, p.blk.toNumber());
-      console.log(
-        `alice epoch: ${i}: balanceAt: ${balanceAt.toString()} bias: ${p.bias.toString()} slope: ${p.slope.toString()} ts: ${p.ts.toString()} blk: ${p.blk.toString()}`
-      );
+      // console.log(
+      //   `alice epoch: ${i}: balanceAt: ${balanceAt.toString()} bias: ${p.bias.toString()} slope: ${p.slope.toString()} ts: ${p.ts.toString()} blk: ${p.blk.toString()}`
+      // );
     }
     for (let i = 0; i < bobEpoch; i++) {
       let p = await veYMT.userPointHistory(bob.address, i);
       let balanceAt = p.blk.isZero()
         ? 0
         : await veYMT.balanceOfAt(bob.address, p.blk.toNumber());
-      console.log(
-        `bob epoch: ${i}: balanceAt: ${balanceAt.toString()} bias: ${p.bias.toString()} slope: ${p.slope.toString()} ts: ${p.ts.toString()} blk: ${p.blk.toString()}`
-      );
+      // console.log(
+      //   `bob epoch: ${i}: balanceAt: ${balanceAt.toString()} bias: ${p.bias.toString()} slope: ${p.slope.toString()} ts: ${p.ts.toString()} blk: ${p.blk.toString()}`
+      // );
     }
   }
 });

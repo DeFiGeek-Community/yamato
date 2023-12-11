@@ -256,30 +256,30 @@ describe("YmtMinter components", function () {
       const weight3 = Math.floor(weight2 + (durations[2] - durations[1]) * 3);
       const totalWeight = weight1 + weight2 + weight3;
 
-      console.log(
-        `Total minted: ${totalMinted.toString()}, Total Weight: ${totalWeight.toString()}`
-      );
-      console.log(
-        `Balance 1: ${balances[0]} (${balances[0]
-          .mul(ten_to_the_20)
-          .div(totalMinted)}) Weight 1: ${weight1.toString()} (${
-          (100 * weight1) / totalWeight
-        }%)`
-      );
-      console.log(
-        `Balance 2: ${balances[1]} (${balances[1]
-          .mul(ten_to_the_20)
-          .div(totalMinted)}) Weight 2: ${weight2.toString()} (${
-          (100 * weight2) / totalWeight
-        }%)`
-      );
-      console.log(
-        `Balance 3: ${balances[2]} (${balances[2]
-          .mul(ten_to_the_20)
-          .div(totalMinted)}) Weight 3: ${weight3.toString()} (${
-          (100 * weight3) / totalWeight
-        }%)`
-      );
+      // console.log(
+      //   `Total minted: ${totalMinted.toString()}, Total Weight: ${totalWeight.toString()}`
+      // );
+      // console.log(
+      //   `Balance 1: ${balances[0]} (${balances[0]
+      //     .mul(ten_to_the_20)
+      //     .div(totalMinted)}) Weight 1: ${weight1.toString()} (${
+      //     (100 * weight1) / totalWeight
+      //   }%)`
+      // );
+      // console.log(
+      //   `Balance 2: ${balances[1]} (${balances[1]
+      //     .mul(ten_to_the_20)
+      //     .div(totalMinted)}) Weight 2: ${weight2.toString()} (${
+      //     (100 * weight2) / totalWeight
+      //   }%)`
+      // );
+      // console.log(
+      //   `Balance 3: ${balances[2]} (${balances[2]
+      //     .mul(ten_to_the_20)
+      //     .div(totalMinted)}) Weight 3: ${weight3.toString()} (${
+      //     (100 * weight3) / totalWeight
+      //   }%)`
+      // );
 
       expect(
         approx(
@@ -336,30 +336,30 @@ describe("YmtMinter components", function () {
         zero
       );
 
-      console.log(
-        `Total deposited: ${totalDeposited.toString()}, Total minted: ${totalMinted.toString()}`
-      );
-      console.log(
-        `Balance 1: ${balances[0]} (${balances[0]
-          .mul(ten_to_the_20)
-          .div(totalMinted)}) Deposited 1: ${stAmounts[0].toString()} (${
-          (100 * stAmounts[0]) / totalDeposited
-        }%)`
-      );
-      console.log(
-        `Balance 2: ${balances[1]} (${balances[1]
-          .mul(ten_to_the_20)
-          .div(totalMinted)}) Deposited 2: ${stAmounts[1].toString()} (${
-          (100 * stAmounts[1]) / totalDeposited
-        }%)`
-      );
-      console.log(
-        `Balance 3: ${balances[2]} (${balances[2]
-          .mul(ten_to_the_20)
-          .div(totalMinted)}) Deposited 3: ${stAmounts[2].toString()} (${
-          (100 * stAmounts[2]) / totalDeposited
-        }%)`
-      );
+      // console.log(
+      //   `Total deposited: ${totalDeposited.toString()}, Total minted: ${totalMinted.toString()}`
+      // );
+      // console.log(
+      //   `Balance 1: ${balances[0]} (${balances[0]
+      //     .mul(ten_to_the_20)
+      //     .div(totalMinted)}) Deposited 1: ${stAmounts[0].toString()} (${
+      //     (100 * stAmounts[0]) / totalDeposited
+      //   }%)`
+      // );
+      // console.log(
+      //   `Balance 2: ${balances[1]} (${balances[1]
+      //     .mul(ten_to_the_20)
+      //     .div(totalMinted)}) Deposited 2: ${stAmounts[1].toString()} (${
+      //     (100 * stAmounts[1]) / totalDeposited
+      //   }%)`
+      // );
+      // console.log(
+      //   `Balance 3: ${balances[2]} (${balances[2]
+      //     .mul(ten_to_the_20)
+      //     .div(totalMinted)}) Deposited 3: ${stAmounts[2].toString()} (${
+      //     (100 * stAmounts[2]) / totalDeposited
+      //   }%)`
+      // );
 
       expect(
         approx(

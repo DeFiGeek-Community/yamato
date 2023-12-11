@@ -282,7 +282,7 @@ describe("YmtMinter integration", function () {
     for (let i = 0; i < 5; i++) {
       await ymtMinter.connect(accounts[i + 1]).mint(scoreRegistry.address);
       const token = await YMT.balanceOf(accounts[i + 1].address);
-      console.log("tokenBalance:", Number(token));
+      // console.log("tokenBalance:", Number(token));
       tokens.push(token);
     }
     for (let i = 0; i < 5; i++) {

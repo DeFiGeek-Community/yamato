@@ -159,12 +159,12 @@ describe("FeePoolV2", function () {
     stWeeks = stWeeks || getRandomWeeks();
     stTime = stTime || getRandomsTime();
 
-    console.log(`
-    ruleNewLock --- 
-    stAcct: ${
-      stAcct.address
-    }, stAmount: ${stAmount.toString()}, stWeeks: ${stWeeks.toString()}, stTime: ${stTime.toString()}
-    `);
+    // console.log(`
+    // ruleNewLock --- 
+    // stAcct: ${
+    //   stAcct.address
+    // }, stAmount: ${stAmount.toString()}, stWeeks: ${stWeeks.toString()}, stTime: ${stTime.toString()}
+    // `);
 
     stTime.gt(0) && (await time.increase(stTime));
 
@@ -198,11 +198,11 @@ describe("FeePoolV2", function () {
     stWeeks = stWeeks || getRandomWeeks();
     stTime = stTime || getRandomsTime();
 
-    console.log(`
-    ruleExtendLock --- stAmount ${
-      stAcct.address
-    }, stAmount: ${stWeeks.toString()}, stTime: ${stTime.toString()}
-    `);
+    // console.log(`
+    // ruleExtendLock --- stAmount ${
+    //   stAcct.address
+    // }, stAmount: ${stWeeks.toString()}, stTime: ${stTime.toString()}
+    // `);
 
     stTime.gt(0) && (await time.increase(stTime));
 
@@ -225,7 +225,7 @@ describe("FeePoolV2", function () {
     stAmount?: BigNumber,
     stTime?: BigNumber
   ) {
-    console.log("ruleIncreaseLockAmount");
+    // console.log("ruleIncreaseLockAmount");
 
     /*
     Increase the amount of an existing user lock.
@@ -244,11 +244,11 @@ describe("FeePoolV2", function () {
     stAmount = getRandomAmounts();
     stTime = getRandomsTime();
 
-    console.log(`
-    ruleIncreaseLockAmount --- stAmount ${
-      stAcct.address
-    }, stAmount: ${stAmount.toString()}, stTime: ${stTime.toString()}
-    `);
+    // console.log(`
+    // ruleIncreaseLockAmount --- stAmount ${
+    //   stAcct.address
+    // }, stAmount: ${stAmount.toString()}, stTime: ${stTime.toString()}
+    // `);
 
     stTime.gt(0) && (await time.increase(stTime));
 
@@ -258,7 +258,7 @@ describe("FeePoolV2", function () {
   }
 
   async function ruleClaimFees(stAcct?: SignerWithAddress, stTime?: BigNumber) {
-    console.log("ruleClaimFees");
+    // console.log("ruleClaimFees");
     /*
     Claim fees for a user.
 
@@ -272,9 +272,9 @@ describe("FeePoolV2", function () {
     stAcct = accounts[getRandomAccountNum()];
     stTime = getRandomsTime();
 
-    console.log(`
-    ruleClaimFees --- stAmount ${stAcct.address}, stTime: ${stTime.toString()}
-    `);
+    // console.log(`
+    // ruleClaimFees --- stAmount ${stAcct.address}, stTime: ${stTime.toString()}
+    // `);
 
     stTime.gt(0) && (await time.increase(stTime));
 
@@ -301,7 +301,7 @@ describe("FeePoolV2", function () {
   }
 
   async function ruleTransferFees(stAmount?: BigNumber, stTime?: BigNumber) {
-    console.log("ruleTransferFees");
+    // console.log("ruleTransferFees");
     /*
     Transfer fees into the feePool and make a checkpoint.
 
@@ -318,9 +318,9 @@ describe("FeePoolV2", function () {
     stAmount = stAmount || getRandomAmounts();
     stTime = stTime || getRandomsTime();
 
-    console.log(`
-    ruleTransferFees --- stAmount ${stAmount.toString()}, stTime: ${stTime.toString()}
-    `);
+    // console.log(`
+    // ruleTransferFees --- stAmount ${stAmount.toString()}, stTime: ${stTime.toString()}
+    // `);
 
     stTime.gt(0) && (await time.increase(stTime));
 
@@ -343,7 +343,7 @@ describe("FeePoolV2", function () {
     stAmount?: BigNumber,
     stTime?: BigNumber
   ) {
-    console.log("ruleTransferFeesWithoutCheckpoint");
+    // console.log("ruleTransferFeesWithoutCheckpoint");
 
     /*
     Transfer fees into the feePool without checkpointing.
@@ -358,9 +358,9 @@ describe("FeePoolV2", function () {
     stAmount = stAmount || getRandomAmounts();
     stTime = stTime || getRandomsTime();
 
-    console.log(`
-    ruleTransferFeesWithoutCheckpoint --- stAmount ${stAmount.toString()}, stTime: ${stTime.toString()}
-    `);
+    // console.log(`
+    // ruleTransferFeesWithoutCheckpoint --- stAmount ${stAmount.toString()}, stTime: ${stTime.toString()}
+    // `);
 
     stTime.gt(0) && (await time.increase(stTime));
 
@@ -378,7 +378,7 @@ describe("FeePoolV2", function () {
     /*
     Claim fees for all accounts and verify that only dust remains.
     */
-    console.log("teardown----");
+    // console.log("teardown----");
     if (!(await feePool.canCheckpointToken())) {
       //if no token checkpoint occured, add 100,000 tokens prior to teardown
       await ruleTransferFees(
@@ -497,18 +497,18 @@ describe("FeePoolV2", function () {
         // initialize_transfer_fees: This is equivalent to `rule_transfer_fees` to make it more likely that claimable fees are available from the start of the test.
         const initializerSeed = Math.random();
         if (initializerSeed < 0.2) {
-          console.log("0.2");
+          // console.log("0.2");
           await ruleNewLock();
           await ruleTransferFees();
         } else if (initializerSeed < 0.4) {
-          console.log("0.4");
+          // console.log("0.4");
           await ruleTransferFees();
           await ruleNewLock();
         } else if (initializerSeed < 0.6) {
-          console.log("0.6");
+          // console.log("0.6");
           await ruleNewLock();
         } else if (initializerSeed < 0.8) {
-          console.log("0.8");
+          // console.log("0.8");
           await ruleTransferFees();
         }
 
