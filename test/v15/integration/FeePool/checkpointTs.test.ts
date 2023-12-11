@@ -9,7 +9,9 @@ import {
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import {
   FeePool,
+  YmtVesting,
   FeePool__factory,
+  YmtVesting__factory,
   YMT__factory,
   VeYMT__factory,
 } from "../../../../typechain";
@@ -27,12 +29,17 @@ describe("FeePoolV2", function () {
   let YMT: Contract;
   let veYMT: Contract;
   let feePool: Contract;
+  let YmtVesting: YmtVesting;
   let snapshot: SnapshotRestorer;
 
   before(async function () {
     accounts = await ethers.getSigners();
 
-    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy();
+    YmtVesting = await (<YmtVesting__factory>(
+      await ethers.getContractFactory("YmtVesting")
+    )).deploy();
+
+    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy(YmtVesting.address);
 
     veYMT = await (<VeYMT__factory>(
       await ethers.getContractFactory("veYMT")

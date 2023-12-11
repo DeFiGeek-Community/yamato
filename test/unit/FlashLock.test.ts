@@ -22,6 +22,7 @@ import {
   YamatoRedeemer,
   YamatoSweeper,
   PriorityRegistry,
+  YmtVesting,
   YMT,
   VeYMT,
   ScoreWeightController,
@@ -43,6 +44,7 @@ import {
   YamatoSweeper__factory,
   Pool__factory,
   PriorityRegistry__factory,
+  YmtVesting__factory,
   YMT__factory,
   VeYMT__factory,
   ScoreWeightController__factory,
@@ -75,6 +77,7 @@ describe("FlashLock :: contract Yamato", () => {
   let YmtMinter: YmtMinter;
   let veYMT: VeYMT;
   let YMT: YMT;
+  let YmtVesting: YmtVesting;
   let ScoreWeightController: ScoreWeightController;
   let accounts: Signer[];
   let ownerAddress: string;
@@ -182,7 +185,11 @@ describe("FlashLock :: contract Yamato", () => {
       PriorityRegistry__factory
     >(contractVersion["PriorityRegistry"], [Yamato.address], ["PledgeLib"]);
 
-    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy();
+    YmtVesting = await (<YmtVesting__factory>(
+      await ethers.getContractFactory("YmtVesting")
+    )).deploy();
+
+    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy(YmtVesting.address);
 
     veYMT = await (<VeYMT__factory>(
       await ethers.getContractFactory("veYMT")

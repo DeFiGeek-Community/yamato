@@ -7,7 +7,7 @@ import {
 } from "@nomicfoundation/hardhat-network-helpers";
 import { BigNumber } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { YMT, YMT__factory } from "../../../../typechain";
+import { YMT, YMT__factory, YmtVesting, YmtVesting__factory } from "../../../../typechain";
 import Constants from "../../Constants";
 
 const week = Constants.week;
@@ -16,11 +16,16 @@ const ZERO_ADDRESS = Constants.ZERO_ADDRESS;
 describe("YMT", function () {
   let accounts: SignerWithAddress[];
   let YMT: YMT;
+  let YmtVesting: YmtVesting;
   let snapshot: SnapshotRestorer;
 
   before(async function () {
     accounts = await ethers.getSigners();
-    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy();
+    YmtVesting = await (<YmtVesting__factory>(
+      await ethers.getContractFactory("YmtVesting")
+    )).deploy();
+
+    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy(YmtVesting.address);
     await time.increase(86401);
     await YMT.updateMiningParameters();
   });

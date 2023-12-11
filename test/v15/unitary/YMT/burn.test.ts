@@ -6,16 +6,21 @@ import {
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { YMT, YMT__factory } from "../../../../typechain";
+import { YMT, YMT__factory, YmtVesting, YmtVesting__factory } from "../../../../typechain";
 
 describe("YMT", function () {
   let accounts: SignerWithAddress[];
   let YMT: YMT;
+  let YmtVesting: YmtVesting;
   let snapshot: SnapshotRestorer;
 
   before(async function () {
     accounts = await ethers.getSigners();
-    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy();
+    YmtVesting = await (<YmtVesting__factory>(
+      await ethers.getContractFactory("YmtVesting")
+    )).deploy();
+
+    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy(YmtVesting.address);
   });
 
   beforeEach(async () => {

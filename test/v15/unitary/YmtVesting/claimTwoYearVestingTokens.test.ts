@@ -8,10 +8,10 @@ import {
 import { BigNumber } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import {
-  YMT,
-  YMT__factory,
   YmtVesting,
+  YMT,
   YmtVesting__factory,
+  YMT__factory,
 } from "../../../../typechain";
 import Constants from "../../Constants";
 

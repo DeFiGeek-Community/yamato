@@ -23,6 +23,7 @@ import {
   YamatoRedeemer,
   YamatoSweeper,
   YamatoDummy,
+  YmtVesting,
   YMT,
   VeYMT,
   ScoreWeightController,
@@ -36,6 +37,7 @@ import {
   YamatoRedeemer__factory,
   YamatoSweeper__factory,
   YamatoDummy__factory,
+  YmtVesting__factory,
   YMT__factory,
   VeYMT__factory,
   ScoreWeightController__factory,
@@ -75,6 +77,7 @@ describe("contract Yamato - pure func quickier tests", function () {
   let YmtMinter: YmtMinter;
   let veYMT: VeYMT;
   let YMT: YMT;
+  let YmtVesting: YmtVesting;
   let ScoreWeightController: ScoreWeightController;
   let pool: Pool;
   let priorityRegistry: PriorityRegistry;
@@ -154,7 +157,11 @@ describe("contract Yamato - pure func quickier tests", function () {
       contractVersion["PriorityRegistry"]
     );
 
-    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy();
+    YmtVesting = await (<YmtVesting__factory>(
+      await ethers.getContractFactory("YmtVesting")
+    )).deploy();
+
+    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy(YmtVesting.address);
 
     veYMT = await (<VeYMT__factory>(
       await ethers.getContractFactory("veYMT")
@@ -316,6 +323,7 @@ describe("contract Yamato", function () {
   let YmtMinter: YmtMinter;
   let veYMT: VeYMT;
   let YMT: YMT;
+  let YmtVesting: YmtVesting;
   let ScoreWeightController: ScoreWeightController;
   let PRICE: BigNumber;
   let MCR: BigNumber;
@@ -391,7 +399,11 @@ describe("contract Yamato", function () {
       contractVersion["PriorityRegistry"]
     );
 
-    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy();
+    YmtVesting = await (<YmtVesting__factory>(
+      await ethers.getContractFactory("YmtVesting")
+    )).deploy();
+
+    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy(YmtVesting.address);
 
     veYMT = await (<VeYMT__factory>(
       await ethers.getContractFactory("veYMT")

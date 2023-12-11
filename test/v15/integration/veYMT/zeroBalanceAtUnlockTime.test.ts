@@ -7,7 +7,9 @@ import {
 } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import {
+  YmtVesting,
   YMT,
+  YmtVesting__factory,
   YMT__factory,
   VeYMT,
   VeYMT__factory,
@@ -21,12 +23,17 @@ describe("veYMT", function () {
   let accounts: SignerWithAddress[];
   let veYMT: VeYMT;
   let YMT: YMT;
+  let YmtVesting: YmtVesting;
   let snapshot: SnapshotRestorer;
 
   before(async () => {
     accounts = await ethers.getSigners();
 
-    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy();
+    YmtVesting = await (<YmtVesting__factory>(
+      await ethers.getContractFactory("YmtVesting")
+    )).deploy();
+
+    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy(YmtVesting.address);
 
     veYMT = await (<VeYMT__factory>(
       await ethers.getContractFactory("veYMT")

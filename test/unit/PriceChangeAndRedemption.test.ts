@@ -22,6 +22,7 @@ import {
   YamatoRedeemer,
   YamatoSweeper,
   PriorityRegistryV6,
+  YmtVesting,
   YMT,
   VeYMT,
   ScoreWeightController,
@@ -42,6 +43,7 @@ import {
   Pool__factory,
   FeePoolV2__factory,
   PriorityRegistryV6__factory,
+  YmtVesting__factory,
   YMT__factory,
   VeYMT__factory,
   ScoreWeightController__factory,
@@ -80,6 +82,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
   let YmtMinter: YmtMinter;
   let veYMT: VeYMT;
   let YMT: YMT;
+  let YmtVesting: YmtVesting;
   let ScoreWeightController: ScoreWeightController;
   let accounts: Signer[];
   let ownerAddress: string;
@@ -194,7 +197,11 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       PriorityRegistryV6__factory
     >(contractVersion["PriorityRegistry"], [Yamato.address], ["PledgeLib"]);
 
-    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy();
+    YmtVesting = await (<YmtVesting__factory>(
+      await ethers.getContractFactory("YmtVesting")
+    )).deploy();
+
+    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy(YmtVesting.address);
 
     veYMT = await (<VeYMT__factory>(
       await ethers.getContractFactory("veYMT")

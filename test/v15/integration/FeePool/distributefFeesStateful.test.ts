@@ -9,7 +9,11 @@ import {
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import {
   FeePool,
+  YmtVesting,
+  YMT,
+  VeYMT,
   FeePool__factory,
+  YmtVesting__factory,
   YMT__factory,
   VeYMT__factory,
 } from "../../../../typechain";
@@ -41,6 +45,7 @@ describe("FeePoolV2", function () {
   let veYMT: Contract;
   let feePool: Contract;
   let YMT: Contract;
+  let YmtVesting: YmtVesting;
 
   let lockedUntil: { [key: string]: number } = {};
   let fees: { [key: number]: BigNumber } = {}; // timestamp -> amount
@@ -57,7 +62,11 @@ describe("FeePoolV2", function () {
     userClaims = {};
     totalFees = ethers.utils.parseEther("1");
 
-    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy();
+    YmtVesting = await (<YmtVesting__factory>(
+      await ethers.getContractFactory("YmtVesting")
+    )).deploy();
+
+    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy(YmtVesting.address);
 
     veYMT = await (<VeYMT__factory>(
       await ethers.getContractFactory("veYMT")

@@ -23,6 +23,7 @@ import {
   YamatoWithdrawer,
   YamatoRedeemer,
   YamatoSweeper,
+  YmtVesting,
   YMT,
   VeYMT,
   ScoreWeightController,
@@ -37,6 +38,7 @@ import {
   YamatoWithdrawer__factory,
   YamatoRedeemer__factory,
   YamatoSweeper__factory,
+  YmtVesting__factory,
   YMT__factory,
   VeYMT__factory,
   ScoreWeightController__factory,
@@ -78,6 +80,7 @@ describe("YmtMinter components", function () {
   let ymtMinter: YmtMinter;
   let veYMT: VeYMT;
   let YMT: YMT;
+  let YmtVesting: YmtVesting;
   let scoreWeightController: ScoreWeightController;
   let pool: Pool;
   let priorityRegistry: PriorityRegistry;
@@ -144,7 +147,11 @@ describe("YmtMinter components", function () {
       PriorityRegistry__factory
     >(contractVersion["PriorityRegistry"], [yamato.address], ["PledgeLib"]);
 
-    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy();
+    YmtVesting = await (<YmtVesting__factory>(
+      await ethers.getContractFactory("YmtVesting")
+    )).deploy();
+
+    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy(YmtVesting.address);
 
     veYMT = await (<VeYMT__factory>(
       await ethers.getContractFactory("veYMT")
