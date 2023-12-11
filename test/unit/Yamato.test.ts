@@ -441,7 +441,6 @@ describe("contract Yamato", function () {
     await (
       await yamatoDummy.setPriorityRegistry(priorityRegistry.address)
     ).wait();
-
   });
 
   beforeEach(async () => {

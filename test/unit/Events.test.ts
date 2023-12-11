@@ -156,7 +156,10 @@ describe("story Events", function () {
         [YMT.address, ScoreWeightController.address]
       );
 
-      ScoreRegistry = await getLinkedProxy<ScoreRegistry, ScoreRegistry__factory>(
+      ScoreRegistry = await getLinkedProxy<
+        ScoreRegistry,
+        ScoreRegistry__factory
+      >(
         contractVersion["ScoreRegistry"],
         [YmtMinter.address, yamato.address],
         ["PledgeLib"]

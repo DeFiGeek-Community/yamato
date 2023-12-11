@@ -36,7 +36,11 @@ export function fee(amount: BigNumber): BigNumber {
   return amount.sub(amount.div(1000));
 }
 
-export function approx(value: BigNumber, target: BigNumber, tol: BigNumber): boolean {
+export function approx(
+  value: BigNumber,
+  target: BigNumber,
+  tol: BigNumber
+): boolean {
   if (value.isZero() && target.isZero()) {
     return true;
   }
@@ -46,6 +50,14 @@ export function approx(value: BigNumber, target: BigNumber, tol: BigNumber): boo
   const ratio = diff.mul(2).mul(BigNumber.from(10).pow(20)).div(sum);
 
   return ratio.lte(tol);
+}
+
+export function approxEqual(actual, expected, tolerance) {
+  // 差の絶対値を計算
+  const diff = actual.sub(expected).abs();
+
+  // 差が許容誤差以下であるかどうかを確認
+  return diff.lte(tolerance);
 }
 
 export function generateUniqueRandomNumbers(
@@ -62,6 +74,6 @@ export function generateUniqueRandomNumbers(
 }
 
 export async function gasCostOf(tx) {
-  const receipt = await tx.wait()
-  return receipt.gasUsed.mul(receipt.effectiveGasPrice)
+  const receipt = await tx.wait();
+  return receipt.gasUsed.mul(receipt.effectiveGasPrice);
 }
