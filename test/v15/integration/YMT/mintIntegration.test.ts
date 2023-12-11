@@ -102,7 +102,7 @@ describe("YMT", function () {
 
   describe("YMT Long-Term Mining Parameters", function () {
     // 400年間にわたるマイニングパラメータの変化とトークンmintをテスト
-    it.only("should correctly reduce mining parameters over 400 years", async function () {
+    it("should correctly reduce mining parameters over 400 years", async function () {
       const initialRate = await YMT.rate();
       await YMT.setMinter(accounts[0].address);
       let currentRate = initialRate;
@@ -120,7 +120,7 @@ describe("YMT", function () {
         let newRate = await YMT.rate();
 
         // レートが減少したことを確認
-        if(Number(newRate) > 0){
+        if (Number(newRate) > 0) {
           expect(newRate).to.be.below(currentRate);
         }
 
@@ -152,7 +152,6 @@ describe("YMT", function () {
           ten_to_the_18
         )
       ).to.be.true;
-
     });
   });
 });
