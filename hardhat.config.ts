@@ -153,7 +153,7 @@ module.exports = {
   },
   paths: {
     // tests: "./test/unit",
-    // tests: "./test/v15",
+    // tests: "./test/v1.5",
     tests: "./test",
   },
   defender: {
