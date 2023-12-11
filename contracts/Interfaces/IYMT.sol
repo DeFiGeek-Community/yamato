@@ -35,4 +35,6 @@ interface IYMT {
     function rate() external view returns (uint256);
 
     function futureEpochTimeWrite() external returns (uint256);
+
+    function startTime() external view returns (uint256);
 }
