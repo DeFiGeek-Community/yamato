@@ -57,7 +57,7 @@ contract YMT is ERC20Permit {
         startTime = block.timestamp;
         miningEpoch = -1;
         rate = 0;
-        startEpochSupply = INITIAL_SUPPLY;
+        startEpochSupply = INITIAL_SUPPLY + VESTING_SUPPLY;
     }
 
     // @dev Update mining rate and supply at the start of the epoch
