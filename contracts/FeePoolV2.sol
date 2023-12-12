@@ -20,8 +20,6 @@ contract FeePoolV2 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
 
     string constant VEYMT_SLOT_ID = "deps.veYMT";
 
-    mapping(address => bool) protocolWhitelist;
-
     uint256 public startTime;
     uint256 public timeCursor;
     mapping(address => uint256) public timeCursorOf;
@@ -580,11 +578,6 @@ contract FeePoolV2 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
         assembly {
             _veYMT := sload(VEYMT_KEY)
         }
-    }
-
-    modifier onlyProtocols() {
-        require(protocolWhitelist[msg.sender], "You are not in the whitelist");
-        _;
     }
 
     receive() external payable {
