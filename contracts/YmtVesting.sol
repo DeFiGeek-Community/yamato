@@ -69,8 +69,8 @@ contract YmtVesting {
     }
 
     /**
-     * @notice Allows the admin to claim tokens from five-year linear distribution.
-     * @dev Transfers claimable tokens to the admin address.
+     * @notice Allows users to claim their V1 Retroactive Rewards based on a one-year linear vesting schedule.
+     * @dev Calculates the claimable amount based on the time elapsed since the distribution start, then transfers the tokens to the user's address. Any unclaimed amount from the previous claims is considered.
      */
     function claimV1RetroactiveRewards() external {
         require(vestingAmounts[msg.sender] > 0, "No tokens to claim");
@@ -116,7 +116,7 @@ contract YmtVesting {
 
     /**
      * @notice Allows the admin to claim tokens from two-year vesting period.
-     * @dev Transfers tokens to the admin address if within the two-year period.
+     * @dev Transfers claimable tokens to the admin address.
      */
     function claimTwoYearVestingTokens() external onlyAdmin {
         uint256 distributionStart = IYMT(ymtTokenAddress).startTime();

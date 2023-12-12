@@ -15,8 +15,8 @@ import "./Dependencies/UUPSBase.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 
-/***
- *@title Token Minter
+/**
+ * @title Token Minter
  */
 
 contract YmtMinter is
@@ -71,18 +71,18 @@ contract YmtMinter is
         }
     }
 
-    /***
-     *@notice Mint everything which belongs to `msg.sender` and send to them
-     *@param scoreAddr_ `LiquidityScore` address to get mintable amount from
+    /**
+     * @notice Mint everything which belongs to `msg.sender` and send to them
+     * @param scoreAddr_ `ScoreRegistry` address to get mintable amount from
      */
     function mint(address scoreAddr_) external nonReentrant {
         _mintFor(scoreAddr_, msg.sender);
     }
 
-    /***
-     *@notice Mint everything which belongs to `msg.sender` across multiple scores
-     *@param scoreAddrs_ List of `LiquidityScore` addresses
-     *@dev address[8]: 8 has randomly decided and has no meaning.
+    /**
+     * @notice Mint everything which belongs to `msg.sender` across multiple scores
+     * @param scoreAddrs_ List of `ScoreRegistry` addresses
+     * @dev address[8]: 8 has randomly decided and has no meaning.
      */
     // function mintMany(address[8] memory scoreAddrs_) external nonReentrant {
     //     for (uint256 i; i < 8; ) {
@@ -96,11 +96,11 @@ contract YmtMinter is
     //     }
     // }
 
-    /***
-     *@notice Mint tokens for `for_`
-     *@dev Only possible when `msg.sender` has been approved via `toggle_approve_mint`
-     *@param scoreAddr_ `LiquidityScore` address to get mintable amount from
-     *@param for_ Address to mint to
+    /**
+     * @notice Mint tokens for `for_`
+     * @dev Only possible when `msg.sender` has been approved via `toggle_approve_mint`
+     * @param scoreAddr_ `ScoreRegistry` address to get mintable amount from
+     * @param for_ Address to mint to
      */
     function mintFor(address scoreAddr_, address for_) external nonReentrant {
         if (allowedToMintFor[msg.sender][for_]) {
@@ -108,9 +108,9 @@ contract YmtMinter is
         }
     }
 
-    /***
-     *@notice allow `mintingUser` to mint for `msg.sender`
-     *@param mintingUser_ Address to toggle permission for
+    /**
+     * @notice allow `mintingUser` to mint for `msg.sender`
+     * @param mintingUser_ Address to toggle permission for
      */
     function toggleApproveMint(address mintingUser_) external {
         allowedToMintFor[mintingUser_][msg.sender] = !allowedToMintFor[

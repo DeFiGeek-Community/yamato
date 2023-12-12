@@ -5,9 +5,9 @@ pragma solidity 0.8.4;
  * Copyright (C) 2023 Yamato Protocol (DeFiGeek Community Japan)
  */
 
-/***
- *@title Score Controller
- *@notice Controls liquidity scores and the issuance of token through the scores
+/**
+ * @title Score Controller
+ * @notice Controls liquidity scores and the issuance of token through the scores
  */
 
 //dao-contracts
@@ -27,10 +27,10 @@ contract ScoreWeightController is UUPSBase {
     // Needed for enumeration
     mapping(address => int128) public scores;
 
-    /***
-     *@notice Contract constructor
-     *@param _token `Token` contract address
-     *@param _votingEscrow `VotingEscrow` contract address
+    /**
+     * @notice Contract constructor
+     * @param ymtAddr `Token` contract address
+     * @param veYmtAddr `VotingEscrow` contract address
      */
     function initialize(address ymtAddr, address veYmtAddr) public initializer {
         require(ymtAddr != address(0));
@@ -45,10 +45,10 @@ contract ScoreWeightController is UUPSBase {
         }
     }
 
-    /***
-     *@notice Add Currency `addr` of type `score_type` with weight `weight`
-     *@param addr_ Score address
-     *@param scoreType_ Score type
+    /**
+     * @notice Add Currency `addr` of type `score_type` with weight `weight`
+     * @param addr_ Score address
+     * @param weight_ Score type
      */
     function addCurrency(
         address addr_,
@@ -63,28 +63,28 @@ contract ScoreWeightController is UUPSBase {
         emit NewScore(addr_, weight_);
     }
 
-    /***
+    /**
      * @notice Checkpoint to fill data common for all scores
      */
     function checkpoint() external {
         // Add to V2.0
     }
 
-    /***
-     *@notice Checkpoint to fill data for both a specific score and common for all scores
-     *@param addr_ Score address
+    /**
+     * @notice Checkpoint to fill data for both a specific score and common for all scores
+     * @param addr_ Score address
      */
     function checkpointScore(address addr_) external {
         // Add to V2.0
     }
 
-    /***
-     *@notice Get Score relative weight (not more than 1.0) normalized to 1e18
+    /**
+     * @notice Get Score relative weight (not more than 1.0) normalized to 1e18
      *        (e.g. 1.0 == 1e18). Inflation which will be received by it is
      *        inflation_rate * relative_weight / 1e18
-     *@param addr_ Score address
-     *@param time_ Relative weight at the specified timestamp in the past or present
-     *@return Value of relative weight normalized to 1e18
+     * @param addr_ Score address
+     * @param time_ Relative weight at the specified timestamp in the past or present
+     * @return Value of relative weight normalized to 1e18
      */
     function scoreRelativeWeight(
         address addr_,
@@ -93,10 +93,10 @@ contract ScoreWeightController is UUPSBase {
         return MULTIPLIER;
     }
 
-    /***
-     *@notice Change weight of score `addr` to `weight`
-     *@param addr_ `ScoreController` contract address
-     *@param weight_ New Score weight
+    /**
+     * @notice Change weight of score `addr` to `weight`
+     * @param addr_ `ScoreController` contract address
+     * @param weight_ New Score weight
      */
     function changeScoreWeight(
         address addr_,

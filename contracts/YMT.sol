@@ -60,8 +60,10 @@ contract YMT is ERC20Permit {
         startEpochSupply = INITIAL_SUPPLY + VESTING_SUPPLY;
     }
 
-    // @dev Update mining rate and supply at the start of the epoch
-    //      Any modifying mining call must also call this
+    /**
+     * @dev Update mining rate and supply at the start of the epoch
+     *      Any modifying mining call must also call this
+     */
     function _updateMiningParameters() internal {
         uint256 _rate = rate;
         uint256 _startEpochSupply = startEpochSupply;
@@ -82,9 +84,11 @@ contract YMT is ERC20Permit {
         emit UpdateMiningParameters(block.timestamp, _rate, _startEpochSupply);
     }
 
-    // @notice Update mining rate and supply at the start of the epoch
-    // @dev Callable by any address, but only once per epoch
-    //      Total supply becomes slightly larger if(this function is called late
+    /**
+     * @notice Update mining rate and supply at the start of the epoch
+     * @dev Callable by any address, but only once per epoch
+     *      Total supply becomes slightly larger if(this function is called late
+     */
     function updateMiningParameters() external {
         require(
             block.timestamp >= startEpochTime + RATE_REDUCTION_TIME,
@@ -93,9 +97,11 @@ contract YMT is ERC20Permit {
         _updateMiningParameters();
     }
 
-    // @notice Get timestamp of the current mining epoch start
-    //         while simultaneously updating mining parameters
-    // @return Timestamp of the epoch
+    /**
+     * @notice Get timestamp of the current mining epoch start
+     *         while simultaneously updating mining parameters
+     * @return Timestamp of the epoch
+     */
     function startEpochTimeWrite() external returns (uint256) {
         uint256 _startEpochTime = startEpochTime;
         if (block.timestamp >= _startEpochTime + RATE_REDUCTION_TIME) {
@@ -106,9 +112,11 @@ contract YMT is ERC20Permit {
         }
     }
 
-    // @notice Get timestamp of the next mining epoch start
-    //         while simultaneously updating mining parameters
-    // @return Timestamp of the next epoch
+    /**
+     * @notice Get timestamp of the next mining epoch start
+     *         while simultaneously updating mining parameters
+     * @return Timestamp of the next epoch
+     */
     function futureEpochTimeWrite() external returns (uint256) {
         uint256 _startEpochTime = startEpochTime;
         if (block.timestamp >= _startEpochTime + RATE_REDUCTION_TIME) {
@@ -128,10 +136,12 @@ contract YMT is ERC20Permit {
         return _availableSupply();
     }
 
-    // @notice How much supply is mintable from start timestamp till end timestamp
-    // @param start Start of the time interval (timestamp)
-    // @param end End of the time interval (timestamp)
-    // @return Tokens mintable from `start` till `end`
+    /**
+     * @notice How much supply is mintable from start timestamp till end timestamp
+     * @param start Start of the time interval (timestamp)
+     * @param end End of the time interval (timestamp)
+     * @return Tokens mintable from `start` till `end`
+     */
     function mintableInTimeframe(
         uint256 start,
         uint256 end
@@ -188,9 +198,11 @@ contract YMT is ERC20Permit {
         return to_mint;
     }
 
-    // @notice Set the ymtMinter address
-    // @dev Only callable once, when ymtMinter has not yet been set
-    // @param _ymtMinter Address of the ymtMinter
+    /**
+     * @notice Set the ymtMinter address
+     * @dev Only callable once, when ymtMinter has not yet been set
+     * @param _ymtMinter Address of the ymtMinter
+     */
     function setMinter(address _ymtMinter) external onlyAdmin {
         require(
             _ymtMinter != address(0),
@@ -200,19 +212,23 @@ contract YMT is ERC20Permit {
         emit SetMinter(_ymtMinter);
     }
 
-    // @notice Set the new admin.
-    // @dev After all is set up, admin only can change the token name
-    // @param _admin New admin address
+    /**
+     * @notice Set the new admin.
+     * @dev After all is set up, admin only can change the token name
+     * @param _admin New admin address
+     */
     function setAdmin(address _admin) external onlyAdmin {
         admin = _admin;
         emit SetAdmin(_admin);
     }
 
-    // @notice Mint `_value` tokens and assign them to `_to`
-    // @dev Emits a Transfer event originating from 0x00
-    // @param _to The account that will receive the created tokens
-    // @param _value The amount that will be created
-    // @return bool success
+    /**
+     * @notice Mint `_value` tokens and assign them to `_to`
+     * @dev Emits a Transfer event originating from 0x00
+     * @param _to The account that will receive the created tokens
+     * @param _value The amount that will be created
+     * @return bool success
+     */
     function mint(address _to, uint256 _value) external returns (bool) {
         require(msg.sender == ymtMinter, "dev: ymtMinter only"); // dev: ymtMinter only
         require(_to != address(0), "dev: zero address"); // dev: zero address
@@ -230,10 +246,12 @@ contract YMT is ERC20Permit {
         return true;
     }
 
-    // @notice Burn `_value` tokens belonging to `msg.sender`
-    // @dev Emits a Transfer event with a destination of 0x00
-    // @param _value The amount that will be burned
-    // @return bool success
+    /**
+     * @notice Burn `_value` tokens belonging to `msg.sender`
+     * @dev Emits a Transfer event with a destination of 0x00
+     * @param _value The amount that will be burned
+     * @return bool success
+     */
     function burn(uint256 _value) external returns (bool) {
         _burn(msg.sender, _value);
         return true;

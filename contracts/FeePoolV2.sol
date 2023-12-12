@@ -46,7 +46,7 @@ contract FeePoolV2 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
     event Received(address sender, uint256 value);
     event VeYMTSet(address sender, address veYMT);
 
-    /***
+    /**
      * @param startTime_ Epoch time for fee distribution to start
      */
     function initialize(uint256 startTime_) public initializer {
@@ -105,7 +105,7 @@ contract FeePoolV2 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
         emit CheckpointToken(block.timestamp, _toDistribute);
     }
 
-    /***
+    /**
      * @notice Update the token checkpoint
      * @dev Calculates the total number of tokens to be distributed in a given week.
          During setup for the initial distribution this function is only callable
@@ -182,7 +182,7 @@ contract FeePoolV2 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
         return _min;
     }
 
-    /***
+    /**
      * @notice Get the veYMT balance for `user_` at `timestamp_`
      * @param user_ Address to query balance for
      * @param timestamp_ Epoch time
@@ -238,7 +238,7 @@ contract FeePoolV2 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
         timeCursor = _t;
     }
 
-    /***
+    /**
      * @notice Update the veYMT total supply checkpoint
      * @dev The checkpoint is also updated by the first claimant each new epoch week. This function may be called independently of a claim, to reduce claiming gas costs.
      */
@@ -398,7 +398,7 @@ contract FeePoolV2 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
         return _toDistribute;
     }
 
-    /***
+    /**
      * @notice Claim fees for `msg.sender`
      * @dev Each call to claim look at a maximum of 50 user veYMT points.
          For accounts with many veYMT related actions, this function
@@ -438,7 +438,7 @@ contract FeePoolV2 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
         return _amount;
     }
 
-    /***
+    /**
      * @notice Claim fees for `addr_`
      * @dev Each call to claim look at a maximum of 50 user veYMT points.
          For accounts with many veYMT related actions, this function
@@ -532,7 +532,7 @@ contract FeePoolV2 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
         return true;
     }
 
-    /***
+    /**
      * @notice Toggle permission for checkpointing by any account
      */
     function toggleAllowCheckpointToken() external onlyGovernance {
@@ -552,7 +552,7 @@ contract FeePoolV2 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
         require(success, "Transfer failed");
     }
 
-    /***
+    /**
      * @notice Recover native token from this contract
      * @dev Tokens are sent to the emergency return address.
      * @return bool success

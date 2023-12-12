@@ -73,6 +73,11 @@ contract ScoreRegistry is YamatoAction {
     mapping(int128 => uint256) public periodTimestamp;
     mapping(int128 => uint256) public integrateInvSupply;
 
+    /**
+     * @notice Initializes the contract with given parameters.
+     * @param ymtMinterAddr The address of the YMT minter.
+     * @param yamatoAddr The address of the Yamato contract.
+     */
     function initialize(
         address ymtMinterAddr,
         address yamatoAddr
@@ -107,10 +112,18 @@ contract ScoreRegistry is YamatoAction {
         futureEpochTime = IYMT(ymtAddr).futureEpochTimeWrite();
     }
 
+    /**
+     * @notice Updates the checkpoint for a specified address.
+     * @param addr The address to update the checkpoint for.
+     */
     function checkpoint(address addr) public onlyYamato {
         _checkpoint(addr);
     }
 
+    /**
+     * @notice Internal function to update the checkpoint for a specified address.
+     * @param addr The address to update the checkpoint for.
+     */
     function _checkpoint(address addr) private {
         CheckPointParameters memory _st;
 
@@ -198,6 +211,13 @@ contract ScoreRegistry is YamatoAction {
         integrateCheckpointOf[addr] = block.timestamp;
     }
 
+    /**
+     * @notice Updates the score limit for a user based on their collateral ratio and total debt.
+     * @param addr_ The address of the user.
+     * @param debt_ The user's debt amount.
+     * @param totalDebt_ The total debt amount in the system.
+     * @param collateralRatio_ The user's collateral ratio.
+     */
     function updateScoreLimit(
         address addr_,
         uint256 debt_,
@@ -207,6 +227,13 @@ contract ScoreRegistry is YamatoAction {
         _updateScoreLimit(addr_, debt_, totalDebt_, collateralRatio_);
     }
 
+    /**
+     * @notice Internal function to calculate and update score limits for a user.
+     * @param addr_ The address of the user.
+     * @param debt_ The user's debt amount.
+     * @param totalDebt_ The total debt amount in the system.
+     * @param collateralRatio_ The user's collateral ratio.
+     */
     function _updateScoreLimit(
         address addr_,
         uint256 debt_,
@@ -248,6 +275,11 @@ contract ScoreRegistry is YamatoAction {
         );
     }
 
+    /**
+     * @notice Calculates the coefficient based on the collateral ratio.
+     * @param collateralRatio_ The collateral ratio to calculate the coefficient for.
+     * @return The calculated coefficient.
+     */
     function calculateCoefficient(
         uint256 collateralRatio_
     ) internal pure returns (uint256) {
@@ -258,6 +290,11 @@ contract ScoreRegistry is YamatoAction {
         return 0;
     }
 
+    /**
+     * @notice Allows a user to checkpoint their score.
+     * @param addr_ The address of the user.
+     * @return True if the operation was successful.
+     */
     function userCheckpoint(address addr_) external returns (bool) {
         require(
             msg.sender == addr_ || msg.sender == ymtMinter(),
@@ -272,6 +309,10 @@ contract ScoreRegistry is YamatoAction {
         return true;
     }
 
+    /**
+     * @notice Kicks a user for abusing their boost, resetting their score limit.
+     * @param addr_ The address of the user to kick.
+     */
     function kick(address addr_) external {
         uint256 _tLast = integrateCheckpointOf[addr_];
         uint256 _tVe = IveYMT(veYMT()).userPointHistoryTs(
@@ -298,10 +339,18 @@ contract ScoreRegistry is YamatoAction {
         _updateScoreLimit(addr_, _balance, _totalSupply, _collateralRatio);
     }
 
+    /**
+     * @notice Sets the killed status of the contract.
+     * @param isKilled_ The status to set.
+     */
     function setKilled(bool isKilled_) external onlyGovernance {
         isKilled = isKilled_;
     }
 
+    /**
+     * @notice Gets the timestamp of the last checkpoint.
+     * @return The timestamp of the last checkpoint.
+     */
     function integrateCheckpoint() external view returns (uint256) {
         return periodTimestamp[period];
     }

@@ -90,7 +90,7 @@ contract veYMT is ReentrancyGuard {
     address public admin;
     address public futureAdmin;
 
-    /***
+    /**
      * @notice Contract constructor
      * @param tokenAddr_ `YMT` token address
      */
@@ -108,16 +108,16 @@ contract veYMT is ReentrancyGuard {
         symbol = "veYMT";
     }
 
-    /***
+    /**
      * @notice Transfer ownership of VotingEscrow contract to `addr_`
-     * @param addr Address to have ownership transferred to
+     * @param addr_ Address to have ownership transferred to
      */
     function commitTransferOwnership(address addr_) external onlyAdmin {
         futureAdmin = addr_;
         emit CommitOwnership(addr_);
     }
 
-    /***
+    /**
      * @notice Apply ownership transfer
      */
     function applyTransferOwnership() external onlyAdmin {
@@ -127,7 +127,7 @@ contract veYMT is ReentrancyGuard {
         emit ApplyOwnership(_admin);
     }
 
-    /***
+    /**
      * @notice Get the most recently recorded rate of voting power decrease for `addr`
      * @param addr_ Address of the user wallet
      * @return Value of the slope
@@ -137,7 +137,7 @@ contract veYMT is ReentrancyGuard {
         return userPointHistory[addr_][_uEpoch].slope;
     }
 
-    /***
+    /**
      * @notice Get the timestamp for checkpoint `idx_` for `addr_`
      * @param addr_ User wallet address
      * @param idx_ User epoch number
@@ -150,7 +150,7 @@ contract veYMT is ReentrancyGuard {
         return userPointHistory[addr_][idx_].ts;
     }
 
-    /***
+    /**
      * @notice Get timestamp when `addr_`'s lock finishes
      * @param addr_ User wallet
      * @return Epoch time of the lock end
@@ -159,7 +159,7 @@ contract veYMT is ReentrancyGuard {
         return locked[addr_].end;
     }
 
-    /***
+    /**
      * @notice Record global and per-user data to checkpoint
      * @param addr_ User's wallet address. No user checkpoint if 0x0
      * @param oldLocked_ Pevious locked amount / end lock time for the user
@@ -356,7 +356,7 @@ contract veYMT is ReentrancyGuard {
         }
     }
 
-    /***
+    /**
      * @notice Deposit and lock tokens for a user
      * @param addr_ User's wallet address
      * @param value_ Amount to deposit
@@ -406,7 +406,7 @@ contract veYMT is ReentrancyGuard {
         emit Supply(_supplyBefore, _supplyBefore + value_);
     }
 
-    /***
+    /**
      * @notice Record global data to checkpoint
      */
     function checkpoint() external {
@@ -415,7 +415,7 @@ contract veYMT is ReentrancyGuard {
         _checkpoint(address(0), _old, _new);
     }
 
-    /***
+    /**
      * @notice Deposit `_value` tokens for `_addr` and add to the lock
      * @dev Anyone (even a smart contract) can deposit for someone else, but
          cannot extend their locktime and deposit for a brand new user
@@ -435,7 +435,7 @@ contract veYMT is ReentrancyGuard {
         _depositFor(addr_, value_, 0, locked[addr_], DEPOSIT_FOR_TYPE);
     }
 
-    /***
+    /**
      * @notice Deposit `_value` tokens for `msg.sender` and lock until `_unlock_time`
      * @param value_ Amount to deposit
      * @param unlockTime_ Epoch time when tokens unlock, rounded down to whole weeks
@@ -467,7 +467,7 @@ contract veYMT is ReentrancyGuard {
         );
     }
 
-    /***
+    /**
      * @notice Deposit `_value` additional tokens for `msg.sender`
             without modifying the unlock time
      * @param value_ Amount of tokens to deposit and add to the lock
@@ -485,7 +485,7 @@ contract veYMT is ReentrancyGuard {
         _depositFor(msg.sender, value_, 0, _locked, INCREASE_LOCK_AMOUNT);
     }
 
-    /***
+    /**
      * @notice Extend the unlock time for `msg.sender` to `_unlock_time`
      * @param unlockTime_ New epoch time for unlocking
      */
@@ -516,7 +516,7 @@ contract veYMT is ReentrancyGuard {
         );
     }
 
-    /***
+    /**
      * @notice Withdraw all tokens for `msg.sender`
      * @dev Only possible if the lock has expired
      */
@@ -554,7 +554,7 @@ contract veYMT is ReentrancyGuard {
     // They measure the weights for the purpose of voting, so they don't represent
     // real coins.
 
-    /***
+    /**
      * @notice Binary search to estimate epoch for block number
      * @param block_ Block to find
      * @param maxEpoch_ Don't go beyond this epoch
@@ -584,7 +584,7 @@ contract veYMT is ReentrancyGuard {
         return _min;
     }
 
-    /***
+    /**
      * @notice Get the current voting power for `msg.sender`
      * @dev Adheres to the ERC20 `balanceOf` interface for Aragon compatibility
      * @param addr_ User wallet address
@@ -610,7 +610,7 @@ contract veYMT is ReentrancyGuard {
         }
     }
 
-    /***
+    /**
      * @notice Get the current voting power for `msg.sender`
      * @dev Adheres to the ERC20 `balanceOf` interface for Aragon compatibility
      * @param addr_ User wallet address
@@ -632,7 +632,7 @@ contract veYMT is ReentrancyGuard {
         }
     }
 
-    /***
+    /**
      * @notice Measure voting power of `addr` at block height `_block`
      * @dev Adheres to MiniMe `balanceOfAt` interface: https://github.com/Giveth/minime
      * @param addr_ User's wallet address
@@ -697,7 +697,7 @@ contract veYMT is ReentrancyGuard {
         }
     }
 
-    /***
+    /**
      * @notice Calculate total voting power at some point in the past
      * @param point_ The point (bias/slope) to start search from
      * @param t_ Time to calculate the total voting power at
@@ -739,7 +739,7 @@ contract veYMT is ReentrancyGuard {
         return uint256(int256(_lastPoint.bias));
     }
 
-    /***
+    /**
      * @notice Calculate total voting power
      * @dev Adheres to the ERC20 `totalSupply` interface for Aragon compatibility
      * @param t_ Time to calculate the total voting power at
@@ -751,7 +751,7 @@ contract veYMT is ReentrancyGuard {
         return supplyAt(_lastPoint, t_);
     }
 
-    /***
+    /**
      * @notice Calculate total voting power
      * @dev Adheres to the ERC20 `totalSupply` interface for Aragon compatibility
      * @return Total voting power
@@ -762,7 +762,7 @@ contract veYMT is ReentrancyGuard {
         return supplyAt(_lastPoint, block.timestamp);
     }
 
-    /***
+    /**
      * @notice Calculate total voting power at some point in the past
      * @param block_ Block to calculate the total voting power at
      * @return Total voting power at `_block`
@@ -796,7 +796,7 @@ contract veYMT is ReentrancyGuard {
         return supplyAt(_point, _point.ts + _dt);
     }
 
-    /***
+    /**
      * @dev Dummy method required for Aragon compatibility
      */
     function changeController(address newController) external {
