@@ -6,7 +6,12 @@ import {
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
 import { BigNumber } from "ethers";
-import { YMT, YMT__factory, YmtVesting, YmtVesting__factory } from "../../../../typechain";
+import {
+  YMT,
+  YMT__factory,
+  YmtVesting,
+  YmtVesting__factory,
+} from "../../../../typechain";
 import Constants from "../../Constants";
 
 const YEAR = Constants.YEAR;
@@ -21,7 +26,9 @@ describe("YMT", function () {
       await ethers.getContractFactory("YmtVesting")
     )).deploy();
 
-    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy(YmtVesting.address);
+    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy(
+      YmtVesting.address
+    );
   });
 
   beforeEach(async () => {

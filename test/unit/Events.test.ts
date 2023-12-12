@@ -144,8 +144,10 @@ describe("story Events", function () {
       YmtVesting = await (<YmtVesting__factory>(
         await ethers.getContractFactory("YmtVesting")
       )).deploy();
-  
-      YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy(YmtVesting.address);
+
+      YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy(
+        YmtVesting.address
+      );
 
       veYMT = await (<VeYMT__factory>(
         await ethers.getContractFactory("veYMT")

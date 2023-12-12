@@ -75,8 +75,6 @@ describe("YmtVesting Integration Tests", function () {
 
     // Check final balance of YMT in the contract
     const finalContractBalance = await YMT.balanceOf(YmtVesting.address);
-    expect(finalContractBalance).to.equal(
-      BigNumber.from(0)
-    );
+    expect(finalContractBalance).to.equal(BigNumber.from(0));
   });
 });

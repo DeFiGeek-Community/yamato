@@ -7,7 +7,12 @@ import {
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { YMT, YMT__factory, YmtVesting, YmtVesting__factory } from "../../../../typechain";
+import {
+  YMT,
+  YMT__factory,
+  YmtVesting,
+  YmtVesting__factory,
+} from "../../../../typechain";
 import Constants from "../../Constants";
 
 const year = Constants.year;
@@ -32,7 +37,9 @@ describe("YMT", function () {
       await ethers.getContractFactory("YmtVesting")
     )).deploy();
 
-    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy(YmtVesting.address);
+    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy(
+      YmtVesting.address
+    );
 
     await time.increase(BigNumber.from(86401));
     await YMT.updateMiningParameters();

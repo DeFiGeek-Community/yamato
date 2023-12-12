@@ -66,7 +66,9 @@ describe("FeePoolV2", function () {
       await ethers.getContractFactory("YmtVesting")
     )).deploy();
 
-    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy(YmtVesting.address);
+    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy(
+      YmtVesting.address
+    );
 
     veYMT = await (<VeYMT__factory>(
       await ethers.getContractFactory("veYMT")
@@ -160,7 +162,7 @@ describe("FeePoolV2", function () {
     stTime = stTime || getRandomsTime();
 
     // console.log(`
-    // ruleNewLock --- 
+    // ruleNewLock ---
     // stAcct: ${
     //   stAcct.address
     // }, stAmount: ${stAmount.toString()}, stWeeks: ${stWeeks.toString()}, stTime: ${stTime.toString()}

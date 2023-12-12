@@ -6,7 +6,12 @@ import {
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { YMT, YMT__factory, YmtVesting, YmtVesting__factory } from "../../../../typechain";
+import {
+  YMT,
+  YMT__factory,
+  YmtVesting,
+  YmtVesting__factory,
+} from "../../../../typechain";
 import Constants from "../../Constants";
 
 const ten_to_the_18 = Constants.ten_to_the_18;
@@ -23,7 +28,9 @@ describe("YMT", function () {
       await ethers.getContractFactory("YmtVesting")
     )).deploy();
 
-    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy(YmtVesting.address);
+    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy(
+      YmtVesting.address
+    );
   });
 
   beforeEach(async () => {
@@ -63,12 +70,14 @@ describe("YMT", function () {
 
     // トークン供給の全量を正しくburnさせるテスト
     it("should correctly burn the entire token supply", async function () {
-      const balance: BigNumber = await YMT.balanceOf(accounts[0].address)
+      const balance: BigNumber = await YMT.balanceOf(accounts[0].address);
 
       await YMT.burn(balance);
 
       expect(await YMT.balanceOf(accounts[0].address)).to.equal(0);
-      expect(await YMT.totalSupply()).to.equal(BigNumber.from(250000000).mul(ten_to_the_18));
+      expect(await YMT.totalSupply()).to.equal(
+        BigNumber.from(250000000).mul(ten_to_the_18)
+      );
     });
 
     // 総供給量を超える量をburnさせようとした場合にリバートするテスト
