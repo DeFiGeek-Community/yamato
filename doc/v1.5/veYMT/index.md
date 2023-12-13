@@ -1,9 +1,8 @@
-# veYMT (VotingEscrow)
+# veYMT Token
 
 ## 概要
 
-YMT トークンをロックし、移転不可の veYMT トークンを発行する。
-ロック期間は最大 4 年間、最小単位は 1 週間で、veYMT はロック後の時間経過により線形に減衰する。1YMT を 4 年間ロックすると 1veYMT が発行される。
+veYMT Tokenは、YMTトークンをロックすることで得られる、ERC-20互換のトークンです。ただし、このトークンは`transfer()`機能を持ちません。投票用のエスクロートークンとして機能し、ロックされたトークンには時間に応じた重みが付与されます。
 
 #### 参考
 
@@ -11,266 +10,180 @@ YMT トークンをロックし、移転不可の veYMT トークンを発行す
 - [Curve VotingEscrow Contract](https://curve.readthedocs.io/dao-vecrv.html)
 - [The Curve DAO: Liquidity Gauges and Minting CRV](https://curve.readthedocs.io/dao-gauges.html)
 - [LiquidityGaugeV6 Contract](https://github.com/curvefi/tricrypto-ng/blob/main/contracts/main/LiquidityGauge.vy)
+以下は、提供されたSolidityコード「veYMT Token」のためのドキュメントです。このドキュメントは、以前の「Token Minter」ドキュメントのフォーマットに従って作成されています。
 
-## Struct
+---
 
-### Point
+## インターフェース
 
-veYMT のある時点での状態を格納するための構造体
+### `IYMT`:
 
-- bias(int128)
-  - veYMT の残高
-- slope(int128)
-  - veYMT の減り方を表す傾き。ロック額 / 最大ロック期間
-- ts(uint256)
-  - タイムスタンプ
-- blk(uint256)
-  - ブロック高
+- **説明**: YMTトークンのインターフェース。veYMTトークンはこのトークンを基にしています。
+- **関数**:
+  - トークンに関連する標準的なERC20関数群。
 
-### LockedBalance
+---
 
-ロックの情報を格納するための構造体
+## イベント
 
-- amount(int128)
-  - ロック量
-- end(uint256)
-  - ロックが終了する時点のタイムスタンプ
+### `CommitOwnership`:
 
-## 定数
+- **説明**: 新しい管理者に所有権を委譲する際に発生します。
+- **パラメータ**:
+  - `admin`: 新しい管理者のアドレス。
 
-### `DEPOSIT_FOR_TYPE(int128)`
+### `ApplyOwnership`:
 
-イベント識別用
+- **説明**: 所有権の移転が適用されたときにトリガーされるイベント。
+- **パラメータ**:
+  - `admin`: 新しい管理者のアドレス。
 
-### `CREATE_LOCK_TYPE(int128)`
+### `Deposit`:
 
-イベント識別用
+- **説明**: ユーザーがトークンをデポジットした際に発生します。
+- **パラメータ**:
+  - `provider`: デポジットしたユーザーのアドレス。
+  - `value`: デポジットされたトークンの量。
+  - `locktime`: ロックされる時間。
+  - `ts`: タイムスタンプ。
 
-### `INCREASE_LOCK_AMOUNT(int128)`
+### `Withdraw`:
 
-イベント識別用
+- **説明**: ユーザーがトークンを引き出した際に発生します。
+- **パラメータ**:
+  - `provider`: 引き出したユーザーのアドレス。
+  - `value`: 引き出されたトークンの量。
+  - `ts`: タイムスタンプ。
 
-### `INCREASE_UNLOCK_TIME(int128)`
+### `Supply`:
 
-イベント識別用
+- **説明**: 供給量が変更されたときにトリガーされるイベント。
+- **パラメータ**:
+  - `prevSupply`: 変更前の供給量。
+  - `supply`: 新しい供給量。
 
-### `WEEK(uint256)`
+---
 
-1 週間（7 \* 86400）
+## 変数
 
-### `MAXTIME(uint256)`
+### `locked: public(mapping(address => LockedBalance))`
 
-4 年間（4 \* 365 \* 86400）
-
-### `MULTIPLIER(uint256)`
-
-除算時の丸め誤差防止に使用する定数 (10^18)
-
-## プロパティ
-
-### `token: public(address)`
-
-ロック対象のトークンアドレス（YMT のコントラクトアドレス）
-
-### `supply: public(uint256)`
-
-ロック対象トークンの総ロック量。デポジット、引き出し時に変化
-
-### `locked: public(address => LockedBalance)`
-
-ユーザごとのトークンロック情報（量、終了タイムスタンプ）を格納
+- **説明**: ユーザーごとのロックされたバランスを記録します。
 
 ### `epoch: public(uint256)`
 
-全てのユーザのアクションごとにインクリメントするグローバルなインデックス
+- **説明**: 現在のエポック番号。
 
-### `point_history: public(Point[])`
+### `token: public(address)`
 
-veYMT のグローバルな状態を epoch ごとに記録する配列
+- **説明**: veYMTトークンが基づいているYMTトークンのアドレス。
 
-### `user_point_history: public(address => Point[])`
+### `supply: public(uint256)`
 
-veYMT のユーザごとの状態を user epoch ごとに記録する配列
+- **説明**: 総供給量。
 
-### `user_point_epoch: public(address => uint256)`
+---
 
-各ユーザのアクションごとにインクリメントするローカルなインデックス
+## 関数
 
-### `slope_changes: public(uint256 => uint128)`
+### `constructor(tokenAddr_: address)`
 
-ある時点で予定されている slope の変化を記録する。ユーザのデポジットやロック期間変更時に更新される。週単位のタイムスタンプ（WEEK の倍数）がキーになり、ユーザのアクション時に該当する slope の変化がある場合は Point の slope にこの変化を適用する。
+- **説明**: コントラクトのコンストラクタ。YMTトークンのアドレスを設定します。
+- **パラメータ**:
+  - `tokenAddr_`: YMTトークンのアドレス。
 
-### `controller: public(address)`
+### `commitTransferOwnership(addr_: address)`
 
-Aragon 互換性のため
+- **説明**: 新しい管理者に所有権を委譲します。
+- **パラメータ**:
+  - `addr_`: 新しい管理者のアドレス。
+- **アクセス制限**: 管理者のみ。
 
-### `transfersEnabled: public(bool)`
+### `applyTransferOwnership()`
 
-Aragon 互換性のため
+- **説明**: 所有権の移転を適用します。
+- **アクセス制限**: 管理者のみ。
 
-### `name: public(string)`
+### `depositFor(addr_: address, value_: uint256)`
 
-ve トークン名
+- **説明**: 指定したアドレスのユーザーのためにトークンをデポジットし、ロックします。
+- **パラメータ**:
+  - `addr_`: トークンをデポジットするユーザーのアドレス。
+  - `value_`: デポジットするトークンの量。
 
-### `symbol: public(string)`
+### `createLock(value_: uint256, unlockTime_: uint256)`
 
-ve トークンシンボル
+- **説明**: 新しいロックを作成し、トークンをデポジットします。
+- **パラメータ**:
+  - `value_`: デポジットするトークンの量。
+  - `unlockTime_`: トークンのロックを解除する時間（エポック秒）。
 
-### `version: public(string)`
+### `increaseAmount(value_: uint256)`
 
-ve トークンバージョン
+- **説明**: 既存のロックにトークンを追加します。
+- **パラメータ**:
+  - `value_`: 追加するトークンの量。
 
-### `decimals: public(uint256)`
+### `increaseUnlockTime(unlockTime_: uint256)`
 
-ve トークンデシマル
+- **説明**: ロックの解除時間を延長します。
+- **パラメータ**:
+  - `unlockTime_`: 新しいロック解除時間（エポック秒）。
 
-### `future_smart_wallet_checker: public(address)`
+### `withdraw()`
 
-Checker for whitelisted (smart contract) wallets which are allowed to deposit
-The goal is to prevent tokenizing the escrow
+- **説明**: ロックが解除されたトークンを引き出します。
 
-### `smart_wallet_checker: public(address)`
 
-Checker for whitelisted (smart contract) wallets which are allowed to deposit
-The goal is to prevent tokenizing the escrow
+以下は、提供されたSolidityコード「veYMT Token」の追加的なドキュメント記述です。このセクションは、コントラクトの仕様をより深く理解するのに役立ちます。
 
-Curve の VotingEscrow では現在下記コントラクトが登録されている
-https://etherscan.io/address/0xca719728Ef172d0961768581fdF35CB116e0B7a4#readContract
+---
 
-### `admin: public(address)`
+## コントラクトの詳細
 
-管理者アドレス
+### veYMT コントラクト:
 
-### `future_admin: public(address)`
+- **目的**: veYMTコントラクトは、YMTトークンをロックして、ロック期間に応じた投票権を提供する機能を実装しています。ロックされたトークンは、所定の期間が経過するまで引き出すことができません。
 
-次期管理者アドレス
+### ロックメカニズム:
 
-# 機能
+- **ロックの仕組み**: ユーザーはYMTトークンをveYMTコントラクトに預けることで、ロックされたトークンに基づく投票権を獲得します。ロック期間はユーザーによって設定され、最大で4年間です。
+veYMTトークンにおける投票権の変化は、ロックされたトークンの量とロック期間に基づいて計算されます。この計算には「バイアス」と「スロープ」という二つの概念が関係します。
 
-### `**init**(token_addr: address, _name: String[64], _symbol: String[32], _version: String[32]) external`
+### バイアスとスロープ
 
-初期化
+- **バイアス (Bias)**: ある時点でのユーザーの投票権の量を示します。これは、ロックされたトークンの量とロック期間に比例します。
+- **スロープ (Slope)**: バイアスが時間とともにどのように減少するかを示す値です。これは、ロックされたトークンの量に依存し、ロック期間が経過するにつれて減少します。
 
-- admin に msg.sender を設定
-- token に token_addr を設定
-- point_history[0].blk に block.number を設定
-- point_history[0].ts に block.timestamp を設定
-- controller に msg.sender を設定
-- transfersEnabled に True を設定
-- decimals に token の decimals と同じ値を設定
-- name に\_name を設定
-- symbol に\_symbol を設定
-- version に\_version を設定
+## 投票権の計算
 
-### `commit_transfer_ownership(addr: address) external`
+投票権の計算においては、次の数式が用いられます:
 
-- 次期管理者アドレスを設定
-- 管理者のみ
+$$ \text{バイアス} = \text{スロープ} \times (\text{ロック終了時刻} - \text{現在時刻}) $$
 
-### `apply_transfer_ownership() external`
+ここで、
+- **ロック終了時刻**: ユーザーが設定したトークンのロックが解除される時刻。
+- **現在時刻**: 現在の時刻。
 
-- 管理者アドレスに次期管理者アドレスを設定
-- 管理者のみ
 
-### `commit_smart_wallet_checker(addr: address) external`
+### 例
 
-- 次期スマートウォレットチェッカーを設定
-- 管理者のみ
+例えば、ユーザーが100 veYMTトークンを4年間ロックするとします。この場合、スロープはロック量を最大ロック期間で割った値になります。
 
-### `apply_smart_wallet_checker() external`
+$$ \text{スロープ} = \frac{100 \text{ veYMT}}{4 \times 365 \times 24 \times 3600 \text{ 秒}} $$
 
-- スマートウォレットチェッカーに次期スマートウォレットチェッカーを設定
-- 管理者のみ
 
-### `assert_not_contract(addr: address) internal`
+ロックが開始された時点でのバイアスは、スロープにロック期間を掛けたものに等しくなります。したがって、バイアスは初め100 veYMTとなりますが、時間が経過するにつれて徐々に減少していきます。
 
-- スマートウォレットチェッカーを使用して対象アドレスがホワイトリストされたスマコンかどうかチェックする
+### ロック期間の影響
 
-### `get_last_user_slope(addr: address) -> int128 external view`
+- **長期ロックの利点**: 長期にわたってトークンをロックするほど、初期のバイアスは大きくなり、投票権の量も多くなります。
+- **時間経過とともの減少**: しかし、時間が経過するにつれて、スロープによりバイアスは減少し、投票権も徐々に減少していきます。
 
-- 指定アドレスの最新の slope を返す
+このようにveYMTトークンでは、ロック期間が長いほど、初期の投票権は多くなりますが、その権利は時間とともに減少していきます。このメカニズムにより、ユーザーは長期的なコミットメントを通じてより大きな投票権を得ることができますが、ロック期間が経過するにつれてその影響力は減少していきます。
 
-### `user_point_history__ts(_addr: address, _idx: uint256) -> uint256 external view`
+### ユーザーインタラクション:
 
-- 指定アドレスの指定インデックス（user epoch）のタイムスタンプを返す
-
-### `locked__end(_addr: address) -> uint256 external view`
-
-- 指定アドレスのロック終了時点タイムスタンプを返す
-
-### `_checkpoint(addr: address, old_locked: LockedBalance, new_locked: LockedBalance) internal`
-
-各ユーザアクションごとにコールされ、ポイント履歴、報酬情報を更新する
-
-- addr が ZERO_ADDRESS でない場合
-  - addr の新旧 slope と bias を計算
-  - slope の変化（slope_changes）を計算
-  - ユーザのポイント履歴を更新
-  - ユーザごとの報酬の計算をする
-    - integrate_inv_supply_of
-    - integrate_checkpoint_of
-    - integrate_fraction
-- ポイント履歴の最後の時点から 最大 255 週分の履歴を作成する。255 週以上の期間に渡って履歴がない場合(=ユーザ操作がない場合）は正しい計算ができなくなる
-- integrate_inv_supply を更新する
-
-### `_deposit_for(_addr: address, _value: uint256, unlock_time: uint256, locked_balance: LockedBalance, type: int128) internal`
-
-- 任意の addr に代わって YMT を任意の量ロックする
-
-### `checkpoint() external`
-
-- \_checkpoint を呼び、veYMT のグローバルな状態を更新する
-
-### `deposit_for(_addr: address, _value: uint256) external`
-
-- \_deposit_for を呼び、任意の addr に代わって YMT を任意の量ロックする
-- 既存のロックがない場合はリバート
-
-### `create_lock(_value: uint256, _unlock_time: uint256) external`
-
-- 新規にロックを作成する
-- 既存のロックがある場合はリバート
-
-### `increase_amount(_value: uint256) external`
-
-- ロック量を増額する
-
-### `increase_unlock_time(_unlock_time: uint256) external`
-
-- ロック期間を延長する
-
-### `withdraw() external`
-
-- ロック期間が終了した YMT を引き出す
-
-### `find_block_epoch(_block: uint256, max_epoch: uint256) -> uint256 internal view`
-
-- 指定したブロック高に一番近い epoch を検索して返す
-
-### `balanceOf(addr: address, _t: uint256 = block.timestamp) -> uint256 external view`
-
-- 指定したアドレスの指定したタイムスタンプ時点での veYMT 残高を返す
-- \_t が最後に記録されたユーザのポイント履歴より前の場合は失敗する
-
-### `balanceOfAt(addr: address, _block: uint256) -> uint256 external view`
-
-- 指定したアドレスの指定したブロック高時点での veYMT 残高を返す
-
-### `supply_at(point: Point, t: uint256) -> uint256 internal view`
-
-- 指定したポイントを起点に指定したタイムスタンプ時点での 総 veYMT 残高を返す
-- 255 週以上ポイントが記録されていない状況の場合は正しい計算ができなくなる
-
-### `totalSupply(t: uint256 = block.timestamp) -> uint256 external view`
-
-- 最後に記録されたポイントを起点に、指定したタイムスタンプ時点の総 veYMT 残高を返す
-
-### `totalSupplyAt(_block: uint256) -> uint256 external view`
-
-- 指定したブロック高時点での総 veYMT 残高を返す
-
-### `changeController(_newController: address) external`
-
-- controller のみ
-- controller を変更する
-- Aragon 互換性のためのダミー関数
+- **デポジット**: ユーザーは特定の量のYMTトークンをデポジットし、特定の期間でロックすることができます。
+- **ロックの増加**: ユーザーは既存のロックにトークンを追加するか、ロック期間を延長することが可能です。
+- **引き出し**: ロック期間が終了した後、ユーザーはロックされたトークンを引き出すことができます。
