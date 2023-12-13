@@ -2,7 +2,7 @@
 
 ## 概要
 
-Score Weight Controllerは、流動性スコアを管理し、これらのスコアを通じてトークンの発行を制御するコントラクトです。
+Score Weight Controller は、流動性スコアを管理し、これらのスコアを通じてトークンの発行を制御するコントラクトです。
 
 ---
 
@@ -33,10 +33,10 @@ Score Weight Controllerは、流動性スコアを管理し、これらのスコ
 
 ### `initialize(ymtAddr: address, veYmtAddr: address)`
 
-- **説明**: コントラクトの初期化関数。YMTトークンとveYMTコントラクトのアドレスを設定します。
+- **説明**: コントラクトの初期化関数。YMT トークンと veYMT コントラクトのアドレスを設定します。
 - **パラメータ**:
-  - `ymtAddr`: YMTトークンのアドレス。
-  - `veYmtAddr`: veYMTコントラクトのアドレス。
+  - `ymtAddr`: YMT トークンのアドレス。
+  - `veYmtAddr`: veYMT コントラクトのアドレス。
 
 ### `addCurrency(addr_: address, weight_: uint256)`
 
@@ -73,8 +73,8 @@ Score Weight Controllerは、流動性スコアを管理し、これらのスコ
 
 ### `YMT()`
 
-- **説明**: YMTトークンのアドレスを返します。
+- **説明**: YMT トークンのアドレスを返します。
 
 ### `veYMT()`
 
-- **説明**: veYMTコントラクトのアドレスを返します。
+- **説明**: veYMT コントラクトのアドレスを返します。

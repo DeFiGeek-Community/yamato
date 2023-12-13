@@ -51,9 +51,9 @@ Token Minter は、特定のスコアレジストリからトークンを mint �
 
 ### `initialize(_ymtAddr: address, _scoreWeightControllerAddr: address)`
 
-- **説明**: コントラクトの初期化関数。YMTトークンとスコアウェイトコントローラーのアドレスを設定する。
+- **説明**: コントラクトの初期化関数。YMT トークンとスコアウェイトコントローラーのアドレスを設定する。
 - **パラメータ**:
-  - `_ymtAddr`: YMTトークンのアドレス。
+  - `_ymtAddr`: YMT トークンのアドレス。
   - `_scoreWeightControllerAddr`: スコアウェイトコントローラーのアドレス。
 
 ### `_mintFor(scoreAddr: address, _for: address)`
