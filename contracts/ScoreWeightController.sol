@@ -6,7 +6,7 @@ pragma solidity 0.8.4;
  */
 
 /**
- * @title Score Controller
+ * @title Score Weight Controller
  * @notice Controls liquidity scores and the issuance of token through the scores
  */
 

@@ -8,7 +8,7 @@ pragma solidity 0.8.4;
 import "./Interfaces/IYMT.sol";
 
 /**
- * @title YmtVesting
+ * @title YMT Vesting
  * @dev This contract manages the vesting of YMT tokens.
  */
 contract YmtVesting {

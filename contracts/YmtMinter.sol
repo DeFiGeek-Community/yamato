@@ -16,7 +16,7 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 
 /**
- * @title Token Minter
+ * @title YMT Minter
  */
 
 contract YmtMinter is
