@@ -6,23 +6,6 @@ Token Minter は、特定のスコアレジストリからトークンを mint �
 
 ---
 
-## インターフェース
-
-### `IScoreRegistry`:
-
-- **説明**: スコアレジストリから情報を取得するためのインターフェース。
-- **関数**:
-  - `integrateFraction(addr: address) -> uint256`: 指定したアドレスの積分値を取得する。
-  - `userCheckpoint(addr: address) -> bool`: ユーザーチェックポイントを更新する。
-
-### `IYMT`:
-
-- **説明**: トークンを mint するための ERC20 トークンインターフェース。
-- **関数**:
-  - `mint(_to: address, _amount: uint256) -> bool`: トークンを mint する。
-
----
-
 ## イベント
 
 ### `Minted`:
@@ -56,13 +39,6 @@ Token Minter は、特定のスコアレジストリからトークンを mint �
   - `_ymtAddr`: YMT トークンのアドレス。
   - `_scoreWeightControllerAddr`: スコアウェイトコントローラーのアドレス。
 
-### `_mintFor(scoreAddr: address, _for: address)`
-
-- **説明**: 内部関数。指定したスコアレジストリからトークンを mint する。
-- **パラメータ**:
-  - `scoreAddr`: スコアレジストリのアドレス。
-  - `_for`: トークンを受け取るアドレス。
-
 ### `mint(scoreAddr: address)`
 
 - **説明**: `msg.sender`に属するすべてのトークンを mint して送信する。
@@ -81,3 +57,16 @@ Token Minter は、特定のスコアレジストリからトークンを mint �
 - **説明**: `mintingUser`が`msg.sender`の代わりにトークンを mint することを許可または禁止する。
 - **パラメータ**:
   - `mintingUser`: 許可または禁止を切り替えるユーザーのアドレス。
+
+### `toggle()`
+
+- **説明**: コントラクトの状態を一時停止または再開します。この関数は、コントラクトの管理者（governance）のみが呼び出すことができます。コントラクトが一時停止中の場合、この関数はコントラクトを再開します。逆に、コントラクトがアクティブな状態の場合、一時停止します。一時停止中は、コントラクトの主要な機能が使用不可になります。
+- **アクセス制限**: 管理者のみ。
+
+### `YMT()`
+
+- **説明**: YMT トークンのアドレスを返します。
+
+### `scoreWeightController()`
+
+- **説明**: ScoreWeightController コントラクトのアドレスを返します。
