@@ -50,8 +50,6 @@ contract veYMT is ReentrancyGuard {
     uint128 private constant INCREASE_LOCK_AMOUNT = 2;
     uint128 private constant INCREASE_UNLOCK_TIME = 3;
 
-    event CommitOwnership(address admin);
-    event ApplyOwnership(address admin);
     event Deposit(
         address indexed provider,
         uint256 value,
@@ -87,7 +85,6 @@ contract veYMT is ReentrancyGuard {
     string public symbol;
     uint8 public decimals;
 
-    address public admin;
     address public futureAdmin;
 
     /**
@@ -95,7 +92,6 @@ contract veYMT is ReentrancyGuard {
      * @param tokenAddr_ `YMT` token address
      */
     constructor(address tokenAddr_) {
-        admin = msg.sender;
         token = tokenAddr_;
         pointHistory[0].blk = block.number;
         pointHistory[0].ts = block.timestamp;
@@ -106,25 +102,6 @@ contract veYMT is ReentrancyGuard {
 
         name = "Voting-escrowed Yamato";
         symbol = "veYMT";
-    }
-
-    /**
-     * @notice Transfer ownership of VotingEscrow contract to `addr_`
-     * @param addr_ Address to have ownership transferred to
-     */
-    function commitTransferOwnership(address addr_) external onlyAdmin {
-        futureAdmin = addr_;
-        emit CommitOwnership(addr_);
-    }
-
-    /**
-     * @notice Apply ownership transfer
-     */
-    function applyTransferOwnership() external onlyAdmin {
-        address _admin = futureAdmin;
-        require(_admin != address(0), "admin not set");
-        admin = _admin;
-        emit ApplyOwnership(_admin);
     }
 
     /**
@@ -805,10 +782,5 @@ contract veYMT is ReentrancyGuard {
             "Only the controller can call this function"
         );
         controller = newController;
-    }
-
-    modifier onlyAdmin() {
-        require(admin == msg.sender, "admin only");
-        _;
     }
 }

@@ -10,7 +10,6 @@ veYMT Token は、YMT トークンをロックすることで得られる、ERC-
 - [Curve VotingEscrow Contract](https://curve.readthedocs.io/dao-vecrv.html)
 - [The Curve DAO: Liquidity Gauges and Minting CRV](https://curve.readthedocs.io/dao-gauges.html)
 - [LiquidityGaugeV6 Contract](https://github.com/curvefi/tricrypto-ng/blob/main/contracts/main/LiquidityGauge.vy)
-  以下は、提供された Solidity コード「veYMT Token」のためのドキュメントです。このドキュメントは、以前の「Token Minter」ドキュメントのフォーマットに従って作成されています。
 
 ---
 
@@ -25,18 +24,6 @@ veYMT Token は、YMT トークンをロックすることで得られる、ERC-
 ---
 
 ## イベント
-
-### `CommitOwnership`:
-
-- **説明**: 新しい管理者に所有権を委譲する際に発生します。
-- **パラメータ**:
-  - `admin`: 新しい管理者のアドレス。
-
-### `ApplyOwnership`:
-
-- **説明**: 所有権の移転が適用されたときにトリガーされるイベント。
-- **パラメータ**:
-  - `admin`: 新しい管理者のアドレス。
 
 ### `Deposit`:
 
@@ -91,18 +78,6 @@ veYMT Token は、YMT トークンをロックすることで得られる、ERC-
 - **説明**: コントラクトのコンストラクタ。YMT トークンのアドレスを設定します。
 - **パラメータ**:
   - `tokenAddr_`: YMT トークンのアドレス。
-
-### `commitTransferOwnership(addr_: address)`
-
-- **説明**: 新しい管理者に所有権を委譲します。
-- **パラメータ**:
-  - `addr_`: 新しい管理者のアドレス。
-- **アクセス制限**: 管理者のみ。
-
-### `applyTransferOwnership()`
-
-- **説明**: 所有権の移転を適用します。
-- **アクセス制限**: 管理者のみ。
 
 ### `depositFor(addr_: address, value_: uint256)`
 
