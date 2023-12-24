@@ -144,7 +144,7 @@
 ユーザーの作業バランスは以下の式によって計算されます:
 
 $$
-\text{workingSupply} = \min\left( \text{自債務}, \left( \text{自債務} \times 0.4 \right) + \left( 0.6 \times \frac{\text{総債務} \times \text{自veYMT}}{\text{総veYMT}} \right) \right) / \text{担保係数}
+\text{workingSupply} = \min\left( \text{自債務}, \left( \text{自債務} \times 0.4 \right) + \left( 0.6 \times \frac{\text{総債務} \times \text{自veYMT}}{\text{総veYMT}} \right) \right) * \text{担保係数}
 $$
 
 ここで、
