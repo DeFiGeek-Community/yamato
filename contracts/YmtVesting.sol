@@ -15,6 +15,7 @@ contract YmtVesting {
     // Events
     event YmtAddressSet(address ymt);
     event AdminAddressSet(address admin);
+    event ClaimAmountSet(address user, uint256 amount);
 
     // Constants
     uint256 private constant YEAR = 365 days;
@@ -66,6 +67,7 @@ contract YmtVesting {
     function setClaimAmount(address user, uint256 amount) external onlyAdmin {
         require(user != address(0), "Invalid user address");
         vestingAmounts[user] = amount;
+        emit ClaimAmountSet(user, amount);
     }
 
     /**
