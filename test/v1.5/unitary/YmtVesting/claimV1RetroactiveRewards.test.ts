@@ -114,28 +114,34 @@ describe("YmtVesting", function () {
         BigNumber.from(5000000).mul(ten_to_the_18),
         BigNumber.from(3000000).mul(ten_to_the_18),
       ];
-  
+
       // Set claim amounts for multiple users
-      await YmtVesting.connect(accounts[1]).setMultipleClaimAmounts(users, claimAmounts);
-  
+      await YmtVesting.connect(accounts[1]).setMultipleClaimAmounts(
+        users,
+        claimAmounts
+      );
+
       // Check claim amounts for each user
       for (let i = 0; i < users.length; i++) {
         const userClaimAmount = await YmtVesting.vestingAmounts(users[i]);
         expect(userClaimAmount).to.equal(claimAmounts[i]);
       }
     });
-  
+
     // ユーザーと金額の配列の長さが異なる場合に失敗するかテスト
     it("should fail if the arrays of users and amounts have different lengths", async function () {
       const users = [accounts[2].address, accounts[3].address];
       const claimAmounts = [BigNumber.from(5000000).mul(ten_to_the_18)]; // Intentionally only one amount
-  
+
       // Attempt to set claim amounts with mismatched array lengths
       await expect(
-        YmtVesting.connect(accounts[1]).setMultipleClaimAmounts(users, claimAmounts)
+        YmtVesting.connect(accounts[1]).setMultipleClaimAmounts(
+          users,
+          claimAmounts
+        )
       ).to.be.revertedWith("Users and amounts length mismatch");
     });
-  
+
     // 無効なユーザーアドレスが含まれている場合に失敗するかテスト
     it("should fail if an invalid user address is included", async function () {
       const users = [accounts[2].address, ethers.constants.AddressZero]; // Include an invalid address
@@ -143,10 +149,13 @@ describe("YmtVesting", function () {
         BigNumber.from(5000000).mul(ten_to_the_18),
         BigNumber.from(3000000).mul(ten_to_the_18),
       ];
-  
+
       // Attempt to set claim amounts with an invalid user address
       await expect(
-        YmtVesting.connect(accounts[1]).setMultipleClaimAmounts(users, claimAmounts)
+        YmtVesting.connect(accounts[1]).setMultipleClaimAmounts(
+          users,
+          claimAmounts
+        )
       ).to.be.revertedWith("Invalid user address");
     });
   });

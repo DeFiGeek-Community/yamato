@@ -75,9 +75,15 @@ contract YmtVesting {
      * @param users Array of user addresses.
      * @param amounts Array of claim amounts for each user.
      */
-    function setMultipleClaimAmounts(address[] calldata users, uint256[] calldata amounts) external onlyAdmin {
-        require(users.length == amounts.length, "Users and amounts length mismatch");
-        
+    function setMultipleClaimAmounts(
+        address[] calldata users,
+        uint256[] calldata amounts
+    ) external onlyAdmin {
+        require(
+            users.length == amounts.length,
+            "Users and amounts length mismatch"
+        );
+
         for (uint256 i = 0; i < users.length; i++) {
             require(users[i] != address(0), "Invalid user address");
             vestingAmounts[users[i]] = amounts[i];
