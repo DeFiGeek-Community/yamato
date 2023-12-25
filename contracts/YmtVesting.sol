@@ -71,6 +71,21 @@ contract YmtVesting {
     }
 
     /**
+     * @notice Sets claim amounts for multiple users.
+     * @param users Array of user addresses.
+     * @param amounts Array of claim amounts for each user.
+     */
+    function setMultipleClaimAmounts(address[] calldata users, uint256[] calldata amounts) external onlyAdmin {
+        require(users.length == amounts.length, "Users and amounts length mismatch");
+        
+        for (uint256 i = 0; i < users.length; i++) {
+            require(users[i] != address(0), "Invalid user address");
+            vestingAmounts[users[i]] = amounts[i];
+            emit ClaimAmountSet(users[i], amounts[i]);
+        }
+    }
+
+    /**
      * @notice Allows users to claim their V1 Retroactive Rewards based on a one-year linear vesting schedule.
      * @dev Calculates the claimable amount based on the time elapsed since the distribution start, then transfers the tokens to the user's address. Any unclaimed amount from the previous claims is considered.
      */
