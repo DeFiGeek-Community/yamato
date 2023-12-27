@@ -14,13 +14,6 @@ import { getProxy } from "../src/testUtil";
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   if (existsSync(getDeploymentAddressPathWithTag("YmtMinter", "ERC1967Proxy")))
     return;
-  if (
-    existsSync(
-      getDeploymentAddressPathWithTag("ScoreWeightController", "ERC1967Proxy")
-    )
-  )
-    return;
-  if (existsSync(getDeploymentAddressPath("YMT"))) return;
 
   setNetwork(hre.network.name);
   const p = await setProvider();
