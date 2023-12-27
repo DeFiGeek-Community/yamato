@@ -21,8 +21,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     )
   )
     return;
-  if (existsSync(getDeploymentAddressPath("YMT"))) return;
-  if (existsSync(getDeploymentAddressPath("veYMT"))) return;
 
   setNetwork(hre.network.name);
   const p = await setProvider();
