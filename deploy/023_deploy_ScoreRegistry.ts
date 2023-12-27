@@ -9,16 +9,12 @@ import {
 } from "../src/deployUtil";
 import { readFileSync, writeFileSync, existsSync } from "fs";
 import { ScoreRegistry, ScoreRegistry__factory } from "../typechain";
-import { getProxy } from "../src/testUtil";
+import { getLinkedProxy } from "../src/testUtil";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   if (
     existsSync(getDeploymentAddressPathWithTag("ScoreRegistry", "ERC1967Proxy"))
   )
-    return;
-  if (!existsSync(getDeploymentAddressPathWithTag("Yamato", "ERC1967Proxy")))
-    return;
-  if (!existsSync(getDeploymentAddressPathWithTag("YmtMinter", "ERC1967Proxy")))
     return;
 
   setNetwork(hre.network.name);
@@ -33,9 +29,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     getDeploymentAddressPathWithTag("Yamato", "ERC1967Proxy")
   ).toString();
 
-  const inst = await getProxy<ScoreRegistry, ScoreRegistry__factory>(
+  const inst = await getLinkedProxy<ScoreRegistry, ScoreRegistry__factory>(
     "ScoreRegistry",
-    [ymtMinterAddr, yamatoAddr]
+    [ymtMinterAddr, yamatoAddr],
+    ["PledgeLib"]
   );
   const implAddr = await inst.getImplementation();
 
