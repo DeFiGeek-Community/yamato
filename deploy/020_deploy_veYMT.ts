@@ -6,7 +6,6 @@ import { readFileSync, existsSync } from "fs";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   if (existsSync(getDeploymentAddressPath("veYMT"))) return;
-  if (existsSync(getDeploymentAddressPath("YMT"))) return;
 
   setNetwork(hre.network.name);
   const p = await setProvider();
