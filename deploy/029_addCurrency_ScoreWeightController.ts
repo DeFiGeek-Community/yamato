@@ -1,0 +1,41 @@
+import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { DeployFunction } from "hardhat-deploy/types";
+import {
+  setProvider,
+  getDeploymentAddressPath,
+  getDeploymentAddressPathWithTag,
+  getFoundation,
+  setNetwork,
+} from "../src/deployUtil";
+import { readFileSync } from "fs";
+import { genABI } from "../src/genABI";
+import { Contract, utils } from "ethers";
+
+const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+  setNetwork(hre.network.name);
+  const p = await setProvider();
+  const { ethers, deployments } = hre;
+  const { getContractFactory } = ethers;
+
+  const _controllerAddr = readFileSync(
+    getDeploymentAddressPath("ScoreWeightController")
+  ).toString();
+
+  const _CJPY = readFileSync(getDeploymentAddressPath("CJPY")).toString();
+
+  const ScoreWeightController = new Contract(
+    _controllerAddr,
+    genABI("ScoreWeightController"),
+    p
+  );
+
+  await (
+    await ScoreWeightController.connect(getFoundation()).addCurrency(
+      _CJPY,
+      utils.parseEther("1")
+    )
+  ).wait();
+  console.log(`log: Yamato.setScoreRegistry() executed.`);
+};
+export default func;
+func.tags = ["setScoreRegistry"];
