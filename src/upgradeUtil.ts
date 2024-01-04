@@ -108,7 +108,7 @@ export async function runDowngrade(
   versionStr: string,
   linkings = []
 ) {
-  setNetwork("goerli");
+  setNetwork(process.env.NETWORK);
   const filepath = getDeploymentAddressPathWithTag(
     implNameBase,
     "ERC1967Proxy"
@@ -151,7 +151,7 @@ export async function runDowngrade(
   }
 }
 export async function runUpgrade(implNameBase, linkings = []) {
-  setNetwork("goerli");
+  setNetwork(process.env.NETWORK);
 
   const filepath = getDeploymentAddressPathWithTag(
     implNameBase,
@@ -159,8 +159,9 @@ export async function runUpgrade(implNameBase, linkings = []) {
   );
   if (!existsSync(filepath)) throw new Error(`${filepath} is not exist`);
   const ERC1967Proxy: string = readFileSync(filepath).toString();
-
+  console.log(ERC1967Proxy);
   const implName = getLatestContractName(implNameBase);
+  console.log(implName);
   if (implName.length == 0) {
     console.log(
       `./contracts/${implNameBase} only found. Set ./contracts/${implNameBase}V2 to start upgrading.`
