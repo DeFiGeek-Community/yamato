@@ -20,6 +20,10 @@ contract FeePoolV2 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
 
     string constant VEYMT_SLOT_ID = "deps.veYMT";
 
+    // This variable is currently not in use
+    mapping(address => bool) protocolWhitelist;
+
+    // This variable is in use
     uint256 public startTime;
     uint256 public timeCursor;
     mapping(address => uint256) public timeCursorOf;
@@ -46,13 +50,15 @@ contract FeePoolV2 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
     event Received(address sender, uint256 value);
     event VeYMTSet(address sender, address veYMT);
 
+    function initialize() public initializer {
+        __UUPSBase_init();
+        __ReentrancyGuard_init();
+    }
+
     /**
      * @param startTime_ Epoch time for fee distribution to start
      */
-    function initialize(uint256 startTime_) public initializer {
-        __UUPSBase_init();
-        __ReentrancyGuard_init();
-
+    function initializeV2(uint256 startTime_) public reinitializer(2) {
         uint256 t = (startTime_ / WEEK) * WEEK;
         startTime = t;
         lastTokenTime = t;
