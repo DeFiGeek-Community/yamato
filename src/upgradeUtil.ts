@@ -142,7 +142,7 @@ export async function runDowngrade(
     // console.log(`Saved ${implAddr} to ${implPath}`);
 
     try {
-      if(network != "localhost"){
+      if (network != "localhost") {
         execSync(
           `npm run verify:${network} -- --contract contracts/${implName}.sol:${implName} ${implAddr}`
         );
@@ -187,7 +187,7 @@ export async function runUpgrade(implNameBase, linkings = []) {
       const implAddr = await (<any>inst).getImplementation();
 
       try {
-        if(network != "localhost"){
+        if (network != "localhost") {
           execSync(
             `npm run verify:${network} -- --contract contracts/${implName}.sol:${implName} ${implAddr}`
           );
