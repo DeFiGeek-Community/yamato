@@ -18,7 +18,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { getContractFactory } = ethers;
 
   const _controllerAddr = readFileSync(
-    getDeploymentAddressPath("ScoreWeightController")
+    getDeploymentAddressPathWithTag("ScoreWeightController", "ERC1967Proxy")
   ).toString();
 
   const _CJPY = readFileSync(getDeploymentAddressPath("CJPY")).toString();
@@ -35,7 +35,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       utils.parseEther("1")
     )
   ).wait();
-  console.log(`log: Yamato.setScoreRegistry() executed.`);
+  console.log(`log: ScoreWeightController.addCurrency() executed.`);
 };
 export default func;
-func.tags = ["setScoreRegistry"];
+func.tags = ["addCurrency"];
