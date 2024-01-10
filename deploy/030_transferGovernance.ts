@@ -28,7 +28,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const YmtVesting = new Contract(_ymtVestingAddr, genABI("YmtVesting"), p);
 
   const _controllerAddr = readFileSync(
-    getDeploymentAddressPath("ScoreWeightController")
+    getDeploymentAddressPathWithTag("ScoreWeightController", "ERC1967Proxy")
   ).toString();
   const ScoreWeightController = new Contract(
     _controllerAddr,
