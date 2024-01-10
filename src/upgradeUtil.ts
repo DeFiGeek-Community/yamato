@@ -108,7 +108,8 @@ export async function runDowngrade(
   versionStr: string,
   linkings = []
 ) {
-  setNetwork(process.env.NETWORK);
+  const network = process.env.NETWORK;
+  setNetwork(network);
   const filepath = getDeploymentAddressPathWithTag(
     implNameBase,
     "ERC1967Proxy"
@@ -141,17 +142,20 @@ export async function runDowngrade(
     // console.log(`Saved ${implAddr} to ${implPath}`);
 
     try {
-      execSync(
-        `npm run verify:goerli -- --contract contracts/${implName}.sol:${implName} ${implAddr}`
-      );
-      console.log(`Verified ${implAddr}`);
+      if(network != "localhost"){
+        execSync(
+          `npm run verify:${network} -- --contract contracts/${implName}.sol:${implName} ${implAddr}`
+        );
+        console.log(`Verified ${implAddr}`);
+      }
     } catch (e) {
       console.error(e.message);
     }
   }
 }
 export async function runUpgrade(implNameBase, linkings = []) {
-  setNetwork(process.env.NETWORK);
+  const network = process.env.NETWORK;
+  setNetwork(network);
 
   const filepath = getDeploymentAddressPathWithTag(
     implNameBase,
@@ -183,10 +187,12 @@ export async function runUpgrade(implNameBase, linkings = []) {
       const implAddr = await (<any>inst).getImplementation();
 
       try {
-        execSync(
-          `npm run verify:goerli -- --contract contracts/${implName}.sol:${implName} ${implAddr}`
-        );
-        console.log(`Verified ${implAddr}`);
+        if(network != "localhost"){
+          execSync(
+            `npm run verify:${network} -- --contract contracts/${implName}.sol:${implName} ${implAddr}`
+          );
+          console.log(`Verified ${implAddr}`);
+        }
       } catch (e) {
         console.error(e.message);
       }
