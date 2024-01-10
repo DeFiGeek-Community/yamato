@@ -25,7 +25,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     getDeploymentAddressPathWithTag("ScoreRegistry", "ERC1967Proxy")
   ).toString();
 
-  const Yamato = new Contract(_yamatoAddr, genABI("Yamato"), p);
+  const Yamato = new Contract(_yamatoAddr, genABI("YamatoV4"), p);
 
   await (
     await Yamato.connect(getFoundation()).setScoreRegistry(_scoreRegistryAddr)
