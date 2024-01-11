@@ -97,11 +97,7 @@ describe("FeePoolV2", function () {
     // a week later we deploy the fee feePool
     await time.increase(week);
 
-    feePool = await getProxy<FeePoolV2, FeePoolV2__factory>(
-      "FeePool",
-      [],
-      1
-    );
+    feePool = await getProxy<FeePoolV2, FeePoolV2__factory>("FeePool", [], 1);
     feePool = await upgradeProxy(feePool.address, "FeePoolV2", undefined, {
       call: { fn: "initializeV2", args: [await time.latest()] },
     });

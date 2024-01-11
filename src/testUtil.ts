@@ -1,14 +1,11 @@
 import { ethers, upgrades, artifacts } from "hardhat";
-import { silenceWarnings } from '@openzeppelin/upgrades-core';
+import { silenceWarnings } from "@openzeppelin/upgrades-core";
 import { BaseContract, ContractFactory, BigNumber } from "ethers";
 import { FakeContract, smock } from "@defi-wonderland/smock";
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "fs";
 import { getDeploymentAddressPath, getCurrentNetwork } from "./deployUtil";
 import { genABI } from "./genABI";
-import {
-  getLatestContractName,
-  upgradeProxy,
-} from "./upgradeUtil";
+import { getLatestContractName, upgradeProxy } from "./upgradeUtil";
 import chalk from "chalk";
 import {
   getDeploymentAddressPathWithTag,
@@ -50,11 +47,12 @@ export async function getProxy<
 
   let implName;
   if (versionSpecification) {
-    const contractVersion = versionSpecification == 1 ? contractName :`${contractName}V${versionSpecification}`;
-    contractFactory = <S>(
-      await ethers.getContractFactory(contractVersion)
-    );
-implName = "";
+    const contractVersion =
+      versionSpecification == 1
+        ? contractName
+        : `${contractName}V${versionSpecification}`;
+    contractFactory = <S>await ethers.getContractFactory(contractVersion);
+    implName = "";
   } else {
     contractFactory = <S>await ethers.getContractFactory(contractName);
     implName = getLatestContractName(contractName);
@@ -69,13 +67,15 @@ implName = "";
   } else {
     // console.log(`${implName} is going to be deployed to ERC1967Proxy...`);
 
-    const inst: T = <T>await upgradeProxy(defaultInst.address, implName, [], options);
+    const inst: T = <T>(
+      await upgradeProxy(defaultInst.address, implName, [], options)
+    );
     console.log(
       chalk.gray(
         `        [success] ${implName}=${inst.address} is upgraded to ERC1967Proxy`
       )
-  );
-  return inst;
+    );
+    return inst;
   }
 }
 

@@ -50,11 +50,7 @@ describe("FeePoolV2", () => {
       await ethers.getContractFactory("veYMT")
     )).deploy(YMT.address);
 
-    feePool = await getProxy<FeePoolV2, FeePoolV2__factory>(
-      "FeePool",
-      [],
-      1
-    );
+    feePool = await getProxy<FeePoolV2, FeePoolV2__factory>("FeePool", [], 1);
     feePool = await upgradeProxy(feePool.address, "FeePoolV2", undefined, {
       call: { fn: "initializeV2", args: [await time.latest()] },
     });
