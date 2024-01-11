@@ -53,6 +53,7 @@ import {
   SameBlockClient__factory,
 } from "../../typechain";
 import { getProxy, getLinkedProxy } from "../../src/testUtil";
+import { upgradeProxy } from "../../src/upgradeUtil";
 import { contractVersion } from "../param/version";
 
 chai.use(smock.matchers);
@@ -128,10 +129,10 @@ describe("FlashLock :: contract Yamato", () => {
       await ethers.getContractFactory("CJPY")
     )).deploy();
 
-    FeePool = await getProxy<FeePoolV2, FeePoolV2__factory>(
-      contractVersion["FeePool"],
-      [await time.latest()]
-    );
+    FeePool = await getProxy<FeePoolV2, FeePoolV2__factory>("FeePool", [], 1);
+    FeePool = await upgradeProxy(FeePool.address, "FeePoolV2", undefined, {
+      call: { fn: "initializeV2", args: [await time.latest()] },
+    });
 
     CurrencyOS = await getProxy<CurrencyOS, CurrencyOS__factory>(
       contractVersion["CurrencyOS"],
