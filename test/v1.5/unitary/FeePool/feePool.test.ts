@@ -17,6 +17,7 @@ import {
   VeYMT__factory,
 } from "../../../../typechain";
 import { getProxy } from "../../../../src/testUtil";
+import { upgradeProxy } from "../../../../src/upgradeUtil";
 import { contractVersion } from "../../../param/version";
 import Constants from "../../Constants";
 import { gasCostOf } from "../../testHelpers";
@@ -51,9 +52,13 @@ describe("FeePoolV2", () => {
     )).deploy(YMT.address);
 
     feePool = await getProxy<FeePoolV2, FeePoolV2__factory>(
-      contractVersion["FeePool"],
-      [await time.latest()]
+      "FeePool",
+      [],
+      1
     );
+    feePool = await upgradeProxy(feePool.address, "FeePoolV2", undefined, {
+      call: { fn: "initializeV2", args: [await time.latest()] },
+    });
     await feePool.setVeYMT(veYMT.address);
   });
 
@@ -111,9 +116,13 @@ describe("FeePoolV2", () => {
       await time.increase(week);
 
       feePool = await getProxy<FeePoolV2, FeePoolV2__factory>(
-        contractVersion["FeePool"],
-        [await time.latest()]
+        "FeePool",
+        [],
+        1
       );
+      feePool = await upgradeProxy(feePool.address, "FeePoolV2", undefined, {
+        call: { fn: "initializeV2", args: [await time.latest()] },
+      });
       await feePool.setVeYMT(veYMT.address);
 
       for (let i = 0; i < 3; i++) {
@@ -156,9 +165,13 @@ describe("FeePoolV2", () => {
       await time.increase(week * 5);
 
       feePool = await getProxy<FeePoolV2, FeePoolV2__factory>(
-        contractVersion["FeePool"],
-        [await time.latest()]
+        "FeePool",
+        [],
+        1
       );
+      feePool = await upgradeProxy(feePool.address, "FeePoolV2", undefined, {
+        call: { fn: "initializeV2", args: [await time.latest()] },
+      });
       await feePool.setVeYMT(veYMT.address);
 
       await bob.sendTransaction({
@@ -201,9 +214,13 @@ describe("FeePoolV2", () => {
       await time.increase(2 * week);
 
       feePool = await getProxy<FeePoolV2, FeePoolV2__factory>(
-        contractVersion["FeePool"],
-        [startTime]
+        "FeePool",
+        [],
+        1
       );
+      feePool = await upgradeProxy(feePool.address, "FeePoolV2", undefined, {
+        call: { fn: "initializeV2", args: [startTime] },
+      });
       await feePool.setVeYMT(veYMT.address);
 
       await bob.sendTransaction({
@@ -250,9 +267,13 @@ describe("FeePoolV2", () => {
       await time.increase(5 * week);
 
       feePool = await getProxy<FeePoolV2, FeePoolV2__factory>(
-        contractVersion["FeePool"],
-        [startTime]
+        "FeePool",
+        [],
+        1
       );
+      feePool = await upgradeProxy(feePool.address, "FeePoolV2", undefined, {
+        call: { fn: "initializeV2", args: [startTime] },
+      });
       await feePool.setVeYMT(veYMT.address);
 
       await bob.sendTransaction({

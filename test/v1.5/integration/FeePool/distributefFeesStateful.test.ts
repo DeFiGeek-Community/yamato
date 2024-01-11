@@ -8,16 +8,17 @@ import {
 } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import {
-  FeePool,
+  FeePoolV2,
   YmtVesting,
   YMT,
   VeYMT,
-  FeePool__factory,
+  FeePoolV2__factory,
   YmtVesting__factory,
   YMT__factory,
   VeYMT__factory,
 } from "../../../../typechain";
 import { getProxy } from "../../../../src/testUtil";
+import { upgradeProxy } from "../../../../src/upgradeUtil";
 import { contractVersion } from "../../../param/version";
 import Constants from "../../Constants";
 import {
@@ -96,10 +97,14 @@ describe("FeePoolV2", function () {
     // a week later we deploy the fee feePool
     await time.increase(week);
 
-    feePool = await getProxy<FeePool, FeePool__factory>(
-      contractVersion["FeePool"],
-      [await time.latest()]
+    feePool = await getProxy<FeePoolV2, FeePoolV2__factory>(
+      "FeePool",
+      [],
+      1
     );
+    feePool = await upgradeProxy(feePool.address, "FeePoolV2", undefined, {
+      call: { fn: "initializeV2", args: [await time.latest()] },
+    });
     await feePool.setVeYMT(veYMT.address);
   });
 
