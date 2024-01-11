@@ -1,1 +1,5 @@
-import("./mods/016_upgrade_ScoreRegistry").catch((e) => console.log(e));
+import main from "./mods/016_upgrade_ScoreRegistry";
+
+main().catch((e) => {
+  console.error("An error occurred during the upgrade process:", e);
+});
