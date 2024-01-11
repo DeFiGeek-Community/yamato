@@ -19,6 +19,8 @@ export default async function main() {
   const _YMTAddr = readFileSync(getDeploymentAddressPath("YMT")).toString();
   const YMT = new Contract(_YMTAddr, genABI("YMT"), p);
   const startTime = await YMT.startTime();
-  await runUpgrade(IMPL_NAME_BASE, [], { call: {fn: "initializeV2", args: [startTime]}});
-  console.log("log: upgrade_FeePool.ts: upgrade executed.")
+  await runUpgrade(IMPL_NAME_BASE, [], {
+    call: { fn: "initializeV2", args: [startTime] },
+  });
+  console.log("log: upgrade_FeePool.ts: upgrade executed.");
 }
