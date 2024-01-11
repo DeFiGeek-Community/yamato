@@ -1,4 +1,5 @@
 import { ethers, upgrades, artifacts } from "hardhat";
+import { silenceWarnings } from '@openzeppelin/upgrades-core';
 import { BaseContract, ContractFactory, BigNumber } from "ethers";
 import { FakeContract, smock } from "@defi-wonderland/smock";
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "fs";
@@ -6,7 +7,6 @@ import { getDeploymentAddressPath, getCurrentNetwork } from "./deployUtil";
 import { genABI } from "./genABI";
 import {
   getLatestContractName,
-  upgradeLinkedProxy,
   upgradeProxy,
 } from "./upgradeUtil";
 import chalk from "chalk";
@@ -39,17 +39,22 @@ export async function getProxy<
 >(
   contractName: string,
   args: any,
-  versionSpecification?: number | undefined
+  versionSpecification?: number | undefined,
+  isUpdateDisabled?: boolean,
+  options?: {
+    call?: string | { fn: string; args?: unknown[] };
+  }
 ): Promise<T> {
   let contractFactory: S;
   let defaultInst: T;
 
   let implName;
   if (versionSpecification) {
+    const contractVersion = versionSpecification == 1 ? contractName :`${contractName}V${versionSpecification}`;
     contractFactory = <S>(
-      await ethers.getContractFactory(`${contractName}V${versionSpecification}`)
+      await ethers.getContractFactory(contractVersion)
     );
-    implName = "";
+implName = "";
   } else {
     contractFactory = <S>await ethers.getContractFactory(contractName);
     implName = getLatestContractName(contractName);
@@ -59,18 +64,18 @@ export async function getProxy<
     await upgrades.deployProxy(contractFactory, args, { kind: "uups" })
   );
 
-  if (implName.length == 0) {
+  if (isUpdateDisabled || implName.length == 0) {
     return defaultInst;
   } else {
     // console.log(`${implName} is going to be deployed to ERC1967Proxy...`);
 
-    const inst: T = <T>await upgradeProxy(defaultInst.address, implName);
+    const inst: T = <T>await upgradeProxy(defaultInst.address, implName, [], options);
     console.log(
       chalk.gray(
         `        [success] ${implName}=${inst.address} is upgraded to ERC1967Proxy`
       )
-    );
-    return inst;
+  );
+  return inst;
   }
 }
 
@@ -83,6 +88,7 @@ export async function getLinkedProxy<
   libralies: string[],
   versionSpecification?: number | undefined
 ): Promise<T> {
+  silenceWarnings();
   let Libraries = {};
   for (var i = 0; i < libralies.length; i++) {
     let libraryName = libralies[i];
@@ -117,7 +123,7 @@ export async function getLinkedProxy<
     return defaultInst;
   } else {
     const inst: T = <T>(
-      await upgradeLinkedProxy(defaultInst.address, implName, libralies)
+      await upgradeProxy(defaultInst.address, implName, libralies)
     );
     console.log(
       chalk.gray(
