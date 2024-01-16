@@ -1,4 +1,29 @@
 import { readFileSync, writeFileSync } from "fs";
+import { ethers } from "hardhat";
+import { YamatoV4__factory } from "../typechain/factories/contracts/YamatoV4__factory";
+
+async function getPledgeOutput(address: string, blockNumber: number) {
+  const network = "mainnet";
+  const YamatoERC1967ProxyAddress = readFileSync(
+    `deployments/${network}/YamatoERC1967Proxy`
+  ).toString();
+  
+  if (!process.env.INFURA_URL) {
+    console.error('INFURA_URLが設定されていません。');
+    return;
+  }
+
+  const provider = new ethers.providers.JsonRpcProvider(process.env.INFURA_URL, network);
+  const abi = YamatoV4__factory.abi;
+  const Yamato = new ethers.Contract(YamatoERC1967ProxyAddress, abi, provider);
+
+  try {
+    const p = await Yamato.getPledge(address, { blockTag: blockNumber });
+    return p;
+  } catch (error) {
+    console.error('エラーが発生しました:', error);
+  }
+}
 
 interface EventData {
   depositedEvents: any[];
