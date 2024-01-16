@@ -9,11 +9,11 @@ async function getPledgeOutput(address: string, blockNumber: number) {
   ).toString();
   
   if (!process.env.INFURA_URL) {
-    console.error('INFURA_URLが設定されていません。');
+    console.error("INFURA_URLが設定されていません。");
     return;
   }
 
-  const provider = new ethers.providers.JsonRpcProvider(process.env.INFURA_URL, network);
+  const provider = new ethers.providers.JsonRpcProvider(
   const abi = YamatoV4__factory.abi;
   const Yamato = new ethers.Contract(YamatoERC1967ProxyAddress, abi, provider);
 
@@ -21,7 +21,7 @@ async function getPledgeOutput(address: string, blockNumber: number) {
     const p = await Yamato.getPledge(address, { blockTag: blockNumber });
     return p;
   } catch (error) {
-    console.error('エラーが発生しました:', error);
+    console.error("エラーが発生しました:", error);
   }
 }
 
