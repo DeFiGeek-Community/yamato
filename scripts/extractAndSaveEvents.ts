@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync } from "fs";
 import { ethers } from "hardhat";
 import { YamatoV4__factory } from "../typechain/factories/contracts/YamatoV4__factory";
+import { BigNumber } from "ethers";
 
 async function getPledgeOutput(address: string, blockNumber: number) {
   const network = "mainnet";
@@ -86,7 +87,7 @@ const extractedEvents = Object.values(events).reduce(
         acc[address].push({
           blockNumber: event.blockNumber,
           event: event.event,
-          args: BigInt(event.args[1].hex).toString(),
+          args: BigNumber.from(event.args[1]),
         });
       } else if (eventName === "Redeemed") {
         const nonZeroAddresses = event.args[3].filter(
@@ -100,8 +101,8 @@ const extractedEvents = Object.values(events).reduce(
           acc[address].push({
             blockNumber: event.blockNumber,
             event: event.event,
-            coll: BigInt(pledge.coll).toString(),
-            debt: BigInt(pledge.debt).toString(),
+            coll: BigNumber.from(pledge.coll),
+            debt: BigNumber.from(pledge.debt),
           });
         }
       }
