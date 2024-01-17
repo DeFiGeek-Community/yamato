@@ -7,13 +7,16 @@ async function getPledgeOutput(address: string, blockNumber: number) {
   const YamatoERC1967ProxyAddress = readFileSync(
     `deployments/${network}/YamatoERC1967Proxy`
   ).toString();
-  
+
   if (!process.env.INFURA_URL) {
     console.error("INFURA_URLが設定されていません。");
     return;
   }
 
   const provider = new ethers.providers.JsonRpcProvider(
+    process.env.INFURA_URL,
+    network
+  );
   const abi = YamatoV4__factory.abi;
   const Yamato = new ethers.Contract(YamatoERC1967ProxyAddress, abi, provider);
 
@@ -64,34 +67,64 @@ function readEventJsonFiles(): EventData {
 }
 
 const events = readEventJsonFiles();
-// console.log(events);
-const extractedEvents = Object.values(events).reduce((acc, eventArray) => {
-  eventArray.forEach((event) => {
-    const address = event.args[0];
-    if (!acc[address]) {
-      acc[address] = [];
-    }
-    const eventName = event.event;
-    if (
-      eventName === "Deposited" ||
-      eventName === "Borrowed" ||
-      eventName === "Repaid" ||
-      eventName === "Withdrawn"
-    ) {
-      acc[address].push({
-        blockNumber: event.blockNumber,
-        event: event.event,
-        args: BigInt(event.args[1].hex).toString(),
-      });
-    }
-  });
-  return acc;
-}, {});
 
-try {
-  const jsonContent = JSON.stringify(extractedEvents, null, 2);
-  writeFileSync("./scripts/events/extractedEvents.json", jsonContent, "utf-8");
-  console.log("結果がjsonファイルに保存されました。");
-} catch (error) {
-  console.error("ファイルの保存中にエラーが発生しました:", error);
-}
+const extractedEvents = Object.values(events).reduce(
+  async (accPromise, eventArray) => {
+    const acc = await accPromise;
+    for (const event of eventArray) {
+      const eventName = event.event;
+      if (
+        eventName === "Deposited" ||
+        eventName === "Borrowed" ||
+        eventName === "Repaid" ||
+        eventName === "Withdrawn"
+      ) {
+        const address = event.args[0];
+        if (!acc[address]) {
+          acc[address] = [];
+        }
+        acc[address].push({
+          blockNumber: event.blockNumber,
+          event: event.event,
+          args: BigInt(event.args[1].hex).toString(),
+        });
+      } else if (eventName === "Redeemed") {
+        const nonZeroAddresses = event.args[3].filter(
+          (address) => address !== "0x0000000000000000000000000000000000000000"
+        );
+        for (const address of nonZeroAddresses) {
+          if (!acc[address]) {
+            acc[address] = [];
+          }
+          const pledge = await getPledgeOutput(address, event.blockNumber);
+          acc[address].push({
+            blockNumber: event.blockNumber,
+            event: event.event,
+            coll: BigInt(pledge.coll).toString(),
+            debt: BigInt(pledge.debt).toString(),
+          });
+        }
+      }
+    }
+    return acc;
+  },
+  Promise.resolve({})
+);
+
+extractedEvents.then((events) => {
+  Object.keys(events).forEach((address) => {
+    events[address].sort((a, b) => a.blockNumber - b.blockNumber);
+  });
+
+  try {
+    const jsonContent = JSON.stringify(events, null, 2);
+    writeFileSync(
+      "./scripts/events/extractedEvents.json",
+      jsonContent,
+      "utf-8"
+    );
+    console.log("結果がjsonファイルに保存されました。");
+  } catch (error) {
+    console.error("ファイルの保存中にエラーが発生しました:", error);
+  }
+});
