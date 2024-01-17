@@ -3,7 +3,6 @@ import { ethers } from "hardhat";
 import { readFileSync, writeFileSync } from "fs";
 import { PriceFeedV3__factory } from "../typechain/factories/contracts/PriceFeedV3__factory";
 
-
 async function fetchLastGoodPrice(blockNum: number) {
   const networkName = "mainnet";
   const priceFeedProxyAddress = readFileSync(
@@ -20,10 +19,16 @@ async function fetchLastGoodPrice(blockNum: number) {
     networkName
   );
   const priceFeedAbi = PriceFeedV3__factory.abi;
-  const priceFeedContract = new ethers.Contract(priceFeedProxyAddress, priceFeedAbi, priceFeedProvider);
+  const priceFeedContract = new ethers.Contract(
+    priceFeedProxyAddress,
+    priceFeedAbi,
+    priceFeedProvider
+  );
 
   try {
-    const lastPrice = await priceFeedContract.lastGoodPrice({ blockTag: blockNum });
+    const lastPrice = await priceFeedContract.lastGoodPrice({
+      blockTag: blockNum,
+    });
     return lastPrice;
   } catch (error) {
     console.error("エラーが発生しました:", error);
@@ -48,7 +53,6 @@ export async function processPriceData() {
 
   for (const userAddress in eventsData) {
     eventsData[userAddress].forEach((eventData, index) => {
-
       if (!blockNumList.includes(eventData.blockNumber)) {
         blockNumList.push(eventData.blockNumber);
       }
@@ -66,7 +70,6 @@ export async function processPriceData() {
   );
   console.log("イベント処理が完了し、ファイルに出力されました。");
 }
-
 
 (async () => {
   await processPriceData();
