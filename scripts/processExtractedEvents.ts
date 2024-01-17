@@ -1,5 +1,18 @@
-import { BigNumber } from "ethers";
+import { BigNumber, utils } from "ethers";
 import { readFileSync, writeFileSync } from "fs";
+
+function calculateICR(
+  collateral: BigNumber,
+  debt: BigNumber,
+  price: BigNumber
+): number {
+  const collateralValue = Number(utils.formatUnits(collateral, 18));
+  const debtValue = Number(utils.formatUnits(debt, 18));
+  const priceValue = Number(utils.formatUnits(price, 18));
+  const collateralInCurrency = collateralValue * priceValue;
+
+  return collateralValue === 0 || debtValue === 0 ? 0 : (100 * collateralInCurrency) / debtValue;
+}
 
 export function processExtractedEvents() {
   const extractedEventsJson = readFileSync(
@@ -8,7 +21,8 @@ export function processExtractedEvents() {
   );
   const extractedEvents = JSON.parse(extractedEventsJson);
 
-  const blockNumber: number[] = [];
+  const priceDataJson = readFileSync("./scripts/events/priceData.json", "utf8");
+  const priceData = JSON.parse(priceDataJson);
 
   for (const address in extractedEvents) {
     extractedEvents[address].forEach((event, index) => {
@@ -20,11 +34,14 @@ export function processExtractedEvents() {
         event.debt = extractedEvents[address][index - 1].debt;
       }
 
-      if (!blockNumber.includes(event.blockNumber)) {
-        blockNumber.push(event.blockNumber);
-      }
       if (event.event !== "Redeemed") {
         event.args = BigNumber.from(event.args).toString();
+      }
+
+      if (priceData[event.blockNumber]) {
+        event.price = BigNumber.from(
+          priceData[event.blockNumber].price
+        ).toString();
       }
 
       switch (event.event) {
@@ -49,11 +66,29 @@ export function processExtractedEvents() {
             .toString();
           break;
         case "Redeemed":
-          event.coll = BigNumber.from(event.coll).toString();
-          event.debt = BigNumber.from(event.debt).toString();
+          // Redeemed events do not modify coll or debt
           break;
         default:
+          // No action for other events
       }
+
+      event.icr = calculateICR(
+        BigNumber.from(event.coll),
+        BigNumber.from(event.debt),
+        BigNumber.from(event.price)
+      );
+      event.cjpy = Number(utils.formatUnits(event.debt, 18));
+
+      const baseScore = event.icr * event.cjpy;
+      const previousEvent =
+        index > 0 ? extractedEvents[address][index - 1] : null;
+      const timeDifference = previousEvent
+        ? event.blockNumber - previousEvent.blockNumber
+        : 0;
+      event.score =
+        previousEvent && previousEvent.score !== 0
+          ? baseScore * timeDifference
+          : baseScore;
     });
   }
 
@@ -62,9 +97,7 @@ export function processExtractedEvents() {
     JSON.stringify(extractedEvents, null, 2)
   );
 
-  writeFileSync(
-    "./scripts/events/blockNumbers.json",
-    JSON.stringify(blockNumber, null, 2)
-  );
   console.log("イベント処理が完了し、ファイルに出力されました。");
 }
+
+processExtractedEvents();
