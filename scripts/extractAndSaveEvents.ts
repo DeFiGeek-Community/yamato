@@ -2,6 +2,8 @@ import { readFileSync, writeFileSync } from "fs";
 import { BigNumber, providers, Contract } from "ethers";
 import { YamatoV4__factory } from "../typechain/factories/contracts/YamatoV4__factory";
 
+const lastBlockNumber = 19030664;
+
 async function getPledgeOutput(address: string, blockNumber: number) {
   const network = "mainnet";
   const YamatoERC1967ProxyAddress = readFileSync(
@@ -114,6 +116,14 @@ const extractedEvents = Object.values(events).reduce(
 extractedEvents.then((events) => {
   Object.keys(events).forEach((address) => {
     events[address].sort((a, b) => a.blockNumber - b.blockNumber);
+  });
+
+  Object.keys(events).forEach((address) => {
+    events[address].push({
+      blockNumber: lastBlockNumber,
+      event: "end",
+      args: 0,
+    });
   });
 
   try {
