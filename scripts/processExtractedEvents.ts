@@ -11,7 +11,9 @@ function calculateICR(
   const priceValue = Number(utils.formatUnits(price, 18));
   const collateralInCurrency = collateralValue * priceValue;
 
-  return collateralValue === 0 || debtValue === 0 ? 0 : (100 * collateralInCurrency) / debtValue;
+  return collateralValue === 0 || debtValue === 0
+    ? 0
+    : (100 * collateralInCurrency) / debtValue;
 }
 
 export function processExtractedEvents() {
@@ -69,7 +71,7 @@ export function processExtractedEvents() {
           // Redeemed events do not modify coll or debt
           break;
         default:
-          // No action for other events
+        // No action for other events
       }
 
       event.icr = calculateICR(
@@ -89,6 +91,10 @@ export function processExtractedEvents() {
         previousEvent && previousEvent.score !== 0
           ? baseScore * timeDifference
           : baseScore;
+
+      event.allScore = previousEvent
+        ? previousEvent.allScore + event.score
+        : event.score;
     });
   }
 
