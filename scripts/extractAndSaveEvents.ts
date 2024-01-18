@@ -1,7 +1,6 @@
 import { readFileSync, writeFileSync } from "fs";
-import { ethers } from "hardhat";
+import { BigNumber, providers, Contract } from "ethers";
 import { YamatoV4__factory } from "../typechain/factories/contracts/YamatoV4__factory";
-import { BigNumber } from "ethers";
 
 async function getPledgeOutput(address: string, blockNumber: number) {
   const network = "mainnet";
@@ -14,12 +13,12 @@ async function getPledgeOutput(address: string, blockNumber: number) {
     return;
   }
 
-  const provider = new ethers.providers.JsonRpcProvider(
+  const provider = new providers.JsonRpcProvider(
     process.env.INFURA_URL,
     network
   );
   const abi = YamatoV4__factory.abi;
-  const Yamato = new ethers.Contract(YamatoERC1967ProxyAddress, abi, provider);
+  const Yamato = new Contract(YamatoERC1967ProxyAddress, abi, provider);
 
   try {
     const p = await Yamato.getPledge(address, { blockTag: blockNumber });
