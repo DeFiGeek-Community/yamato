@@ -1,6 +1,5 @@
-import { BigNumber } from "ethers";
-import { ethers } from "hardhat";
-import { readFileSync, writeFileSync } from "fs";
+import { BigNumber, providers, Contract } from "ethers";
+import { readFileSync, writeFileSync, existsSync } from "fs";
 import { PriceFeedV3__factory } from "../typechain/factories/contracts/PriceFeedV3__factory";
 
 async function fetchLastGoodPrice(blockNum: number) {
@@ -14,12 +13,12 @@ async function fetchLastGoodPrice(blockNum: number) {
     return;
   }
 
-  const priceFeedProvider = new ethers.providers.JsonRpcProvider(
+  const priceFeedProvider = new providers.JsonRpcProvider(
     process.env.INFURA_URL,
     networkName
   );
   const priceFeedAbi = PriceFeedV3__factory.abi;
-  const priceFeedContract = new ethers.Contract(
+  const priceFeedContract = new Contract(
     priceFeedProxyAddress,
     priceFeedAbi,
     priceFeedProvider
@@ -48,12 +47,23 @@ export async function processPriceData() {
     };
   };
 
+  let priceData: PriceData = {};
+  if (existsSync("./scripts/events/priceData.json")) {
+    const existingPriceDataJson = readFileSync(
+      "./scripts/events/priceData.json",
+      "utf8"
+    );
+    priceData = JSON.parse(existingPriceDataJson);
+  }
+
   const blockNumList: number[] = [];
-  const priceData: PriceData = {};
 
   for (const userAddress in eventsData) {
     eventsData[userAddress].forEach((eventData, index) => {
-      if (!blockNumList.includes(eventData.blockNumber)) {
+      if (
+        !blockNumList.includes(eventData.blockNumber) &&
+        !priceData[eventData.blockNumber]
+      ) {
         blockNumList.push(eventData.blockNumber);
       }
     });
