@@ -1,6 +1,7 @@
 require("dotenv").config();
 import { readFileSync, writeFileSync, unlinkSync, existsSync } from "fs";
 import { Wallet, Signer, getDefaultProvider, Contract } from "ethers";
+import { ethers } from "hardhat";
 import { genABI } from "../src/genABI";
 import { getLatestContractName } from "../src/upgradeUtil";
 import { isConstructSignatureDeclaration } from "typescript";
@@ -466,4 +467,33 @@ export async function sleep(n) {
 
 export async function existsSlot(provider, address, slot) {
   return (await provider.getStorageAt(address, slot)).length > 2;
+}
+
+export async function deployImplContract(
+  implNameBase: string,
+  usePledgeLib: boolean = false
+) {
+  let contractFactoryOptions = {};
+
+  if (usePledgeLib) {
+    const pledgeLibAddress = readFileSync(
+      getDeploymentAddressPath("PledgeLib")
+    ).toString();
+    contractFactoryOptions = {
+      libraries: {
+        PledgeLib: pledgeLibAddress,
+      },
+    };
+  }
+
+  const Contract = await ethers.getContractFactory(
+    implNameBase,
+    contractFactoryOptions
+  );
+  const contract = await Contract.deploy();
+  await contract.deployed();
+
+  console.log(`${implNameBase} deployed to:`, contract.address);
+  const implPath = getDeploymentAddressPathWithTag(implNameBase, "UUPSImpl");
+  writeFileSync(implPath, contract.address);
 }
