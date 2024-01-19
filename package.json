@@ -34,7 +34,7 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "v4.3.0-rc.0",
-    "@openzeppelin/hardhat-defender": "^1.8.1",
+    "@openzeppelin/hardhat-defender": "^1.9.0",
     "child-process-promise": "^2.2.1",
     "hardhat-defender": "^1.0.1",
     "openzeppelin-solidity": "^4.1.0",
