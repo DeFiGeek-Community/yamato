@@ -473,6 +473,7 @@ export async function deployImplContract(
   implNameBase: string,
   usePledgeLib: boolean = false
 ) {
+  setNetwork(process.env.NETWORK);
   let contractFactoryOptions = {};
 
   if (usePledgeLib) {
