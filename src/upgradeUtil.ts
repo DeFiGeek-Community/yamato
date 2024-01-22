@@ -93,7 +93,7 @@ export async function proposeUpgradeProxy<
 
   const proposalOptions: any = {
     multisig: multisigAddr,
-    proxyAdmin: multisigAddr,
+    kind: "uups",
   };
 
   if (options?.call) {
@@ -103,7 +103,15 @@ export async function proposeUpgradeProxy<
   if (libraries?.length > 0) {
     proposalOptions.unsafeAllow = ["external-library-linking"];
   }
+  // console.log("prepareUpgrade")
+  // console.log(
+  //   await upgrades.prepareUpgrade(
+  //     olderInstanceAddress,
+  //     contractFactory,
+  //     proposalOptions
+  //     ))
 
+  console.log("proposeUpgrade");
   const res: ExtendedProposalResponse = await defender.proposeUpgrade(
     olderInstanceAddress,
     contractFactory,
@@ -225,8 +233,9 @@ export async function runUpgrade(
         options
       );
 
+      console.log(res);
       console.log(res.verificationResponse);
-      const implAddr = await (<any>res).getImplementation();
+      const implAddr = res.metadata.newImplementationAddress;
 
       const implPath = getDeploymentAddressPathWithTag(
         implNameBase,
