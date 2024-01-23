@@ -20,5 +20,4 @@ typechain-types
 abis
 test/**/*.js
 /slither-output.json
-.openzeppelin/*.json
 .openzeppelin/unknown-31337.json
