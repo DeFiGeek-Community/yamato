@@ -1,19 +1,27 @@
-import { ethers } from "ethers";
-import { writeFileSync } from "fs";
-import { getDeploymentAddressPath, setNetwork } from "../../src/deployUtil";
+import { ethers, Contract } from "ethers";
+import { writeFileSync, readFileSync } from "fs";
+import { getDeploymentAddressPath, setNetwork, setProvider } from "../../src/deployUtil";
+import { genABI } from "../../src/genABI";
 
-// 実際利用するtimestampを入れる
-const number = 1705895822;
+(async () => {
+  setNetwork(process.env.NETWORK);
+  const p = await setProvider();
+  const ymtAddr = readFileSync(getDeploymentAddressPath("YMT")).toString();
 
-const bytes32Number = ethers.utils.solidityPack(["uint256"], [number]);
+  const YMT = new Contract(ymtAddr, genABI("YMT"), p);
+  const number = await YMT.startTime();
+  console.log(Number(number));
 
-const selector = 0x5b4e128c;
-const packedBytes = ethers.utils.solidityPack(
-  ["bytes", "uint256"],
-  [selector, bytes32Number]
-);
+  const bytes32Number = ethers.utils.solidityPack(["uint256"], [Number(number)]);
 
-console.log(packedBytes);
-setNetwork(process.env.NETWORK);
-const implPath = getDeploymentAddressPath("FeePoolV2CallData");
-writeFileSync(implPath, packedBytes);
+  const selector = 0x5b4e128c;
+  const packedBytes = ethers.utils.solidityPack(
+    ["bytes", "uint256"],
+    [selector, bytes32Number]
+  );
+
+  console.log(packedBytes);
+  setNetwork(process.env.NETWORK);
+  const implPath = getDeploymentAddressPath("FeePoolV2CallData");
+  writeFileSync(implPath, packedBytes);
+})();
