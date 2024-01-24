@@ -1,6 +1,10 @@
 import { ethers, Contract } from "ethers";
 import { writeFileSync, readFileSync } from "fs";
-import { getDeploymentAddressPath, setNetwork, setProvider } from "../../src/deployUtil";
+import {
+  getDeploymentAddressPath,
+  setNetwork,
+  setProvider,
+} from "../../src/deployUtil";
 import { genABI } from "../../src/genABI";
 
 (async () => {
@@ -12,7 +16,10 @@ import { genABI } from "../../src/genABI";
   const number = await YMT.startTime();
   console.log(Number(number));
 
-  const bytes32Number = ethers.utils.solidityPack(["uint256"], [Number(number)]);
+  const bytes32Number = ethers.utils.solidityPack(
+    ["uint256"],
+    [Number(number)]
+  );
 
   const selector = 0x5b4e128c;
   const packedBytes = ethers.utils.solidityPack(
