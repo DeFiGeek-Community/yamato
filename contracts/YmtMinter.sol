@@ -52,7 +52,7 @@ contract YmtMinter is
         }
     }
 
-    function _mintFor(address scoreAddr_, address for_) internal {
+    function _mintFor(address scoreAddr_, address for_) internal returns (uint256) {
         require(
             IScoreWeightController(scoreWeightController()).scores(scoreAddr_) >
                 0,
@@ -69,14 +69,15 @@ contract YmtMinter is
 
             emit Minted(for_, scoreAddr_, totalMint);
         }
+        return _toMint;
     }
 
     /**
      * @notice Mint everything which belongs to `msg.sender` and send to them
      * @param scoreAddr_ `ScoreRegistry` address to get mintable amount from
      */
-    function mint(address scoreAddr_) external nonReentrant {
-        _mintFor(scoreAddr_, msg.sender);
+    function mint(address scoreAddr_) external nonReentrant returns (uint256) {
+        return _mintFor(scoreAddr_, msg.sender);
     }
 
     /**
@@ -102,10 +103,12 @@ contract YmtMinter is
      * @param scoreAddr_ `ScoreRegistry` address to get mintable amount from
      * @param for_ Address to mint to
      */
-    function mintFor(address scoreAddr_, address for_) external nonReentrant {
+    function mintFor(address scoreAddr_, address for_) external nonReentrant returns (uint256) {
+        uint256 toMint = 0;
         if (allowedToMintFor[msg.sender][for_]) {
-            _mintFor(scoreAddr_, for_);
+            toMint = _mintFor(scoreAddr_, for_);
         }
+        return toMint;
     }
 
     /**
