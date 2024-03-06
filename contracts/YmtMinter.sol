@@ -52,7 +52,10 @@ contract YmtMinter is
         }
     }
 
-    function _mintFor(address scoreAddr_, address for_) internal returns (uint256) {
+    function _mintFor(
+        address scoreAddr_,
+        address for_
+    ) internal returns (uint256) {
         require(
             IScoreWeightController(scoreWeightController()).scores(scoreAddr_) >
                 0,
@@ -103,7 +106,10 @@ contract YmtMinter is
      * @param scoreAddr_ `ScoreRegistry` address to get mintable amount from
      * @param for_ Address to mint to
      */
-    function mintFor(address scoreAddr_, address for_) external nonReentrant returns (uint256) {
+    function mintFor(
+        address scoreAddr_,
+        address for_
+    ) external nonReentrant returns (uint256) {
         uint256 toMint = 0;
         if (allowedToMintFor[msg.sender][for_]) {
             toMint = _mintFor(scoreAddr_, for_);
