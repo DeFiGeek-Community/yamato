@@ -95,7 +95,7 @@ contract YmtVesting {
      * @notice Allows users to claim their V1 Retroactive Rewards based on a one-year linear vesting schedule.
      * @dev Calculates the claimable amount based on the time elapsed since the distribution start, then transfers the tokens to the user's address. Any unclaimed amount from the previous claims is considered.
      */
-    function claimV1RetroactiveRewards() external {
+    function claimV1RetroactiveRewards() external returns (uint256) {
         require(vestingAmounts[msg.sender] > 0, "No tokens to claim");
         uint256 distributionStart = IYMT(ymtTokenAddress).startTime();
         uint256 timeElapsed = block.timestamp - distributionStart;
@@ -107,8 +107,9 @@ contract YmtVesting {
         }
         uint256 availableToClaim = claimableAmount - claimedAmounts[msg.sender];
         require(availableToClaim > 0, "No tokens available to claim");
-        IYMT(ymtTokenAddress).transfer(msg.sender, availableToClaim);
         claimedAmounts[msg.sender] += availableToClaim;
+        IYMT(ymtTokenAddress).transfer(msg.sender, availableToClaim);
+        return availableToClaim;
     }
 
     /**
@@ -133,8 +134,8 @@ contract YmtVesting {
         }
         uint256 availableToClaim = claimableAmount -
             totalLinearDistributionClaimed;
-        IYMT(ymtTokenAddress).transfer(contractAdmin, availableToClaim);
         totalLinearDistributionClaimed += availableToClaim;
+        IYMT(ymtTokenAddress).transfer(contractAdmin, availableToClaim);
     }
 
     /**
@@ -148,8 +149,8 @@ contract YmtVesting {
             "Distribution period has ended"
         );
         require(!isClaimed, "All tokens have already been claimed");
-        IYMT(ymtTokenAddress).transfer(contractAdmin, VESTING_AMOUNT);
         isClaimed = true;
+        IYMT(ymtTokenAddress).transfer(contractAdmin, VESTING_AMOUNT);
     }
 
     // Modifier
