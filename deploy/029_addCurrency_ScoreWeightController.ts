@@ -21,7 +21,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     getDeploymentAddressPathWithTag("ScoreWeightController", "ERC1967Proxy")
   ).toString();
 
-  const _CJPY = readFileSync(getDeploymentAddressPath("CJPY")).toString();
+  const _ScoreRegistry = readFileSync(
+    getDeploymentAddressPathWithTag("ScoreRegistry", "ERC1967Proxy")
+  ).toString();
 
   const ScoreWeightController = new Contract(
     _controllerAddr,
@@ -31,7 +33,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   await (
     await ScoreWeightController.connect(getFoundation()).addCurrency(
-      _CJPY,
+      _ScoreRegistry,
       utils.parseEther("1")
     )
   ).wait();
