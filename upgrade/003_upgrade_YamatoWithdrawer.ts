@@ -1,1 +1,5 @@
-import("./mods/003_upgrade_YamatoWithdrawer").catch((e) => console.log(e));
+import main from "./mods/003_upgrade_YamatoWithdrawer";
+
+main().catch((e) => {
+  console.error("An error occurred during the upgrade process:", e);
+});

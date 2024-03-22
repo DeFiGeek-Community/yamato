@@ -19,7 +19,7 @@ import { toERC20 } from "../test/param/helper";
 import { BigNumber } from "ethers";
 
 export async function smokeTest() {
-  setNetwork("goerli");
+  setNetwork(process.env.NETWORK);
   const p = await setProvider();
   const filepath = getDeploymentAddressPathWithTag("Yamato", "ERC1967Proxy");
   if (!existsSync(filepath)) throw new Error(`${filepath} is not exist`);

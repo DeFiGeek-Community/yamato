@@ -19,12 +19,14 @@ import "hardhat/console.sol";
 contract YamatoBase is UUPSBase {
     string internal YAMATO_SLOT_ID;
 
-    function __YamatoBase_init(address _yamato) internal initializer {
+    function __YamatoBase_init(address _yamato) internal onlyInitializing {
         __UUPSBase_init();
         __YamatoBase_init_unchained(_yamato);
     }
 
-    function __YamatoBase_init_unchained(address _yamato) internal initializer {
+    function __YamatoBase_init_unchained(
+        address _yamato
+    ) internal onlyInitializing {
         YAMATO_SLOT_ID = "deps.Yamato";
         bytes32 YAMATO_KEY = bytes32(keccak256(abi.encode(YAMATO_SLOT_ID)));
         assembly {

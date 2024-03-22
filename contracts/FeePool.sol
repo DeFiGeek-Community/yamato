@@ -9,7 +9,7 @@ pragma solidity 0.8.4;
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 
-import "./Interfaces/IveYMT.sol";
+import "./Interfaces/IveYMTOld.sol";
 import "./Interfaces/IFeePool.sol";
 import "./Dependencies/UUPSBase.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
@@ -64,7 +64,7 @@ contract FeePool is IFeePool, UUPSBase, ReentrancyGuardUpgradeable {
 
     modifier onlyVeYMT() {
         require(
-            IveYMT(veYMT()).balanceOfAt(msg.sender, block.number) > 0,
+            IveYMTOld(veYMT()).balanceOfAt(msg.sender, block.number) > 0,
             "You are not a veYMT holder."
         );
         _;

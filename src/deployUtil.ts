@@ -1,6 +1,7 @@
 require("dotenv").config();
 import { readFileSync, writeFileSync, unlinkSync, existsSync } from "fs";
 import { Wallet, Signer, getDefaultProvider, Contract } from "ethers";
+import { ethers } from "hardhat";
 import { genABI } from "../src/genABI";
 import { getLatestContractName } from "../src/upgradeUtil";
 import { isConstructSignatureDeclaration } from "typescript";
@@ -199,6 +200,11 @@ export function verifyWithEtherscan() {
     getDeploymentAddressPathWithTag("PriceFeed", "UUPSImpl")
   ).toString();
   let CJPY = readFileSync(getDeploymentAddressPath("CJPY")).toString();
+  let YMT = readFileSync(getDeploymentAddressPath("YMT")).toString();
+  let veYMT = readFileSync(getDeploymentAddressPath("veYMT")).toString();
+  let YmtVesting = readFileSync(
+    getDeploymentAddressPath("YmtVesting")
+  ).toString();
   let FeePoolUUPSImpl = readFileSync(
     getDeploymentAddressPathWithTag("FeePool", "UUPSImpl")
   ).toString();
@@ -234,6 +240,15 @@ export function verifyWithEtherscan() {
   let PriorityRegistryUUPSImpl = readFileSync(
     getDeploymentAddressPathWithTag("PriorityRegistry", "UUPSImpl")
   ).toString();
+  let ScoreRegistryUUPSImpl = readFileSync(
+    getDeploymentAddressPathWithTag("ScoreRegistry", "UUPSImpl")
+  ).toString();
+  let ScoreWeightControllerUUPSImpl = readFileSync(
+    getDeploymentAddressPathWithTag("ScoreWeightController", "UUPSImpl")
+  ).toString();
+  let YmtMinterUUPSImpl = readFileSync(
+    getDeploymentAddressPathWithTag("YmtMinter", "UUPSImpl")
+  ).toString();
   let PledgeLib = readFileSync(
     getDeploymentAddressPath("PledgeLib")
   ).toString();
@@ -260,7 +275,29 @@ export function verifyWithEtherscan() {
     console.log(e.message);
   }
   try {
+    execSync(
+      `npx hardhat verify --network ${getCurrentNetwork()} --contract contracts/YMT.sol:YMT ${YMT} ${YmtVesting}`
+    );
+  } catch (e) {
+    console.log(e.message);
+  }
+  try {
+    execSync(
+      `npx hardhat verify --network ${getCurrentNetwork()} --contract contracts/veYMT.sol:veYMT ${veYMT} ${YMT}`
+    );
+  } catch (e) {
+    console.log(e.message);
+  }
+  try {
+    execSync(
+      `npx hardhat verify --network ${getCurrentNetwork()} --contract contracts/YmtVesting.sol:YmtVesting ${YmtVesting}`
+    );
+  } catch (e) {
+    console.log(e.message);
+  }
+  try {
     let name = getLatestContractName("FeePool");
+    console.log(name);
     execSync(
       `npx hardhat verify --network ${getCurrentNetwork()} --contract contracts/${name}.sol:${name} ${FeePoolUUPSImpl}`
     );
@@ -271,6 +308,7 @@ export function verifyWithEtherscan() {
   }
   try {
     let name = getLatestContractName("CurrencyOS");
+    console.log(name);
     execSync(
       `npx hardhat verify --network ${getCurrentNetwork()} --contract contracts/${name}.sol:${name} ${CurrencyOSUUPSImpl}`
     );
@@ -282,6 +320,7 @@ export function verifyWithEtherscan() {
 
   try {
     let name = getLatestContractName("Yamato");
+    console.log(name);
     execSync(
       `npx hardhat verify --network ${getCurrentNetwork()} --contract contracts/${name}.sol:${name} ${YamatoUUPSImpl}`
     );
@@ -293,6 +332,7 @@ export function verifyWithEtherscan() {
 
   try {
     let name = getLatestContractName("YamatoDepositor");
+    console.log(name);
     execSync(
       `npx hardhat verify --network ${getCurrentNetwork()} --contract contracts/${name}.sol:${name} ${YamatoDepositorUUPSImpl}`
     );
@@ -303,6 +343,7 @@ export function verifyWithEtherscan() {
   }
   try {
     let name = getLatestContractName("YamatoBorrower");
+    console.log(name);
     execSync(
       `npx hardhat verify --network ${getCurrentNetwork()} --contract contracts/${name}.sol:${name} ${YamatoBorrowerUUPSImpl}`
     );
@@ -313,6 +354,7 @@ export function verifyWithEtherscan() {
   }
   try {
     let name = getLatestContractName("YamatoRepayer");
+    console.log(name);
     execSync(
       `npx hardhat verify --network ${getCurrentNetwork()} --contract contracts/${name}.sol:${name} ${YamatoRepayerUUPSImpl}`
     );
@@ -323,6 +365,7 @@ export function verifyWithEtherscan() {
   }
   try {
     let name = getLatestContractName("YamatoWithdrawer");
+    console.log(name);
     execSync(
       `npx hardhat verify --network ${getCurrentNetwork()} --contract contracts/${name}.sol:${name} ${YamatoWithdrawerUUPSImpl}`
     );
@@ -333,6 +376,7 @@ export function verifyWithEtherscan() {
   }
   try {
     let name = getLatestContractName("YamatoRedeemer");
+    console.log(name);
     execSync(
       `npx hardhat verify --network ${getCurrentNetwork()} --contract contracts/${name}.sol:${name} ${YamatoRedeemerUUPSImpl}`
     );
@@ -343,6 +387,7 @@ export function verifyWithEtherscan() {
   }
   try {
     let name = getLatestContractName("YamatoSweeper");
+    console.log(name);
     execSync(
       `npx hardhat verify --network ${getCurrentNetwork()} --contract contracts/${name}.sol:${name} ${YamatoSweeperUUPSImpl}`
     );
@@ -353,6 +398,7 @@ export function verifyWithEtherscan() {
   }
   try {
     let name = getLatestContractName("Pool");
+    console.log(name);
     execSync(
       `npx hardhat verify --network ${getCurrentNetwork()} --contract contracts/${name}.sol:${name} ${PoolUUPSImpl}`
     );
@@ -361,8 +407,36 @@ export function verifyWithEtherscan() {
   }
   try {
     let name = getLatestContractName("PriorityRegistry");
+    console.log(name);
     execSync(
       `npx hardhat verify --network ${getCurrentNetwork()} --contract contracts/${name}.sol:${name} ${PriorityRegistryUUPSImpl}`
+    );
+  } catch (e) {
+    console.log(e.message);
+  }
+  try {
+    let name = "ScoreRegistry";
+    console.log(name);
+    execSync(
+      `npx hardhat verify --network ${getCurrentNetwork()} --contract contracts/${name}.sol:${name} ${ScoreRegistryUUPSImpl}`
+    );
+  } catch (e) {
+    console.log(e.message);
+  }
+  try {
+    let name = "ScoreWeightController";
+    console.log(name);
+    execSync(
+      `npx hardhat verify --network ${getCurrentNetwork()} --contract contracts/${name}.sol:${name} ${ScoreWeightControllerUUPSImpl}`
+    );
+  } catch (e) {
+    console.log(e.message);
+  }
+  try {
+    let name = "YmtMinter";
+    console.log(name);
+    execSync(
+      `npx hardhat verify --network ${getCurrentNetwork()} --contract contracts/${name}.sol:${name} ${YmtMinterUUPSImpl}`
     );
   } catch (e) {
     console.log(e.message);
@@ -417,6 +491,15 @@ export function showProxyVerificationURLs() {
   let PriorityRegistryERC1967Proxy = readFileSync(
     getDeploymentAddressPathWithTag("PriorityRegistry", "ERC1967Proxy")
   ).toString();
+  let ScoreRegistryERC1967Proxy = readFileSync(
+    getDeploymentAddressPathWithTag("ScoreRegistry", "ERC1967Proxy")
+  ).toString();
+  let ScoreWeightControllerERC1967Proxy = readFileSync(
+    getDeploymentAddressPathWithTag("ScoreWeightController", "ERC1967Proxy")
+  ).toString();
+  let YmtMinterERC1967Proxy = readFileSync(
+    getDeploymentAddressPathWithTag("YmtMinter", "ERC1967Proxy")
+  ).toString();
   let PriceFeedERC1967Proxy = readFileSync(
     getDeploymentAddressPathWithTag("PriceFeed", "ERC1967Proxy")
   ).toString();
@@ -436,6 +519,9 @@ export function showProxyVerificationURLs() {
   _logProxyProcedure(YamatoSweeperERC1967Proxy);
   _logProxyProcedure(PoolERC1967Proxy);
   _logProxyProcedure(PriorityRegistryERC1967Proxy);
+  _logProxyProcedure(ScoreRegistryERC1967Proxy);
+  _logProxyProcedure(ScoreWeightControllerERC1967Proxy);
+  _logProxyProcedure(YmtMinterERC1967Proxy);
   _logProxyProcedure(PriceFeedERC1967Proxy);
   _logProxyProcedure(FeePoolERC1967Proxy);
   _logProxyProcedure(CurrencyOSERC1967Proxy);
@@ -466,4 +552,34 @@ export async function sleep(n) {
 
 export async function existsSlot(provider, address, slot) {
   return (await provider.getStorageAt(address, slot)).length > 2;
+}
+
+export async function deployImplContract(
+  implNameBase: string,
+  usePledgeLib: boolean = false
+) {
+  setNetwork(process.env.NETWORK);
+  let contractFactoryOptions = {};
+
+  if (usePledgeLib) {
+    const pledgeLibAddress = readFileSync(
+      getDeploymentAddressPath("PledgeLib")
+    ).toString();
+    contractFactoryOptions = {
+      libraries: {
+        PledgeLib: pledgeLibAddress,
+      },
+    };
+  }
+
+  const Contract = await ethers.getContractFactory(
+    implNameBase,
+    contractFactoryOptions
+  );
+  const contract = await Contract.deploy();
+  await contract.deployed();
+
+  console.log(`${implNameBase} deployed to:`, contract.address);
+  const implPath = getDeploymentAddressPathWithTag(implNameBase, "UUPSImpl");
+  writeFileSync(implPath, contract.address);
 }

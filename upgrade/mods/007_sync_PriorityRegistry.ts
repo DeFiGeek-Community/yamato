@@ -24,7 +24,7 @@ let PriceFeedERC1967Proxy = readFileSync(
 ).toString();
 
 export default async function main() {
-  setNetwork("goerli");
+  setNetwork(process.env.NETWORK);
   await setProvider();
   let Yamato = new ethers.Contract(
     YamatoERC1967Proxy,

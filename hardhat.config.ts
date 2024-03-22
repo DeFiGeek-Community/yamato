@@ -49,6 +49,20 @@ module.exports = {
           },
         },
       },
+      {
+        version: "0.8.18",
+        settings: {
+          outputSelection: {
+            "*": {
+              "*": ["storageLayout"],
+            },
+          },
+          optimizer: {
+            enabled: true,
+            runs: 1000,
+          },
+        },
+      },
     ],
   },
   networks: {
@@ -125,7 +139,7 @@ module.exports = {
   contractSizer: {
     alphaSort: true,
     disambiguatePaths: false,
-    runOnCompile: true,
+    runOnCompile: false,
     strict: false,
   },
   gasReporter: {
@@ -138,7 +152,9 @@ module.exports = {
     alwaysGenerateOverloads: false, // should overloads with full signatures like deposit(uint256) be generated always, even if there are no overloads?
   },
   paths: {
-    tests: "./test/unit",
+    // tests: "./test/unit",
+    // tests: "./test/v1.5",
+    tests: "./test",
   },
   defender: {
     apiKey: process.env.DEFENDER_TEAM_API_KEY,
