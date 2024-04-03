@@ -16,7 +16,7 @@ import "@openzeppelin/contracts/utils/math/Math.sol";
 
 contract FeePoolV2 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
     uint256 public constant WEEK = 7 * 86400;
-    uint256 public constant TOKEN_CHECKPOINT_DEADLINE = 1 hours;
+    uint256 public constant TOKEN_CHECKPOINT_DEADLINE = 86400;
 
     string constant VEYMT_SLOT_ID = "deps.veYMT";
 
