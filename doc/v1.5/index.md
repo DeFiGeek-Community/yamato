@@ -36,26 +36,26 @@ veYMT に関連するユースケースを以下の図で示しています。
 
 # Yamato v1.5 のコントラクト
 
-以下は、v1.5で使用されている最新バージョンのコントラクトのリストです。
+以下は、v1.5 で使用されている最新バージョンのコントラクトのリストです。
 
 - `CJPY.sol`
 - `Currency.sol`
-- `CurrencyOSV3.sol` - CurrencyOSの最新バージョン
-- `FeePoolV2.sol` - FeePoolの最新バージョン
-- `PoolV2.sol` - Poolの最新バージョン
-- `PriceFeedV3.sol` - PriceFeedの最新バージョン
-- `PriorityRegistryV6.sol` - PriorityRegistryの最新バージョン
-- `YamatoBorrowerV2.sol` - YamatoBorrowerの最新バージョン
-- `YamatoDepositorV3.sol` - YamatoDepositorの最新バージョン
-- `YamatoRedeemerV5.sol` - YamatoRedeemerの最新バージョン
-- `YamatoRepayerV3.sol` - YamatoRepayerの最新バージョン
-- `YamatoSweeperV3.sol` - YamatoSweeperの最新バージョン
-- `YamatoV4.sol` - Yamatoの最新バージョン
-- `YamatoWithdrawerV3.sol` - YamatoWithdrawerの最新バージョン
+- `CurrencyOSV3.sol` - CurrencyOS の最新バージョン
+- `FeePoolV2.sol` - FeePool の最新バージョン
+- `PoolV2.sol` - Pool の最新バージョン
+- `PriceFeedV3.sol` - PriceFeed の最新バージョン
+- `PriorityRegistryV6.sol` - PriorityRegistry の最新バージョン
+- `YamatoBorrowerV2.sol` - YamatoBorrower の最新バージョン
+- `YamatoDepositorV3.sol` - YamatoDepositor の最新バージョン
+- `YamatoRedeemerV5.sol` - YamatoRedeemer の最新バージョン
+- `YamatoRepayerV3.sol` - YamatoRepayer の最新バージョン
+- `YamatoSweeperV3.sol` - YamatoSweeper の最新バージョン
+- `YamatoV4.sol` - Yamato の最新バージョン
+- `YamatoWithdrawerV3.sol` - YamatoWithdrawer の最新バージョン
 - `YmtOS.sol`
-- `YmtMinter.sol` - v1.5で追加
-- `ScoreRegistry.sol` - v1.5で追加
-- `ScoreWeightController.sol` - v1.5で追加
-- `YMT.sol` - v1.5で追加
-- `YmtVesting.sol` - v1.5で追加
-- `veYMT.sol` - v1.5で追加
+- `YmtMinter.sol` - v1.5 で追加
+- `ScoreRegistry.sol` - v1.5 で追加
+- `ScoreWeightController.sol` - v1.5 で追加
+- `YMT.sol` - v1.5 で追加
+- `YmtVesting.sol` - v1.5 で追加
+- `veYMT.sol` - v1.5 で追加
