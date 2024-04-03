@@ -34,27 +34,17 @@ veYMT に関連するユースケースを以下の図で示しています。
 
 ![FeePool ユースケース図](FeePoolV2/usecase.png)
 
-# v1.5 最新バージョンのコントラクト
+# Yamato v1.5 のコントラクト
 
 以下は、v1.5で使用されている最新バージョンのコントラクトのリストです。
 
 - `CJPY.sol`
-- `ChainLinkMock.sol`
 - `Currency.sol`
 - `CurrencyOSV3.sol` - CurrencyOSの最新バージョン
 - `FeePoolV2.sol` - FeePoolの最新バージョン
-- `Import.sol`
-- `OracleMockBase.sol`
 - `PoolV2.sol` - Poolの最新バージョン
 - `PriceFeedV3.sol` - PriceFeedの最新バージョン
 - `PriorityRegistryV6.sol` - PriorityRegistryの最新バージョン
-- `ScoreRegistry.sol`
-- `ScoreWeightController.sol`
-- `TellorCallerMock.sol`
-- `Vester.sol`
-- `VesterFactory.sol`
-- `YMT.sol`
-- `Yamato.sol`
 - `YamatoBorrowerV2.sol` - YamatoBorrowerの最新バージョン
 - `YamatoDepositorV3.sol` - YamatoDepositorの最新バージョン
 - `YamatoRedeemerV5.sol` - YamatoRedeemerの最新バージョン
@@ -62,7 +52,10 @@ veYMT に関連するユースケースを以下の図で示しています。
 - `YamatoSweeperV3.sol` - YamatoSweeperの最新バージョン
 - `YamatoV4.sol` - Yamatoの最新バージョン
 - `YamatoWithdrawerV3.sol` - YamatoWithdrawerの最新バージョン
-- `YmtMinter.sol`
 - `YmtOS.sol`
-- `YmtVesting.sol`
-- `veYMT.sol`
+- `YmtMinter.sol` - v1.5で追加
+- `ScoreRegistry.sol` - v1.5で追加
+- `ScoreWeightController.sol` - v1.5で追加
+- `YMT.sol` - v1.5で追加
+- `YmtVesting.sol` - v1.5で追加
+- `veYMT.sol` - v1.5で追加
