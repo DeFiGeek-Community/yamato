@@ -38,6 +38,8 @@ veYMT に関連するユースケースを以下の図で示しています。
 
 以下は、v1.5 で使用されている最新バージョンのコントラクトのリストです。
 
+## デプロイされているコントラクト
+
 - `CJPY.sol`
 - `CurrencyOSV3.sol` - CurrencyOS の最新バージョン
 - `FeePoolV2.sol` - FeePool の最新バージョン
@@ -57,6 +59,8 @@ veYMT に関連するユースケースを以下の図で示しています。
 - `YMT.sol` - v1.5 で追加
 - `YmtVesting.sol` - v1.5 で追加
 - `veYMT.sol` - v1.5 で追加
+
+## 利用していないものや、テスト用コントラクト
 
 - `Currency.sol` - 未デプロイ 継承コントラクト
 - `Vester.sol` - 未デプロイ
