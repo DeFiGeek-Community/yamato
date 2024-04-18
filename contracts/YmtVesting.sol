@@ -103,7 +103,7 @@ contract YmtVesting {
         if (block.timestamp >= distributionStart + YEAR) {
             claimableAmount = vestingAmounts[msg.sender];
         } else {
-            claimableAmount = timeElapsed * (vestingAmounts[msg.sender] / YEAR);
+            claimableAmount = (timeElapsed * vestingAmounts[msg.sender]) / YEAR;
         }
         uint256 availableToClaim = claimableAmount - claimedAmounts[msg.sender];
         require(availableToClaim > 0, "No tokens available to claim");
