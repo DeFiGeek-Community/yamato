@@ -5,15 +5,14 @@ import {
   setNetwork,
   setProvider,
 } from "../../src/deployUtil";
-import { genABI } from "../../src/genABI";
+import { time } from "@nomicfoundation/hardhat-network-helpers";
 
 (async () => {
   setNetwork(process.env.NETWORK);
   const p = await setProvider();
   const ymtAddr = readFileSync(getDeploymentAddressPath("YMT")).toString();
 
-  const YMT = new Contract(ymtAddr, genABI("YMT"), p);
-  const number = await YMT.startTime();
+  const number = await time.latest();
   console.log(Number(number));
 
   const bytes32Number = ethers.utils.solidityPack(
