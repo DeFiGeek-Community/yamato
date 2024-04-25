@@ -12,6 +12,7 @@ import "hardhat/console.sol";
 
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
+//solhint-disable-next-line security/no-block-members
 
 contract TellorCallerMock is OracleMockBase, ITellorCaller {
     uint256 public lastSeen;
