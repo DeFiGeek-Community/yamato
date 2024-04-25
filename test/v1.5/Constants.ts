@@ -26,6 +26,12 @@ class Constants {
   static ten_to_the_16 = BigNumber.from("10000000000000000");
   static zero = BigNumber.from("0");
   static MAX_UINT256 = ethers.constants.MaxUint256;
+
+  static WEIGHTS: BigNumber[] = [
+    BigNumber.from(2).mul(BigNumber.from(10).pow(18)),
+    BigNumber.from(10).pow(18),
+    BigNumber.from(5).mul(BigNumber.from(10).pow(17)),
+  ];
 }
 
 export default Constants;
