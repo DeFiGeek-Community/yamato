@@ -338,7 +338,7 @@ describe("FeePoolV2", function () {
       await feePool.checkpointToken();
     }
 
-    fees[tx.blockNumber] = stAmount;
+    fees[tx.blockNumber || 0] = stAmount;
     totalFees = totalFees.add(stAmount);
   }
 
@@ -373,7 +373,7 @@ describe("FeePoolV2", function () {
     });
     // const tx = await feeCoin._mintForTesting(feePool.address, stAmount);
 
-    fees[tx.blockNumber] = stAmount;
+    fees[tx.blockNumber || 0] = stAmount;
     totalFees = totalFees.add(stAmount);
   }
 
