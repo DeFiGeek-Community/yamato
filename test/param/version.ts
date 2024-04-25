@@ -26,7 +26,7 @@ export const contractVersion: Version = {
   PriceFeed: "PriceFeedV3",
   PriorityRegistry: "PriorityRegistryV6",
   ScoreRegistry: "ScoreRegistry",
-  ScoreWeightController: "ScoreWeightController",
+  ScoreWeightController: "ScoreWeightControllerV2",
   veYMT: "veYMT",
   Yamato: "YamatoV4",
   YamatoBorrower: "YamatoBorrowerV2",
