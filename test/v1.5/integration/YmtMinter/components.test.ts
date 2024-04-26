@@ -202,10 +202,7 @@ describe("YmtMinter components", function () {
     mockFeed.getPrice.returns(PRICE);
     mockFeed.lastGoodPrice.returns(PRICE);
 
-    await scoreWeightController.addScore(
-      scoreRegistry.address,
-      ten_to_the_18
-    );
+    await scoreWeightController.addScore(scoreRegistry.address, ten_to_the_18);
     for (let i = 0; i < 4; i++) {
       await yamato.connect(accounts[i]).deposit({ value: ten_to_the_20 });
     }

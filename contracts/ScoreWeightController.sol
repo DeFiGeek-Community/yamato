@@ -50,10 +50,7 @@ contract ScoreWeightController is UUPSBase {
      * @param addr_ Score address
      * @param weight_ Score type
      */
-    function addScore(
-        address addr_,
-        uint256 weight_
-    ) external onlyGovernance {
+    function addScore(address addr_, uint256 weight_) external onlyGovernance {
         int128 _n = nScores;
         unchecked {
             nScores = _n + 1;

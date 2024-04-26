@@ -161,7 +161,7 @@ This calculation determines the `workingSupply` (working balance) which serves a
 
 `integrateInvSupply` is an integrated value calculated over a specific period. It is represented by the following formula:
 
-$$ \text{integrateInvSupply} = \int_{\text{start time}}^{\text{end time}} \frac{\text{rate}(t) \times \text{weight}(t)}{\text{workingSupply}(t)} \ dt $$
+$$ \text{integrateInvSupply} = \int\_{\text{start time}}^{\text{end time}} \frac{\text{rate}(t) \times \text{weight}(t)}{\text{workingSupply}(t)} \ dt $$
 
 Where:
 
