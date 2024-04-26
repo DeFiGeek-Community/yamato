@@ -161,7 +161,7 @@ $$
 
 `integrateInvSupply` は、特定の期間にわたって計算される積分値です。具体的には以下の式で表されます：
 
-$$ \text{integrateInvSupply} = \int\_{\text{開始時刻}}^{\text{終了時刻}} \frac{\text{rate}(t) \times \text{weight}(t)}{\text{workingSupply}(t)} \ dt $$
+$$ \text{integrateInvSupply} = \int_{\text{開始時刻}}^{\text{終了時刻}} \frac{\text{rate}(t) \times \text{weight}(t)}{\text{workingSupply}(t)} \ dt $$
 
 ここで、
 
