@@ -50,6 +50,7 @@ contract ScoreWeightControllerV2 is UUPSBase {
     uint256 constant MULTIPLIER = 10 ** 18;
 
     event NewScore(address addr, uint256 weight);
+    event ScoreTimingUpdated(address addr, uint256 weight);
 
     int128 public nScores; //number of scores
 
@@ -212,9 +213,9 @@ contract ScoreWeightControllerV2 is UUPSBase {
     }
 
     /**
-     * @notice Add Score `addr` of type `score_type` with weight `weight`
+     * @notice Add Score `addr` with weight `weight`
      * @param addr_ Score address
-     * @param weight_ Score type
+     * @param weight_ Score weight
      */
     function addScore(address addr_, uint256 weight_) external onlyGovernance {
         require(scores[addr_] == 0, "cannot add the same gauge twice");
@@ -223,6 +224,35 @@ contract ScoreWeightControllerV2 is UUPSBase {
             nScores = _n + 1;
         }
         scores[addr_] = nScores;
+
+        _updateTimingAndWeights(addr_, weight_);
+
+        emit NewScore(addr_, weight_);
+    }
+
+    /**
+     * @notice Update timing and weight for an existing score
+     * @param addr_ The address of the score to update
+     * @param weight_ The new weight for the score
+     */
+    function updateScore(
+        address addr_,
+        uint256 weight_
+    ) external onlyGovernance {
+        require(scores[addr_] != 0, "Score does not exist");
+        require(timeWeight[addr_] == 0, "Timing already set for this score");
+
+        _updateTimingAndWeights(addr_, weight_);
+
+        emit ScoreTimingUpdated(addr_, weight_);
+    }
+
+    /**
+     * @dev Internal function to update timing and weights for a score
+     * @param addr_ The address of the score to update
+     * @param weight_ The new weight to be applied
+     */
+    function _updateTimingAndWeights(address addr_, uint256 weight_) private {
         uint256 _nextTime;
         unchecked {
             _nextTime = ((block.timestamp + WEEK) / WEEK) * WEEK;
@@ -243,8 +273,6 @@ contract ScoreWeightControllerV2 is UUPSBase {
             timeSum = _nextTime;
         }
         timeWeight[addr_] = _nextTime;
-
-        emit NewScore(addr_, weight_);
     }
 
     /***
