@@ -3,6 +3,11 @@ import { FakeContract, smock } from "@defi-wonderland/smock";
 import chai, { expect } from "chai";
 import { Signer, BigNumber, Wallet } from "ethers";
 import {
+  time,
+  takeSnapshot,
+  SnapshotRestorer,
+} from "@nomicfoundation/hardhat-network-helpers";
+import {
   CJPY,
   CurrencyOS,
   Pool,
@@ -77,7 +82,9 @@ describe("story Events", function () {
     let toCollateralize: number;
     let toBorrow: BigNumber;
 
-    beforeEach(async () => {
+    let snapshot: SnapshotRestorer;
+
+    before(async () => {
       accounts = await ethers.getSigners();
       ownerAddress = await accounts[0].getAddress();
 
@@ -185,8 +192,17 @@ describe("story Events", function () {
         )
       ).wait();
       await (await yamato.setScoreRegistry(ScoreRegistry.address)).wait();
+    });
+
+    beforeEach(async () => {
+      snapshot = await takeSnapshot();
       PRICE = BigNumber.from(260000).mul(1e18 + "");
       MCR = BigNumber.from(130);
+      toCollateralize = 1;
+      toBorrow = PRICE.mul(toCollateralize)
+        .mul(100)
+        .div(MCR)
+        .div(1e18 + "");
 
       mockPool.depositRedemptionReserve.returns(0);
       mockPool.depositSweepReserve.returns(0);
@@ -206,14 +222,11 @@ describe("story Events", function () {
       mockPriorityRegistry.rankedQueueTotalLen.returns(0);
       mockPriorityRegistry.getRankedQueue.returns(ethers.constants.AddressZero);
       mockPriorityRegistry.bulkUpsert.returns(Array(100).fill(0));
-
-      toCollateralize = 1;
-      toBorrow = PRICE.mul(toCollateralize)
-        .mul(100)
-        .div(MCR)
-        .div(1e18 + "");
-
       mockCJPY.balanceOf.returns(PRICE.mul(toCollateralize).mul(100).div(MCR));
+    });
+
+    afterEach(async () => {
+      await snapshot.restore();
     });
 
     describe("event Deposited", function () {
@@ -375,7 +388,9 @@ describe("story Events", function () {
     let mockYamatoSweeper: FakeContract<YamatoSweeper>;
     let accounts;
 
-    beforeEach(async () => {
+    let snapshot: SnapshotRestorer;
+
+    before(async () => {
       accounts = await ethers.getSigners();
       mockCJPY = await smock.fake<CJPY>("CJPY");
       mockCJPY.transfer.returns(0);
@@ -422,6 +437,15 @@ describe("story Events", function () {
 
       await (await yamatoDummy.setPool(pool.address)).wait();
     });
+
+    beforeEach(async () => {
+      snapshot = await takeSnapshot();
+    });
+
+    afterEach(async () => {
+      await snapshot.restore();
+    });
+
     describe("event RedemptionReserveDeposited", function () {
       it(`should be emitted`, async function () {
         await expect(
