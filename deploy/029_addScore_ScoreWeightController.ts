@@ -32,12 +32,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   );
 
   await (
-    await ScoreWeightController.connect(getFoundation()).addCurrency(
+    await ScoreWeightController.connect(getFoundation()).addScore(
       _ScoreRegistry,
       utils.parseEther("1")
     )
   ).wait();
-  console.log(`log: ScoreWeightController.addCurrency() executed.`);
+  console.log(`log: ScoreWeightController.addScore() executed.`);
 };
 export default func;
-func.tags = ["addCurrency"];
+func.tags = ["addScore"];

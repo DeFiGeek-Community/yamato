@@ -15,7 +15,7 @@ interface IScoreWeightController {
 
     function checkpoint(address addr_) external;
 
-    function addCurrency(address addr_, uint256 weight_) external;
+    function addScore(address addr_, uint256 weight_) external;
 
     function scoreRelativeWeight(
         address addr,

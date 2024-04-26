@@ -199,7 +199,7 @@ describe("ScoreRegistry kick", function () {
     mockFeed.getPrice.returns(PRICE);
     mockFeed.lastGoodPrice.returns(PRICE);
 
-    await scoreWeightController.addCurrency(
+    await scoreWeightController.addScore(
       scoreRegistry.address,
       ethers.utils.parseEther("10")
     );
