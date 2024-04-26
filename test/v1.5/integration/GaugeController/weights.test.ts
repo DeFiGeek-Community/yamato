@@ -99,13 +99,11 @@ describe("scoreWeightController", function () {
         call: { fn: "initializeV2" },
       }
     );
-
   });
 
   beforeEach(async () => {
     snapshot = await takeSnapshot();
     scores = [];
-
   });
 
   afterEach(async () => {
@@ -120,9 +118,7 @@ describe("scoreWeightController", function () {
     }, BigNumber.from("0"));
   }
 
-
   //--------------------------------------------- randomly exceuted functions -----------------------------------------------------------//
-
 
   async function ruleAddScore(stGaugeWeight?: BigNumber) {
     /*
@@ -153,10 +149,10 @@ describe("scoreWeightController", function () {
 
   async function invariantGaugeWeightSums() {
     // Validate the gauge weight sums per type.
-      const gaugeWeightSum = _gaugeWeight();
-      expect(await scoreWeightController.getTotalWeight()).to.be.eq(
-        gaugeWeightSum
-      );
+    const gaugeWeightSum = _gaugeWeight();
+    expect(await scoreWeightController.getTotalWeight()).to.be.eq(
+      gaugeWeightSum
+    );
   }
 
   async function invariantRelativeGaugeWeight() {
@@ -187,7 +183,6 @@ describe("scoreWeightController", function () {
   describe("gauge weights and gauge weight sum", function () {
     for (let i = 0; i < MAX_EXAMPLES; i++) {
       it(`tests gauge weights and gauge weight sum ${i}`, async () => {
-
         const steps = randomValue(1, STATEFUL_STEP_COUNT);
         for (let x = 0; x < steps; x++) {
           let n = randomValue(0, func.length);

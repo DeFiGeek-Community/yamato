@@ -216,10 +216,7 @@ contract ScoreWeightControllerV2 is UUPSBase {
      * @param addr_ Score address
      * @param weight_ Score type
      */
-    function addScore(
-        address addr_,
-        uint256 weight_
-    ) external onlyGovernance {
+    function addScore(address addr_, uint256 weight_) external onlyGovernance {
         require(scores[addr_] == 0, "cannot add the same gauge twice");
         int128 _n = nScores;
         unchecked {

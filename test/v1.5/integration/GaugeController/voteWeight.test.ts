@@ -83,12 +83,14 @@ describe("scoreWeightController", function () {
     }
 
     for (let i = 0; i < 3; i++) {
-      await YMT
-        .connect(accounts[0])
-        .transfer(accounts[i].address, ethers.utils.parseEther("100000"));
-      await YMT
-        .connect(accounts[i])
-        .approve(veYMT.address, ethers.utils.parseEther("100000"));
+      await YMT.connect(accounts[0]).transfer(
+        accounts[i].address,
+        ethers.utils.parseEther("100000")
+      );
+      await YMT.connect(accounts[i]).approve(
+        veYMT.address,
+        ethers.utils.parseEther("100000")
+      );
     }
   });
 
@@ -219,9 +221,7 @@ describe("scoreWeightController", function () {
       for (let i = 0; i < accounts.length; i++) {
         const initialBias: BigNumber = (
           await veYMT.getLastUserSlope(accounts[i].address)
-        ).mul(
-          (await veYMT.locked(accounts[i].address)).end.sub(timestamp)
-        );
+        ).mul((await veYMT.locked(accounts[i].address)).end.sub(timestamp));
         const duration =
           Math.floor((timestamp + stLength[i] * week) / week) * week -
           timestamp;

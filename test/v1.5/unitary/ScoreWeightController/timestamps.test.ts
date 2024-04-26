@@ -65,10 +65,7 @@ describe("scoreWeightController", function () {
         call: { fn: "initializeV2" },
       }
     );
-    await scoreWeightController.addScore(
-      mockScoreRegistry.address,
-      WEIGHTS[0]
-    );
+    await scoreWeightController.addScore(mockScoreRegistry.address, WEIGHTS[0]);
   });
 
   beforeEach(async () => {
