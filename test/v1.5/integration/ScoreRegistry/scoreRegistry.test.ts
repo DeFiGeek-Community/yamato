@@ -204,7 +204,7 @@ describe("ScoreRegistry", function () {
     mockFeed.getPrice.returns(PRICE);
     mockFeed.lastGoodPrice.returns(PRICE);
 
-    await scoreWeightController.addCurrency(
+    await scoreWeightController.addScore(
       scoreRegistry.address,
       ten_to_the_18
     );
@@ -249,7 +249,7 @@ describe("ScoreRegistry", function () {
       let checkpoint_supply = zero;
       let checkpoint_balance = zero;
 
-      await scoreWeightController.addCurrency(
+      await scoreWeightController.addScore(
         scoreRegistry.address,
         ten_to_the_18
       );
@@ -406,7 +406,7 @@ describe("ScoreRegistry", function () {
       await time.increase(week * 2 + 5);
 
       // ゲージをコントローラーに接続して適切なレートなどを設定する
-      await scoreWeightController.addCurrency(
+      await scoreWeightController.addScore(
         scoreRegistry.address,
         ten_to_the_18
       );

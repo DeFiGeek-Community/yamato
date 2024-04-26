@@ -46,11 +46,11 @@ contract ScoreWeightController is UUPSBase {
     }
 
     /**
-     * @notice Add Currency `addr` of type `score_type` with weight `weight`
+     * @notice Add Score `addr` of type `score_type` with weight `weight`
      * @param addr_ Score address
      * @param weight_ Score type
      */
-    function addCurrency(
+    function addScore(
         address addr_,
         uint256 weight_
     ) external onlyGovernance {

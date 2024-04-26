@@ -38,7 +38,7 @@ The Score Weight Controller is a contract that manages liquidity scores and cont
   - `ymtAddr`: Address of the YMT token.
   - `veYmtAddr`: Address of the veYMT contract.
 
-### `addCurrency(addr_: address, weight_: uint256)`
+### `addScore(addr_: address, weight_: uint256)`
 
 - **Description**: Adds a score for the specified address and sets its weight.
 - **Parameters**:

@@ -203,7 +203,7 @@ describe("YmtMinter integration", function () {
         ethers.utils.parseEther("10000")
       );
     }
-    await scoreWeightController.addCurrency(
+    await scoreWeightController.addScore(
       scoreRegistry.address,
       ten_to_the_18
     );
