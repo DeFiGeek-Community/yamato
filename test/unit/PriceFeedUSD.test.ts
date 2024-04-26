@@ -88,7 +88,7 @@ async function setMocks(conf: MockConf) {
   lastChainLinkAnswer = cPriceEthInUsd;
   mockRoundCount++;
 }
-describe.only("PriceFeedUSD", function () {
+describe("PriceFeedUSD", function () {
   let lastMockInput;
   let snapshot: SnapshotRestorer;
 
