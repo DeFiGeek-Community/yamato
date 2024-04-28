@@ -65,7 +65,7 @@ contract ScoreWeightControllerV2 is UUPSBase {
     mapping(address => uint256) public voteUserPower; // Total vote power used by user
     mapping(address => mapping(address => uint256)) public lastUserVote; // Last user vote's timestamp for each score address
 
-    // Past and scheduled points for score weight, sum of weights per type, total weight
+    // Past and scheduled points for score weight, total weight
     // Point is for bias+slope
     // changes_* are for changes in slope
     // time_* are for the last change timestamp
@@ -104,11 +104,10 @@ contract ScoreWeightControllerV2 is UUPSBase {
         timeTotal = (block.timestamp / WEEK) * WEEK;
     }
 
-    /***
-     *@notice Fill sum of score weights for the same type week-over-week for
-     *        missed checkins and return the sum for the future week
-     *@return Sum of weights
-     */
+     /**
+      * @notice Calculates the sum of score weights for the same type week-over-week, accounting for missed check-ins, and returns the sum for the upcoming week.
+      * @dev Iterates up to 500 weeks to update the sum. Used internally to maintain accurate weight totals.
+      */
     function _getSum() internal returns (uint256) {
         uint256 _t = timeSum;
         if (_t > 0) {
@@ -141,11 +140,10 @@ contract ScoreWeightControllerV2 is UUPSBase {
         }
     }
 
-    /***
-     *@notice Fill historic total weights week-over-week for missed checkins
-     *        and return the total for the future week
-     *@return Total weight
-     */
+     /**
+      * @notice Calculates the historic total weights week-over-week, accounting for missed check-ins, and returns the total for the upcoming week.
+      * @dev Iterates up to 500 weeks to update the total weight. Invokes _getSum to ensure all score weights are up to date.
+      */
     function _getTotal() internal returns (uint256) {
         uint256 _t = timeTotal;
         if (_t > block.timestamp) {
@@ -174,12 +172,11 @@ contract ScoreWeightControllerV2 is UUPSBase {
         return _pt;
     }
 
-    /***
-     *@notice Fill historic score weights week-over-week for missed checkins
-     *        and return the total for the future week
-     *@param scoreAddr_ Address of the score
-     *@return Score weight
-     */
+     /**
+      * @notice Calculates the historic weight of a specific score week-over-week, accounting for missed check-ins, and returns the weight for the upcoming week.
+      * @param scoreAddr_ The address of the score whose weight is being calculated.
+      * @dev Iterates up to 500 weeks to update the score's weight. Used internally to maintain accurate score weights.
+      */
     function _getWeight(address scoreAddr_) internal returns (uint256) {
         uint256 _t = timeWeight[scoreAddr_];
         if (_t > 0) {
@@ -212,11 +209,12 @@ contract ScoreWeightControllerV2 is UUPSBase {
         }
     }
 
-    /**
-     * @notice Add Score `addr` with weight `weight`
-     * @param addr_ Score address
-     * @param weight_ Score weight
-     */
+     /**
+      * @notice Adds a new score with a specified weight
+      * @param addr_ The address of the score to add
+      * @param weight_ The weight of the score
+      * @dev This function can only be called by governance. It emits a NewScore event upon success.
+      */
     function addScore(address addr_, uint256 weight_) external onlyGovernance {
         require(scores[addr_] == 0, "cannot add the same gauge twice");
         int128 _n = nScores;
@@ -230,11 +228,12 @@ contract ScoreWeightControllerV2 is UUPSBase {
         emit NewScore(addr_, weight_);
     }
 
-    /**
-     * @notice Update timing and weight for an existing score
-     * @param addr_ The address of the score to update
-     * @param weight_ The new weight for the score
-     */
+     /**
+      * @notice Updates the weight for an existing score
+      * @param addr_ The address of the score to update
+      * @param weight_ The new weight for the score
+      * @dev This function can only be called by governance. It checks if the score exists and if its timing has not been previously set. Emits ScoreTimingUpdated event upon success.
+      */
     function updateScore(
         address addr_,
         uint256 weight_
@@ -507,7 +506,7 @@ contract ScoreWeightControllerV2 is UUPSBase {
     }
 
     /***
-     *@notice Get current total (type-weighted) weight
+     *@notice Get current total weight
      *@return Total weight
      */
     function getTotalWeight() external view returns (uint256) {
