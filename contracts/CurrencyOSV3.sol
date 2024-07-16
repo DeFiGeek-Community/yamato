@@ -202,14 +202,14 @@ contract CurrencyOSV3 is ICurrencyOSV3, UUPSBase {
     }
 
     function exists(address _yamato) public view returns (bool) {
-        for (uint256 i = 0; i < yamatoes.length; i++) {
+        for (uint256 i = 0; i < yamatoes.length; ++i) {
             if (yamatoes[i] == _yamato) return true;
         }
         return false;
     }
 
     function _permitMe() internal view returns (bool) {
-        for (uint256 i = 0; i < yamatoes.length; i++) {
+        for (uint256 i = 0; i < yamatoes.length; ++i) {
             if (IYamato(yamatoes[i]).permitDeps(msg.sender)) return true;
         }
         return false;

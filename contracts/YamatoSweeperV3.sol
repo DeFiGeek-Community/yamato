@@ -136,7 +136,7 @@ contract YamatoSweeperV3 is IYamatoSweeper, YamatoAction {
         /*
             Update pledges
         */
-        for (uint256 i; i < vars._bulkedPledges.length; i++) {
+        for (uint256 i; i < vars._bulkedPledges.length; ++i) {
             IYamato.Pledge memory _pledge = vars._bulkedPledges[i];
             if (_pledge.debt == 0) {
                 _prv6.remove(_pledge);
@@ -156,7 +156,7 @@ contract YamatoSweeperV3 is IYamatoSweeper, YamatoAction {
         /*
             Update score
         */
-        for (uint256 i; i < vars._bulkedPledges.length; i++) {
+        for (uint256 i; i < vars._bulkedPledges.length; ++i) {
             IYamato.Pledge memory _pledge = vars._bulkedPledges[i];
             _scoreRegistry.updateScoreLimit(
                 _pledge.owner,

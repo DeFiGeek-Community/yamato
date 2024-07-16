@@ -143,7 +143,7 @@ contract FeePoolV2 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
         uint256 _max = IveYMT(ve_).epoch();
 
         unchecked {
-            for (uint256 i; i < 128; i++) {
+            for (uint256 i; i < 128; ++i) {
                 if (_min >= _max) {
                     break;
                 }
@@ -169,7 +169,7 @@ contract FeePoolV2 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
         uint256 _max = maxUserEpoch_;
 
         unchecked {
-            for (uint256 i; i < 128; i++) {
+            for (uint256 i; i < 128; ++i) {
                 if (_min >= _max) {
                     break;
                 }
@@ -346,7 +346,7 @@ contract FeePoolV2 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
             } else if (
                 _weekCursor >= _userPoint.ts && _userEpoch <= _maxUserEpoch
             ) {
-                _userEpoch += 1;
+                ++_userEpoch;
                 _oldUserPoint = IveYMT.Point({
                     bias: _userPoint.bias,
                     slope: _userPoint.slope,

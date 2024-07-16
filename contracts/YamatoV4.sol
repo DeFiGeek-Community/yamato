@@ -246,7 +246,7 @@ contract YamatoV4 is
     function setPledges(
         Pledge[] memory _pledges
     ) public override(IYamatoV4) onlyYamato {
-        for (uint256 i; i < _pledges.length; i++) {
+        for (uint256 i; i < _pledges.length; ++i) {
             Pledge memory _p = _pledges[i];
             if (_p.isCreated == false) {
                 continue;
@@ -592,7 +592,7 @@ contract YamatoV4 is
     ) public view override(IYamato, YamatoBase) returns (bool) {
         bool permit;
         address[10] memory deps = getDeps();
-        for (uint256 i = 0; i < deps.length; i++) {
+        for (uint256 i = 0; i < deps.length; ++i) {
             if (_sender == deps[i]) permit = true;
         }
         return permit;

@@ -84,7 +84,7 @@ contract YmtVesting {
             "Users and amounts length mismatch"
         );
 
-        for (uint256 i = 0; i < users.length; i++) {
+        for (uint256 i = 0; i < users.length; ++i) {
             require(users[i] != address(0), "Invalid user address");
             vestingAmounts[users[i]] = amounts[i];
             emit ClaimAmountSet(users[i], amounts[i]);

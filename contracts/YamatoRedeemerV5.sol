@@ -218,7 +218,7 @@ contract YamatoRedeemerV5 is IYamatoRedeemerV4, YamatoAction {
         /*
             On memory update: priority
         */
-        for (uint256 i; i < vars._bulkedPledges.length; i++) {
+        for (uint256 i; i < vars._bulkedPledges.length; ++i) {
             vars._bulkedPledges[i].priority = _priorities[i];
         }
 
@@ -239,7 +239,7 @@ contract YamatoRedeemerV5 is IYamatoRedeemerV4, YamatoAction {
         /*
             Update score
         */
-        for (uint256 i; i < vars._bulkedPledges.length; i++) {
+        for (uint256 i; i < vars._bulkedPledges.length; ++i) {
             IYamato.Pledge memory _pledge = vars._bulkedPledges[i];
             _scoreRegistry.updateScoreLimit(
                 _pledge.owner,

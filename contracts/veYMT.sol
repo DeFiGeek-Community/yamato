@@ -260,7 +260,7 @@ contract veYMT is ReentrancyGuard {
                 (_blockSlope * (_ti - _initialLastPoint.ts)) /
                 MULTIPLIER;
 
-            _epoch += 1;
+            ++_epoch;
 
             if (_ti == block.timestamp) {
                 _lastPoint.blk = block.number;
@@ -545,7 +545,7 @@ contract veYMT is ReentrancyGuard {
         uint256 _min = 0;
         uint256 _max = maxEpoch_;
         unchecked {
-            for (uint256 i; i < 128; i++) {
+            for (uint256 i; i < 128; ++i) {
                 // Will be always enough for 128-bit numbers
                 if (_min >= _max) {
                     break;
@@ -629,7 +629,7 @@ contract veYMT is ReentrancyGuard {
         uint256 max_ = userPointEpoch[addr_];
 
         unchecked {
-            for (uint i = 0; i < 128; i++) {
+            for (uint i = 0; i < 128; ++i) {
                 // Will be always enough for 128-bit numbers
                 if (min_ >= max_) {
                     break;

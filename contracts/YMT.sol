@@ -69,7 +69,7 @@ contract YMT is ERC20Permit {
         uint256 _startEpochSupply = startEpochSupply;
 
         startEpochTime += RATE_REDUCTION_TIME;
-        miningEpoch += 1;
+        ++miningEpoch;
 
         if (_rate == 0 && miningEpoch < 1) {
             _rate = INITIAL_RATE;
@@ -191,7 +191,7 @@ contract YMT is ERC20Permit {
             require(currentRate <= INITIAL_RATE, "This should never happen"); // This should never happen
 
             unchecked {
-                i++;
+                ++i;
             }
         }
 

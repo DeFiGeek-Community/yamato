@@ -197,7 +197,7 @@ contract ScoreRegistry is YamatoAction {
             }
         }
 
-        _st.period += 1;
+        ++_st.period;
         period = _st.period;
         periodTimestamp[_st.period] = block.timestamp;
         integrateInvSupply[_st.period] = _st.integrateInvSupply;
