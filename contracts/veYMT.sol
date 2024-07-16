@@ -77,6 +77,9 @@ contract veYMT is ReentrancyGuard {
     mapping(address => uint256) public userPointEpoch;
     mapping(uint256 => int128) public slopeChanges; // time -> signed slope change
 
+    mapping(address => mapping(address => bool)) public depositForAllowed;
+    mapping(address => bool) public depositForAllAllowed;
+
     // Aragon's view methods for compatibility
     address public controller;
     bool public transfersEnabled;
@@ -400,6 +403,10 @@ contract veYMT is ReentrancyGuard {
      * @param value_ Amount to add to user's lock
      */
     function depositFor(address addr_, uint256 value_) external nonReentrant {
+        require(
+            depositForAllAllowed[addr_] || depositForAllowed[msg.sender][addr_],
+            "Not allowed to deposit for this address"
+        );
         LockedBalance memory _locked = locked[addr_];
 
         require(value_ > 0, "Need non-zero value");
@@ -410,6 +417,23 @@ contract veYMT is ReentrancyGuard {
         );
 
         _depositFor(addr_, value_, 0, locked[addr_], DEPOSIT_FOR_TYPE);
+    }
+
+    /**
+     * @notice Toggles the permission for a specific depositor to call depositFor on behalf of the message sender.
+     * @param depositor_ The address of the depositor whose permission is being toggled.
+     */
+    function toggleDepositForApproval(address depositor_) external {
+        depositForAllowed[depositor_][msg.sender] = !depositForAllowed[
+            depositor_
+        ][msg.sender];
+    }
+
+    /**
+     * @notice Toggles the permission for all addresses to call depositFor on behalf of the message sender.
+     */
+    function toggleDepositForAllApproval() external {
+        depositForAllAllowed[msg.sender] = !depositForAllAllowed[msg.sender];
     }
 
     /**
