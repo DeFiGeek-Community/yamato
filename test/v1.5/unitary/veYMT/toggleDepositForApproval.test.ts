@@ -20,7 +20,7 @@ const week = Constants.week;
 const ten_to_the_18 = Constants.ten_to_the_18;
 const ten_to_the_20 = Constants.ten_to_the_20;
 
-describe.only("veYMT", function () {
+describe("veYMT", function () {
   let accounts: SignerWithAddress[];
   let veYMT: VeYMT;
   let YMT: YMT;
