@@ -67,8 +67,8 @@ contract YmtMinter is
         uint256 _toMint = totalMint - minted[for_][scoreAddr_];
 
         if (_toMint != 0) {
-            IYMT(YMT()).mint(for_, _toMint);
             minted[for_][scoreAddr_] = totalMint;
+            IYMT(YMT()).mint(for_, _toMint);
 
             emit Minted(for_, scoreAddr_, totalMint);
         }
