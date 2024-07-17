@@ -110,7 +110,7 @@ contract YmtMinter is
         address scoreAddr_,
         address for_
     ) external nonReentrant returns (uint256) {
-        uint256 toMint = 0;
+        uint256 toMint;
         if (allowedToMintFor[msg.sender][for_]) {
             toMint = _mintFor(scoreAddr_, for_);
         }
