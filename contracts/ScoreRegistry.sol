@@ -157,7 +157,7 @@ contract ScoreRegistry is YamatoAction {
                 block.timestamp
             );
 
-            for (uint256 i = 0; i < 500; ) {
+            for (uint256 i; i < 500; ) {
                 uint256 dt = _weekTime - _prevWeekTime;
                 uint256 w = IScoreWeightController(scoreWeightController())
                     .scoreRelativeWeight(
