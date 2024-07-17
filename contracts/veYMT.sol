@@ -9,6 +9,7 @@ pragma solidity 0.8.4;
 //solhint-disable no-inline-assembly
 
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "./Interfaces/IYMT.sol";
 
 /**
@@ -29,6 +30,9 @@ contract veYMT is ReentrancyGuard {
     //   |/
     // 0 +--------+------> time
     //       maxtime (4 years?)
+
+    using SafeCast for uint256;
+    using SafeCast for int256;
 
     struct Point {
         int128 bias;
@@ -162,7 +166,7 @@ contract veYMT is ReentrancyGuard {
                 }
                 _uOld.bias =
                     _uOld.slope *
-                    int128(uint128(oldLocked_.end - block.timestamp));
+                    castUint256ToInt128(oldLocked_.end - block.timestamp);
             }
 
             if (newLocked_.end > block.timestamp && newLocked_.amount > 0) {
@@ -173,7 +177,7 @@ contract veYMT is ReentrancyGuard {
                 }
                 _uNew.bias =
                     _uNew.slope *
-                    int128(uint128(newLocked_.end - block.timestamp));
+                    castUint256ToInt128(newLocked_.end - block.timestamp);
             }
 
             // Read values of scheduled changes in the slope
@@ -241,7 +245,7 @@ contract veYMT is ReentrancyGuard {
 
             _lastPoint.bias -=
                 _lastPoint.slope *
-                int128(uint128(_ti) - uint128(_lastCheckpoint));
+                castInt256ToInt128(_ti.toInt256() - _lastCheckpoint.toInt256());
             _lastPoint.slope += _dSlope;
 
             if (_lastPoint.bias < 0) {
@@ -360,7 +364,7 @@ contract veYMT is ReentrancyGuard {
         supply = _supplyBefore + value_;
 
         // Adding to existing lock, or if a lock is expired - creating a new one
-        _locked.amount += int128(uint128(value_));
+        _locked.amount += castUint256ToInt128(value_);
         if (unlockTime_ != 0) {
             _locked.end = unlockTime_;
         }
@@ -782,5 +786,13 @@ contract veYMT is ReentrancyGuard {
             "Only the controller can call this function"
         );
         controller = newController;
+    }
+
+    function castUint256ToInt128(uint256 value) public pure returns (int128) {
+        return value.toInt256().toInt128();
+    }
+
+    function castInt256ToInt128(int256 value) public pure returns (int128) {
+        return value.toInt128();
     }
 }
