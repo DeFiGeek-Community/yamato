@@ -149,8 +149,8 @@ contract veYMT is ReentrancyGuard {
     ) internal {
         Point memory _uOld;
         Point memory _uNew;
-        int128 _oldDSlope = 0;
-        int128 _newDSlope = 0;
+        int128 _oldDSlope;
+        int128 _newDSlope;
         uint256 _epoch = epoch;
 
         if (addr_ != address(0)) {
@@ -214,7 +214,7 @@ contract veYMT is ReentrancyGuard {
             ts: _lastPoint.ts,
             blk: _lastPoint.blk
         });
-        uint256 _blockSlope = 0;
+        uint256 _blockSlope;
         if (block.timestamp > _lastPoint.ts) {
             _blockSlope =
                 (MULTIPLIER * (block.number - _lastPoint.blk)) /
@@ -232,7 +232,7 @@ contract veYMT is ReentrancyGuard {
             // Hopefully it won't happen that this won't get used in 5 years!
             // If it does, users will be able to withdraw but vote weight will be broken
             _ti += WEEK;
-            int128 _dSlope = 0;
+            int128 _dSlope;
             if (_ti > block.timestamp) {
                 _ti = block.timestamp;
             } else {
@@ -542,7 +542,7 @@ contract veYMT is ReentrancyGuard {
         uint256 maxEpoch_
     ) internal view returns (uint256) {
         // Binary search
-        uint256 _min = 0;
+        uint256 _min;
         uint256 _max = maxEpoch_;
         unchecked {
             for (uint256 i; i < 128; ++i) {
@@ -625,11 +625,11 @@ contract veYMT is ReentrancyGuard {
         require(block_ <= block.number, "Cannot look up future block");
 
         // Binary search
-        uint256 min_ = 0;
+        uint256 min_;
         uint256 max_ = userPointEpoch[addr_];
 
         unchecked {
-            for (uint i = 0; i < 128; ++i) {
+            for (uint i; i < 128; ++i) {
                 // Will be always enough for 128-bit numbers
                 if (min_ >= max_) {
                     break;
@@ -647,8 +647,8 @@ contract veYMT is ReentrancyGuard {
         uint256 _maxEpoch = epoch;
         uint256 _epoch = findBlockEpoch(block_, _maxEpoch);
         Point memory _point0 = pointHistory[_epoch];
-        uint256 _dBlock = 0;
-        uint256 _dt = 0;
+        uint256 _dBlock;
+        uint256 _dt;
 
         if (_epoch < _maxEpoch) {
             Point memory _point1 = pointHistory[_epoch + 1];
@@ -691,7 +691,7 @@ contract veYMT is ReentrancyGuard {
         }
         for (uint256 i; i < 255; ) {
             _ti += WEEK;
-            int128 _dSlope = 0;
+            int128 _dSlope;
             if (_ti > t_) {
                 _ti = t_;
             } else {
@@ -754,7 +754,7 @@ contract veYMT is ReentrancyGuard {
         if (_point.blk > block_) {
             return 0;
         }
-        uint256 _dt = 0;
+        uint256 _dt;
         if (_targetEpoch < _epoch) {
             Point memory _pointNext = pointHistory[_targetEpoch + 1];
             if (_point.blk != _pointNext.blk) {
