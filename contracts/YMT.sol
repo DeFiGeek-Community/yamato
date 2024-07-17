@@ -147,7 +147,7 @@ contract YMT is ERC20Permit {
         uint256 end
     ) external view returns (uint256) {
         require(start <= end, "dev: start > end"); // dev: start > end
-        uint256 to_mint = 0;
+        uint256 to_mint;
         uint256 currentEpochTime = startEpochTime;
         uint256 currentRate = rate;
 
