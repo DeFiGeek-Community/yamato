@@ -592,7 +592,7 @@ contract YamatoV4 is
     ) public view override(IYamato, YamatoBase) returns (bool) {
         bool permit;
         address[10] memory deps = getDeps();
-        for (uint256 i = 0; i < deps.length; ++i) {
+        for (uint256 i; i < deps.length; ++i) {
             if (_sender == deps[i]) permit = true;
         }
         return permit;
