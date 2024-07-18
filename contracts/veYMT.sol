@@ -77,7 +77,9 @@ contract veYMT is ReentrancyGuard {
     mapping(address => uint256) public userPointEpoch;
     mapping(uint256 => int128) public slopeChanges; // time -> signed slope change
 
+    // depositor -> user -> allowed
     mapping(address => mapping(address => bool)) public depositForAllowed;
+    // user -> all allowed
     mapping(address => bool) public depositForAllAllowed;
 
     // Aragon's view methods for compatibility
