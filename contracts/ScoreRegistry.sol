@@ -2,7 +2,7 @@ pragma solidity 0.8.4;
 
 /*
  * SPDX-License-Identifier: GPL-3.0-or-later
- * Copyright (C) 2023 Yamato Protocol (DeFiGeek Community Japan)
+ * Copyright (C) 2024 Yamato Protocol (DeFiGeek Community Japan)
  */
 
 //solhint-disable max-line-length
@@ -157,7 +157,7 @@ contract ScoreRegistry is YamatoAction {
                 block.timestamp
             );
 
-            for (uint256 i = 0; i < 500; ) {
+            for (uint256 i; i < 500; ) {
                 uint256 dt = _weekTime - _prevWeekTime;
                 uint256 w = IScoreWeightController(scoreWeightController())
                     .scoreRelativeWeight(
@@ -197,7 +197,7 @@ contract ScoreRegistry is YamatoAction {
             }
         }
 
-        _st.period += 1;
+        ++_st.period;
         period = _st.period;
         periodTimestamp[_st.period] = block.timestamp;
         integrateInvSupply[_st.period] = _st.integrateInvSupply;

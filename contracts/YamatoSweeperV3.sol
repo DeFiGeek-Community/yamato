@@ -2,7 +2,7 @@ pragma solidity 0.8.4;
 
 /*
  * SPDX-License-Identifier: GPL-3.0-or-later
- * Copyright (C) 2023 Yamato Protocol (DeFiGeek Community Japan)
+ * Copyright (C) 2024 Yamato Protocol (DeFiGeek Community Japan)
  */
 
 //solhint-disable max-line-length
@@ -136,7 +136,7 @@ contract YamatoSweeperV3 is IYamatoSweeper, YamatoAction {
         /*
             Update pledges
         */
-        for (uint256 i; i < vars._bulkedPledges.length; i++) {
+        for (uint256 i; i < vars._bulkedPledges.length; ++i) {
             IYamato.Pledge memory _pledge = vars._bulkedPledges[i];
             if (_pledge.debt == 0) {
                 _prv6.remove(_pledge);
@@ -156,7 +156,7 @@ contract YamatoSweeperV3 is IYamatoSweeper, YamatoAction {
         /*
             Update score
         */
-        for (uint256 i; i < vars._bulkedPledges.length; i++) {
+        for (uint256 i; i < vars._bulkedPledges.length; ++i) {
             IYamato.Pledge memory _pledge = vars._bulkedPledges[i];
             _scoreRegistry.updateScoreLimit(
                 _pledge.owner,

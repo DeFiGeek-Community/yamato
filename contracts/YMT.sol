@@ -2,7 +2,7 @@ pragma solidity 0.8.4;
 
 /*
  * SPDX-License-Identifier: GPL-3.0-or-later
- * Copyright (C) 2023 Yamato Protocol (DeFiGeek Community Japan)
+ * Copyright (C) 2024 Yamato Protocol (DeFiGeek Community Japan)
  */
 
 //solhint-disable max-line-length
@@ -69,7 +69,7 @@ contract YMT is ERC20Permit {
         uint256 _startEpochSupply = startEpochSupply;
 
         startEpochTime += RATE_REDUCTION_TIME;
-        miningEpoch += 1;
+        ++miningEpoch;
 
         if (_rate == 0 && miningEpoch < 1) {
             _rate = INITIAL_RATE;
@@ -147,7 +147,7 @@ contract YMT is ERC20Permit {
         uint256 end
     ) external view returns (uint256) {
         require(start <= end, "dev: start > end"); // dev: start > end
-        uint256 to_mint = 0;
+        uint256 to_mint;
         uint256 currentEpochTime = startEpochTime;
         uint256 currentRate = rate;
 
@@ -191,7 +191,7 @@ contract YMT is ERC20Permit {
             require(currentRate <= INITIAL_RATE, "This should never happen"); // This should never happen
 
             unchecked {
-                i++;
+                ++i;
             }
         }
 
