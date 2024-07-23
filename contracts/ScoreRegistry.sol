@@ -334,7 +334,6 @@ contract ScoreRegistry is YamatoAction {
 
             workingBalances[_addr] = _limit;
             _workingSupply = _workingSupply + _limit - _oldBal;
-            workingSupply = _workingSupply;
 
             emit UpdateScoreLimit(
                 _addr,
