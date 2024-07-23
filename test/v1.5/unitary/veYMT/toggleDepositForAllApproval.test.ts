@@ -57,9 +57,7 @@ describe("veYMT", function () {
     await veYMT
       .connect(accounts[0])
       .createLock(ten_to_the_18, (await time.latest()) + week);
-    await veYMT
-      .connect(accounts[0])
-      .toggleDepositForAllApproval();
+    await veYMT.connect(accounts[0]).toggleDepositForAllApproval();
 
     // 許可されたデポジターがdepositForを実行し、成功することを確認
     await expect(
@@ -88,9 +86,7 @@ describe("veYMT", function () {
     await veYMT
       .connect(accounts[0])
       .createLock(ten_to_the_18, (await time.latest()) + week);
-    await veYMT
-      .connect(accounts[0])
-      .toggleDepositForAllApproval(); // 許可を与える
+    await veYMT.connect(accounts[0]).toggleDepositForAllApproval(); // 許可を与える
 
     // 2回のトグル操作後、デポジターがdepositForを実行し、成功することを確認
     await expect(
@@ -100,9 +96,7 @@ describe("veYMT", function () {
     ).to.not.be.reverted;
 
     // さらにトグル操作を行い、許可を取り消す
-    await veYMT
-      .connect(accounts[0])
-      .toggleDepositForAllApproval();
+    await veYMT.connect(accounts[0]).toggleDepositForAllApproval();
 
     // 許可が取り消された後、デポジターがdepositForを実行しようとすると、失敗することを確認
     await expect(
