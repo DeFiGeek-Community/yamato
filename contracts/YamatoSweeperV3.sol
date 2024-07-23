@@ -51,10 +51,6 @@ contract YamatoSweeperV3 is IYamatoSweeper, YamatoAction {
 
         IYamatoSweeper.Vars memory vars;
 
-        IScoreRegistry _scoreRegistry = IScoreRegistry(
-            IYamatoV4(yamato()).scoreRegistry()
-        );
-
         vars._GRR = IYamato(yamato()).GRR();
         vars._currencyOS = ICurrencyOS(currencyOS());
         vars.sweepReserve = IPool(pool()).sweepReserve();
@@ -98,11 +94,6 @@ contract YamatoSweeperV3 is IYamatoSweeper, YamatoAction {
             }
 
             IYamato.Pledge memory _pledge = _yamato.getPledge(_pledgeAddr);
-
-            /*
-                Score checkpoint
-            */
-            _scoreRegistry.checkpoint(_pledge.owner);
 
             uint256 _pledgeDebt = _pledge.debt;
 
@@ -154,17 +145,21 @@ contract YamatoSweeperV3 is IYamatoSweeper, YamatoAction {
         _yamato.setTotalDebt(totalDebt - vars._toBeSwept);
 
         /*
+            Score checkpoint
+        */
+        IScoreRegistry _scoreRegistry = IScoreRegistry(
+            IYamatoV4(yamato()).scoreRegistry()
+        );
+        _scoreRegistry.bulkCheckpoint(vars._bulkedPledges);
+
+        /*
             Update score
         */
-        for (uint256 i; i < vars._bulkedPledges.length; ++i) {
-            IYamato.Pledge memory _pledge = vars._bulkedPledges[i];
-            _scoreRegistry.updateScoreLimit(
-                _pledge.owner,
-                _pledge.debt,
-                totalDebt - vars._toBeSwept,
-                _pledge.getICR(priceFeed())
-            );
-        }
+        _scoreRegistry.bulkUpdateScoreLimit(
+            vars._bulkedPledges,
+            totalDebt - vars._toBeSwept,
+            priceFeed()
+        );
 
         /*
             Reserve reduction for 99%
