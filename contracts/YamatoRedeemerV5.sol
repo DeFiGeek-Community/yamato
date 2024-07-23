@@ -45,10 +45,6 @@ contract YamatoRedeemerV5 is IYamatoRedeemerV4, YamatoAction {
         IERC20 _cjpy = IERC20(_currencyOS.currency());
         IYamato _yamato = IYamato(yamato());
 
-        IScoreRegistry _scoreRegistry = IScoreRegistry(
-            IYamatoV4(yamato()).scoreRegistry()
-        );
-
         vars.ethPriceInCurrency = IPriceFeedV3(priceFeed()).fetchPrice();
         if (_args.isCoreRedemption) {
             _args.wantToRedeemCurrencyAmount = IPool(pool())
@@ -100,11 +96,6 @@ contract YamatoRedeemerV5 is IYamatoRedeemerV4, YamatoAction {
             }
 
             IYamato.Pledge memory _pledge = _yamato.getPledge(_pledgeAddr);
-
-            /*
-                Score checkpoint
-            */
-            _scoreRegistry.checkpoint(_pledge.owner);
 
             uint256 _ICRpertenk = _pledge.getICRWithPrice(
                 vars.ethPriceInCurrency
@@ -237,17 +228,21 @@ contract YamatoRedeemerV5 is IYamatoRedeemerV4, YamatoAction {
         IYamato(yamato()).setTotalColl(totalColl - vars._toBeRedeemedInEth);
 
         /*
+                Score checkpoint
+            */
+        IScoreRegistry _scoreRegistry = IScoreRegistry(
+            IYamatoV4(yamato()).scoreRegistry()
+        );
+        _scoreRegistry.bulkCheckpoint(vars._bulkedPledges);
+
+        /*
             Update score
         */
-        for (uint256 i; i < vars._bulkedPledges.length; ++i) {
-            IYamato.Pledge memory _pledge = vars._bulkedPledges[i];
-            _scoreRegistry.updateScoreLimit(
-                _pledge.owner,
-                _pledge.debt,
-                totalDebt - vars._toBeRedeemed,
-                _pledge.getICR(priceFeed())
-            );
-        }
+        _scoreRegistry.bulkUpdateScoreLimit(
+            vars._bulkedPledges,
+            totalDebt - vars._toBeRedeemed,
+            priceFeed()
+        );
 
         /*
             Handle compensations
