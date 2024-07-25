@@ -308,7 +308,7 @@ contract ScoreRegistry is YamatoAction {
             uint256 _debt = pledges_[i].debt;
             uint256 _oldBal = workingBalances[_addr];
 
-            if (totalDebt_ == 0 || _debt == 0) {
+            if (_debt == 0) {
                 workingBalances[_addr] = 0;
                 _workingSupply -= _oldBal;
                 continue;
