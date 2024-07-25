@@ -13,7 +13,7 @@ import "./IYamatoV4.sol";
 interface IScoreRegistry {
     function checkpoint(address addr_) external;
 
-    function bulkCheckpoint(IYamato.Pledge[] memory pledges) external;
+    function bulkCheckpoint(address[] memory pledges) external;
 
     function updateScoreLimit(
         address addr_,
