@@ -254,24 +254,14 @@ contract ScoreRegistry is YamatoAction {
         uint256 _votingBalance = IveYMT(veYMT()).balanceOf(addr_);
         uint256 _votingTotal = IveYMT(veYMT()).totalSupply();
 
-        uint256 _limit = (debt_ * TOKENLESS_PRODUCTION) / 10;
-        if (_votingTotal > 0) {
-            _limit +=
-                (((totalDebt_ * _votingBalance) / _votingTotal) *
-                    (10 - TOKENLESS_PRODUCTION)) /
-                10;
-        }
-
-        _limit = min(debt_, _limit);
+        uint256 _limit = calculateLimit(
+            debt_,
+            totalDebt_,
+            collateralRatio_,
+            _votingBalance,
+            _votingTotal
+        );
         uint256 _oldBal = workingBalances[addr_];
-
-        if (debt_ > 0) {
-            // Apply the coefficient based on the collateral ratio provided
-            uint256 coefficient = calculateCoefficient(collateralRatio_);
-            // Adjust the limit based on the coefficient
-            _limit = (_limit * coefficient) / 10;
-        }
-
         workingBalances[addr_] = _limit;
         uint256 _workingSupply = workingSupply + _limit - _oldBal;
         workingSupply = _workingSupply;
@@ -310,26 +300,11 @@ contract ScoreRegistry is YamatoAction {
                 continue;
             }
 
-            uint256 _collateralRatio = pledges_[i].getICR(priceFeedAddress_);
-            uint256 _votingBalance = IveYMT(veYMT()).balanceOf(_addr);
-
-            uint256 _limit = (_debt * TOKENLESS_PRODUCTION) / 10;
-            if (_votingTotal > 0) {
-                _limit +=
-                    (((totalDebt_ * _votingBalance) / _votingTotal) *
-                        (10 - TOKENLESS_PRODUCTION)) /
-                    10;
-            }
-
-            _limit = min(_debt, _limit);
-
-            // Apply the coefficient based on the collateral ratio provided
-            uint256 coefficient = calculateCoefficient(_collateralRatio);
-            // Adjust the limit based on the coefficient
-            _limit = (_limit * coefficient) / 10;
-
-            workingBalances[_addr] = _limit;
-            _workingSupply = _workingSupply + _limit - _oldBal;
+        uint256 _collateralRatio = pledges_[i].getICR(priceFeedAddress_);
+        uint256 _votingBalance = IveYMT(veYMT()).balanceOf(_addr);
+        uint256 _limit = calculateLimit(_debt, totalDebt_, _collateralRatio, _votingBalance, _votingTotal);
+        workingBalances[_addr] = _limit;
+        _workingSupply = _workingSupply + _limit - _oldBal;
 
             emit UpdateScoreLimit(
                 _addr,
@@ -341,6 +316,28 @@ contract ScoreRegistry is YamatoAction {
             );
         }
         workingSupply = _workingSupply;
+    }
+
+    function calculateLimit(
+        uint256 debt,
+        uint256 totalDebt,
+        uint256 collateralRatio,
+        uint256 votingBalance,
+        uint256 votingTotal
+    ) internal pure returns (uint256) {
+        uint256 limit = (debt * TOKENLESS_PRODUCTION) / 10;
+        if (votingTotal > 0) {
+            limit +=
+                (((totalDebt * votingBalance) / votingTotal) *
+                    (10 - TOKENLESS_PRODUCTION)) /
+                10;
+        }
+        limit = min(debt, limit);
+        if (debt > 0) {
+            uint256 coefficient = calculateCoefficient(collateralRatio);
+            limit = (limit * coefficient) / 10;
+        }
+        return limit;
     }
 
     /**
