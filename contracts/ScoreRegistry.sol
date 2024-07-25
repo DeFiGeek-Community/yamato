@@ -319,22 +319,22 @@ contract ScoreRegistry is YamatoAction {
     }
 
     function calculateLimit(
-        uint256 debt,
-        uint256 totalDebt,
-        uint256 collateralRatio,
-        uint256 votingBalance,
-        uint256 votingTotal
+        uint256 debt_,
+        uint256 totalDebt_,
+        uint256 collateralRatio_,
+        uint256 votingBalance_,
+        uint256 votingTotal_
     ) internal pure returns (uint256) {
-        uint256 limit = (debt * TOKENLESS_PRODUCTION) / 10;
-        if (votingTotal > 0) {
+        uint256 limit = (debt_ * TOKENLESS_PRODUCTION) / 10;
+        if (votingTotal_ > 0) {
             limit +=
-                (((totalDebt * votingBalance) / votingTotal) *
+                (((totalDebt_ * votingBalance_) / votingTotal_) *
                     (10 - TOKENLESS_PRODUCTION)) /
                 10;
         }
-        limit = min(debt, limit);
-        if (debt > 0) {
-            uint256 coefficient = calculateCoefficient(collateralRatio);
+        limit = min(debt_, limit);
+        if (debt_ > 0) {
+            uint256 coefficient = calculateCoefficient(collateralRatio_);
             limit = (limit * coefficient) / 10;
         }
         return limit;
