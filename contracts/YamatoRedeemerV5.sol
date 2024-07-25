@@ -233,7 +233,7 @@ contract YamatoRedeemerV5 is IYamatoRedeemerV4, YamatoAction {
         IScoreRegistry _scoreRegistry = IScoreRegistry(
             IYamatoV4(yamato()).scoreRegistry()
         );
-        _scoreRegistry.bulkCheckpoint(vars._bulkedPledges);
+        _scoreRegistry.bulkCheckpoint(vars._pledgesOwner);
 
         /*
             Update score
