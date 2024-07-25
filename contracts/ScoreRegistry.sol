@@ -122,16 +122,12 @@ contract ScoreRegistry is YamatoAction {
 
     /**
      * @notice Performs a checkpoint update for multiple users based on their pledges.
-     * @dev Iterates through an array of pledges and calls the internal `_checkpoint` function for each pledge owner if the pledge is marked as created.
-     * @param pledges An array of `IYamato.Pledge` structs representing the pledges to be checkpointed.
+     * @dev Iterates through an array of pledge owners and invokes the internal `_checkpoint` function.
+     * @param pledgesOwner_ An array of addresses representing the owners of the pledges to be checkpointed.
      */
-    function bulkCheckpoint(
-        IYamato.Pledge[] memory pledges
-    ) external onlyYamato {
-        for (uint256 i; i < pledges.length; ++i) {
-            if (pledges[i].isCreated) {
-                _checkpoint(pledges[i].owner);
-            }
+    function bulkCheckpoint(address[] memory pledgesOwner_) external onlyYamato {
+        for (uint256 i; i < pledgesOwner_.length; ++i) {
+            _checkpoint(pledgesOwner_[i]);
         }
     }
 
