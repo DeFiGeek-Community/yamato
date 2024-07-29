@@ -9,7 +9,7 @@ pragma solidity 0.8.4;
 //solhint-disable no-inline-assembly
 
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import "./Dependencies/YamatoAction.sol";
+import "./Dependencies/YamatoStore.sol";
 import "./Dependencies/PledgeLib.sol";
 import "./Interfaces/IScoreWeightController.sol";
 import "./Interfaces/IYMT.sol";
@@ -17,7 +17,7 @@ import "./Interfaces/IYmtMinter.sol";
 import "./Interfaces/IveYMT.sol";
 import "./Interfaces/IYamatoV4.sol";
 
-contract ScoreRegistry is YamatoAction {
+contract ScoreRegistry is YamatoStore {
     using PledgeLib for IYamato.Pledge;
 
     event UpdateScoreLimit(
@@ -82,7 +82,7 @@ contract ScoreRegistry is YamatoAction {
         address ymtMinterAddr,
         address yamatoAddr
     ) public initializer {
-        __YamatoAction_init(yamatoAddr);
+        __YamatoStore_init(yamatoAddr);
 
         bytes32 YMT_KEY = bytes32(keccak256(abi.encode(YMT_SLOT_ID)));
         bytes32 VEYMT_KEY = bytes32(keccak256(abi.encode(VEYMT_SLOT_ID)));
