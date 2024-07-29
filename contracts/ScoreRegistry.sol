@@ -125,7 +125,9 @@ contract ScoreRegistry is YamatoAction {
      * @dev Iterates through an array of pledge owners and invokes the internal `_checkpoint` function.
      * @param pledgesOwner_ An array of addresses representing the owners of the pledges to be checkpointed.
      */
-    function bulkCheckpoint(address[] memory pledgesOwner_) external onlyYamato {
+    function bulkCheckpoint(
+        address[] memory pledgesOwner_
+    ) external onlyYamato {
         for (uint256 i; i < pledgesOwner_.length; ++i) {
             _checkpoint(pledgesOwner_[i]);
         }
@@ -300,11 +302,17 @@ contract ScoreRegistry is YamatoAction {
                 continue;
             }
 
-        uint256 _collateralRatio = pledges_[i].getICR(priceFeedAddress_);
-        uint256 _votingBalance = IveYMT(veYMT()).balanceOf(_addr);
-        uint256 _limit = calculateLimit(_debt, totalDebt_, _collateralRatio, _votingBalance, _votingTotal);
-        workingBalances[_addr] = _limit;
-        _workingSupply = _workingSupply + _limit - _oldBal;
+            uint256 _collateralRatio = pledges_[i].getICR(priceFeedAddress_);
+            uint256 _votingBalance = IveYMT(veYMT()).balanceOf(_addr);
+            uint256 _limit = calculateLimit(
+                _debt,
+                totalDebt_,
+                _collateralRatio,
+                _votingBalance,
+                _votingTotal
+            );
+            workingBalances[_addr] = _limit;
+            _workingSupply = _workingSupply + _limit - _oldBal;
 
             emit UpdateScoreLimit(
                 _addr,

@@ -458,7 +458,6 @@ describe("ScoreRegistry.checkpoint()", () => {
     beforeEach(async () => {
       await snapshot.restore();
       setupMocks();
-
     });
 
     it("should handle different relative weights from ScoreWeightController", async function () {

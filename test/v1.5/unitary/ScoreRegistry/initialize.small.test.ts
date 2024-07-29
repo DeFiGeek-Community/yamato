@@ -120,7 +120,6 @@ describe("ScoreRegistry.initialize()", () => {
         scoreRegistry.initialize(mocks.YmtMinter.address, mocks.Yamato.address)
       ).to.be.revertedWith("Initializable: contract is already initialized");
     });
-
   });
 
   context("3. Edge Cases", () => {
