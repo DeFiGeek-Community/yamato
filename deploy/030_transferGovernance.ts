@@ -66,4 +66,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 };
 
 export default func;
-func.tags = ["transferGovernance"];
+func.tags = ["transferGovernanceV15"];
