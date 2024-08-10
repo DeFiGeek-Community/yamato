@@ -578,8 +578,11 @@ export async function deployImplContract(
   );
   const contract = await Contract.deploy();
   await contract.deployed();
-
   console.log(`${implNameBase} deployed to:`, contract.address);
-  const implPath = getDeploymentAddressPathWithTag(implNameBase, "UUPSImpl");
+  const implNameWithoutVersion = implNameBase.replace(/V\d+$/, "");
+  const implPath = getDeploymentAddressPathWithTag(
+    implNameWithoutVersion,
+    "UUPSImpl"
+  );
   writeFileSync(implPath, contract.address);
 }
