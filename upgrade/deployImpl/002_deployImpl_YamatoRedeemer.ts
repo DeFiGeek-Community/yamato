@@ -1,14 +1,5 @@
-import { deployImplContract } from "../../src/deployUtil";
+import main from "../mods/102_deployImpl_YamatoRedeemer";
 
-const IMPL_NAME_BASE = "YamatoRedeemer";
-const version = "V5";
-
-async function main() {
-  const implNameBase = `${IMPL_NAME_BASE}${version}`;
-  await deployImplContract(implNameBase, true);
-}
-
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
+main().catch((e) => {
+  console.error("An error occurred:", e);
 });
