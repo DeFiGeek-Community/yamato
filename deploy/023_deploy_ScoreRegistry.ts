@@ -36,6 +36,14 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   );
   const implAddr = await inst.getImplementation();
 
+  console.log(
+    `PriorityRegistry is deployed as ${
+      inst.address
+    } with impl(${implAddr}) by ${await inst.signer.getAddress()} on ${
+      (await inst.provider.getNetwork()).name
+    } at ${await inst.provider.getBlockNumber()}`
+  );
+
   writeFileSync(
     getDeploymentAddressPathWithTag("ScoreRegistry", "ERC1967Proxy"),
     inst.address
