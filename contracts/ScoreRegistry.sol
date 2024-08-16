@@ -129,6 +129,9 @@ contract ScoreRegistry is YamatoStore {
         address[] memory pledgesOwner_
     ) external onlyYamato {
         for (uint256 i; i < pledgesOwner_.length; ++i) {
+            if (pledgesOwner_[i] == address(0)) {
+                break;
+            }
             _checkpoint(pledgesOwner_[i]);
         }
     }
@@ -293,6 +296,9 @@ contract ScoreRegistry is YamatoStore {
         uint256 _workingSupply = workingSupply;
         for (uint256 i; i < pledges_.length; ++i) {
             address _addr = pledges_[i].owner;
+            if (_addr == address(0)) {
+                break;
+            }
             uint256 _debt = pledges_[i].debt;
             uint256 _oldBal = workingBalances[_addr];
 
