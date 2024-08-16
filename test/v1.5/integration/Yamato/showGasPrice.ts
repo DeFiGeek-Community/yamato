@@ -243,10 +243,10 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       ["PledgeLib"]
     );
 
-    Pool = await getProxy<Pool, Pool__factory>(contractVersion["Pool"], [
-      Yamato.address,
-    ]);
-    mockPool = await smock.fake<Pool>("Pool");
+    // Pool = await getProxy<Pool, Pool__factory>(contractVersion["Pool"], [
+    //   Yamato.address,
+    // ]);
+    mockPool = await smock.fake<Pool>(contractVersion["Pool"]);
 
     PriorityRegistry = await getLinkedProxy<
       PriorityRegistryV6,
