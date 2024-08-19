@@ -87,7 +87,6 @@ contract veYMT is ReentrancyGuard {
     mapping(address => bool) public depositForAllAllowed;
 
     // Aragon's view methods for compatibility
-    address public controller;
     bool public transfersEnabled;
 
     string public name;
@@ -104,7 +103,6 @@ contract veYMT is ReentrancyGuard {
         token = tokenAddr_;
         pointHistory[0].blk = block.number;
         pointHistory[0].ts = block.timestamp;
-        controller = msg.sender;
         transfersEnabled = true;
 
         decimals = IYMT(tokenAddr_).decimals();
@@ -801,17 +799,6 @@ contract veYMT is ReentrancyGuard {
         }
         // Now _dt contains info on how far are we beyond point
         return supplyAt(_point, _point.ts + _dt);
-    }
-
-    /**
-     * @dev Dummy method required for Aragon compatibility
-     */
-    function changeController(address newController) external {
-        require(
-            msg.sender == controller,
-            "Only the controller can call this function"
-        );
-        controller = newController;
     }
 
     function castUint256ToInt128(uint256 value) public pure returns (int128) {
