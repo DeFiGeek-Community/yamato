@@ -28,7 +28,7 @@ import {
   ScoreWeightController,
   YmtMinter,
   ScoreRegistry,
-  Pool,
+  PoolV2,
   ChainLinkMock__factory,
   PriceFeedV3__factory,
   CurrencyOS__factory,
@@ -53,12 +53,8 @@ import {
 import {
   getProxy,
   getLinkedProxy,
-  assertDebtIntegrity,
-  assertPoolIntegrity,
-  assertCollIntegrity,
 } from "../../../../src/testUtil";
 import { upgradeProxy } from "../../../../src/upgradeUtil";
-import { isToken } from "typescript";
 import { contractVersion } from "../../../param/version";
 
 chai.use(smock.matchers);
@@ -107,7 +103,7 @@ async function calculateAndLogTransactionCost(
   );
 }
 
-describe("PriceChangeAndRedemption :: contract Yamato", () => {
+describe("Gas Price Calculation and Transaction Cost Logging", () => {
   let ChainLinkEthUsd: ChainLinkMock;
   let ChainLinkUsdJpy: ChainLinkMock;
   let PriceFeed: PriceFeedV3;
@@ -122,7 +118,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
   let YamatoRedeemer: YamatoRedeemer;
   let YamatoSweeper: YamatoSweeper;
   // let Pool: Pool;
-  let mockPool: FakeContract<Pool>;
+  let mockPool: FakeContract<PoolV2>;
   let PriorityRegistry: PriorityRegistryV6;
   let ScoreRegistry: ScoreRegistry;
   let YmtMinter: YmtMinter;
@@ -246,7 +242,7 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
     // Pool = await getProxy<Pool, Pool__factory>(contractVersion["Pool"], [
     //   Yamato.address,
     // ]);
-    mockPool = await smock.fake<Pool>(contractVersion["Pool"]);
+    mockPool = await smock.fake<PoolV2>(contractVersion["Pool"]);
 
     PriorityRegistry = await getLinkedProxy<
       PriorityRegistryV6,
@@ -346,46 +342,42 @@ describe("PriceChangeAndRedemption :: contract Yamato", () => {
       ).wait();
     });
 
-    describe("Context - full sweep", function () {
-      it.only(`should run full sweep`, async function () {
-        console.log("should run full sweep");
+    it(`should run full sweep`, async function () {
 
-        for (const value of depositAndBorrowValues) {
-          await (await ChainLinkEthUsd.setLastPrice(400000000000)).wait(); //dec8
-          await (await ChainLinkUsdJpy.setLastPrice(877000)).wait();
+      for (const value of depositAndBorrowValues) {
+        await (await ChainLinkEthUsd.setLastPrice(400000000000)).wait(); //dec8
+        await (await ChainLinkUsdJpy.setLastPrice(877000)).wait();
 
-
-          for (var i = 1; i < 2; i++) {
-            // depositとborrowの値の配列をループで処理
-            await Yamato.connect(accounts[i]).deposit({
-              value: toERC20(value.deposit),
-            });
-            await Yamato.connect(accounts[i]).borrow(toERC20(value.borrow));
-          }
-
-          /* Market Dump */
-          await (await ChainLinkEthUsd.setLastPrice("204000000000")).wait(); //dec8
-          await (await ChainLinkUsdJpy.setLastPrice(877000)).wait();
-
-          await (
-            await Yamato.connect(redeemer).redeem(toERC20("100000000"), false)
-          ).wait();
-
-          const poolCjpyBalanceBefore = await CJPY.balanceOf(mockPool.address);
-
-          await checkCJPYBalance(mockPool.address);
-
-          let tx1 = await (await Yamato.connect(redeemer).sweep()).wait();
-          await calculateAndLogTransactionCost(tx1, "1");
-
-          const sweptPledge = await Yamato.getPledge(redeemee.address);
-          const poolCjpyBalanceAfter = await CJPY.balanceOf(mockPool.address);
-
-          expect(poolCjpyBalanceAfter).to.be.lt(poolCjpyBalanceBefore);
-          expect(sweptPledge.debt).to.equal(0);
-          expect(sweptPledge.isCreated).to.be.false;
+        for (var i = 1; i < 2; i++) {
+          // depositとborrowの値の配列をループで処理
+          await Yamato.connect(accounts[i]).deposit({
+            value: toERC20(value.deposit),
+          });
+          await Yamato.connect(accounts[i]).borrow(toERC20(value.borrow));
         }
-      });
+
+        /* Market Dump */
+        await (await ChainLinkEthUsd.setLastPrice("204000000000")).wait(); //dec8
+        await (await ChainLinkUsdJpy.setLastPrice(877000)).wait();
+
+        await (
+          await Yamato.connect(redeemer).redeem(toERC20("100000000"), false)
+        ).wait();
+
+        const poolCjpyBalanceBefore = await CJPY.balanceOf(mockPool.address);
+
+        await checkCJPYBalance(mockPool.address);
+
+        let tx1 = await (await Yamato.connect(redeemer).sweep()).wait();
+        await calculateAndLogTransactionCost(tx1, "1");
+
+        const sweptPledge = await Yamato.getPledge(redeemee.address);
+        const poolCjpyBalanceAfter = await CJPY.balanceOf(mockPool.address);
+
+        expect(poolCjpyBalanceAfter).to.be.lt(poolCjpyBalanceBefore);
+        expect(sweptPledge.debt).to.equal(0);
+        expect(sweptPledge.isCreated).to.be.false;
+      }
     });
   });
 });
