@@ -64,9 +64,6 @@ contract YamatoSweeperV3 is IYamatoSweeper, YamatoAction {
         vars._sweepingAmount =
             (vars._sweepingAmountTmp * (100 - vars._GRR)) /
             100;
-        vars._gasCompensationInCurrency =
-            vars._sweepingAmountTmp -
-            vars._sweepingAmount;
 
         if (vars._sweepingAmountTmp > 0 && vars._sweepingAmount == 0) {
             revert("Sweep budget is too small to pay gas reward.");
@@ -123,6 +120,8 @@ contract YamatoSweeperV3 is IYamatoSweeper, YamatoAction {
         }
         require(vars._toBeSwept > 0, "At least a pledge should be swept.");
         require(vars._sweepingAmount >= vars._toBeSwept, "Too much sweeping.");
+
+        vars._gasCompensationInCurrency = (vars._toBeSwept * vars._GRR) / 100;
 
         /*
             Update pledges
