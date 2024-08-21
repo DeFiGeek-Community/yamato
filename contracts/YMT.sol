@@ -43,9 +43,10 @@ contract YMT is ERC20Permit {
     uint256 public startTime;
 
     constructor(
-        address ymtVestingAddr
+        address ymtVestingAddr,
+        address initialMintAddr
     ) ERC20Permit("Yamato") ERC20("Yamato", "YMT") {
-        _mint(msg.sender, INITIAL_SUPPLY);
+        _mint(initialMintAddr, INITIAL_SUPPLY);
         _mint(ymtVestingAddr, VESTING_SUPPLY);
 
         admin = msg.sender;
