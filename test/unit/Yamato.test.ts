@@ -162,7 +162,8 @@ describe("contract Yamato - pure func quickier tests", function () {
     )).deploy();
 
     YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy(
-      YmtVesting.address
+      YmtVesting.address,
+      ownerAddress
     );
 
     veYMT = await (<VeYMT__factory>(
@@ -406,7 +407,8 @@ describe("contract Yamato", function () {
     )).deploy();
 
     YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy(
-      YmtVesting.address
+      YmtVesting.address,
+      accounts[0].address
     );
 
     veYMT = await (<VeYMT__factory>(

@@ -50,10 +50,7 @@ import {
   YmtMinter__factory,
   ScoreRegistry__factory,
 } from "../../../../typechain";
-import {
-  getProxy,
-  getLinkedProxy,
-} from "../../../../src/testUtil";
+import { getProxy, getLinkedProxy } from "../../../../src/testUtil";
 import { upgradeProxy } from "../../../../src/upgradeUtil";
 import { contractVersion } from "../../../param/version";
 
@@ -254,7 +251,8 @@ describe("Gas Price Calculation and Transaction Cost Logging", () => {
     )).deploy();
 
     YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy(
-      YmtVesting.address
+      YmtVesting.address,
+      accounts[0].address
     );
 
     veYMT = await (<VeYMT__factory>(
@@ -343,7 +341,6 @@ describe("Gas Price Calculation and Transaction Cost Logging", () => {
     });
 
     it(`should run full sweep`, async function () {
-
       for (const value of depositAndBorrowValues) {
         await (await ChainLinkEthUsd.setLastPrice(400000000000)).wait(); //dec8
         await (await ChainLinkUsdJpy.setLastPrice(877000)).wait();

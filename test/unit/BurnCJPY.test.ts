@@ -188,7 +188,8 @@ describe("burnCurrency :: contract Yamato", () => {
     )).deploy();
 
     YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy(
-      YmtVesting.address
+      YmtVesting.address,
+      ownerAddress
     );
 
     veYMT = await (<VeYMT__factory>(

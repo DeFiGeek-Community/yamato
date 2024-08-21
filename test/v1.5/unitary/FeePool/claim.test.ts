@@ -38,7 +38,7 @@ describe("FeePoolV2", () => {
     )).deploy();
     const YMT = await (<YMT__factory>(
       await ethers.getContractFactory("YMT")
-    )).deploy(YmtVesting.address);
+    )).deploy(YmtVesting.address, alice.address);
     const veYMT = await (<VeYMT__factory>(
       await ethers.getContractFactory("veYMT")
     )).deploy(YMT.address);

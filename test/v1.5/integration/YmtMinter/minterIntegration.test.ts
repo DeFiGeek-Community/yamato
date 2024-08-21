@@ -145,7 +145,8 @@ describe("YmtMinter integration", function () {
     )).deploy();
 
     YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy(
-      YmtVesting.address
+      YmtVesting.address,
+      accounts[0].address
     );
 
     veYMT = await (<VeYMT__factory>(

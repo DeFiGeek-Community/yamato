@@ -26,12 +26,14 @@ describe("YMT", function () {
 
   before(async function () {
     accounts = await ethers.getSigners();
+
     YmtVesting = await (<YmtVesting__factory>(
       await ethers.getContractFactory("YmtVesting")
     )).deploy();
 
     YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy(
-      YmtVesting.address
+      YmtVesting.address,
+      accounts[0].address
     );
     await time.increase(86401);
     await YMT.updateMiningParameters();
