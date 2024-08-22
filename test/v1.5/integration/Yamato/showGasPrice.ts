@@ -252,7 +252,7 @@ describe("Gas Price Calculation and Transaction Cost Logging", () => {
 
     YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy(
       YmtVesting.address,
-      accounts[0].address
+      ownerAddress
     );
 
     veYMT = await (<VeYMT__factory>(

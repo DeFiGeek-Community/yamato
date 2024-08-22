@@ -331,11 +331,13 @@ describe("contract Yamato", function () {
   let PRICE: BigNumber;
   let MCR: BigNumber;
   let accounts: Signer[];
+  let ownerAddress: string;
 
   let snapshot: SnapshotRestorer;
 
   before(async () => {
     accounts = await ethers.getSigners();
+    ownerAddress = await accounts[0].getAddress();
 
     mockPool = await smock.fake<Pool>("Pool");
     mockFeePool = await getFakeProxy<FeePoolV2>(contractVersion["FeePool"]);
@@ -408,7 +410,7 @@ describe("contract Yamato", function () {
 
     YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy(
       YmtVesting.address,
-      accounts[0].address
+      ownerAddress
     );
 
     veYMT = await (<VeYMT__factory>(
