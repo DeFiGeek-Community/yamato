@@ -1,6 +1,21 @@
 import { BigNumber, utils } from "ethers";
 import { readFileSync, writeFileSync } from "fs";
 
+// イベントデータを表すインターフェース
+interface EventData {
+  coll: string | BigNumber; // 担保額
+  debt: string | BigNumber; // 借入額
+  price: string; // 価格
+  args: string; // イベント引数
+  event: string; // イベントタイプ
+  icr: number; // 担保率
+  cjpy: number; // JPYでの借入額
+  icrScore: number; // ICRから計算されたスコア
+  baseScore: number; // 基本スコア
+  diffScore: number; // 差分スコア
+  allScore: number; // 全スコア
+}
+
 function calculateICR(
   collateral: BigNumber,
   debt: BigNumber,
@@ -14,6 +29,19 @@ function calculateICR(
   return collateralValue === 0 || debtValue === 0
     ? 0
     : (100 * collateralInCurrency) / debtValue;
+}
+
+function calculateScore(icr: number): number {
+  if (icr >= 250) {
+    return 2.5;
+  } else if (icr >= 200) {
+    return 2;
+  } else if (icr >= 150) {
+    return 1.5;
+  } else if (icr >= 130) {
+    return 1;
+  }
+  return 0;
 }
 
 export function processExtractedEvents() {
@@ -80,21 +108,23 @@ export function processExtractedEvents() {
         BigNumber.from(event.price)
       );
       event.cjpy = Number(utils.formatUnits(event.debt, 18));
+      event.icrScore = calculateScore(event.icr);
 
-      const baseScore = event.icr * event.cjpy;
+      const baseScore = event.icrScore * event.cjpy;
+      event.baseScore = baseScore;
       const previousEvent =
         index > 0 ? extractedEvents[address][index - 1] : null;
       const timeDifference = previousEvent
         ? event.blockNumber - previousEvent.blockNumber
         : 0;
-      event.score =
-        previousEvent && previousEvent.score !== 0
+      event.diffScore =
+        previousEvent && previousEvent.diffScore !== 0
           ? baseScore * timeDifference
           : baseScore;
 
       event.allScore = previousEvent
-        ? previousEvent.allScore + event.score
-        : event.score;
+        ? previousEvent.allScore + event.diffScore
+        : event.diffScore;
     });
   }
 
