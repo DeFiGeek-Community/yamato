@@ -31,7 +31,13 @@ export function fromBigNumber(
   return ethers.utils.formatUnits(amount, decimals);
 }
 
+// トータルトークン量
 const TOTAL_TOKEN_SUPPLY = 50000000;
+
+// 除外するアドレスのリスト
+const EXCLUDED_ADDRESSES: string[] = [
+  "0x0000000",
+];
 
 function calculateTokenDistributions() {
   const eventsJson = readFileSync(
@@ -45,10 +51,11 @@ function calculateTokenDistributions() {
 
   const distributions: TokenDistribution[] = [];
 
-  Object.values(events).forEach((eventDetails) => {
+  Object.entries(events).forEach(([address, eventDetails]) => {
+    // 除外するアドレスをチェック
     const endEvent = eventDetails.find((detail) => detail.event === "end");
-    if (endEvent) {
-      totalScore += Math.ceil(endEvent.allScore);
+    if (endEvent && !EXCLUDED_ADDRESSES.includes(address)) {
+      totalScore += endEvent.allScore;
       totalScoreBig = totalScoreBig.add(toBigNumber(endEvent.allScore));
     }
   });
@@ -58,7 +65,8 @@ function calculateTokenDistributions() {
 
   Object.entries(events).forEach(([address, eventDetails]) => {
     const endEvent = eventDetails.find((detail) => detail.event === "end");
-    if (endEvent) {
+    // 除外するアドレスをチェックし、endイベントが存在するかを一つの条件で確認
+    if (endEvent && !EXCLUDED_ADDRESSES.includes(address)) {
       const scorePercentage = (endEvent.allScore / totalScore) * 100;
 
       const scoreBig = toBigNumber(endEvent.allScore);
