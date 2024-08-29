@@ -72,16 +72,19 @@ function calculateTokenDistributions() {
         .mul(totalTokenSupplyBig)
         .div(totalScoreBig);
 
-      totalDistributedTokensBig =
-        totalDistributedTokensBig.add(distributedTokensBig);
+      // distributedTokensBigが0でない場合のみpushする
+      if (!distributedTokensBig.isZero()) {
+        totalDistributedTokensBig =
+          totalDistributedTokensBig.add(distributedTokensBig);
 
-      distributions.push({
-        address: address,
-        score: endEvent.allScore,
-        scorePercentage: scorePercentage,
-        distributedTokens: fromBigNumber(distributedTokensBig),
-        distributedTokensBigNumber: distributedTokensBig,
-      });
+        distributions.push({
+          address: address,
+          score: endEvent.allScore,
+          scorePercentage: scorePercentage,
+          distributedTokens: fromBigNumber(distributedTokensBig),
+          distributedTokensBigNumber: distributedTokensBig,
+        });
+      }
     }
   });
 
