@@ -93,8 +93,6 @@ contract veYMT is ReentrancyGuard {
     string public symbol;
     uint8 public decimals;
 
-    address public futureAdmin;
-
     /**
      * @notice Contract constructor
      * @param tokenAddr_ `YMT` token address
