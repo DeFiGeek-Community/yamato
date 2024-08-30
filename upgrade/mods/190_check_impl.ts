@@ -1,9 +1,9 @@
 import { setNetwork, getFoundation, setProvider } from "../../src/deployUtil";
 import { genABI } from "../../src/genABI";
-import { readDeploymentAddress } from "../..//src/addressUtil";
+import { readDeploymentAddress } from "../../src/addressUtil";
 import * as ethers from "ethers";
 
-(async () => {
+async function main() {
   setNetwork(process.env.NETWORK);
   await setProvider();
 
@@ -58,4 +58,6 @@ import * as ethers from "ethers";
       `${contractName}`
     );
   }
-})();
+}
+
+export default main;
