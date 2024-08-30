@@ -1,5 +1,11 @@
 require("dotenv").config();
-import { readFileSync, writeFileSync, unlinkSync, existsSync } from "fs";
+import {
+  readFileSync,
+  writeFileSync,
+  unlinkSync,
+  existsSync,
+  mkdirSync,
+} from "fs";
 import { Wallet, Signer, getDefaultProvider, Contract } from "ethers";
 import { ethers } from "hardhat";
 import { genABI } from "../src/genABI";
@@ -181,7 +187,14 @@ export async function deploy(contractName: string, opts: Options) {
   return _signedContract;
 }
 function _getDeploymentAddressPathWithTag(contractName: string, tag: string) {
-  return `./deployments/${getCurrentNetwork()}/${contractName}${tag}`;
+  const path = `./deployments/${getCurrentNetwork()}/${contractName}${tag}`;
+  const dir = path.substring(0, path.lastIndexOf("/"));
+
+  if (!existsSync(dir)) {
+    mkdirSync(dir, { recursive: true });
+  }
+
+  return path;
 }
 export function getDeploymentAddressPath(contractName: string) {
   return _getDeploymentAddressPathWithTag(contractName, "");
