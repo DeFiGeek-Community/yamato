@@ -1,4 +1,4 @@
-import { readDeploymentAddress } from "../..//src/addressUtil";
+import { readDeploymentAddress } from "../../src/addressUtil";
 import { genABI } from "../../src/genABI";
 import { createAndProposeTransaction } from "../../src/safeUtil";
 const IMPL_NAME_BASE = "priceFeed";
