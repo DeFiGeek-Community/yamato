@@ -287,3 +287,32 @@ export async function upgradePriorityRegistryV2ToV5AndSync(
   await inst.syncRankedQueue(pledges);
   return inst;
 }
+
+// 汎用的なトランザクション実行関数
+export async function executeTransaction(
+  contractAddress: string,
+  contractABI: any,
+  methodName: string,
+  args: any[] = []
+) {
+  // .envからDEPLOYER_PRIVATE_KEYを読み込む
+  const deployerPrivateKey = process.env.DEPLOYER_PRIVATE_KEY;
+  if (!deployerPrivateKey) {
+    console.error("DEPLOYER_PRIVATE_KEY is not defined in .env file");
+    return;
+  }
+
+  // JsonRpcProviderと秘密鍵からWalletを生成し、サイナーとして使用
+  const provider = new ethers.providers.JsonRpcProvider();
+  const signer = new ethers.Wallet(deployerPrivateKey, provider);
+
+  const contract = new ethers.Contract(contractAddress, contractABI, signer);
+
+  const transactionResponse = await contract[methodName](...args);
+  await transactionResponse.wait(); // トランザクションの確定を待つ
+
+  console.log(
+    `Executing method: ${methodName} on contract: ${contractAddress} with arguments:`,
+    args
+  );
+}
