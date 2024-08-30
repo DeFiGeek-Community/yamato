@@ -27,6 +27,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   ).toString();
   const YmtVesting = new Contract(_ymtVestingAddr, genABI("YmtVesting"), p);
 
+  const _minterAddr = readFileSync(
+    getDeploymentAddressPathWithTag("YmtMinter", "ERC1967Proxy")
+  ).toString();
+  const YmtMinter = new Contract(_minterAddr, genABI("YmtMinter"), p);
+
   const _controllerAddr = readFileSync(
     getDeploymentAddressPathWithTag("ScoreWeightController", "ERC1967Proxy")
   ).toString();
@@ -47,10 +52,17 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   await (await YMT.connect(getFoundation()).setAdmin(multisigAddr)).wait();
   console.log(`log: YMT.setAdmin(${multisigAddr}) executed.`);
+
   await (
     await YmtVesting.connect(getFoundation()).setAdmin(multisigAddr)
   ).wait();
   console.log(`log: YmtVesting.setAdmin(${multisigAddr}) executed.`);
+
+  await (
+    await YmtMinter.connect(getFoundation()).setGovernance(multisigAddr)
+  ).wait();
+  console.log(`log: YmtMinter.setGovernance(${multisigAddr}) executed.`);
+
   await (
     await ScoreWeightController.connect(getFoundation()).setGovernance(
       multisigAddr
@@ -59,6 +71,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log(
     `log: ScoreWeightController.setGovernance(${multisigAddr}) executed.`
   );
+
   await (
     await ScoreRegistry.connect(getFoundation()).setGovernance(multisigAddr)
   ).wait();
