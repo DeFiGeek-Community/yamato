@@ -45,10 +45,8 @@ async function main() {
   async function checkImplementation(contractInstance, contractName) {
     const currentImpl = await contractInstance.getImplementation();
     console.log(`${contractName}Proxy`, contractInstance.address);
-    console.log("governance", await contractInstance.governance());
     const expectedImpl = readDeploymentAddress(contractName, "UUPSImpl");
     console.log(`${contractName}Impl`, currentImpl);
-    console.log(`${contractName}NewImpl`, expectedImpl);
     console.log(`${contractName}Impl`, currentImpl.toString() === expectedImpl);
   }
 
