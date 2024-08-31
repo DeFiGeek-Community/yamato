@@ -87,7 +87,7 @@ async function main() {
     const ymtAddressFromMinter = await minterInstance.YMT();
     console.log(
       `YMT Address Match in Minter:`,
-      ymtAddressFromMinter === ymtAddress ? "Yes" : "No"
+      ymtAddressFromMinter === ymtAddress
     );
 
     const scoreWeightControllerAddressFromMinter =
@@ -95,65 +95,63 @@ async function main() {
     console.log(
       `Score Weight Controller Address Match in Minter:`,
       scoreWeightControllerAddressFromMinter === scoreWeightControllerAddress
-        ? "Yes"
-        : "No"
     );
 
     const ymtAddressFromVesting = await vestingInstance.ymtTokenAddress();
     console.log(
       `YMT Address Match in Vesting:`,
-      ymtAddressFromVesting === ymtAddress ? "Yes" : "No"
+      ymtAddressFromVesting === ymtAddress
     );
 
     const ymtMinterAddressFromYmt = await ymtInstance.ymtMinter();
     console.log(
       `YMT Minter Address Match in YMT:`,
-      ymtMinterAddressFromYmt === minterProxyAddress ? "Yes" : "No"
+      ymtMinterAddressFromYmt === minterProxyAddress
     );
 
     const scoreRegistryAddressFromYamato = await yamatoInstance.scoreRegistry();
     console.log(
       `Score Registry Address Match in Yamato:`,
-      scoreRegistryAddressFromYamato === scoreRegistryAddress ? "Yes" : "No"
+      scoreRegistryAddressFromYamato === scoreRegistryAddress
     );
 
     const ymtAddressFromVeYmt = await veYmtInstance.token();
     console.log(
       `YMT Address Match in VeYMT:`,
-      ymtAddressFromVeYmt === ymtAddress ? "Yes" : "No"
+      ymtAddressFromVeYmt === ymtAddress
     );
 
     const ymtAddressFromScoreWeightController =
       await scoreWeightControllerInstance.YMT();
     console.log(
       `YMT Address Match in Score Weight Controller:`,
-      ymtAddressFromScoreWeightController === ymtAddress ? "Yes" : "No"
+      ymtAddressFromScoreWeightController === ymtAddress
     );
 
     const veYmtAddressFromScoreWeightController =
       await scoreWeightControllerInstance.veYMT();
     console.log(
       `VeYMT Address Match in Score Weight Controller:`,
-      veYmtAddressFromScoreWeightController === veYmtAddress ? "Yes" : "No"
+      veYmtAddressFromScoreWeightController === veYmtAddress
     );
 
     const ymtAddressFromScoreRegistry = await scoreRegistryInstance.YMT();
     console.log(
       `YMT Address Match in Score Registry:`,
-      ymtAddressFromScoreRegistry === ymtAddress ? "Yes" : "No"
+      ymtAddressFromScoreRegistry === ymtAddress
     );
 
     const veYmtAddressFromScoreRegistry = await scoreRegistryInstance.veYMT();
     console.log(
       `VeYMT Address Match in Score Registry:`,
-      veYmtAddressFromScoreRegistry === veYmtAddress ? "Yes" : "No"
+      veYmtAddressFromScoreRegistry === veYmtAddress
     );
 
     const ymtMinterAddressFromScoreRegistry =
       await scoreRegistryInstance.ymtMinter();
     console.log(
       `YMT Minter Address Match in Score Registry:`,
-      ymtMinterAddressFromScoreRegistry === minterProxyAddress ? "Yes" : "No"
+      ymtMinterAddressFromScoreRegistry === minterProxyAddress
     );
 
     const scoreWeightControllerAddressFromScoreRegistry =
@@ -162,38 +160,36 @@ async function main() {
       `Score Weight Controller Address Match in Score Registry:`,
       scoreWeightControllerAddressFromScoreRegistry ===
         scoreWeightControllerAddress
-        ? "Yes"
-        : "No"
     );
 
     const yamatoAddressFromScoreRegistry = await scoreRegistryInstance.yamato();
     console.log(
       `Yamato Address Match in ScoreRegistry:`,
-      yamatoAddressFromScoreRegistry === yamatoAddress ? "Yes" : "No"
+      yamatoAddressFromScoreRegistry === yamatoAddress
     );
 
     const veYmtAddressFromFeePool = await feePoolInstance.veYMT();
     console.log(
       `VeYMT Address Match in Fee Pool:`,
-      veYmtAddressFromFeePool === veYmtAddress ? "Yes" : "No"
+      veYmtAddressFromFeePool === veYmtAddress
     );
 
     const ymtAddressFromCurrencyOS = await currencyOSInstance.YMT();
     console.log(
       `YMT Address Match in CurrencyOS:`,
-      ymtAddressFromCurrencyOS === ymtAddress ? "Yes" : "No"
+      ymtAddressFromCurrencyOS === ymtAddress
     );
 
     const veYmtAddressFromCurrencyOS = await currencyOSInstance.veYMT();
     console.log(
       `VeYMT Address Match in CurrencyOS:`,
-      veYmtAddressFromCurrencyOS === veYmtAddress ? "Yes" : "No"
+      veYmtAddressFromCurrencyOS === veYmtAddress
     );
 
     const ymtMinterAddressFromCurrencyOS = await currencyOSInstance.ymtMinter();
     console.log(
       `YMT Minter Address Match in CurrencyOS:`,
-      ymtMinterAddressFromCurrencyOS === minterProxyAddress ? "Yes" : "No"
+      ymtMinterAddressFromCurrencyOS === minterProxyAddress
     );
 
     const scoreWeightControllerAddressFromCurrencyOS =
@@ -202,8 +198,6 @@ async function main() {
       `Score Weight Controller Address Match in CurrencyOS:`,
       scoreWeightControllerAddressFromCurrencyOS ===
         scoreWeightControllerAddress
-        ? "Yes"
-        : "No"
     );
 
     // アドレスの比較と結果のログ出力
