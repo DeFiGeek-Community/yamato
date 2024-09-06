@@ -35,7 +35,7 @@ export function fromBigNumber(
 const TOTAL_TOKEN_SUPPLY = 50000000;
 
 // 除外するアドレスのリスト
-const EXCLUDED_ADDRESSES: string[] = ["0x0000000"];
+const EXCLUDED_ADDRESSES: string[] = ["0x153d9DD730083e53615610A0d2f6F95Ab5A0Bc01"];
 
 function calculateTokenDistributions() {
   const eventsJson = readFileSync(
