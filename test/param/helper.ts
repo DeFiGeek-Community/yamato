@@ -1,5 +1,48 @@
 const { ethers, waffle } = require("hardhat");
 import { BigNumber, Contract, Signer } from "ethers";
+import { expect } from "chai";
+
+// Helper function to impersonate an account
+export async function startImpersonate(account: string) {
+  await ethers.provider.send("hardhat_impersonateAccount", [account]);
+  const impersonatedSigner = await ethers.provider.getSigner(account);
+
+  // Send some ETH to the impersonated account for gas
+  const [deployer] = await ethers.getSigners();
+  await deployer.sendTransaction({
+    to: account,
+    value: ethers.utils.parseEther("1.0"),
+  });
+
+  return impersonatedSigner;
+}
+
+// Helper function to stop impersonating an account
+export async function stopImpersonate(account: string) {
+  await ethers.provider.send("hardhat_stopImpersonatingAccount", [account]);
+}
+
+// Helper function to check if an event was emitted with specific arguments
+export async function expectEventEmitted(
+  tx: ContractTransaction,
+  eventName: string,
+  expectedArgs: Object
+) {
+  const receipt = await tx.wait();
+  const event = receipt.events?.find((e) => e.event === eventName);
+
+  expect(event).to.not.be.undefined,
+    `Expected event ${eventName} to be emitted`;
+
+  if (expectedArgs) {
+    for (const [key, value] of Object.entries(expectedArgs)) {
+      expect(event.args[key]).to.equal(
+        value,
+        `Expected event argument ${key} to be ${value}`
+      );
+    }
+  }
+}
 
 let provider;
 export function getSharedProvider() {

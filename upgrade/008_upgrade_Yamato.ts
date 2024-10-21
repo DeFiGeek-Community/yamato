@@ -1,1 +1,5 @@
-import("./mods/008_upgrade_Yamato").catch((e) => console.log(e));
+import main from "./mods/008_upgrade_Yamato";
+
+main().catch((e) => {
+  console.error("An error occurred during the upgrade process:", e);
+});

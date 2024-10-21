@@ -15,45 +15,49 @@ require("dotenv").config();
 export async function upgradeProxy<
   T extends BaseContract,
   S extends ContractFactory
->(olderInstanceAddress: string, contractNameTo: string): Promise<T> {
-  let contractFactory: S = <S>await ethers.getContractFactory(contractNameTo);
-  const instance: T = <T>await upgrades.upgradeProxy(
-    olderInstanceAddress,
-    contractFactory,
-    {
-      kind: "uups",
-    }
-  );
-  return instance;
-}
-
-export async function upgradeLinkedProxy<
-  T extends BaseContract,
-  S extends ContractFactory
 >(
   olderInstanceAddress: string,
   contractNameTo: string,
-  libralies: string[]
+  libraries?: string[],
+  options?: {
+    call?: string | { fn: string; args?: unknown[] };
+  }
 ): Promise<T> {
   let Libraries = {};
-  for (var i = 0; i < libralies.length; i++) {
-    let libraryName = libralies[i];
-    Libraries[libraryName] = (await deployLibrary(libraryName)).address;
-  }
-  // Note: Libraries upgrade requires you to re-deploy the whole library. That's expensive.
-
-  let contractFactory: S = <S>(
-    await getLinkedContractFactory(contractNameTo, Libraries)
-  );
-  const newerInstance: T = <T>await upgrades.upgradeProxy(
-    olderInstanceAddress,
-    contractFactory,
-    {
-      kind: "uups",
-      unsafeAllow: ["external-library-linking"],
+  if (libraries) {
+    for (const libraryName of libraries) {
+      Libraries[libraryName] = (await deployLibrary(libraryName)).address;
     }
+  }
+
+  let contractFactory: S;
+  if (libraries?.length > 0) {
+    contractFactory = <S>(
+      await getLinkedContractFactory(contractNameTo, Libraries)
+    );
+  } else {
+    contractFactory = <S>await ethers.getContractFactory(contractNameTo);
+  }
+
+  const upgradeOptions: any = {
+    kind: "uups",
+  };
+
+  if (options?.call) {
+    upgradeOptions.call = options.call;
+  }
+
+  if (libraries?.length > 0) {
+    upgradeOptions.unsafeAllow = ["external-library-linking"];
+  }
+  const instance: T = <T>(
+    await upgrades.upgradeProxy(
+      olderInstanceAddress,
+      contractFactory,
+      upgradeOptions
+    )
   );
-  return newerInstance;
+  return instance;
 }
 
 /*
@@ -65,40 +69,53 @@ export async function proposeUpgradeProxy<
 >(
   olderInstanceAddress: string,
   contractNameTo: string,
-  multisigAddr: string
-): Promise<ExtendedProposalResponse> {
-  let contractFactory: S = <S>await ethers.getContractFactory(contractNameTo);
-  const res: ExtendedProposalResponse = await defender.proposeUpgrade(
-    olderInstanceAddress,
-    contractFactory,
-    { multisig: multisigAddr, proxyAdmin: multisigAddr }
-  );
-  return res;
-}
-export async function proposeUpgradeLinkedProxy<
-  T extends BaseContract,
-  S extends ContractFactory
->(
-  olderInstanceAddress: string,
-  contractNameTo: string,
-  libralies: string[]
+  multisigAddr: string,
+  libraries?: string[],
+  options?: {
+    call?: string | { fn: string; args?: unknown[] };
+  }
 ): Promise<ExtendedProposalResponse> {
   let Libraries = {};
-  for (var i = 0; i < libralies.length; i++) {
-    let libraryName = libralies[i];
-    Libraries[libraryName] = (await deployLibrary(libraryName)).address;
+  if (libraries) {
+    for (const libraryName of libraries) {
+      Libraries[libraryName] = (await deployLibrary(libraryName)).address;
+    }
   }
-  // Note: Libraries upgrade requires you to re-deploy the whole library. That's expensive.
 
-  let contractFactory: S = <S>(
-    await getLinkedContractFactory(contractNameTo, Libraries)
-  );
+  let contractFactory: S;
+  if (libraries?.length > 0) {
+    contractFactory = <S>(
+      await getLinkedContractFactory(contractNameTo, Libraries)
+    );
+  } else {
+    contractFactory = <S>await ethers.getContractFactory(contractNameTo);
+  }
+
+  const proposalOptions: any = {
+    multisig: multisigAddr,
+    kind: "uups",
+  };
+
+  if (options?.call) {
+    proposalOptions.call = options.call;
+  }
+
+  if (libraries?.length > 0) {
+    proposalOptions.unsafeAllow = ["external-library-linking"];
+  }
+  // console.log("prepareUpgrade")
+  // console.log(
+  //   await upgrades.prepareUpgrade(
+  //     olderInstanceAddress,
+  //     contractFactory,
+  //     proposalOptions
+  //     ))
+
+  console.log("proposeUpgrade");
   const res: ExtendedProposalResponse = await defender.proposeUpgrade(
     olderInstanceAddress,
     contractFactory,
-    {
-      unsafeAllow: ["external-library-linking"],
-    }
+    proposalOptions
   );
   return res;
 }
@@ -108,7 +125,8 @@ export async function runDowngrade(
   versionStr: string,
   linkings = []
 ) {
-  setNetwork("goerli");
+  const network = process.env.NETWORK;
+  setNetwork(network);
   const filepath = getDeploymentAddressPathWithTag(
     implNameBase,
     "ERC1967Proxy"
@@ -124,10 +142,7 @@ export async function runDowngrade(
   } else {
     // console.log(`${implName} is going to be deployed to ERC1967Proxy...`);
 
-    const inst =
-      linkings.length > 0
-        ? await upgradeLinkedProxy(ERC1967Proxy, implName, linkings)
-        : await upgradeProxy(ERC1967Proxy, implName);
+    const inst = await upgradeProxy(ERC1967Proxy, implName, linkings);
     console.log(
       chalk.gray(
         `        [success] ${implName}=${inst.address} is upgraded to ERC1967Proxy`
@@ -141,17 +156,26 @@ export async function runDowngrade(
     // console.log(`Saved ${implAddr} to ${implPath}`);
 
     try {
-      execSync(
-        `npm run verify:goerli -- --contract contracts/${implName}.sol:${implName} ${implAddr}`
-      );
-      console.log(`Verified ${implAddr}`);
+      if (network != "localhost") {
+        execSync(
+          `npm run verify:${network} -- --contract contracts/${implName}.sol:${implName} ${implAddr}`
+        );
+        console.log(`Verified ${implAddr}`);
+      }
     } catch (e) {
       console.error(e.message);
     }
   }
 }
-export async function runUpgrade(implNameBase, linkings = []) {
-  setNetwork("goerli");
+export async function runUpgrade(
+  implNameBase,
+  linkings = [],
+  options?: {
+    call?: string | { fn: string; args?: unknown[] };
+  }
+) {
+  const network = process.env.NETWORK;
+  setNetwork(network);
 
   const filepath = getDeploymentAddressPathWithTag(
     implNameBase,
@@ -159,8 +183,9 @@ export async function runUpgrade(implNameBase, linkings = []) {
   );
   if (!existsSync(filepath)) throw new Error(`${filepath} is not exist`);
   const ERC1967Proxy: string = readFileSync(filepath).toString();
-
+  console.log(ERC1967Proxy);
   const implName = getLatestContractName(implNameBase);
+  console.log(implName);
   if (implName.length == 0) {
     console.log(
       `./contracts/${implNameBase} only found. Set ./contracts/${implNameBase}V2 to start upgrading.`
@@ -169,10 +194,12 @@ export async function runUpgrade(implNameBase, linkings = []) {
     // console.log(`${implName} is going to be deployed to ERC1967Proxy...`);
     let multisigAddr = process.env.UUPS_PROXY_ADMIN_MULTISIG_ADDRESS;
     if (!multisigAddr) {
-      const inst =
-        linkings.length > 0
-          ? await upgradeLinkedProxy(ERC1967Proxy, implName, linkings)
-          : await upgradeProxy(ERC1967Proxy, implName);
+      const inst = await upgradeProxy(
+        ERC1967Proxy,
+        implName,
+        linkings,
+        options
+      );
       console.log(
         chalk.gray(
           `        [success] ${implName}=${inst.address} is upgraded to ERC1967Proxy`
@@ -182,10 +209,12 @@ export async function runUpgrade(implNameBase, linkings = []) {
       const implAddr = await (<any>inst).getImplementation();
 
       try {
-        execSync(
-          `npm run verify:goerli -- --contract contracts/${implName}.sol:${implName} ${implAddr}`
-        );
-        console.log(`Verified ${implAddr}`);
+        if (network != "localhost") {
+          execSync(
+            `npm run verify:${network} -- --contract contracts/${implName}.sol:${implName} ${implAddr}`
+          );
+          console.log(`Verified ${implAddr}`);
+        }
       } catch (e) {
         console.error(e.message);
       }
@@ -196,15 +225,23 @@ export async function runUpgrade(implNameBase, linkings = []) {
       );
       writeFileSync(implPath, implAddr);
     } else {
-      const res =
-        linkings.length > 0
-          ? await proposeUpgradeLinkedProxy(ERC1967Proxy, implName, linkings)
-          : await proposeUpgradeProxy(ERC1967Proxy, implName, multisigAddr);
+      const res = await proposeUpgradeProxy(
+        ERC1967Proxy,
+        implName,
+        multisigAddr,
+        linkings,
+        options
+      );
 
+      console.log(res);
       console.log(res.verificationResponse);
+      const implAddr = res.metadata.newImplementationAddress;
 
-      // const implPath = getDeploymentAddressPathWithTag(implNameBase, "UUPSImpl");
-      // writeFileSync(implPath, implAddr);
+      const implPath = getDeploymentAddressPathWithTag(
+        implNameBase,
+        "UUPSImpl"
+      );
+      writeFileSync(implPath, implAddr);
     }
   }
 }
@@ -225,7 +262,7 @@ export function getLatestContractName(implNameBase) {
     .map((matched) => parseInt(regexpV(matched)[1]));
   let highestVersion = Math.max(...versions);
   const implName = `${implNameBase}V${highestVersion}`;
-  if (versions.length == 0) {
+  if (versions?.length == 0) {
     return "";
   } else {
     return implName;
@@ -243,10 +280,39 @@ export async function upgradePriorityRegistryV2ToV5AndSync(
   }[]
 ): Promise<PriorityRegistryV5> {
   const inst: PriorityRegistryV5 = <PriorityRegistryV5>(
-    await upgradeLinkedProxy(PriorityRegistry.address, "PriorityRegistryV5", [
+    await upgradeProxy(PriorityRegistry.address, "PriorityRegistryV5", [
       "PledgeLib",
     ])
   );
   await inst.syncRankedQueue(pledges);
   return inst;
+}
+
+// 汎用的なトランザクション実行関数
+export async function executeTransaction(
+  contractAddress: string,
+  contractABI: any,
+  methodName: string,
+  args: any[] = []
+) {
+  // .envからDEPLOYER_PRIVATE_KEYを読み込む
+  const deployerPrivateKey = process.env.DEPLOYER_PRIVATE_KEY;
+  if (!deployerPrivateKey) {
+    console.error("DEPLOYER_PRIVATE_KEY is not defined in .env file");
+    return;
+  }
+
+  // JsonRpcProviderと秘密鍵からWalletを生成し、サイナーとして使用
+  const provider = new ethers.providers.JsonRpcProvider();
+  const signer = new ethers.Wallet(deployerPrivateKey, provider);
+
+  const contract = new ethers.Contract(contractAddress, contractABI, signer);
+
+  const transactionResponse = await contract[methodName](...args);
+  await transactionResponse.wait(); // トランザクションの確定を待つ
+
+  console.log(
+    `Executing method: ${methodName} on contract: ${contractAddress} with arguments:`,
+    args
+  );
 }

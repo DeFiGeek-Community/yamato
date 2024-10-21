@@ -2,14 +2,19 @@ import { ethers } from "hardhat";
 import { smock } from "@defi-wonderland/smock";
 import chai, { expect } from "chai";
 import { Signer, BigNumber } from "ethers";
+import {
+  time,
+  takeSnapshot,
+  SnapshotRestorer,
+} from "@nomicfoundation/hardhat-network-helpers";
 import { toERC20 } from "../param/helper";
 import {
   ChainLinkMock,
   PriceFeedV3,
-  FeePool,
+  FeePoolV2,
   CurrencyOS,
   CJPY,
-  Yamato,
+  YamatoV4,
   YamatoDepositor,
   YamatoBorrower,
   YamatoRepayer,
@@ -18,12 +23,18 @@ import {
   YamatoSweeper,
   PriorityRegistry,
   Pool,
+  YmtVesting,
+  YMT,
+  VeYMT,
+  ScoreWeightController,
+  YmtMinter,
+  ScoreRegistry,
   ChainLinkMock__factory,
   PriceFeedV3__factory,
-  FeePool__factory,
+  FeePoolV2__factory,
   CurrencyOS__factory,
   CJPY__factory,
-  Yamato__factory,
+  YamatoV4__factory,
   YamatoDepositor__factory,
   YamatoBorrower__factory,
   YamatoRepayer__factory,
@@ -32,8 +43,16 @@ import {
   YamatoSweeper__factory,
   Pool__factory,
   PriorityRegistry__factory,
+  YmtVesting__factory,
+  YMT__factory,
+  VeYMT__factory,
+  ScoreWeightController__factory,
+  YmtMinter__factory,
+  ScoreRegistry__factory,
 } from "../../typechain";
 import { getProxy, getLinkedProxy } from "../../src/testUtil";
+import { upgradeProxy } from "../../src/upgradeUtil";
+import { contractVersion } from "../param/version";
 
 chai.use(smock.matchers);
 
@@ -42,9 +61,9 @@ describe("burnCurrency :: contract Yamato", () => {
   let ChainLinkUsdJpy: ChainLinkMock;
   let PriceFeed: PriceFeedV3;
   let CJPY: CJPY;
-  let FeePool: FeePool;
+  let FeePool: FeePoolV2;
   let CurrencyOS: CurrencyOS;
-  let Yamato: Yamato;
+  let Yamato: YamatoV4;
   let YamatoDepositor: YamatoDepositor;
   let YamatoBorrower: YamatoBorrower;
   let YamatoRepayer: YamatoRepayer;
@@ -53,11 +72,19 @@ describe("burnCurrency :: contract Yamato", () => {
   let YamatoSweeper: YamatoSweeper;
   let Pool: Pool;
   let PriorityRegistry: PriorityRegistry;
+  let ScoreRegistry: ScoreRegistry;
+  let YmtMinter: YmtMinter;
+  let veYMT: VeYMT;
+  let YMT: YMT;
+  let YmtVesting: YmtVesting;
+  let ScoreWeightController: ScoreWeightController;
   let accounts: Signer[];
   let ownerAddress: string;
   let userAddress: string;
 
-  beforeEach(async () => {
+  let snapshot: SnapshotRestorer;
+
+  before(async () => {
     accounts = await ethers.getSigners();
     ownerAddress = await accounts[0].getAddress();
     userAddress = await accounts[1].getAddress();
@@ -91,25 +118,26 @@ describe("burnCurrency :: contract Yamato", () => {
     ).wait();
 
     PriceFeed = await getProxy<PriceFeedV3, PriceFeedV3__factory>(
-      "PriceFeed",
-      [ChainLinkEthUsd.address, ChainLinkUsdJpy.address],
-      3
+      contractVersion["PriceFeed"],
+      [ChainLinkEthUsd.address, ChainLinkUsdJpy.address]
     );
 
     CJPY = await (<CJPY__factory>(
       await ethers.getContractFactory("CJPY")
     )).deploy();
 
-    FeePool = await getProxy<FeePool, FeePool__factory>("FeePool", []);
+    FeePool = await getProxy<FeePoolV2, FeePoolV2__factory>("FeePool", [], 1);
+    FeePool = await upgradeProxy(FeePool.address, "FeePoolV2", undefined, {
+      call: { fn: "initializeV2", args: [await time.latest()] },
+    });
 
-    CurrencyOS = await getProxy<CurrencyOS, CurrencyOS__factory>("CurrencyOS", [
-      CJPY.address,
-      PriceFeed.address,
-      FeePool.address,
-    ]);
+    CurrencyOS = await getProxy<CurrencyOS, CurrencyOS__factory>(
+      contractVersion["CurrencyOS"],
+      [CJPY.address, PriceFeed.address, FeePool.address]
+    );
 
-    Yamato = await getLinkedProxy<Yamato, Yamato__factory>(
-      "Yamato",
+    Yamato = await getLinkedProxy<YamatoV4, YamatoV4__factory>(
+      contractVersion["Yamato"],
       [CurrencyOS.address],
       ["PledgeLib"]
     );
@@ -117,15 +145,15 @@ describe("burnCurrency :: contract Yamato", () => {
     YamatoDepositor = await getLinkedProxy<
       YamatoDepositor,
       YamatoDepositor__factory
-    >("YamatoDepositor", [Yamato.address], ["PledgeLib"]);
+    >(contractVersion["YamatoDepositor"], [Yamato.address], ["PledgeLib"]);
 
     YamatoBorrower = await getLinkedProxy<
       YamatoBorrower,
       YamatoBorrower__factory
-    >("YamatoBorrower", [Yamato.address], ["PledgeLib"]);
+    >(contractVersion["YamatoBorrower"], [Yamato.address], ["PledgeLib"]);
 
     YamatoRepayer = await getLinkedProxy<YamatoRepayer, YamatoRepayer__factory>(
-      "YamatoRepayer",
+      contractVersion["YamatoRepayer"],
       [Yamato.address],
       ["PledgeLib"]
     );
@@ -133,25 +161,56 @@ describe("burnCurrency :: contract Yamato", () => {
     YamatoWithdrawer = await getLinkedProxy<
       YamatoWithdrawer,
       YamatoWithdrawer__factory
-    >("YamatoWithdrawer", [Yamato.address], ["PledgeLib"]);
+    >(contractVersion["YamatoWithdrawer"], [Yamato.address], ["PledgeLib"]);
 
     YamatoRedeemer = await getLinkedProxy<
       YamatoRedeemer,
       YamatoRedeemer__factory
-    >("YamatoRedeemer", [Yamato.address], ["PledgeLib"]);
+    >(contractVersion["YamatoRedeemer"], [Yamato.address], ["PledgeLib"]);
 
     YamatoSweeper = await getLinkedProxy<YamatoSweeper, YamatoSweeper__factory>(
-      "YamatoSweeper",
+      contractVersion["YamatoSweeper"],
       [Yamato.address],
       ["PledgeLib"]
     );
 
-    Pool = await getProxy<Pool, Pool__factory>("Pool", [Yamato.address]);
+    Pool = await getProxy<Pool, Pool__factory>(contractVersion["Pool"], [
+      Yamato.address,
+    ]);
 
     PriorityRegistry = await getLinkedProxy<
       PriorityRegistry,
       PriorityRegistry__factory
-    >("PriorityRegistry", [Yamato.address], ["PledgeLib"]);
+    >(contractVersion["PriorityRegistry"], [Yamato.address], ["PledgeLib"]);
+
+    YmtVesting = await (<YmtVesting__factory>(
+      await ethers.getContractFactory("YmtVesting")
+    )).deploy();
+
+    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy(
+      YmtVesting.address,
+      ownerAddress
+    );
+
+    veYMT = await (<VeYMT__factory>(
+      await ethers.getContractFactory("veYMT")
+    )).deploy(YMT.address);
+
+    ScoreWeightController = await getProxy<
+      ScoreWeightController,
+      ScoreWeightController__factory
+    >(contractVersion["ScoreWeightController"], [YMT.address, veYMT.address]);
+
+    YmtMinter = await getProxy<YmtMinter, YmtMinter__factory>(
+      contractVersion["YmtMinter"],
+      [YMT.address, ScoreWeightController.address]
+    );
+
+    ScoreRegistry = await getLinkedProxy<ScoreRegistry, ScoreRegistry__factory>(
+      contractVersion["ScoreRegistry"],
+      [YmtMinter.address, Yamato.address],
+      ["PledgeLib"]
+    );
 
     await (
       await Yamato.setDeps(
@@ -165,8 +224,17 @@ describe("burnCurrency :: contract Yamato", () => {
         PriorityRegistry.address
       )
     ).wait();
+    await (await Yamato.setScoreRegistry(ScoreRegistry.address)).wait();
     await (await CurrencyOS.addYamato(Yamato.address)).wait();
     await (await CJPY.setCurrencyOS(CurrencyOS.address)).wait();
+  });
+
+  beforeEach(async () => {
+    snapshot = await takeSnapshot();
+  });
+
+  afterEach(async () => {
+    await snapshot.restore();
   });
 
   describe("redeem()", function () {

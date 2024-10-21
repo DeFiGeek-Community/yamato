@@ -3,14 +3,19 @@ import { FakeContract, smock } from "@defi-wonderland/smock";
 import chai, { expect } from "chai";
 import { Signer, BigNumber } from "ethers";
 import {
+  time,
+  takeSnapshot,
+  SnapshotRestorer,
+} from "@nomicfoundation/hardhat-network-helpers";
+import {
   CJPY,
   CurrencyOS,
   Pool,
-  FeePool,
+  FeePoolV2,
   PriceFeedV3,
   PriorityRegistry,
   PriorityRegistry__factory,
-  Yamato,
+  YamatoV4,
   YamatoDepositor,
   YamatoBorrower,
   YamatoRepayer,
@@ -18,7 +23,13 @@ import {
   YamatoRedeemer,
   YamatoSweeper,
   YamatoDummy,
-  Yamato__factory,
+  YmtVesting,
+  YMT,
+  VeYMT,
+  ScoreWeightController,
+  YmtMinter,
+  ScoreRegistry,
+  YamatoV4__factory,
   YamatoDepositor__factory,
   YamatoBorrower__factory,
   YamatoRepayer__factory,
@@ -26,9 +37,14 @@ import {
   YamatoRedeemer__factory,
   YamatoSweeper__factory,
   YamatoDummy__factory,
-  FeePool__factory,
+  YmtVesting__factory,
+  YMT__factory,
+  VeYMT__factory,
+  ScoreWeightController__factory,
+  YmtMinter__factory,
+  ScoreRegistry__factory,
+  FeePoolV2__factory,
   Pool__factory,
-  YMT,
 } from "../../typechain";
 import { encode, toERC20 } from "../param/helper";
 import {
@@ -37,18 +53,19 @@ import {
   getLinkedProxy,
   getTCR,
 } from "../../src/testUtil";
+import { contractVersion } from "../param/version";
 
 chai.use(smock.matchers);
 
 describe("contract Yamato - pure func quickier tests", function () {
   let mockPool: FakeContract<Pool>;
-  let mockFeePool: FakeContract<FeePool>;
+  let mockFeePool: FakeContract<FeePoolV2>;
   let mockFeed: FakeContract<PriceFeedV3>;
   let mockYMT: FakeContract<YMT>;
   let mockCJPY: FakeContract<CJPY>;
   let mockCurrencyOS: FakeContract<CurrencyOS>;
   let mockPriorityRegistry: FakeContract<PriorityRegistry>;
-  let yamato: Yamato;
+  let yamato: YamatoV4;
   let yamatoDepositor: YamatoDepositor;
   let yamatoBorrower: YamatoBorrower;
   let yamatoRepayer: YamatoRepayer;
@@ -56,6 +73,12 @@ describe("contract Yamato - pure func quickier tests", function () {
   let yamatoRedeemer: YamatoRedeemer;
   let yamatoSweeper: YamatoSweeper;
   let yamatoDummy: YamatoDummy;
+  let ScoreRegistry: ScoreRegistry;
+  let YmtMinter: YmtMinter;
+  let veYMT: VeYMT;
+  let YMT: YMT;
+  let YmtVesting: YmtVesting;
+  let ScoreWeightController: ScoreWeightController;
   let pool: Pool;
   let priorityRegistry: PriorityRegistry;
   let PRICE: BigNumber;
@@ -63,13 +86,15 @@ describe("contract Yamato - pure func quickier tests", function () {
   let accounts: Signer[];
   let ownerAddress: string;
 
+  let snapshot: SnapshotRestorer;
+
   before(async () => {
     accounts = await ethers.getSigners();
     ownerAddress = await accounts[0].getAddress();
 
     mockPool = await smock.fake<Pool>("Pool");
-    mockFeePool = await getFakeProxy<FeePool>("FeePool");
-    mockFeed = await getFakeProxy<PriceFeedV3>("PriceFeedV3");
+    mockFeePool = await getFakeProxy<FeePoolV2>(contractVersion["FeePool"]);
+    mockFeed = await getFakeProxy<PriceFeedV3>(contractVersion["PriceFeed"]);
     mockYMT = await smock.fake<YMT>("YMT");
     mockCJPY = await smock.fake<CJPY>("CJPY");
     mockCurrencyOS = await smock.fake<CurrencyOS>("CurrencyOS");
@@ -83,8 +108,8 @@ describe("contract Yamato - pure func quickier tests", function () {
     mockCurrencyOS.feePool.returns(mockFeePool.address);
     mockCurrencyOS.currency.returns(mockCJPY.address);
 
-    yamato = await getLinkedProxy<Yamato, Yamato__factory>(
-      "Yamato",
+    yamato = await getLinkedProxy<YamatoV4, YamatoV4__factory>(
+      contractVersion["Yamato"],
       [mockCurrencyOS.address],
       ["PledgeLib"]
     );
@@ -92,15 +117,15 @@ describe("contract Yamato - pure func quickier tests", function () {
     yamatoDepositor = await getLinkedProxy<
       YamatoDepositor,
       YamatoDepositor__factory
-    >("YamatoDepositor", [yamato.address], ["PledgeLib"]);
+    >(contractVersion["YamatoDepositor"], [yamato.address], ["PledgeLib"]);
 
     yamatoBorrower = await getLinkedProxy<
       YamatoBorrower,
       YamatoBorrower__factory
-    >("YamatoBorrower", [yamato.address], ["PledgeLib"]);
+    >(contractVersion["YamatoBorrower"], [yamato.address], ["PledgeLib"]);
 
     yamatoRepayer = await getLinkedProxy<YamatoRepayer, YamatoRepayer__factory>(
-      "YamatoRepayer",
+      contractVersion["YamatoRepayer"],
       [yamato.address],
       ["PledgeLib"]
     );
@@ -108,15 +133,15 @@ describe("contract Yamato - pure func quickier tests", function () {
     yamatoWithdrawer = await getLinkedProxy<
       YamatoWithdrawer,
       YamatoWithdrawer__factory
-    >("YamatoWithdrawer", [yamato.address], ["PledgeLib"]);
+    >(contractVersion["YamatoWithdrawer"], [yamato.address], ["PledgeLib"]);
 
     yamatoRedeemer = await getLinkedProxy<
       YamatoRedeemer,
       YamatoRedeemer__factory
-    >("YamatoRedeemer", [yamato.address], ["PledgeLib"]);
+    >(contractVersion["YamatoRedeemer"], [yamato.address], ["PledgeLib"]);
 
     yamatoSweeper = await getLinkedProxy<YamatoSweeper, YamatoSweeper__factory>(
-      "YamatoSweeper",
+      contractVersion["YamatoSweeper"],
       [yamato.address],
       ["PledgeLib"]
     );
@@ -129,7 +154,36 @@ describe("contract Yamato - pure func quickier tests", function () {
     )).deploy(mockCurrencyOS.address); // This has test funcs to size Yamato contract
 
     mockPriorityRegistry = await getFakeProxy<PriorityRegistry>(
-      "PriorityRegistry"
+      contractVersion["PriorityRegistry"]
+    );
+
+    YmtVesting = await (<YmtVesting__factory>(
+      await ethers.getContractFactory("YmtVesting")
+    )).deploy();
+
+    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy(
+      YmtVesting.address,
+      ownerAddress
+    );
+
+    veYMT = await (<VeYMT__factory>(
+      await ethers.getContractFactory("veYMT")
+    )).deploy(YMT.address);
+
+    ScoreWeightController = await getProxy<
+      ScoreWeightController,
+      ScoreWeightController__factory
+    >(contractVersion["ScoreWeightController"], [YMT.address, veYMT.address]);
+
+    YmtMinter = await getProxy<YmtMinter, YmtMinter__factory>(
+      contractVersion["YmtMinter"],
+      [YMT.address, ScoreWeightController.address]
+    );
+
+    ScoreRegistry = await getLinkedProxy<ScoreRegistry, ScoreRegistry__factory>(
+      contractVersion["ScoreRegistry"],
+      [YmtMinter.address, yamato.address],
+      ["PledgeLib"]
     );
 
     await (
@@ -144,15 +198,18 @@ describe("contract Yamato - pure func quickier tests", function () {
         mockPriorityRegistry.address
       )
     ).wait();
+    await (await yamato.setScoreRegistry(ScoreRegistry.address)).wait();
 
     // Note: Will use later for mintCurrency mockery test in borrow spec
-    pool = await getProxy<Pool, Pool__factory>("Pool", [yamato.address]);
+    pool = await getProxy<Pool, Pool__factory>(contractVersion["Pool"], [
+      yamato.address,
+    ]);
 
     // Note: Will use later for the redeem() test
     priorityRegistry = await getLinkedProxy<
       PriorityRegistry,
       PriorityRegistry__factory
-    >("PriorityRegistry", [yamato.address], ["PledgeLib"]);
+    >(contractVersion["PriorityRegistry"], [yamato.address], ["PledgeLib"]);
 
     await (
       await yamatoDummy.setPriorityRegistry(priorityRegistry.address)
@@ -173,6 +230,16 @@ describe("contract Yamato - pure func quickier tests", function () {
     mockPriorityRegistry.yamato.returns(yamato.address);
     mockPriorityRegistry.upsert.returns(0);
     mockPriorityRegistry.remove.returns(0);
+  });
+
+  beforeEach(async () => {
+    snapshot = await takeSnapshot();
+    PRICE = BigNumber.from(260000).mul(1e18 + "");
+    MCR = BigNumber.from(130);
+  });
+
+  afterEach(async () => {
+    await snapshot.restore();
   });
 
   describe("FR()", function () {
@@ -239,13 +306,13 @@ describe("contract Yamato - pure func quickier tests", function () {
 
 describe("contract Yamato", function () {
   let mockPool: FakeContract<Pool>;
-  let mockFeePool: FakeContract<FeePool>;
+  let mockFeePool: FakeContract<FeePoolV2>;
   let mockFeed: FakeContract<PriceFeedV3>;
   let mockYMT: FakeContract<YMT>;
   let mockCJPY: FakeContract<CJPY>;
   let mockCurrencyOS: FakeContract<CurrencyOS>;
   let mockPriorityRegistry: FakeContract<PriorityRegistry>;
-  let yamato: Yamato;
+  let yamato: YamatoV4;
   let yamatoDepositor: YamatoDepositor;
   let yamatoBorrower: YamatoBorrower;
   let yamatoRepayer: YamatoRepayer;
@@ -255,18 +322,26 @@ describe("contract Yamato", function () {
   let yamatoDummy: YamatoDummy;
   let pool: Pool;
   let priorityRegistry: PriorityRegistry;
+  let ScoreRegistry: ScoreRegistry;
+  let YmtMinter: YmtMinter;
+  let veYMT: VeYMT;
+  let YMT: YMT;
+  let YmtVesting: YmtVesting;
+  let ScoreWeightController: ScoreWeightController;
   let PRICE: BigNumber;
   let MCR: BigNumber;
   let accounts: Signer[];
   let ownerAddress: string;
 
-  beforeEach(async () => {
+  let snapshot: SnapshotRestorer;
+
+  before(async () => {
     accounts = await ethers.getSigners();
     ownerAddress = await accounts[0].getAddress();
 
     mockPool = await smock.fake<Pool>("Pool");
-    mockFeePool = await getFakeProxy<FeePool>("FeePool");
-    mockFeed = await getFakeProxy<PriceFeedV3>("PriceFeedV3");
+    mockFeePool = await getFakeProxy<FeePoolV2>(contractVersion["FeePool"]);
+    mockFeed = await getFakeProxy<PriceFeedV3>(contractVersion["PriceFeed"]);
     mockYMT = await smock.fake<YMT>("YMT");
     mockCJPY = await smock.fake<CJPY>("CJPY");
     mockCurrencyOS = await smock.fake<CurrencyOS>("CurrencyOS");
@@ -280,8 +355,8 @@ describe("contract Yamato", function () {
     mockCurrencyOS.feePool.returns(mockFeePool.address);
     mockCurrencyOS.currency.returns(mockCJPY.address);
 
-    yamato = await getLinkedProxy<Yamato, Yamato__factory>(
-      "Yamato",
+    yamato = await getLinkedProxy<YamatoV4, YamatoV4__factory>(
+      contractVersion["Yamato"],
       [mockCurrencyOS.address],
       ["PledgeLib"]
     );
@@ -289,15 +364,15 @@ describe("contract Yamato", function () {
     yamatoDepositor = await getLinkedProxy<
       YamatoDepositor,
       YamatoDepositor__factory
-    >("YamatoDepositor", [yamato.address], ["PledgeLib"]);
+    >(contractVersion["YamatoDepositor"], [yamato.address], ["PledgeLib"]);
 
     yamatoBorrower = await getLinkedProxy<
       YamatoBorrower,
       YamatoBorrower__factory
-    >("YamatoBorrower", [yamato.address], ["PledgeLib"]);
+    >(contractVersion["YamatoBorrower"], [yamato.address], ["PledgeLib"]);
 
     yamatoRepayer = await getLinkedProxy<YamatoRepayer, YamatoRepayer__factory>(
-      "YamatoRepayer",
+      contractVersion["YamatoRepayer"],
       [yamato.address],
       ["PledgeLib"]
     );
@@ -305,15 +380,15 @@ describe("contract Yamato", function () {
     yamatoWithdrawer = await getLinkedProxy<
       YamatoWithdrawer,
       YamatoWithdrawer__factory
-    >("YamatoWithdrawer", [yamato.address], ["PledgeLib"]);
+    >(contractVersion["YamatoWithdrawer"], [yamato.address], ["PledgeLib"]);
 
     yamatoRedeemer = await getLinkedProxy<
       YamatoRedeemer,
       YamatoRedeemer__factory
-    >("YamatoRedeemer", [yamato.address], ["PledgeLib"]);
+    >(contractVersion["YamatoRedeemer"], [yamato.address], ["PledgeLib"]);
 
     yamatoSweeper = await getLinkedProxy<YamatoSweeper, YamatoSweeper__factory>(
-      "YamatoSweeper",
+      contractVersion["YamatoSweeper"],
       [yamato.address],
       ["PledgeLib"]
     );
@@ -326,7 +401,36 @@ describe("contract Yamato", function () {
     )).deploy(mockCurrencyOS.address); // This has test funcs to size Yamato contract
 
     mockPriorityRegistry = await getFakeProxy<PriorityRegistry>(
-      "PriorityRegistry"
+      contractVersion["PriorityRegistry"]
+    );
+
+    YmtVesting = await (<YmtVesting__factory>(
+      await ethers.getContractFactory("YmtVesting")
+    )).deploy();
+
+    YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy(
+      YmtVesting.address,
+      ownerAddress
+    );
+
+    veYMT = await (<VeYMT__factory>(
+      await ethers.getContractFactory("veYMT")
+    )).deploy(YMT.address);
+
+    ScoreWeightController = await getProxy<
+      ScoreWeightController,
+      ScoreWeightController__factory
+    >(contractVersion["ScoreWeightController"], [YMT.address, veYMT.address]);
+
+    YmtMinter = await getProxy<YmtMinter, YmtMinter__factory>(
+      contractVersion["YmtMinter"],
+      [YMT.address, ScoreWeightController.address]
+    );
+
+    ScoreRegistry = await getLinkedProxy<ScoreRegistry, ScoreRegistry__factory>(
+      contractVersion["ScoreRegistry"],
+      [YmtMinter.address, yamato.address],
+      ["PledgeLib"]
     );
 
     await (
@@ -341,23 +445,47 @@ describe("contract Yamato", function () {
         mockPriorityRegistry.address
       )
     ).wait();
+    await (await yamato.setScoreRegistry(ScoreRegistry.address)).wait();
 
     // Note: Will use later for mintCurrency mockery test in borrow spec
-    pool = await getProxy<Pool, Pool__factory>("Pool", [yamato.address]);
+    pool = await getProxy<Pool, Pool__factory>(contractVersion["Pool"], [
+      yamato.address,
+    ]);
 
     // Note: Will use later for the redeem() test
     priorityRegistry = await getLinkedProxy<
       PriorityRegistry,
       PriorityRegistry__factory
-    >("PriorityRegistry", [yamato.address], ["PledgeLib"]);
+    >(contractVersion["PriorityRegistry"], [yamato.address], ["PledgeLib"]);
 
     await (
       await yamatoDummy.setPriorityRegistry(priorityRegistry.address)
     ).wait();
+  });
 
+  beforeEach(async () => {
+    snapshot = await takeSnapshot();
+    mockPool.depositRedemptionReserve.reset();
+    mockPool.sweepReserve.reset();
+    mockPool.sendETH.reset();
+    mockPool.sendCurrency.reset();
+    mockPool.useSweepReserve.reset();
+    mockPool.useRedemptionReserve.reset();
+    mockPool.redemptionReserve.reset();
+    mockPool.depositSweepReserve.reset();
+    mockFeed.fetchPrice.reset();
+    mockFeed.lastGoodPrice.reset();
+    mockFeed.getPrice.reset();
+    mockCurrencyOS.mintCurrency.reset();
+    mockCurrencyOS.burnCurrency.reset();
+    mockPriorityRegistry.remove.reset();
+    mockPriorityRegistry.upsert.reset();
+
+    mockCurrencyOS.priceFeed.returns(mockFeed.address);
+    mockCurrencyOS.feePool.returns(mockFeePool.address);
+    mockCurrencyOS.currency.returns(mockCJPY.address);
     PRICE = BigNumber.from(260000).mul(1e18 + "");
     MCR = BigNumber.from(130);
-
     mockCJPY.balanceOf.returns(PRICE.mul(1).mul(100).div(MCR));
     mockPool.depositRedemptionReserve.returns(0);
     mockPool.depositSweepReserve.returns(0);
@@ -371,6 +499,11 @@ describe("contract Yamato", function () {
     mockPriorityRegistry.upsert.returns(0);
     mockPriorityRegistry.remove.returns(0);
   });
+
+  afterEach(async () => {
+    await snapshot.restore();
+  });
+
   describe("setPledge()", function () {
     beforeEach(async () => {
       await (

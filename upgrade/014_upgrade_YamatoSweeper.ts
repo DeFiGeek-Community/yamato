@@ -1,1 +1,5 @@
-import("./mods/014_upgrade_YamatoSweeper").catch((e) => console.log(e));
+import main from "./mods/014_upgrade_YamatoSweeper";
+
+main().catch((e) => {
+  console.error("An error occurred during the upgrade process:", e);
+});

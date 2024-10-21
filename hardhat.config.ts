@@ -16,6 +16,7 @@ import "hardhat-abi-exporter";
 import "hardhat-contract-sizer";
 import "@openzeppelin/hardhat-upgrades";
 import "@openzeppelin/hardhat-defender";
+import "hardhat-gas-reporter";
 
 // TODO
 // make a defender multisig on goerli  0x585876db533ab88A66847891054f2bf78BCcabcA
@@ -37,6 +38,20 @@ module.exports = {
     compilers: [
       {
         version: "0.8.4",
+        settings: {
+          outputSelection: {
+            "*": {
+              "*": ["storageLayout"],
+            },
+          },
+          optimizer: {
+            enabled: true,
+            runs: 1000,
+          },
+        },
+      },
+      {
+        version: "0.8.18",
         settings: {
           outputSelection: {
             "*": {
@@ -125,10 +140,11 @@ module.exports = {
   contractSizer: {
     alphaSort: true,
     disambiguatePaths: false,
-    runOnCompile: true,
+    runOnCompile: false,
     strict: false,
   },
   gasReporter: {
+    enabled: true,
     currency: "USD",
     gasPrice: 100,
   },
@@ -138,7 +154,9 @@ module.exports = {
     alwaysGenerateOverloads: false, // should overloads with full signatures like deposit(uint256) be generated always, even if there are no overloads?
   },
   paths: {
-    tests: "./test/unit",
+    // tests: "./test/unit",
+    // tests: "./test/v1.5",
+    tests: "./test",
   },
   defender: {
     apiKey: process.env.DEFENDER_TEAM_API_KEY,

@@ -3,11 +3,16 @@ import { FakeContract, smock } from "@defi-wonderland/smock";
 import chai, { expect } from "chai";
 import { Signer, BigNumber } from "ethers";
 import {
+  takeSnapshot,
+  SnapshotRestorer,
+} from "@nomicfoundation/hardhat-network-helpers";
+import {
   ChainLinkMock,
   PriceFeedV3,
   PriceFeedV3__factory,
 } from "../../typechain";
 import { getProxy } from "../../src/testUtil";
+import { contractVersion } from "../param/version";
 
 chai.use(smock.matchers);
 
@@ -112,7 +117,9 @@ async function setMocks(conf: MockConf) {
 }
 describe("PriceFeed", function () {
   let lastMockInput;
-  beforeEach(async () => {
+  let snapshot: SnapshotRestorer;
+
+  before(async () => {
     accounts = await ethers.getSigners();
     ownerAddress = await accounts[0].getAddress();
     // https://github.com/liquity/dev/blob/main/packages/contracts/contracts/Dependencies/AggregatorV3Interface.sol
@@ -138,9 +145,8 @@ describe("PriceFeed", function () {
     await setMocks(lastMockInput);
 
     feed = await getProxy<PriceFeedV3, PriceFeedV3__factory>(
-      "PriceFeed",
-      [mockAggregatorV3EthUsd.address, mockAggregatorV3JpyUsd.address],
-      3
+      contractVersion["PriceFeed"],
+      [mockAggregatorV3EthUsd.address, mockAggregatorV3JpyUsd.address]
     );
 
     assertChainlink(
@@ -148,6 +154,14 @@ describe("PriceFeed", function () {
       await feed.getStatus(),
       lastMockInput
     );
+  });
+
+  beforeEach(async () => {
+    snapshot = await takeSnapshot();
+  });
+
+  afterEach(async () => {
+    await snapshot.restore();
   });
 
   describe("constructor()", function () {
