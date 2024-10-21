@@ -2,7 +2,7 @@ pragma solidity 0.8.4;
 
 /*
  * SPDX-License-Identifier: GPL-3.0-or-later
- * Copyright (C) 2023 Yamato Protocol (DeFiGeek Community Japan)
+ * Copyright (C) 2024 Yamato Protocol (DeFiGeek Community Japan)
  */
 
 //solhint-disable max-line-length
@@ -67,8 +67,8 @@ contract YmtMinter is
         uint256 _toMint = totalMint - minted[for_][scoreAddr_];
 
         if (_toMint != 0) {
-            IYMT(YMT()).mint(for_, _toMint);
             minted[for_][scoreAddr_] = totalMint;
+            IYMT(YMT()).mint(for_, _toMint);
 
             emit Minted(for_, scoreAddr_, totalMint);
         }
@@ -110,7 +110,7 @@ contract YmtMinter is
         address scoreAddr_,
         address for_
     ) external nonReentrant returns (uint256) {
-        uint256 toMint = 0;
+        uint256 toMint;
         if (allowedToMintFor[msg.sender][for_]) {
             toMint = _mintFor(scoreAddr_, for_);
         }

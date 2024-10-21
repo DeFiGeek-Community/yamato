@@ -2,14 +2,14 @@ pragma solidity 0.8.4;
 
 /*
  * SPDX-License-Identifier: GPL-3.0-or-later
- * Copyright (C) 2023 Yamato Protocol (DeFiGeek Community Japan)
+ * Copyright (C) 2024 Yamato Protocol (DeFiGeek Community Japan)
  */
 
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import "./Dependencies/YamatoAction.sol";
+import "./Dependencies/YamatoStore.sol";
 import "./Dependencies/PledgeLib.sol";
 import "./Interfaces/IScoreWeightController.sol";
 import "./Interfaces/IYMT.sol";
@@ -17,7 +17,7 @@ import "./Interfaces/IYmtMinter.sol";
 import "./Interfaces/IveYMT.sol";
 import "./Interfaces/IYamatoV4.sol";
 
-contract ScoreRegistry is YamatoAction {
+contract ScoreRegistry is YamatoStore {
     using PledgeLib for IYamato.Pledge;
 
     event UpdateScoreLimit(
@@ -82,7 +82,7 @@ contract ScoreRegistry is YamatoAction {
         address ymtMinterAddr,
         address yamatoAddr
     ) public initializer {
-        __YamatoAction_init(yamatoAddr);
+        __YamatoStore_init(yamatoAddr);
 
         bytes32 YMT_KEY = bytes32(keccak256(abi.encode(YMT_SLOT_ID)));
         bytes32 VEYMT_KEY = bytes32(keccak256(abi.encode(VEYMT_SLOT_ID)));
@@ -118,6 +118,22 @@ contract ScoreRegistry is YamatoAction {
      */
     function checkpoint(address addr) public onlyYamato {
         _checkpoint(addr);
+    }
+
+    /**
+     * @notice Performs a checkpoint update for multiple users based on their pledges.
+     * @dev Iterates through an array of pledge owners and invokes the internal `_checkpoint` function.
+     * @param pledgesOwner_ An array of addresses representing the owners of the pledges to be checkpointed.
+     */
+    function bulkCheckpoint(
+        address[] memory pledgesOwner_
+    ) external onlyYamato {
+        for (uint256 i; i < pledgesOwner_.length; ++i) {
+            if (pledgesOwner_[i] == address(0)) {
+                break;
+            }
+            _checkpoint(pledgesOwner_[i]);
+        }
     }
 
     /**
@@ -157,7 +173,7 @@ contract ScoreRegistry is YamatoAction {
                 block.timestamp
             );
 
-            for (uint256 i = 0; i < 500; ) {
+            for (uint256 i; i < 500; ) {
                 uint256 dt = _weekTime - _prevWeekTime;
                 uint256 w = IScoreWeightController(scoreWeightController())
                     .scoreRelativeWeight(
@@ -197,7 +213,7 @@ contract ScoreRegistry is YamatoAction {
             }
         }
 
-        _st.period += 1;
+        ++_st.period;
         period = _st.period;
         periodTimestamp[_st.period] = block.timestamp;
         integrateInvSupply[_st.period] = _st.integrateInvSupply;
@@ -243,24 +259,14 @@ contract ScoreRegistry is YamatoAction {
         uint256 _votingBalance = IveYMT(veYMT()).balanceOf(addr_);
         uint256 _votingTotal = IveYMT(veYMT()).totalSupply();
 
-        uint256 _limit = (debt_ * TOKENLESS_PRODUCTION) / 10;
-        if (_votingTotal > 0) {
-            _limit +=
-                (((totalDebt_ * _votingBalance) / _votingTotal) *
-                    (10 - TOKENLESS_PRODUCTION)) /
-                10;
-        }
-
-        _limit = min(debt_, _limit);
+        uint256 _limit = calculateLimit(
+            debt_,
+            totalDebt_,
+            collateralRatio_,
+            _votingBalance,
+            _votingTotal
+        );
         uint256 _oldBal = workingBalances[addr_];
-
-        if (debt_ > 0) {
-            // Apply the coefficient based on the collateral ratio provided
-            uint256 coefficient = calculateCoefficient(collateralRatio_);
-            // Adjust the limit based on the coefficient
-            _limit = (_limit * coefficient) / 10;
-        }
-
         workingBalances[addr_] = _limit;
         uint256 _workingSupply = workingSupply + _limit - _oldBal;
         workingSupply = _workingSupply;
@@ -273,6 +279,79 @@ contract ScoreRegistry is YamatoAction {
             _limit,
             _workingSupply
         );
+    }
+
+    /**
+     * @notice Bulk updates the score limits for multiple users based on their pledges.
+     * @param pledges_ An array of pledges to be updated.
+     * @param totalDebt_ The total debt amount within the system.
+     * @param priceFeedAddress_ The address of the current ETH price feed in the system's currency.
+     */
+    function bulkUpdateScoreLimit(
+        IYamato.Pledge[] memory pledges_,
+        uint256 totalDebt_,
+        address priceFeedAddress_
+    ) external onlyYamato {
+        uint256 _votingTotal = IveYMT(veYMT()).totalSupply();
+        uint256 _workingSupply = workingSupply;
+        for (uint256 i; i < pledges_.length; ++i) {
+            address _addr = pledges_[i].owner;
+            if (_addr == address(0)) {
+                break;
+            }
+            uint256 _debt = pledges_[i].debt;
+            uint256 _oldBal = workingBalances[_addr];
+
+            if (_debt == 0) {
+                workingBalances[_addr] = 0;
+                _workingSupply -= _oldBal;
+                continue;
+            }
+
+            uint256 _collateralRatio = pledges_[i].getICR(priceFeedAddress_);
+            uint256 _votingBalance = IveYMT(veYMT()).balanceOf(_addr);
+            uint256 _limit = calculateLimit(
+                _debt,
+                totalDebt_,
+                _collateralRatio,
+                _votingBalance,
+                _votingTotal
+            );
+            workingBalances[_addr] = _limit;
+            _workingSupply = _workingSupply + _limit - _oldBal;
+
+            emit UpdateScoreLimit(
+                _addr,
+                _debt,
+                totalDebt_,
+                _collateralRatio,
+                _limit,
+                _workingSupply
+            );
+        }
+        workingSupply = _workingSupply;
+    }
+
+    function calculateLimit(
+        uint256 debt_,
+        uint256 totalDebt_,
+        uint256 collateralRatio_,
+        uint256 votingBalance_,
+        uint256 votingTotal_
+    ) internal pure returns (uint256) {
+        uint256 limit = (debt_ * TOKENLESS_PRODUCTION) / 10;
+        if (votingTotal_ > 0) {
+            limit +=
+                (((totalDebt_ * votingBalance_) / votingTotal_) *
+                    (10 - TOKENLESS_PRODUCTION)) /
+                10;
+        }
+        limit = min(debt_, limit);
+        if (debt_ > 0) {
+            uint256 coefficient = calculateCoefficient(collateralRatio_);
+            limit = (limit * coefficient) / 10;
+        }
+        return limit;
     }
 
     /**

@@ -2,13 +2,14 @@ pragma solidity 0.8.4;
 
 /*
  * SPDX-License-Identifier: GPL-3.0-or-later
- * Copyright (C) 2023 Yamato Protocol (DeFiGeek Community Japan)
+ * Copyright (C) 2024 Yamato Protocol (DeFiGeek Community Japan)
  */
 
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "./Interfaces/IYMT.sol";
 
 /**
@@ -29,6 +30,9 @@ contract veYMT is ReentrancyGuard {
     //   |/
     // 0 +--------+------> time
     //       maxtime (4 years?)
+
+    using SafeCast for uint256;
+    using SafeCast for int256;
 
     struct Point {
         int128 bias;
@@ -77,15 +81,17 @@ contract veYMT is ReentrancyGuard {
     mapping(address => uint256) public userPointEpoch;
     mapping(uint256 => int128) public slopeChanges; // time -> signed slope change
 
+    // depositor -> user -> allowed
+    mapping(address => mapping(address => bool)) public depositForAllowed;
+    // user -> all allowed
+    mapping(address => bool) public depositForAllAllowed;
+
     // Aragon's view methods for compatibility
-    address public controller;
     bool public transfersEnabled;
 
     string public name;
     string public symbol;
     uint8 public decimals;
-
-    address public futureAdmin;
 
     /**
      * @notice Contract constructor
@@ -95,7 +101,6 @@ contract veYMT is ReentrancyGuard {
         token = tokenAddr_;
         pointHistory[0].blk = block.number;
         pointHistory[0].ts = block.timestamp;
-        controller = msg.sender;
         transfersEnabled = true;
 
         decimals = IYMT(tokenAddr_).decimals();
@@ -149,8 +154,8 @@ contract veYMT is ReentrancyGuard {
     ) internal {
         Point memory _uOld;
         Point memory _uNew;
-        int128 _oldDSlope = 0;
-        int128 _newDSlope = 0;
+        int128 _oldDSlope;
+        int128 _newDSlope;
         uint256 _epoch = epoch;
 
         if (addr_ != address(0)) {
@@ -162,7 +167,7 @@ contract veYMT is ReentrancyGuard {
                 }
                 _uOld.bias =
                     _uOld.slope *
-                    int128(uint128(oldLocked_.end - block.timestamp));
+                    castUint256ToInt128(oldLocked_.end - block.timestamp);
             }
 
             if (newLocked_.end > block.timestamp && newLocked_.amount > 0) {
@@ -173,7 +178,7 @@ contract veYMT is ReentrancyGuard {
                 }
                 _uNew.bias =
                     _uNew.slope *
-                    int128(uint128(newLocked_.end - block.timestamp));
+                    castUint256ToInt128(newLocked_.end - block.timestamp);
             }
 
             // Read values of scheduled changes in the slope
@@ -214,7 +219,7 @@ contract veYMT is ReentrancyGuard {
             ts: _lastPoint.ts,
             blk: _lastPoint.blk
         });
-        uint256 _blockSlope = 0;
+        uint256 _blockSlope;
         if (block.timestamp > _lastPoint.ts) {
             _blockSlope =
                 (MULTIPLIER * (block.number - _lastPoint.blk)) /
@@ -232,7 +237,7 @@ contract veYMT is ReentrancyGuard {
             // Hopefully it won't happen that this won't get used in 5 years!
             // If it does, users will be able to withdraw but vote weight will be broken
             _ti += WEEK;
-            int128 _dSlope = 0;
+            int128 _dSlope;
             if (_ti > block.timestamp) {
                 _ti = block.timestamp;
             } else {
@@ -241,7 +246,7 @@ contract veYMT is ReentrancyGuard {
 
             _lastPoint.bias -=
                 _lastPoint.slope *
-                int128(uint128(_ti) - uint128(_lastCheckpoint));
+                castInt256ToInt128(_ti.toInt256() - _lastCheckpoint.toInt256());
             _lastPoint.slope += _dSlope;
 
             if (_lastPoint.bias < 0) {
@@ -260,7 +265,7 @@ contract veYMT is ReentrancyGuard {
                 (_blockSlope * (_ti - _initialLastPoint.ts)) /
                 MULTIPLIER;
 
-            _epoch += 1;
+            ++_epoch;
 
             if (_ti == block.timestamp) {
                 _lastPoint.blk = block.number;
@@ -360,7 +365,7 @@ contract veYMT is ReentrancyGuard {
         supply = _supplyBefore + value_;
 
         // Adding to existing lock, or if a lock is expired - creating a new one
-        _locked.amount += int128(uint128(value_));
+        _locked.amount += castUint256ToInt128(value_);
         if (unlockTime_ != 0) {
             _locked.end = unlockTime_;
         }
@@ -400,6 +405,10 @@ contract veYMT is ReentrancyGuard {
      * @param value_ Amount to add to user's lock
      */
     function depositFor(address addr_, uint256 value_) external nonReentrant {
+        require(
+            depositForAllAllowed[addr_] || depositForAllowed[msg.sender][addr_],
+            "Not allowed to deposit for this address"
+        );
         LockedBalance memory _locked = locked[addr_];
 
         require(value_ > 0, "Need non-zero value");
@@ -410,6 +419,23 @@ contract veYMT is ReentrancyGuard {
         );
 
         _depositFor(addr_, value_, 0, locked[addr_], DEPOSIT_FOR_TYPE);
+    }
+
+    /**
+     * @notice Toggles the permission for a specific depositor to call depositFor on behalf of the message sender.
+     * @param depositor_ The address of the depositor whose permission is being toggled.
+     */
+    function toggleDepositForApproval(address depositor_) external {
+        depositForAllowed[depositor_][msg.sender] = !depositForAllowed[
+            depositor_
+        ][msg.sender];
+    }
+
+    /**
+     * @notice Toggles the permission for all addresses to call depositFor on behalf of the message sender.
+     */
+    function toggleDepositForAllApproval() external {
+        depositForAllAllowed[msg.sender] = !depositForAllAllowed[msg.sender];
     }
 
     /**
@@ -542,10 +568,10 @@ contract veYMT is ReentrancyGuard {
         uint256 maxEpoch_
     ) internal view returns (uint256) {
         // Binary search
-        uint256 _min = 0;
+        uint256 _min;
         uint256 _max = maxEpoch_;
         unchecked {
-            for (uint256 i; i < 128; i++) {
+            for (uint256 i; i < 128; ++i) {
                 // Will be always enough for 128-bit numbers
                 if (_min >= _max) {
                     break;
@@ -625,11 +651,11 @@ contract veYMT is ReentrancyGuard {
         require(block_ <= block.number, "Cannot look up future block");
 
         // Binary search
-        uint256 min_ = 0;
+        uint256 min_;
         uint256 max_ = userPointEpoch[addr_];
 
         unchecked {
-            for (uint i = 0; i < 128; i++) {
+            for (uint i; i < 128; ++i) {
                 // Will be always enough for 128-bit numbers
                 if (min_ >= max_) {
                     break;
@@ -647,8 +673,8 @@ contract veYMT is ReentrancyGuard {
         uint256 _maxEpoch = epoch;
         uint256 _epoch = findBlockEpoch(block_, _maxEpoch);
         Point memory _point0 = pointHistory[_epoch];
-        uint256 _dBlock = 0;
-        uint256 _dt = 0;
+        uint256 _dBlock;
+        uint256 _dt;
 
         if (_epoch < _maxEpoch) {
             Point memory _point1 = pointHistory[_epoch + 1];
@@ -691,7 +717,7 @@ contract veYMT is ReentrancyGuard {
         }
         for (uint256 i; i < 255; ) {
             _ti += WEEK;
-            int128 _dSlope = 0;
+            int128 _dSlope;
             if (_ti > t_) {
                 _ti = t_;
             } else {
@@ -754,7 +780,7 @@ contract veYMT is ReentrancyGuard {
         if (_point.blk > block_) {
             return 0;
         }
-        uint256 _dt = 0;
+        uint256 _dt;
         if (_targetEpoch < _epoch) {
             Point memory _pointNext = pointHistory[_targetEpoch + 1];
             if (_point.blk != _pointNext.blk) {
@@ -773,14 +799,11 @@ contract veYMT is ReentrancyGuard {
         return supplyAt(_point, _point.ts + _dt);
     }
 
-    /**
-     * @dev Dummy method required for Aragon compatibility
-     */
-    function changeController(address newController) external {
-        require(
-            msg.sender == controller,
-            "Only the controller can call this function"
-        );
-        controller = newController;
+    function castUint256ToInt128(uint256 value) public pure returns (int128) {
+        return value.toInt256().toInt128();
+    }
+
+    function castInt256ToInt128(int256 value) public pure returns (int128) {
+        return value.toInt128();
     }
 }

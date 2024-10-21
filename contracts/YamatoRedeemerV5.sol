@@ -2,7 +2,7 @@ pragma solidity 0.8.4;
 
 /*
  * SPDX-License-Identifier: GPL-3.0-or-later
- * Copyright (C) 2023 Yamato Protocol (DeFiGeek Community Japan)
+ * Copyright (C) 2024 Yamato Protocol (DeFiGeek Community Japan)
  */
 
 //solhint-disable max-line-length
@@ -44,10 +44,6 @@ contract YamatoRedeemerV5 is IYamatoRedeemerV4, YamatoAction {
         ICurrencyOS _currencyOS = ICurrencyOS(currencyOS());
         IERC20 _cjpy = IERC20(_currencyOS.currency());
         IYamato _yamato = IYamato(yamato());
-
-        IScoreRegistry _scoreRegistry = IScoreRegistry(
-            IYamatoV4(yamato()).scoreRegistry()
-        );
 
         vars.ethPriceInCurrency = IPriceFeedV3(priceFeed()).fetchPrice();
         if (_args.isCoreRedemption) {
@@ -100,11 +96,6 @@ contract YamatoRedeemerV5 is IYamatoRedeemerV4, YamatoAction {
             }
 
             IYamato.Pledge memory _pledge = _yamato.getPledge(_pledgeAddr);
-
-            /*
-                Score checkpoint
-            */
-            _scoreRegistry.checkpoint(_pledge.owner);
 
             uint256 _ICRpertenk = _pledge.getICRWithPrice(
                 vars.ethPriceInCurrency
@@ -218,7 +209,7 @@ contract YamatoRedeemerV5 is IYamatoRedeemerV4, YamatoAction {
         /*
             On memory update: priority
         */
-        for (uint256 i; i < vars._bulkedPledges.length; i++) {
+        for (uint256 i; i < vars._bulkedPledges.length; ++i) {
             vars._bulkedPledges[i].priority = _priorities[i];
         }
 
@@ -237,17 +228,21 @@ contract YamatoRedeemerV5 is IYamatoRedeemerV4, YamatoAction {
         IYamato(yamato()).setTotalColl(totalColl - vars._toBeRedeemedInEth);
 
         /*
+                Score checkpoint
+            */
+        IScoreRegistry _scoreRegistry = IScoreRegistry(
+            IYamatoV4(yamato()).scoreRegistry()
+        );
+        _scoreRegistry.bulkCheckpoint(vars._pledgesOwner);
+
+        /*
             Update score
         */
-        for (uint256 i; i < vars._bulkedPledges.length; i++) {
-            IYamato.Pledge memory _pledge = vars._bulkedPledges[i];
-            _scoreRegistry.updateScoreLimit(
-                _pledge.owner,
-                _pledge.debt,
-                totalDebt - vars._toBeRedeemed,
-                _pledge.getICR(priceFeed())
-            );
-        }
+        _scoreRegistry.bulkUpdateScoreLimit(
+            vars._bulkedPledges,
+            totalDebt - vars._toBeRedeemed,
+            priceFeed()
+        );
 
         /*
             Handle compensations

@@ -1,14 +1,9 @@
-import {
-  setNetwork,
-  getDeploymentAddressPathWithTag,
-  getFoundation,
-  setProvider,
-} from "../../src/deployUtil";
+import { setNetwork, getFoundation, setProvider } from "../../src/deployUtil";
 import { genABI } from "../../src/genABI";
-import { readFileSync } from "fs";
+import { readDeploymentAddress } from "../../src/addressUtil";
 import * as ethers from "ethers";
 
-(async () => {
+async function main() {
   setNetwork(process.env.NETWORK);
   await setProvider();
 
@@ -39,9 +34,7 @@ import * as ethers from "ethers";
   const contractInstances = {};
 
   for (const contractName of contracts) {
-    const proxyAddress = readFileSync(
-      getDeploymentAddressPathWithTag(contractName, "ERC1967Proxy")
-    ).toString();
+    const proxyAddress = readDeploymentAddress(contractName, "ERC1967Proxy");
     contractInstances[contractName] = new ethers.Contract(
       proxyAddress,
       genABI(contractName),
@@ -49,22 +42,20 @@ import * as ethers from "ethers";
     );
   }
 
-  async function checkImplementation(contractInstance, versionTag) {
+  async function checkImplementation(contractInstance, contractName) {
     const currentImpl = await contractInstance.getImplementation();
-    console.log(`${versionTag}Proxy`, contractInstance.address);
-    console.log("governance", await contractInstance.governance());
-    const expectedImpl = readFileSync(
-      getDeploymentAddressPathWithTag(versionTag, "UUPSImpl")
-    ).toString();
-    console.log(`${versionTag}Impl`, currentImpl);
-    console.log(`${versionTag}NewImpl`, expectedImpl);
-    console.log(`${versionTag}Impl`, currentImpl.toString() === expectedImpl);
+    console.log(`${contractName}Proxy`, contractInstance.address);
+    const expectedImpl = readDeploymentAddress(contractName, "UUPSImpl");
+    console.log(`${contractName}Impl`, currentImpl);
+    console.log(`${contractName}Impl`, currentImpl.toString() === expectedImpl);
   }
 
   for (const [contractName, versionTag] of Object.entries(versions)) {
     await checkImplementation(
       contractInstances[contractName],
-      `${contractName}${versionTag}`
+      `${contractName}`
     );
   }
-})();
+}
+
+export default main;

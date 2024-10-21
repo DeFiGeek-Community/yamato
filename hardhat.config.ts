@@ -16,6 +16,7 @@ import "hardhat-abi-exporter";
 import "hardhat-contract-sizer";
 import "@openzeppelin/hardhat-upgrades";
 import "@openzeppelin/hardhat-defender";
+import "hardhat-gas-reporter";
 
 // TODO
 // make a defender multisig on goerli  0x585876db533ab88A66847891054f2bf78BCcabcA
@@ -143,6 +144,7 @@ module.exports = {
     strict: false,
   },
   gasReporter: {
+    enabled: true,
     currency: "USD",
     gasPrice: 100,
   },

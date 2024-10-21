@@ -2,7 +2,7 @@ pragma solidity 0.8.4;
 
 /*
  * SPDX-License-Identifier: GPL-3.0-or-later
- * Copyright (C) 2023 Yamato Protocol (DeFiGeek Community Japan)
+ * Copyright (C) 2024 Yamato Protocol (DeFiGeek Community Japan)
  */
 
 import "./Interfaces/IYMT.sol";
@@ -84,7 +84,7 @@ contract YmtVesting {
             "Users and amounts length mismatch"
         );
 
-        for (uint256 i = 0; i < users.length; i++) {
+        for (uint256 i = 0; i < users.length; ++i) {
             require(users[i] != address(0), "Invalid user address");
             vestingAmounts[users[i]] = amounts[i];
             emit ClaimAmountSet(users[i], amounts[i]);

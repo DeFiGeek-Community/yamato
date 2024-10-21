@@ -5,6 +5,7 @@ import {
   takeSnapshot,
   SnapshotRestorer,
 } from "@nomicfoundation/hardhat-network-helpers";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { BigNumber } from "ethers";
 import {
   YMT,
@@ -19,17 +20,21 @@ const year = Constants.year;
 const YEAR = Constants.YEAR;
 
 describe("YMT", function () {
+  let accounts: SignerWithAddress[];
   let YMT: YMT;
   let YmtVesting: YmtVesting;
   let snapshot: SnapshotRestorer;
 
   before(async function () {
+    accounts = await ethers.getSigners();
+
     YmtVesting = await (<YmtVesting__factory>(
       await ethers.getContractFactory("YmtVesting")
     )).deploy();
 
     YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy(
-      YmtVesting.address
+      YmtVesting.address,
+      accounts[0].address
     );
   });
 

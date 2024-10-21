@@ -1,14 +1,5 @@
-import { deployImplContract } from "../../src/deployUtil";
+import main from "../mods/110_deployImpl_PriceFeed";
 
-const IMPL_NAME_BASE = "priceFeed";
-const version = "V3";
-
-async function main() {
-  const implNameBase = `${IMPL_NAME_BASE}${version}`;
-  await deployImplContract(implNameBase, false);
-}
-
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
+main().catch((e) => {
+  console.error("An error occurred:", e);
 });

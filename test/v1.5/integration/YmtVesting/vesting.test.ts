@@ -30,7 +30,8 @@ describe("YmtVesting Integration Tests", function () {
       await ethers.getContractFactory("YmtVesting")
     )).deploy();
     YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy(
-      YmtVesting.address
+      YmtVesting.address,
+      accounts[0].address
     );
     await YmtVesting.setYmtToken(YMT.address);
     await YmtVesting.setAdmin(accounts[1].address);

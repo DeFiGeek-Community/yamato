@@ -162,7 +162,8 @@ describe("contract Yamato - pure func quickier tests", function () {
     )).deploy();
 
     YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy(
-      YmtVesting.address
+      YmtVesting.address,
+      ownerAddress
     );
 
     veYMT = await (<VeYMT__factory>(
@@ -330,11 +331,13 @@ describe("contract Yamato", function () {
   let PRICE: BigNumber;
   let MCR: BigNumber;
   let accounts: Signer[];
+  let ownerAddress: string;
 
   let snapshot: SnapshotRestorer;
 
   before(async () => {
     accounts = await ethers.getSigners();
+    ownerAddress = await accounts[0].getAddress();
 
     mockPool = await smock.fake<Pool>("Pool");
     mockFeePool = await getFakeProxy<FeePoolV2>(contractVersion["FeePool"]);
@@ -406,7 +409,8 @@ describe("contract Yamato", function () {
     )).deploy();
 
     YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy(
-      YmtVesting.address
+      YmtVesting.address,
+      ownerAddress
     );
 
     veYMT = await (<VeYMT__factory>(
