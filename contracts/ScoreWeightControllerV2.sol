@@ -104,10 +104,10 @@ contract ScoreWeightControllerV2 is UUPSBase {
         timeTotal = (block.timestamp / WEEK) * WEEK;
     }
 
-     /**
-      * @notice Calculates the sum of score weights for the same type week-over-week, accounting for missed check-ins, and returns the sum for the upcoming week.
-      * @dev Iterates up to 500 weeks to update the sum. Used internally to maintain accurate weight totals.
-      */
+    /**
+     * @notice Calculates the sum of score weights for the same type week-over-week, accounting for missed check-ins, and returns the sum for the upcoming week.
+     * @dev Iterates up to 500 weeks to update the sum. Used internally to maintain accurate weight totals.
+     */
     function _getSum() internal returns (uint256) {
         uint256 _t = timeSum;
         if (_t > 0) {
@@ -140,10 +140,10 @@ contract ScoreWeightControllerV2 is UUPSBase {
         }
     }
 
-     /**
-      * @notice Calculates the historic total weights week-over-week, accounting for missed check-ins, and returns the total for the upcoming week.
-      * @dev Iterates up to 500 weeks to update the total weight. Invokes _getSum to ensure all score weights are up to date.
-      */
+    /**
+     * @notice Calculates the historic total weights week-over-week, accounting for missed check-ins, and returns the total for the upcoming week.
+     * @dev Iterates up to 500 weeks to update the total weight. Invokes _getSum to ensure all score weights are up to date.
+     */
     function _getTotal() internal returns (uint256) {
         uint256 _t = timeTotal;
         if (_t > block.timestamp) {
@@ -172,11 +172,11 @@ contract ScoreWeightControllerV2 is UUPSBase {
         return _pt;
     }
 
-     /**
-      * @notice Calculates the historic weight of a specific score week-over-week, accounting for missed check-ins, and returns the weight for the upcoming week.
-      * @param scoreAddr_ The address of the score whose weight is being calculated.
-      * @dev Iterates up to 500 weeks to update the score's weight. Used internally to maintain accurate score weights.
-      */
+    /**
+     * @notice Calculates the historic weight of a specific score week-over-week, accounting for missed check-ins, and returns the weight for the upcoming week.
+     * @param scoreAddr_ The address of the score whose weight is being calculated.
+     * @dev Iterates up to 500 weeks to update the score's weight. Used internally to maintain accurate score weights.
+     */
     function _getWeight(address scoreAddr_) internal returns (uint256) {
         uint256 _t = timeWeight[scoreAddr_];
         if (_t > 0) {
@@ -209,12 +209,12 @@ contract ScoreWeightControllerV2 is UUPSBase {
         }
     }
 
-     /**
-      * @notice Adds a new score with a specified weight
-      * @param addr_ The address of the score to add
-      * @param weight_ The weight of the score
-      * @dev This function can only be called by governance. It emits a NewScore event upon success.
-      */
+    /**
+     * @notice Adds a new score with a specified weight
+     * @param addr_ The address of the score to add
+     * @param weight_ The weight of the score
+     * @dev This function can only be called by governance. It emits a NewScore event upon success.
+     */
     function addScore(address addr_, uint256 weight_) external onlyGovernance {
         require(scores[addr_] == 0, "cannot add the same gauge twice");
         int128 _n = nScores;
@@ -228,12 +228,12 @@ contract ScoreWeightControllerV2 is UUPSBase {
         emit NewScore(addr_, weight_);
     }
 
-     /**
-      * @notice Updates the weight for an existing score
-      * @param addr_ The address of the score to update
-      * @param weight_ The new weight for the score
-      * @dev This function can only be called by governance. It checks if the score exists and if its timing has not been previously set. Emits ScoreTimingUpdated event upon success.
-      */
+    /**
+     * @notice Updates the weight for an existing score
+     * @param addr_ The address of the score to update
+     * @param weight_ The new weight for the score
+     * @dev This function can only be called by governance. It checks if the score exists and if its timing has not been previously set. Emits ScoreTimingUpdated event upon success.
+     */
     function updateScore(
         address addr_,
         uint256 weight_
