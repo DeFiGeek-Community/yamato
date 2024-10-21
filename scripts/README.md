@@ -38,4 +38,4 @@ npx hardhat run scripts/proposeSetVestingClaims.ts --network <network>
 
 ### `proposeSetVestingClaims.ts`
 
-このスクリプトは、`TokenDistributions.json`から読み込んだトークン配布データを使用して、YmtVestingコントラクトに対して複数の請求額を設定するトランザクションを作成し、提案します。ローカルネットワークでは直接実行され、それ以外のネットワークではsafeでTX作成されます。
+このスクリプトは、`TokenDistributions.json`から読み込んだトークン配布データを使用して、YmtVesting コントラクトに対して複数の請求額を設定するトランザクションを作成し、提案します。ローカルネットワークでは直接実行され、それ以外のネットワークでは safe で TX 作成されます。
