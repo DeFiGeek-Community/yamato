@@ -54,7 +54,8 @@ describe("scoreWeightController", function () {
     )).deploy();
 
     YMT = await (<YMT__factory>await ethers.getContractFactory("YMT")).deploy(
-      YmtVesting.address
+      YmtVesting.address,
+      accounts[0].address
     );
 
     veYMT = await (<VeYMT__factory>(
@@ -102,15 +103,6 @@ describe("scoreWeightController", function () {
     });
 
     it("reverts when trying to add a score that already exists", async function () {
-      scoreWeightControllerV2 = await upgradeProxy(
-        scoreWeightController.address,
-        "ScoreWeightControllerV2",
-        undefined,
-        {
-          call: { fn: "initializeV2" },
-        }
-      );
-
       const weight = BigNumber.from(1000);
 
       // First addition should succeed
