@@ -6,6 +6,7 @@ npx hardhat run scripts/processBlockchainEvents.ts
 npx hardhat run scripts/blockPriceDataExporter.ts
 npx hardhat run scripts/calculateEventScores.ts
 npx hardhat run scripts/calculateTokenDistributions.ts
+npx hardhat run scripts/proposeSetVestingClaims.ts --network <network>
 ```
 
 ##各ファイル
@@ -34,3 +35,7 @@ npx hardhat run scripts/calculateTokenDistributions.ts
 ### `calculateTokenDistributions.ts`
 
 `processedEvents.json`からイベントスコアデータを読み込み、それらのスコアに基づいてトークンの配布量を計算します。各参加者に配布されるトークンの量は、その参加者のイベントスコアの全体に占める割合に基づいています。計算されたトークン配布量は、`TokenDistributions.json`に保存されます。
+
+### `proposeSetVestingClaims.ts`
+
+このスクリプトは、`TokenDistributions.json`から読み込んだトークン配布データを使用して、YmtVestingコントラクトに対して複数の請求額を設定するトランザクションを作成し、提案します。ローカルネットワークでは直接実行され、それ以外のネットワークではsafeでTX作成されます。
