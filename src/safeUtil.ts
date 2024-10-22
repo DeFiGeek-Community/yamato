@@ -11,14 +11,23 @@ interface Config {
   SAFE_ADDRESS: string;
 }
 
+const networkToChainId: { [key: string]: bigint } = {
+  mainnet: BigInt(1),
+  goerli: BigInt(5),
+  sepolia: BigInt(11155111),
+};
+
 export async function createAndProposeTransaction(
   contractAddress: string,
   contractABI: any,
   functionName: string,
   args: any[] = []
 ) {
+  const NETWORK_NAME = process.env.NETWORK;
+  const chainId = networkToChainId[NETWORK_NAME];
+
   const config: Config = {
-    CHAIN_ID: BigInt("11155111"),
+    CHAIN_ID: chainId,
     RPC_URL: process.env.ALCHEMY_URL || "",
     SIGNER_ADDRESS_PRIVATE_KEY: process.env.SIGNER_ADDRESS_PRIVATE_KEY || "",
     SAFE_ADDRESS: process.env.UUPS_PROXY_ADMIN_MULTISIG_ADDRESS || "",
