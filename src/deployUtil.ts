@@ -130,7 +130,11 @@ export function setProvider() {
   });
   return singletonProvider(provider);
 }
-export async function deploy(contractName: string, opts: Options) {
+export async function deploy(
+  contractName: string,
+  opts: Options,
+  additionalDir?: string
+) {
   const foundation: Signer = getFoundation();
   const deployer: Signer = getDeployer();
 
@@ -167,7 +171,7 @@ export async function deploy(contractName: string, opts: Options) {
   if (!res) throw new Error(`The deployment of ${contractName} is failed.`);
 
   writeFileSync(
-    getDeploymentAddressPathWithTag(contractName, opts.tag),
+    getDeploymentAddressPathWithTag(contractName, opts.tag, additionalDir),
     _Contract.address
   );
 
@@ -186,8 +190,16 @@ export async function deploy(contractName: string, opts: Options) {
 
   return _signedContract;
 }
-function _getDeploymentAddressPathWithTag(contractName: string, tag: string) {
-  const path = `./deployments/${getCurrentNetwork()}/${contractName}${tag}`;
+function _getDeploymentAddressPathWithTag(
+  contractName: string,
+  tag: string,
+  additionalDir?: string
+) {
+  // オプションのディレクトリが指定されている場合は、それをパスに追加
+  const basePath = `./deployments/${getCurrentNetwork()}`;
+  const path = additionalDir
+    ? `${basePath}/${additionalDir}/${contractName}/${tag}`
+    : `${basePath}/${contractName}/${tag}`;
   const dir = path.substring(0, path.lastIndexOf("/"));
 
   if (!existsSync(dir)) {
@@ -196,14 +208,20 @@ function _getDeploymentAddressPathWithTag(contractName: string, tag: string) {
 
   return path;
 }
-export function getDeploymentAddressPath(contractName: string) {
-  return _getDeploymentAddressPathWithTag(contractName, "");
+
+export function getDeploymentAddressPath(
+  contractName: string,
+  additionalDir?: string
+) {
+  return _getDeploymentAddressPathWithTag(contractName, "", additionalDir);
 }
+
 export function getDeploymentAddressPathWithTag(
   contractName: string,
-  tag: string
+  tag: string,
+  additionalDir?: string
 ) {
-  return _getDeploymentAddressPathWithTag(contractName, tag);
+  return _getDeploymentAddressPathWithTag(contractName, tag, additionalDir);
 }
 
 export function verifyWithEtherscan() {
