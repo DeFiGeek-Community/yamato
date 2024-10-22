@@ -8,16 +8,16 @@ pragma solidity 0.8.4;
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 
-import "./Interfaces/IPriceFeedUSD.sol";
+import "./Interfaces/IPriceFeedSingle.sol";
 import "./Dependencies/AggregatorV3Interface.sol";
 import "./Dependencies/BaseMath.sol";
 import "./Dependencies/UUPSBase.sol";
 
 /*
- * PriceFeedUSD for mainnet deployment, connected to Chainlink's live ETH:USD aggregator.
+ * PriceFeedSingle for mainnet deployment, connected to Chainlink's live ETH:USD aggregator.
  * It uses Chainlink as the primary oracle and contains logic for handling oracle failures and timeouts.
  */
-contract PriceFeedUSD is IPriceFeedUSD, UUPSBase, BaseMath {
+contract PriceFeedSingle is IPriceFeedSingle, UUPSBase, BaseMath {
     /*
         =========================
         ~~~ SAFE HAVEN ~~~
