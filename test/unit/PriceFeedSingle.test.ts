@@ -8,14 +8,14 @@ import {
 } from "@nomicfoundation/hardhat-network-helpers";
 import {
   ChainLinkMock,
-  PriceFeedUSD,
-  PriceFeedUSD__factory,
+  PriceFeedSingle,
+  PriceFeedSingle__factory,
 } from "../../typechain";
 import { getProxy } from "../../src/testUtil";
 
 chai.use(smock.matchers);
 
-let feed: PriceFeedUSD;
+let feed: PriceFeedSingle;
 let accounts: Signer[];
 let ownerAddress: string;
 let mockAggregatorV3EthUsd: FakeContract<ChainLinkMock>;
@@ -88,7 +88,7 @@ async function setMocks(conf: MockConf) {
   lastChainLinkAnswer = cPriceEthInUsd;
   mockRoundCount++;
 }
-describe("PriceFeedUSD", function () {
+describe("PriceFeedSingle", function () {
   let lastMockInput;
   let snapshot: SnapshotRestorer;
 
@@ -115,9 +115,10 @@ describe("PriceFeedUSD", function () {
     lastMockInput.resetFlag = false;
     await setMocks(lastMockInput);
 
-    feed = await getProxy<PriceFeedUSD, PriceFeedUSD__factory>("PriceFeedUSD", [
-      mockAggregatorV3EthUsd.address,
-    ]);
+    feed = await getProxy<PriceFeedSingle, PriceFeedSingle__factory>(
+      "PriceFeedSingle",
+      [mockAggregatorV3EthUsd.address]
+    );
 
     assertChainlink(
       await feed.getPrice(),
