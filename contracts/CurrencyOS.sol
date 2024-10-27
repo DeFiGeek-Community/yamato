@@ -12,6 +12,7 @@ pragma solidity 0.8.4;
 import "./Interfaces/ICurrency.sol";
 import "./Interfaces/ICurrencyOS.sol";
 import "./Interfaces/IYMT.sol";
+import "./Interfaces/IYmtOSOld.sol";
 import "./veYMT.sol";
 import "./Interfaces/IYamato.sol";
 import "./YmtOS.sol";
@@ -81,7 +82,7 @@ contract CurrencyOS is ICurrencyOS, UUPSBase {
         require(!exists(_yamatoAddr), "Duplicated Yamato.");
         yamatoes.push(_yamatoAddr);
         if (ymtOS() != address(0)) {
-            IYmtOS(ymtOS()).addYamatoOfCurrencyOS(_yamatoAddr);
+            IYmtOSOld(ymtOS()).addYamatoOfCurrencyOS(_yamatoAddr);
         }
     }
 
@@ -135,11 +136,11 @@ contract CurrencyOS is ICurrencyOS, UUPSBase {
     }
 
     function YMT() public view override returns (address _YMT) {
-        _YMT = IYmtOS(ymtOS()).YMT();
+        _YMT = IYmtOSOld(ymtOS()).YMT();
     }
 
     function veYMT() public view override returns (address _veYMT) {
-        _veYMT = IYmtOS(ymtOS()).veYMT();
+        _veYMT = IYmtOSOld(ymtOS()).veYMT();
     }
 
     function exists(address _yamato) public view returns (bool) {
