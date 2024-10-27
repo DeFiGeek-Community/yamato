@@ -1,0 +1,34 @@
+pragma solidity 0.8.4;
+
+/*
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2024 Yamato Protocol (DeFiGeek Community Japan)
+ */
+
+//solhint-disable max-line-length
+//solhint-disable no-inline-assembly
+interface ICurrencyOSV4 {
+    function mintCurrency(address to, uint256 amount) external;
+
+    function burnCurrency(address to, uint256 amount) external;
+
+    function setPriceFeed(address feedAddr) external;
+
+    function setYmtOS(address ymtOSAddr) external;
+
+    function priceFeed() external view returns (address);
+
+    function feePool() external view returns (address);
+
+    function ymtOS() external view returns (address);
+
+    function currency() external view returns (address);
+
+    function YMT() external view returns (address);
+
+    function veYMT() external view returns (address);
+
+    function ymtMinter() external view returns (address);
+
+    function scoreWeightController() external view returns (address);
+}
