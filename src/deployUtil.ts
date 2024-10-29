@@ -198,8 +198,8 @@ function _getDeploymentAddressPathWithTag(
   // オプションのディレクトリが指定されている場合は、それをパスに追加
   const basePath = `./deployments/${getCurrentNetwork()}`;
   const path = additionalDir
-    ? `${basePath}/${additionalDir}/${contractName}/${tag}`
-    : `${basePath}/${contractName}/${tag}`;
+    ? `${basePath}/${additionalDir}/${contractName}${tag}`
+    : `${basePath}/${contractName}${tag}`;
   const dir = path.substring(0, path.lastIndexOf("/"));
 
   if (!existsSync(dir)) {
