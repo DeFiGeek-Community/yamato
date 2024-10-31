@@ -28,13 +28,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const p = await setProvider();
 
   const _priceFeedAddr = readFileSync(
-    getDeploymentAddressPathWithTag("PriceFeed", "ERC1967Proxy", currency)
+    getDeploymentAddressPathWithTag("PriceFeedSingle", "ERC1967Proxy", currency)
   ).toString();
-  const PriceFeed = new Contract(_priceFeedAddr, genABI("PriceFeed"), p);
-  const _feePoolAddr = readFileSync(
-    getDeploymentAddressPathWithTag("FeePool", "ERC1967Proxy", currency)
-  ).toString();
-  const FeePool = new Contract(_feePoolAddr, genABI("FeePool"), p);
+  const PriceFeed = new Contract(_priceFeedAddr, genABI("PriceFeedSingle"), p);
   const _currencyOSAddr = readFileSync(
     getDeploymentAddressPathWithTag("CurrencyOS", "ERC1967Proxy", currency)
   ).toString();
@@ -125,10 +121,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     await PriceFeed.connect(getFoundation()).setGovernance(multisigAddr)
   ).wait();
   console.log(`log: PriceFeed.setGovernance(${multisigAddr}) executed.`);
-  await (
-    await FeePool.connect(getFoundation()).setGovernance(multisigAddr)
-  ).wait();
-  console.log(`log: FeePool.setGovernance(${multisigAddr}) executed.`);
   await (
     await CurrencyOS.connect(getFoundation()).setGovernance(multisigAddr)
   ).wait();
