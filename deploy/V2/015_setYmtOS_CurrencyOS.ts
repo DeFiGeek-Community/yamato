@@ -26,7 +26,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const _currencyOSAddr = readFileSync(
     getDeploymentAddressPathWithTag("CurrencyOS", "ERC1967Proxy", currency)
   ).toString();
-  const CurrencyOS = new Contract(_currencyOSAddr, genABI("CurrencyOS"), p);
+  const CurrencyOS = new Contract(_currencyOSAddr, genABI("CurrencyOSV4"), p);
 
   const _ymtosAddr = readFileSync(
     getDeploymentAddressPathWithTag("YmtOS", "ERC1967Proxy")
