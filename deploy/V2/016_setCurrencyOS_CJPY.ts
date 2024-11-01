@@ -24,26 +24,28 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     return;
   }
 
-  const _YmtOSAddr = readFileSync(
-    getDeploymentAddressPathWithTag("YmtOS", "ERC1967Proxy")
-  ).toString();
-  const YmtOS = new Contract(_YmtOSAddr, genABI("YmtOS"), p);
-
   const _currencyOSAddr = readFileSync(
     getDeploymentAddressPathWithTag("CurrencyOS", "ERC1967Proxy", currency)
   ).toString();
+  const _currency = readFileSync(
+    getDeploymentAddressPath(currency, currency)
+  ).toString();
+  const CURRRECY = new Contract(_currency, genABI(currency), p);
 
-  if (await YmtOS.exists(_currencyOSAddr)) {
-    console.log(`log: YmtOS.addCurrencyOS() skipped.`);
-    return;
-  }
+  console.log(`log: CJPY.setCurrencyOS() will be executed.`);
   await (
-    await YmtOS.connect(getFoundation()).addCurrencyOS(_currencyOSAddr, {
-      gasLimit: 2000000,
+    await CURRRECY.connect(getFoundation()).setCurrencyOS(_currencyOSAddr, {
+      gasLimit: 10000000,
     })
   ).wait();
 
-  console.log(`log: YmtOS.addCurrencyOS() executed.`);
+  if (await existsSlot(p, CURRRECY.address, 1)) {
+    console.log(`log: CURRRECY.setCurrencyOS() executed.`);
+    await (await CURRRECY.connect(getFoundation()).revokeGovernance()).wait();
+    console.log(`log: CURRRECY.revokeGovernance() executed.`);
+  } else {
+    console.log(`log: CURRRECY.setCurrencyOS() skipped.`);
+  }
 };
 export default func;
-func.tags = ["addCurrencyOS_V2"];
+func.tags = ["setCurrencyOS_CURRRECY_V2"];
