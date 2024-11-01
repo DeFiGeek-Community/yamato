@@ -28,7 +28,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     return;
   }
 
-  const cjpyAddr = readFileSync(getDeploymentAddressPath(currency)).toString();
+  const currencyAddr = readFileSync(getDeploymentAddressPath(currency)).toString();
   const feePoolAddr = readFileSync(
     getDeploymentAddressPath("FeePoolERC1967Proxy")
   ).toString();
@@ -38,7 +38,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const inst = await getProxy<CurrencyOS, CurrencyOS__factory>(
     "CurrencyOS",
-    [cjpyAddr, feedAddr, feePoolAddr],
+    [currencyAddr, feedAddr, feePoolAddr],
     4
   );
   const implAddr = await inst.getImplementation();
