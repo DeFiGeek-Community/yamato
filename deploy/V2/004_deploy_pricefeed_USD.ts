@@ -81,4 +81,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   );
 };
 export default func;
-func.tags = ["PriceFeedSingle_V2"];
+func.tags = ["PriceFeed_USD_V2"];
