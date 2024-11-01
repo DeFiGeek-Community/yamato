@@ -12,9 +12,6 @@ import { CurrencyOS, CurrencyOS__factory } from "../../typechain";
 import { getProxy } from "../../src/testUtil";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  if (existsSync(getDeploymentAddressPathWithTag("CurrencyOS", "ERC1967Proxy")))
-    return;
-
   setNetwork(hre.network.name);
   const p = await setProvider();
   const { ethers, deployments } = hre;
@@ -28,24 +25,23 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     return;
   }
 
+  if (existsSync(getDeploymentAddressPathWithTag("YmtOS", "ERC1967Proxy")))
+    return;
+
   const currencyosAddr = readFileSync(
     getDeploymentAddressPathWithTag("CurrencyOS", "ERC1967Proxy")
   ).toString();
 
-  const inst = await getProxy<CurrencyOS, CurrencyOS__factory>(
-    "YmtOS",
-    [currencyosAddr],
-  );
+  const inst = await getProxy<CurrencyOS, CurrencyOS__factory>("YmtOS", [
+    currencyosAddr,
+  ]);
   const implAddr = await inst.getImplementation();
 
   writeFileSync(
     getDeploymentAddressPathWithTag("YmtOS", "ERC1967Proxy"),
     inst.address
   );
-  writeFileSync(
-    getDeploymentAddressPathWithTag("YmtOS", "UUPSImpl"),
-    implAddr
-  );
+  writeFileSync(getDeploymentAddressPathWithTag("YmtOS", "UUPSImpl"), implAddr);
 };
 export default func;
 func.tags = ["YmtOS_V2"];

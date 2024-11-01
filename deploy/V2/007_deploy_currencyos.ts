@@ -12,9 +12,6 @@ import { CurrencyOS, CurrencyOS__factory } from "../../typechain";
 import { getProxy } from "../../src/testUtil";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  if (existsSync(getDeploymentAddressPathWithTag("CurrencyOS", "ERC1967Proxy")))
-    return;
-
   setNetwork(hre.network.name);
   const p = await setProvider();
   const { ethers, deployments } = hre;
@@ -28,7 +25,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     return;
   }
 
-  const currencyAddr = readFileSync(getDeploymentAddressPath(currency)).toString();
+  const currencyAddr = readFileSync(
+    getDeploymentAddressPath(currency, currency)
+  ).toString();
   const feePoolAddr = readFileSync(
     getDeploymentAddressPath("FeePoolERC1967Proxy")
   ).toString();
