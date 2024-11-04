@@ -340,7 +340,7 @@ describe.only("YamatoV2", function () {
     >(scoreWeightController.address, "ScoreWeightControllerV2", undefined, {
       call: { fn: "initializeV2", args: [] },
     });
-    await currencyOSCJPY.setYmtOS(YmtOS.address); 
+    await currencyOSCJPY.setYmtOS(YmtOS.address);
     await currencyOSCUSD.setYmtOS(YmtOS.address);
     await YmtOS.addCurrencyOS(currencyOSCUSD.address);
     await scoreWeightControllerV2.addScore(
