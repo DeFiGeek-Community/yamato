@@ -2,7 +2,7 @@ pragma solidity 0.8.4;
 
 /*
  * SPDX-License-Identifier: GPL-3.0-or-later
- * Copyright (C) 2023 Yamato Protocol (DeFiGeek Community Japan)
+ * Copyright (C) 2024 Yamato Protocol (DeFiGeek Community Japan)
  */
 
 /**
@@ -17,12 +17,11 @@ import "./Dependencies/UUPSBase.sol";
 contract ScoreWeightControllerV2 is UUPSBase {
     string constant YMT_SLOT_ID = "deps.YMT";
     string constant VEYMT_SLOT_ID = "deps.veYMT";
-    // 7 * 86400 seconds - all future times are rounded by week
-    // uint256 constant WEEK = 604800;
-    uint256 constant WEEK = 7 days;
+    // 30 days - all future times are rounded by month
+    uint256 constant MONTH = 30 days;
 
-    // Cannot change weight votes more often than once in 10 days.
-    uint256 constant WEIGHT_VOTE_DELAY = 10 days;
+    // Cannot change weight votes more often than once in 40 days.
+    uint256 constant WEIGHT_VOTE_DELAY = 40 days;
 
     struct Point {
         uint256 bias;
@@ -69,15 +68,15 @@ contract ScoreWeightControllerV2 is UUPSBase {
     // Point is for bias+slope
     // changes_* are for changes in slope
     // time_* are for the last change timestamp
-    // timestamps are rounded to whole weeks
+    // timestamps are rounded to whole months
 
     mapping(address => mapping(uint256 => Point)) public pointsWeight; // score_addr -> time -> Point
     mapping(address => mapping(uint256 => uint256)) public changesWeight; // score_addr -> time -> slope
-    mapping(address => uint256) public timeWeight; // score_addr -> last scheduled time (next week)
+    mapping(address => uint256) public timeWeight; // score_addr -> last scheduled time (next month)
 
     mapping(uint256 => Point) public pointsSum; // time -> Point
     mapping(uint256 => uint256) public changesSum; // time -> slope
-    uint256 public timeSum; // last scheduled time (next week)
+    uint256 public timeSum; // last scheduled time (next month)
 
     mapping(uint256 => uint256) public pointsTotal; // time -> total weight
     uint256 public timeTotal; // last scheduled time
@@ -108,17 +107,17 @@ contract ScoreWeightControllerV2 is UUPSBase {
         address _v1ScoreAddr,
         uint256 _v1DeploymentTime
     ) public reinitializer(2) {
-        // Round times to the nearest week
-        timeTotal = (block.timestamp / WEEK) * WEEK;
+        // Round times to the nearest month
+        timeTotal = (block.timestamp / MONTH) * MONTH;
         timeSum = timeTotal;
-        v1DeploymentTime = (_v1DeploymentTime / WEEK) * WEEK;
+        v1DeploymentTime = (_v1DeploymentTime / MONTH) * MONTH;
         v2DeploymentTime = timeTotal;
         v1ScoreAddr = _v1ScoreAddr;
     }
 
     /**
-     * @notice Calculates the sum of score weights for the same type week-over-week, accounting for missed check-ins, and returns the sum for the upcoming week.
-     * @dev Iterates up to 500 weeks to update the sum. Used internally to maintain accurate weight totals.
+     * @notice Calculates the sum of score weights for the same type month-over-month, accounting for missed check-ins, and returns the sum for the upcoming month.
+     * @dev Iterates up to 500 months to update the sum. Used internally to maintain accurate weight totals.
      */
     function _getSum() internal returns (uint256) {
         uint256 _t = timeSum;
@@ -128,8 +127,8 @@ contract ScoreWeightControllerV2 is UUPSBase {
                 if (_t > block.timestamp) {
                     break;
                 }
-                _t += WEEK;
-                uint256 _dBias = _pt.slope * WEEK;
+                _t += MONTH;
+                uint256 _dBias = _pt.slope * MONTH;
                 if (_pt.bias > _dBias) {
                     _pt.bias -= _dBias;
                     uint256 _dSlope = changesSum[_t];
@@ -153,14 +152,14 @@ contract ScoreWeightControllerV2 is UUPSBase {
     }
 
     /**
-     * @notice Calculates the historic total weights week-over-week, accounting for missed check-ins, and returns the total for the upcoming week.
-     * @dev Iterates up to 500 weeks to update the total weight. Invokes _getSum to ensure all score weights are up to date.
+     * @notice Calculates the historic total weights month-over-month, accounting for missed check-ins, and returns the total for the upcoming month.
+     * @dev Iterates up to 500 months to update the total weight. Invokes _getSum to ensure all score weights are up to date.
      */
     function _getTotal() internal returns (uint256) {
         uint256 _t = timeTotal;
         if (_t > block.timestamp) {
             // If we have already checkpointed - still need to change the value
-            _t -= WEEK;
+            _t -= MONTH;
         }
         uint256 _pt = pointsTotal[_t];
         _getSum();
@@ -169,7 +168,7 @@ contract ScoreWeightControllerV2 is UUPSBase {
             if (_t > block.timestamp) {
                 break;
             }
-            _t += WEEK;
+            _t += MONTH;
 
             _pt = pointsSum[_t].bias;
             pointsTotal[_t] = _pt;
@@ -185,9 +184,9 @@ contract ScoreWeightControllerV2 is UUPSBase {
     }
 
     /**
-     * @notice Calculates the historic weight of a specific score week-over-week, accounting for missed check-ins, and returns the weight for the upcoming week.
+     * @notice Calculates the historic weight of a specific score month-over-month, accounting for missed check-ins, and returns the weight for the upcoming month.
      * @param scoreAddr_ The address of the score whose weight is being calculated.
-     * @dev Iterates up to 500 weeks to update the score's weight. Used internally to maintain accurate score weights.
+     * @dev Iterates up to 500 months to update the score's weight. Used internally to maintain accurate score weights.
      */
     function _getWeight(address scoreAddr_) internal returns (uint256) {
         uint256 _t = timeWeight[scoreAddr_];
@@ -197,8 +196,8 @@ contract ScoreWeightControllerV2 is UUPSBase {
                 if (_t > block.timestamp) {
                     break;
                 }
-                _t += WEEK;
-                uint256 _dBias = _pt.slope * WEEK;
+                _t += MONTH;
+                uint256 _dBias = _pt.slope * MONTH;
                 if (_pt.bias > _dBias) {
                     _pt.bias -= _dBias;
                     uint256 _dSlope = changesWeight[scoreAddr_][_t];
@@ -266,7 +265,7 @@ contract ScoreWeightControllerV2 is UUPSBase {
     function _updateTimingAndWeights(address addr_, uint256 weight_) private {
         uint256 _nextTime;
         unchecked {
-            _nextTime = ((block.timestamp + WEEK) / WEEK) * WEEK;
+            _nextTime = ((block.timestamp + MONTH) / MONTH) * MONTH;
         }
 
         if (weight_ > 0) {
@@ -314,7 +313,7 @@ contract ScoreWeightControllerV2 is UUPSBase {
         address addr_,
         uint256 time_
     ) internal view returns (uint256) {
-        uint256 _t = (time_ / WEEK) * WEEK;
+        uint256 _t = (time_ / MONTH) * MONTH;
         uint256 _totalWeight = pointsTotal[_t];
 
         if (_totalWeight > 0) {
@@ -374,7 +373,7 @@ contract ScoreWeightControllerV2 is UUPSBase {
         uint256 _totalWeight = _getTotal();
         uint256 _nextTime;
         unchecked {
-            _nextTime = ((block.timestamp + WEEK) / WEEK) * WEEK;
+            _nextTime = ((block.timestamp + MONTH) / MONTH) * MONTH;
         }
 
         pointsWeight[addr_][_nextTime].bias = weight_;
@@ -429,7 +428,7 @@ contract ScoreWeightControllerV2 is UUPSBase {
         _vp.lockEnd = IveYMT(veYMT()).lockedEnd(msg.sender);
         _vp._nScores = uint256(uint128(nScores));
         unchecked {
-            _vp.nextTime = ((block.timestamp + WEEK) / WEEK) * WEEK;
+            _vp.nextTime = ((block.timestamp + MONTH) / MONTH) * MONTH;
         }
         require(_vp.lockEnd > _vp.nextTime, "Your token lock expires too soon");
         require(
