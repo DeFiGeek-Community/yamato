@@ -17,6 +17,7 @@ contract ChainLinkMock is OracleMockBase, AggregatorV3Interface {
     uint8 private symbol;
     uint8 private ETHUSD = 1;
     uint8 private JPYUSD = 2;
+    uint8 private EURUSD = 3;
 
     uint80 private lastRoundId;
     uint80 private lastPriceUpdateRoundId;
@@ -41,6 +42,8 @@ contract ChainLinkMock is OracleMockBase, AggregatorV3Interface {
             return ETHUSD;
         } else if (value == keccak256(abi.encodePacked("JPY/USD"))) {
             return JPYUSD;
+        } else if (value == keccak256(abi.encodePacked("EUR/USD"))) {
+            return EURUSD;
         }
         return 0;
     }
@@ -51,6 +54,9 @@ contract ChainLinkMock is OracleMockBase, AggregatorV3Interface {
         } // 3000 USD
         if (symbol == JPYUSD) {
             lastPrice = 877000;
+        } // 0.00877 JPYUSD = 114 USDJPY
+        if (symbol == EURUSD) {
+            lastPrice = 10000000;
         } // 0.00877 JPYUSD = 114 USDJPY
         _update(lastRoundId + 1, lastPrice, lastRoundId);
     }
