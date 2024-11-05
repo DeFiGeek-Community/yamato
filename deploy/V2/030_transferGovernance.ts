@@ -32,9 +32,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   ).toString();
   const YmtOS = new Contract(_ymtOSAddr, genABI("YmtOS"), p);
   const _priceFeedAddr = readFileSync(
-    getDeploymentAddressPathWithTag("PriceFeedSingle", "ERC1967Proxy", currency)
+    getDeploymentAddressPathWithTag(currency === "CUSD" ? "PriceFeedSingle" : "PriceFeed", "ERC1967Proxy", currency)
   ).toString();
-  const PriceFeed = new Contract(_priceFeedAddr, genABI("PriceFeedSingle"), p);
+  const PriceFeed = new Contract(_priceFeedAddr, genABI(currency === "CUSD" ? "PriceFeedSingle" : "PriceFeed"), p);
   const _currencyOSAddr = readFileSync(
     getDeploymentAddressPathWithTag("CurrencyOS", "ERC1967Proxy", currency)
   ).toString();
@@ -120,7 +120,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     genABI("ScoreRegistry"),
     p
   );
-  const governance = await YmtOS.connect(getFoundation()).governanceFunction();
+  const governance = await YmtOS.connect(getFoundation()).governance();
   if (governance == multisigAddr) {
     console.log(`log: YmtOS.setGovernance(${multisigAddr}) skipped.`);
   } else {
