@@ -82,6 +82,10 @@ contract ScoreWeightControllerV2 is UUPSBase {
     mapping(uint256 => uint256) public pointsTotal; // time -> total weight
     uint256 public timeTotal; // last scheduled time
 
+    uint256 public v1DeploymentTime;
+    uint256 public v2DeploymentTime;
+    address public v1ScoreAddr;
+
     /**
      * @notice Contract constructor
      * @param ymtAddr `Token` contract address
@@ -100,8 +104,16 @@ contract ScoreWeightControllerV2 is UUPSBase {
         }
     }
 
-    function initializeV2() public reinitializer(2) {
+    function initializeV2(
+        address _v1ScoreAddr,
+        uint256 _v1DeploymentTime
+    ) public reinitializer(2) {
+        // Round times to the nearest week
         timeTotal = (block.timestamp / WEEK) * WEEK;
+        timeSum = timeTotal;
+        v1DeploymentTime = (_v1DeploymentTime / WEEK) * WEEK;
+        v2DeploymentTime = timeTotal;
+        v1ScoreAddr = _v1ScoreAddr;
     }
 
     /**
@@ -309,6 +321,12 @@ contract ScoreWeightControllerV2 is UUPSBase {
             uint256 _scoreWeight = pointsWeight[addr_][_t].bias;
 
             return (MULTIPLIER * _scoreWeight) / _totalWeight;
+        } else if (
+            addr_ == v1ScoreAddr &&
+            v1DeploymentTime <= _t &&
+            _t <= v2DeploymentTime
+        ) {
+            return MULTIPLIER;
         } else {
             return 0;
         }
