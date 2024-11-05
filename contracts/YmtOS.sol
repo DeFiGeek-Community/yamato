@@ -103,4 +103,11 @@ contract YmtOS is IYmtOS, UUPSBase {
             _scoreWeightController := sload(WEIGHT_CONTROLLER_KEY)
         }
     }
+
+    function exists(address _currencyOS) public view returns (bool) {
+        for (uint256 i; i < currencyOSs.length; ++i) {
+            if (currencyOSs[i] == _currencyOS) return true;
+        }
+        return false;
+    }
 }
