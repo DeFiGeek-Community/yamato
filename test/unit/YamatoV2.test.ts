@@ -115,9 +115,18 @@ describe.only("YamatoV2", function () {
   let COMPOSITE_PRICE: BigNumber;
   let accounts: SignerWithAddress[];
   let snapshot: SnapshotRestorer;
+  let startTimeV1: BigNumber;
 
   before(async () => {
+    await time.increase(week * 10);
     accounts = await ethers.getSigners();
+
+    PRICE_USDETH = BigNumber.from(260000).mul(1e18 + "");
+    PRICE_JPYUSD = BigNumber.from(6).mul(1e15 + ""); // 0.006 * 1e18 = 6 * 1e15
+    COMPOSITE_PRICE = PRICE_USDETH.mul(PRICE_JPYUSD).div(
+      BigNumber.from(1e18 + "")
+    );
+
     ChainLinkEthUsd = await (<ChainLinkMock__factory>(
       await ethers.getContractFactory("ChainLinkMock")
     )).deploy("ETH/USD");
@@ -241,6 +250,11 @@ describe.only("YamatoV2", function () {
     await FeePool.setVeYMT(veYMT.address);
     await scoreWeightController.addScore(scoreRegistry.address, ten_to_the_18);
 
+    await time.increase(week * 4 * 3);
+
+    await (await ChainLinkEthUsd.setLastPrice(PRICE_USDETH)).wait(); //dec8
+    await (await ChainLinkUsdJpy.setLastPrice(PRICE_JPYUSD)).wait(); //dec8
+
     YmtOS = await getProxy<YmtOS, YmtOS__factory>("YmtOS", [
       currencyOS.address,
     ]);
@@ -334,11 +348,13 @@ describe.only("YamatoV2", function () {
       "CurrencyOSV4",
       undefined
     );
+    startTimeV1 = await scoreRegistry.periodTimestamp(0);
+    console.log("startTimeV1",Number(startTimeV1))
     scoreWeightControllerV2 = await upgradeProxy<
       ScoreWeightControllerV2,
       ScoreWeightControllerV2__factory
     >(scoreWeightController.address, "ScoreWeightControllerV2", undefined, {
-      call: { fn: "initializeV2", args: [] },
+      call: { fn: "initializeV2", args: [scoreRegistry.address, startTimeV1 ] },
     });
     await currencyOSCJPY.setYmtOS(YmtOS.address);
     await currencyOSCUSD.setYmtOS(YmtOS.address);
@@ -358,26 +374,16 @@ describe.only("YamatoV2", function () {
       .createLock(amount, (await time.latest()) + week * 100);
     await scoreWeightControllerV2.voteForScoreWeights(
       scoreRegistry.address,
-      10000
+      5000
     );
-    await time.increase(week);
-    // await scoreWeightControllerV2.voteForScoreWeights(scoreRegistry.address, 10000);
-    // await scoreWeightControllerV2.voteForScoreWeights(scoreRegistryV2.address, 1000);
-    // await scoreWeightControllerV2.connect(accounts[1]).voteForScoreWeights(scoreRegistry.address, 9000);
-    // await scoreWeightControllerV2.connect(accounts[1]).voteForScoreWeights(scoreRegistryV2.address, 1000);
-    // await scoreWeightControllerV2.voteForScoreWeights(scoreRegistry.address, 10000);
-    // await scoreWeightControllerV2.checkpointScore(scoreRegistry.address);
-    // await scoreWeightControllerV2.checkpointScore(scoreRegistryV2.address);
-    // await scoreRegistry.userCheckpoint(accounts[0].address);
-    // await scoreRegistryV2.userCheckpoint(accounts[0].address);
+    await time.increase(week * 10);
 
-    PRICE_USDETH = BigNumber.from(260000).mul(1e18 + "");
-    PRICE_JPYUSD = BigNumber.from(6).mul(1e15 + ""); // 0.006 * 1e18 = 6 * 1e15
-    COMPOSITE_PRICE = PRICE_USDETH.mul(PRICE_JPYUSD).div(
-      BigNumber.from(1e18 + "")
-    );
+
+
     await (await ChainLinkEthUsd.setLastPrice(PRICE_USDETH)).wait(); //dec8
     await (await ChainLinkUsdJpy.setLastPrice(PRICE_JPYUSD)).wait(); //dec8
+
+    console.log("v2DeploymentTime", Number(await scoreWeightControllerV2.v2DeploymentTime()));
   });
 
   beforeEach(async () => {
@@ -426,26 +432,6 @@ describe.only("YamatoV2", function () {
     const toCollateralize = 1;
     const MCR = BigNumber.from(130);
 
-    // const weight1 = await scoreWeightControllerV2.getScoreWeight(scoreRegistry.address);
-    // const weight2 = await scoreWeightControllerV2.getScoreWeight(scoreRegistryV2.address);
-    // console.log(Number(weight1))
-    // console.log(Number(weight2))
-    // const weight3 = await scoreWeightControllerV2.scoreRelativeWeight(scoreRegistry.address, await scoreWeightControllerV2.timeTotal());
-    // const weight4 = await scoreWeightControllerV2.scoreRelativeWeight(scoreRegistryV2.address, await scoreWeightControllerV2.timeTotal());
-    // console.log(Number(weight3))
-    // console.log(Number(weight4))
-    // const timeTotal = await scoreWeightControllerV2.timeTotal();
-    // console.log(Number(await scoreWeightControllerV2.getTotalWeight()))
-
-    // for (let i = 0; i < 10; i++) {
-    //   const time = timeTotal - (i * week);
-    //   console.log("===================");
-    //   console.log(time);
-    //   console.log(Number(await scoreWeightControllerV2.pointsTotal(time)))
-    //   console.log(Number(await scoreWeightControllerV2.scoreRelativeWeight(scoreRegistry.address, time)))
-    //   console.log(Number(await scoreWeightControllerV2.scoreRelativeWeight(scoreRegistryV2.address, time)))
-    // }
-
     const toBorrow = COMPOSITE_PRICE.mul(toCollateralize)
       .mul(100)
       .div(MCR)
@@ -459,6 +445,25 @@ describe.only("YamatoV2", function () {
       .div(1e18 + "");
     await yamatoV2.deposit({ value: toERC20(toCollateralize + "") });
     await yamatoV2.borrow(toERC20(toBorrowV2 + ""));
+
+    console.log(Number(await scoreWeightControllerV2.voteUserPower(accounts[0].address)));
+    await scoreWeightControllerV2.voteForScoreWeights(
+      scoreRegistryV2.address,
+      5000
+    );
+
+    const timeTotal = await scoreWeightControllerV2.timeTotal();
+
+    for (let i = 0; i < 12; i++) {
+      const time = (Number(timeTotal) + (month)) - (i * month);
+      console.log("===================");
+      console.log(time);
+      console.log(Number(await scoreWeightControllerV2.pointsTotal(time)))
+      console.log(Number(await scoreWeightControllerV2.scoreRelativeWeight(scoreRegistry.address, time)))
+      console.log(Number(await scoreWeightControllerV2.scoreRelativeWeight(scoreRegistryV2.address, time)))
+    }
+
+
 
     // YMTの残高を取得
     const initialYMTBalance = await YMT.balanceOf(accounts[0].address);
