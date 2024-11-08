@@ -68,6 +68,7 @@
 
 ## v1.0 デプロイ
 
+- .env の PRIVATE_KEY を デプロイする秘密鍵に変更する
 - `npx hardhat deploy --tags ChainLinkMockEthUsd,ChainLinkMockJpyUsd,TellorCallerMock,PriceFeed,CJPY,FeePool,CurrencyOS,Yamato,YamatoAction,Pool,PriorityRegistry,setDeps,addYamato,setCOSCJPY --network localhost`
 
 ## v1.5 デプロイ
@@ -87,3 +88,22 @@
 ## チェック
 
 - `npx hardhat run upgrade/batches/v1.5-check-localTest.ts --network localhost`
+
+## v2 デプロイ
+### CUSD
+- .env を CURRENCY=CUSDに設定
+- .env の PRIVATE_KEY を デプロイする秘密鍵に変更する
+- `npx hardhat deploy --tags YmtOS_V2,PriceFeed_USD_V2,CURRENCY_V2,CurrencyOS_V2,Yamato_V2,YamatoAction_V2,Pool_V2,PriorityRegistry_V2,setDeps_V2,addYamato_V2,setYmtOS_V2,setCurrencyOS_CURRRECY_V2,addCurrencyOS_YmtOS_V2,ScoreRegistry_V2,setScoreRegistry_V2,transferGovernance_V2 --network localhost`
+- `npx hardhat run upgrade/batches/v2-update-deployImpl.ts --network localhost`
+
+### CUSD
+
+- .env を CURRENCY=CEURに設定
+- `npx hardhat deploy --tags ChainLinkMockEurUsd,PriceFeed_EUR_V2,CURRENCY_V2,CurrencyOS_V2,Yamato_V2,YamatoAction_V2,Pool_V2,PriorityRegistry_V2,setDeps_V2,addYamato_V2,setYmtOS_V2,setCurrencyOS_CURRRECY_V2,addCurrencyOS_YmtOS_V2,ScoreRegistry_V2,setScoreRegistry_V2,transferGovernance_V2 --network localhost`
+
+- .env を CURRENCY=CUSDに設定
+- .env の PRIVATE_KEY を UUPS_PROXY_ADMIN_MULTISIG_ADDRESS の秘密鍵に変更する必要あり
+- `npx hardhat run upgrade/batches/v2-update-safePropose.ts --network localhost`
+
+- .env を CURRENCY=CEURに設定
+- `npx hardhat run upgrade/batches/v2-update-safeProposeSecond.ts --network localhost`
