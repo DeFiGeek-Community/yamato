@@ -23,7 +23,7 @@ async function main() {
   const CONTRACT_ABI = genABI(implNameBase);
   const scoreRegistryAddr = readDeploymentAddress(
     "ScoreRegistry",
-    "UUPSImpl",
+    "ERC1967Proxy",
     currency
   );
   if (!scoreRegistryAddr) return console.log("not scoreRegistryAddr");
