@@ -119,7 +119,7 @@ export function getCurrentNetwork() {
 export function setProvider() {
   let network;
   if (getCurrentNetwork() == "localhost") {
-    network = "http://localhost:8545";
+    network = "http://127.0.0.1:8545";
   } else {
     network = getCurrentNetwork();
   }
