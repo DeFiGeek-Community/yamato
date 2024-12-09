@@ -303,7 +303,7 @@ export async function executeTransaction(
   }
 
   // JsonRpcProviderと秘密鍵からWalletを生成し、サイナーとして使用
-  const provider = new ethers.providers.JsonRpcProvider();
+  const provider = new ethers.providers.JsonRpcProvider("http://127.0.0.1:8545/");
   const signer = new ethers.Wallet(deployerPrivateKey, provider);
 
   const contract = new ethers.Contract(contractAddress, contractABI, signer);
@@ -315,4 +315,5 @@ export async function executeTransaction(
     `Executing method: ${methodName} on contract: ${contractAddress} with arguments:`,
     args
   );
+  return transactionResponse;
 }
