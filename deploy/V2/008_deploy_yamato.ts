@@ -33,7 +33,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { getContractFactory } = ethers;
 
   const _currencyOSAddr = readFileSync(
-    getDeploymentAddressPathWithTag("CurrencyOS", "ERC1967Proxy")
+    getDeploymentAddressPathWithTag("CurrencyOS", "ERC1967Proxy", currency)
   ).toString();
 
   const inst = await getLinkedProxy<YamatoV4, YamatoV4__factory>(
