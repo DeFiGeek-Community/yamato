@@ -11,8 +11,6 @@ async function main() {
   await _import("../mods/303_ScoreWeightController_upgradeToAndCall");
   await _import("../mods/304_v2_setYmtOS_CurrencyOS");
   await _import("../mods/305_v2_addScore_ScoreWeightController");
-  await _import("../mods/306_v2_YmtOS_acceptGovernance");
-  await _import("../mods/307_v2_acceptGovernance");
 }
 
 main();
