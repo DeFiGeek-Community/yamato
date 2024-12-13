@@ -15,8 +15,11 @@ async function main() {
     return;
   }
 
+  // currencyの値に応じてPriceFeedを選択
+  const priceFeedContract = currency == "CUSD" ? "PriceFeedSingle" : "PriceFeed";
+
   const contracts = [
-    "PriceFeedSingle",
+    priceFeedContract,
     "YamatoRepayer",
     "YamatoRedeemer",
     "YamatoWithdrawer",
@@ -28,20 +31,6 @@ async function main() {
     "CurrencyOS",
     "ScoreRegistry",
   ];
-
-  const versions = {
-    PriceFeedSingle: "",
-    YamatoRepayer: "V3",
-    YamatoRedeemer: "V5",
-    YamatoWithdrawer: "V3",
-    YamatoSweeper: "V3",
-    YamatoDepositor: "V3",
-    YamatoBorrower: "V2",
-    Yamato: "V4",
-    Pool: "V2",
-    CurrencyOS: "V3",
-    ScoreRegistry: "",
-  };
 
   const contractInstances = {};
 
@@ -71,7 +60,7 @@ async function main() {
     console.log(`${contractName}Impl`, currentImpl.toString() === expectedImpl);
   }
 
-  for (const [contractName, versionTag] of Object.entries(versions)) {
+  for (const contractName of contracts) {
     await checkImplementation(
       contractInstances[contractName],
       `${contractName}`
