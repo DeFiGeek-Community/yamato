@@ -22,7 +22,7 @@ async function main() {
   const scoreRegistryName = "ScoreRegistry";
   const scoreWeightControllerName = "ScoreWeightController";
   const feePoolName = "FeePool";
-  const PriceFeedSingleName = "PriceFeedSingle";
+  const PriceFeedSingleName = currency == "CUSD" ? "PriceFeedSingle" : "PriceFeed";
   const currencyOSName = "CurrencyOS";
   const YmtOSName = "YmtOS";
   const yamatoAddress = readDeploymentAddress(
@@ -167,11 +167,13 @@ async function main() {
       ymtOSAddressFromCurrencyOS === ymtOSAddress
     );
 
+    const expectedValue = currency === "CUSD" ? 2 : 3;
+
     const scoreRegistryAddressFromScoreWeightController =
       await scoreWeightControllerInstance.scores(scoreRegistryAddress);
     console.log(
-      `Score Registry Address in Score Weight Controller: ${scoreRegistryAddressFromScoreWeightController}, Expected: 2, Match:`,
-      scoreRegistryAddressFromScoreWeightController == 2
+      `Score Registry Address in Score Weight Controller: ${scoreRegistryAddressFromScoreWeightController}, Expected: ${expectedValue}, Match:`,
+      scoreRegistryAddressFromScoreWeightController == expectedValue
     );
 
     const ymtAddressFromYmtOS = await ymtOSInstance.YMT();

@@ -24,7 +24,7 @@ async function main() {
       proxy: true,
     },
     PriceFeedSingle: {
-      name: "PriceFeedSingle",
+      name: currency == "CUSD" ? "PriceFeedSingle" : "PriceFeed",
       governanceFunction: "governance",
       version: "",
       proxy: true,
