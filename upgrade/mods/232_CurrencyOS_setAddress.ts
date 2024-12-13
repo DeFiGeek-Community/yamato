@@ -4,7 +4,7 @@ import { createAndProposeTransaction } from "../../src/safeUtil";
 import { executeTransaction } from "../../src/upgradeUtil";
 
 const IMPL_NAME_BASE = "CurrencyOS";
-const version = "V4";
+const version = "V3";
 async function main() {
   const implNameBase = `${IMPL_NAME_BASE}${version}`;
   const CONTRACT_ADDRESS = readDeploymentAddress(
