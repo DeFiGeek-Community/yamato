@@ -54,9 +54,9 @@ export function readDeploymentAddress(
   );
   if (existsSync(filePath)) {
     const savedAddress = readFileSync(filePath, { encoding: "utf8" });
-    console.log(
-      `Address for ${contractName}${tag} read from ${filePath}: ${savedAddress}`
-    );
+    // console.log(
+    //   `Address for ${contractName}${tag} read from ${filePath}: ${savedAddress}`
+    // );
     return savedAddress;
   } else {
     console.log(`Address file for ${contractName}${tag} does not exist.`);
