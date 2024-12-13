@@ -29,9 +29,9 @@ export async function smokeTest() {
   const Yamato = new ethers.Contract(YamatoAddr, genABI("YamatoV3"), p);
 
   const redeemer = getFoundation();
-  const redeemee = getDeployer();
+  // const redeemee = getDeployer();
   const _redeemerAddr = await redeemer.getAddress();
-  const _redeemeeAddr = await redeemee.getAddress();
+  // const _redeemeeAddr = await redeemee.getAddress();
 
   const toCollateralize = 0.001;
   const MCR = BigNumber.from(130);
@@ -106,7 +106,7 @@ export async function smokeTest() {
         Set target account
     */
   await (
-    await Yamato.connect(redeemee).deposit({
+    await Yamato.connect(redeemer).deposit({
       value: BigNumber.from(toCollateralize * 4 * 10000 + "")
         .mul(1e18 + "")
         .div(1e4 + ""),
@@ -114,7 +114,7 @@ export async function smokeTest() {
     })
   ).wait();
   await (
-    await Yamato.connect(redeemee).borrow(toERC20(toBorrow.mul(4) + ""), {
+    await Yamato.connect(redeemer).borrow(toERC20(toBorrow.mul(4) + ""), {
       gasLimit: 1000000,
     })
   ).wait();
@@ -165,19 +165,19 @@ export async function smokeTest() {
   /*
         Send money for repayment
     */
-  let redeemeePledgeBeforeRepay = await Yamato.getPledge(_redeemeeAddr);
+  let redeemeePledgeBeforeRepay = await Yamato.getPledge(_redeemerAddr);
   let d = redeemeePledgeBeforeRepay.debt;
-  let b = await CJPY.balanceOf(_redeemeeAddr);
+  let b = await CJPY.balanceOf(_redeemerAddr);
   let lack: BigNumber = d.sub(b);
   if (lack.gt(0)) {
-    await CJPY.connect(redeemer).transfer(_redeemeeAddr, lack);
+    await CJPY.connect(redeemer).transfer(_redeemerAddr, lack);
   }
 
   /*
         full repay()
     */
   await (
-    await Yamato.connect(redeemee).repay(d, {
+    await Yamato.connect(redeemer).repay(d, {
       gasLimit: 1000000,
     })
   ).wait();
@@ -185,7 +185,7 @@ export async function smokeTest() {
   /*
         check full repay
     */
-  let redeemeeFullyRepaidPledge1 = await Yamato.getPledge(_redeemeeAddr);
+  let redeemeeFullyRepaidPledge1 = await Yamato.getPledge(_redeemerAddr);
   console.log(
     `redeemeeFullyRepaidPledge1:fullRepay? ${redeemeeFullyRepaidPledge1}`
   );
@@ -194,14 +194,14 @@ export async function smokeTest() {
         deposit() from zero pledge
     */
   await (
-    await Yamato.connect(redeemee).deposit({
+    await Yamato.connect(redeemer).deposit({
       value: BigNumber.from(toCollateralize * 1 * 10000 + "")
         .mul(1e18 + "")
         .div(1e4 + ""),
       gasLimit: 1000000,
     })
   ).wait();
-  let redeemeePledge2 = await Yamato.getPledge(_redeemeeAddr);
+  let redeemeePledge2 = await Yamato.getPledge(_redeemerAddr);
   console.log(`redeemeePledge2:re-deposit? ${redeemeePledge2}`);
 
   /*
@@ -217,10 +217,10 @@ export async function smokeTest() {
   ).wait();
 
   /*
-        Set redeemee again
+        Set redeemer again
     */
   await (
-    await Yamato.connect(redeemee).deposit({
+    await Yamato.connect(redeemer).deposit({
       value: BigNumber.from(toCollateralize * 10000 + "")
         .mul(1e18 + "")
         .div(1e4 + ""),
@@ -228,7 +228,7 @@ export async function smokeTest() {
     })
   ).wait();
   await (
-    await Yamato.connect(redeemee).borrow(toERC20(toBorrow + ""), {
+    await Yamato.connect(redeemer).borrow(toERC20(toBorrow + ""), {
       gasLimit: 1000000,
     })
   ).wait();

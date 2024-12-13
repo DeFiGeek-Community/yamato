@@ -136,7 +136,7 @@ export async function deploy(
   additionalDir?: string
 ) {
   const foundation: Signer = getFoundation();
-  const deployer: Signer = getDeployer();
+  // const deployer: Signer = getDeployer();
 
   if (!opts.from) opts.from = foundation;
   if (!opts.signer) opts.signer = opts.from;
@@ -567,9 +567,9 @@ export function singletonProvider(_provider: any | undefined = undefined) {
 export function getFoundation(): Signer {
   return new Wallet(process.env.FOUNDATION_PRIVATE_KEY, singletonProvider());
 }
-export function getDeployer(): Signer {
-  return new Wallet(process.env.DEPLOYER_PRIVATE_KEY, singletonProvider());
-}
+// export function getDeployer(): Signer {
+//   return new Wallet(process.env.DEPLOYER_PRIVATE_KEY, singletonProvider());
+// }
 export function getMultisigGoverner(): Signer {
   return new Wallet(
     process.env.UUPS_PROXY_ADMIN_MULTISIG_ADDRESS,
