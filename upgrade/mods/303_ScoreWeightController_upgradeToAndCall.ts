@@ -1,7 +1,6 @@
 import { ethers } from "ethers";
 import { readDeploymentAddress } from "../../src/addressUtil";
-import { time } from "@nomicfoundation/hardhat-network-helpers";
-
+import { setNetwork, setProvider, getFoundation } from "../../src/deployUtil";
 import { genABI } from "../../src/genABI";
 import { createAndProposeTransaction } from "../../src/safeUtil";
 import { executeTransaction } from "../../src/upgradeUtil";
@@ -9,6 +8,9 @@ import { executeTransaction } from "../../src/upgradeUtil";
 const IMPL_NAME_BASE = "ScoreWeightController";
 const version = "V2";
 async function main() {
+  setNetwork(process.env.NETWORK);
+  await setProvider();
+
   const implNameBase = `${IMPL_NAME_BASE}${version}`;
 
   const ScoreRegistryAddr = readDeploymentAddress(
@@ -23,10 +25,17 @@ async function main() {
   const implAddress = readDeploymentAddress(IMPL_NAME_BASE, "UUPSImpl");
   if (!implAddress) return console.log("not UUPSImpl");
 
-  const number = await time.latest();
+  const scoreRegistryInstance = new ethers.Contract(
+    ScoreRegistryAddr,
+    genABI("ScoreRegistry"),
+    getFoundation()
+  );
+
+  const v1time = await scoreRegistryInstance.periodTimestamp(0);
+  console.log(Number(v1time));
   const packedBytes = ethers.utils.defaultAbiCoder.encode(
     ["address", "uint256"],
-    [ScoreRegistryAddr, Number(number)]
+    [ScoreRegistryAddr, Number(v1time)]
   );
 
   const functionSelector = CONTRACT_ABI.getSighash(
