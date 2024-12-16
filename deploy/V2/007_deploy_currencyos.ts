@@ -32,7 +32,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     getDeploymentAddressPath("FeePoolERC1967Proxy")
   ).toString();
   const feedAddr = readFileSync(
-    getDeploymentAddressPathWithTag(currency === "CUSD" ? "PriceFeedSingle" : "PriceFeed", "ERC1967Proxy", currency)
+    getDeploymentAddressPathWithTag(
+      currency === "CUSD" ? "PriceFeedSingle" : "PriceFeed",
+      "ERC1967Proxy",
+      currency
+    )
   ).toString();
 
   const inst = await getProxy<CurrencyOS, CurrencyOS__factory>(

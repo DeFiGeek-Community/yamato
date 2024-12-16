@@ -7,7 +7,12 @@ async function advanceTime(seconds: number) {
   await ethers.provider.send("evm_mine", []);
 }
 
-function timeUnitsToSeconds(days: number, hours: number, minutes: number, seconds: number): number {
+function timeUnitsToSeconds(
+  days: number,
+  hours: number,
+  minutes: number,
+  seconds: number
+): number {
   return days * 24 * 60 * 60 + hours * 60 * 60 + minutes * 60 + seconds;
 }
 
@@ -27,7 +32,9 @@ async function main() {
   await advanceTime(totalSeconds);
 
   const newTime = await getCurrentBlockchainTime();
-  console.log(`Advanced time by ${days} days, ${hours} hours, ${minutes} minutes, and ${seconds} seconds`);
+  console.log(
+    `Advanced time by ${days} days, ${hours} hours, ${minutes} minutes, and ${seconds} seconds`
+  );
   console.log(`New blockchain time: ${new Date(newTime * 1000).toISOString()}`);
 }
 

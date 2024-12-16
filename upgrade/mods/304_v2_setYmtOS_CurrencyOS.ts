@@ -7,7 +7,6 @@ import { utils } from "ethers";
 const IMPL_NAME_BASE = "CurrencyOS";
 const version = "V4";
 async function main() {
-
   const implNameBase = `${IMPL_NAME_BASE}${version}`;
   const CONTRACT_ADDRESS = readDeploymentAddress(
     IMPL_NAME_BASE,

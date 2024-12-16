@@ -349,12 +349,12 @@ describe.only("YamatoV2", function () {
       undefined
     );
     startTimeV1 = await scoreRegistry.periodTimestamp(0);
-    console.log("startTimeV1",Number(startTimeV1))
+    console.log("startTimeV1", Number(startTimeV1));
     scoreWeightControllerV2 = await upgradeProxy<
       ScoreWeightControllerV2,
       ScoreWeightControllerV2__factory
     >(scoreWeightController.address, "ScoreWeightControllerV2", undefined, {
-      call: { fn: "initializeV2", args: [scoreRegistry.address, startTimeV1 ] },
+      call: { fn: "initializeV2", args: [scoreRegistry.address, startTimeV1] },
     });
     await currencyOSCJPY.setYmtOS(YmtOS.address);
     await currencyOSCUSD.setYmtOS(YmtOS.address);
@@ -378,12 +378,13 @@ describe.only("YamatoV2", function () {
     );
     await time.increase(week * 10);
 
-
-
     await (await ChainLinkEthUsd.setLastPrice(PRICE_USDETH)).wait(); //dec8
     await (await ChainLinkUsdJpy.setLastPrice(PRICE_JPYUSD)).wait(); //dec8
 
-    console.log("v2DeploymentTime", Number(await scoreWeightControllerV2.v2DeploymentTime()));
+    console.log(
+      "v2DeploymentTime",
+      Number(await scoreWeightControllerV2.v2DeploymentTime())
+    );
   });
 
   beforeEach(async () => {
@@ -446,7 +447,9 @@ describe.only("YamatoV2", function () {
     await yamatoV2.deposit({ value: toERC20(toCollateralize + "") });
     await yamatoV2.borrow(toERC20(toBorrowV2 + ""));
 
-    console.log(Number(await scoreWeightControllerV2.voteUserPower(accounts[0].address)));
+    console.log(
+      Number(await scoreWeightControllerV2.voteUserPower(accounts[0].address))
+    );
     await scoreWeightControllerV2.voteForScoreWeights(
       scoreRegistryV2.address,
       5000
@@ -455,15 +458,27 @@ describe.only("YamatoV2", function () {
     const timeTotal = await scoreWeightControllerV2.timeTotal();
 
     for (let i = 0; i < 12; i++) {
-      const time = (Number(timeTotal) + (month)) - (i * month);
+      const time = Number(timeTotal) + month - i * month;
       console.log("===================");
       console.log(time);
-      console.log(Number(await scoreWeightControllerV2.pointsTotal(time)))
-      console.log(Number(await scoreWeightControllerV2.scoreRelativeWeight(scoreRegistry.address, time)))
-      console.log(Number(await scoreWeightControllerV2.scoreRelativeWeight(scoreRegistryV2.address, time)))
+      console.log(Number(await scoreWeightControllerV2.pointsTotal(time)));
+      console.log(
+        Number(
+          await scoreWeightControllerV2.scoreRelativeWeight(
+            scoreRegistry.address,
+            time
+          )
+        )
+      );
+      console.log(
+        Number(
+          await scoreWeightControllerV2.scoreRelativeWeight(
+            scoreRegistryV2.address,
+            time
+          )
+        )
+      );
     }
-
-
 
     // YMTの残高を取得
     const initialYMTBalance = await YMT.balanceOf(accounts[0].address);

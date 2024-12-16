@@ -21,8 +21,8 @@ export default async function main() {
   const startTime = await YMT.startTime();
   const threeMonthsInSeconds = 3 * 30 * 24 * 60 * 60;
   const startTimePlusThreeMonths = startTime.add(threeMonthsInSeconds);
-  console.log(Number(startTime))
-  console.log(Number(startTimePlusThreeMonths))
+  console.log(Number(startTime));
+  console.log(Number(startTimePlusThreeMonths));
   await runUpgrade(IMPL_NAME_BASE, [], {
     call: { fn: "initializeV2", args: [startTimePlusThreeMonths] },
   });

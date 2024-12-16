@@ -25,11 +25,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   if (
     existsSync(
-      getDeploymentAddressPathWithTag(
-        "PriceFeed",
-        "ERC1967Proxy",
-        currency
-      )
+      getDeploymentAddressPathWithTag("PriceFeed", "ERC1967Proxy", currency)
     )
   )
     return;
@@ -73,11 +69,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   );
 
   writeFileSync(
-    getDeploymentAddressPathWithTag(
-      "PriceFeed",
-      "ERC1967Proxy",
-      currency
-    ),
+    getDeploymentAddressPathWithTag("PriceFeed", "ERC1967Proxy", currency),
     inst.address
   );
   writeFileSync(

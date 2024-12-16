@@ -29,11 +29,7 @@ async function main() {
   ].map((name) => {
     return {
       name,
-      address: readDeploymentAddress(
-        name,
-        "ERC1967Proxy",
-        currency
-      ),
+      address: readDeploymentAddress(name, "ERC1967Proxy", currency),
       abi: genABI(name),
     };
   });

@@ -22,7 +22,8 @@ async function main() {
   const scoreRegistryName = "ScoreRegistry";
   const scoreWeightControllerName = "ScoreWeightController";
   const feePoolName = "FeePool";
-  const PriceFeedSingleName = currency == "CUSD" ? "PriceFeedSingle" : "PriceFeed";
+  const PriceFeedSingleName =
+    currency == "CUSD" ? "PriceFeedSingle" : "PriceFeed";
   const currencyOSName = "CurrencyOS";
   const YmtOSName = "YmtOS";
   const yamatoAddress = readDeploymentAddress(

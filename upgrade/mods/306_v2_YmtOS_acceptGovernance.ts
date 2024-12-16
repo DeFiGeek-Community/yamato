@@ -4,17 +4,11 @@ import { createAndProposeTransaction } from "../../src/safeUtil";
 import { executeTransaction } from "../../src/upgradeUtil";
 
 async function main() {
-
   // コントラクトの情報を配列に格納
-  const contracts = [
-    "YmtOS"
-  ].map((name) => {
+  const contracts = ["YmtOS"].map((name) => {
     return {
       name,
-      address: readDeploymentAddress(
-        name,
-        "ERC1967Proxy",
-      ),
+      address: readDeploymentAddress(name, "ERC1967Proxy"),
       abi: genABI(name),
     };
   });

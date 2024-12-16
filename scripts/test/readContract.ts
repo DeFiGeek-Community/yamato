@@ -2,9 +2,17 @@ import { ethers } from "hardhat";
 import { readDeploymentAddress } from "../../src/addressUtil";
 import { genABI } from "../../src/genABI";
 
-async function readContract(contractName: string, methodName: string, args: any[] = []) {
+async function readContract(
+  contractName: string,
+  methodName: string,
+  args: any[] = []
+) {
   const currency = process.env.CURRENCY;
-  const contractAddress = readDeploymentAddress(contractName, "ERC1967Proxy", currency);
+  const contractAddress = readDeploymentAddress(
+    contractName,
+    "ERC1967Proxy",
+    currency
+  );
   const contractABI = genABI(contractName);
 
   if (!contractAddress) {
@@ -21,7 +29,9 @@ async function readContract(contractName: string, methodName: string, args: any[
     }
 
     // JsonRpcProviderと秘密鍵からWalletを生成し、サイナーとして使用
-    const provider = new ethers.providers.JsonRpcProvider("http://localhost:8545");
+    const provider = new ethers.providers.JsonRpcProvider(
+      "http://localhost:8545"
+    );
     const signer = new ethers.Wallet(adminPrivateKey, provider);
 
     const contract = new ethers.Contract(contractAddress, contractABI, signer);

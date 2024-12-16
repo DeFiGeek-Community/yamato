@@ -15,7 +15,10 @@ async function main() {
   const veYmtAddr = readDeploymentAddress("veYMT");
   const ymtAddr = readDeploymentAddress("YMT");
   const ymtMinterAddr = readDeploymentAddress("YmtMinter", "ERC1967Proxy");
-  const controllerAddr = readDeploymentAddress("ScoreWeightController", "ERC1967Proxy");
+  const controllerAddr = readDeploymentAddress(
+    "ScoreWeightController",
+    "ERC1967Proxy"
+  );
   if (!veYmtAddr) return console.log("not veYMT");
   if (!ymtAddr) return console.log("not YMT");
   if (!ymtMinterAddr) return console.log("not YmtMinter");
@@ -32,9 +35,12 @@ async function main() {
     await executeTransaction(CONTRACT_ADDRESS, CONTRACT_ABI, "setYmtMinter", [
       ymtMinterAddr,
     ]);
-    await executeTransaction(CONTRACT_ADDRESS, CONTRACT_ABI, "setScoreWeightController", [
-      controllerAddr,
-    ]);
+    await executeTransaction(
+      CONTRACT_ADDRESS,
+      CONTRACT_ABI,
+      "setScoreWeightController",
+      [controllerAddr]
+    );
   } else {
     // createAndProposeTransaction関数を使用してトランザクションを作成し、提案する
     await createAndProposeTransaction(

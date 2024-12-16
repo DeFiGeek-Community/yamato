@@ -16,7 +16,8 @@ async function main() {
   }
 
   // currencyの値に応じてPriceFeedを選択
-  const priceFeedContract = currency == "CUSD" ? "PriceFeedSingle" : "PriceFeed";
+  const priceFeedContract =
+    currency == "CUSD" ? "PriceFeedSingle" : "PriceFeed";
 
   const contracts = [
     priceFeedContract,
