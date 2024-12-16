@@ -4,18 +4,14 @@ import { parseEther } from "ethers/lib/utils";
 import { readFileSync } from "fs";
 import {
   deploy,
-  goToEmbededMode,
   hardcodeFactoryAddress,
   singletonProvider,
   getFoundation,
-  getDeployer,
   extractEmbeddedFactoryAddress,
-  recoverFactoryAddress,
   setNetwork,
   setProvider,
   isInitMode,
   isEmbeddedMode,
-  backToInitMode,
   sleep,
   getDeploymentAddressPath,
   verifyWithEtherscan,

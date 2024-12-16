@@ -31,48 +31,11 @@ export function hardcodeFactoryAddress(filename, address) {
   writeFileSync(path, tmp);
 }
 
-export function goToEmbededMode() {
-  writeFileSync(EMBEDDED_MODE_FILE, "");
-  console.log(
-    `\n${EMBEDDED_MODE_FILE} is created. Factory Address is from ${getLocalFactoryAddress()} to ${extractEmbeddedFactoryAddress(
-      "BulksaleV1"
-    )}. Now this command is embedded mode.\n`
-  );
-}
-export function getLocalFactoryAddress() {
-  return process.env.LOCAL_FACTORY_ADDERSS;
-}
 export function isEmbeddedMode() {
   return existsSync(EMBEDDED_MODE_FILE);
 }
 export function isInitMode() {
   return !isEmbeddedMode();
-}
-
-export function recoverFactoryAddress(filename) {
-  let path = `contracts/${filename}.sol`;
-  const localAddress = getLocalFactoryAddress();
-  let tmp = readFileSync(path)
-    .toString()
-    .replace(
-      addressExp,
-      `address public constant factory = address(${localAddress});`
-    );
-  writeFileSync(path, tmp);
-  console.log(
-    `deployUtil.recoverFactoryAddress() ... Embedded address is back to ${localAddress} for ${filename}`
-  );
-}
-export function backToInitMode() {
-  const localAddress = getLocalFactoryAddress();
-  try {
-    unlinkSync(EMBEDDED_MODE_FILE);
-  } catch (e) {
-    console.log(e.message);
-  }
-  console.log(
-    `\n${EMBEDDED_MODE_FILE} is deleted. Now this command is initial mode. ${localAddress} is on the contract-hard-coded-value.\n`
-  );
 }
 
 export function extractEmbeddedFactoryAddress(filename) {

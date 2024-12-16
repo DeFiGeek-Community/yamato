@@ -12,17 +12,13 @@ import { genABI } from "../src/genABI";
 
 import {
   deploy,
-  goToEmbededMode,
   hardcodeFactoryAddress,
   singletonProvider,
   getFoundation,
-  getDeployer,
   extractEmbeddedFactoryAddress,
-  recoverFactoryAddress,
   setProvider,
   isInitMode,
   isEmbeddedMode,
-  backToInitMode,
 } from "../src/deployUtil";
 
 const STATUS = [

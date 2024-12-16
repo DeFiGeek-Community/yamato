@@ -3,17 +3,13 @@ import { DeployFunction } from "hardhat-deploy/types";
 import { parseEther } from "ethers/lib/utils";
 import {
   deploy,
-  goToEmbededMode,
   hardcodeFactoryAddress,
   singletonProvider,
   getFoundation,
-  getDeployer,
   extractEmbeddedFactoryAddress,
-  recoverFactoryAddress,
   setProvider,
   isInitMode,
   isEmbeddedMode,
-  backToInitMode,
   sleep,
   getDeploymentAddressPathWithTag,
   setNetwork,
