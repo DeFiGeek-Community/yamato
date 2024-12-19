@@ -31,16 +31,33 @@ async function main() {
     "Pool",
     "CurrencyOS",
     "ScoreRegistry",
+    "ScoreWeightController",
+    "YmtOS",
   ];
 
+  const currencyConfig = {
+    PriceFeedSingle: true,
+    YamatoRepayer: true,
+    YamatoRedeemer: true,
+    YamatoWithdrawer: true,
+    YamatoSweeper: true,
+    YamatoDepositor: true,
+    YamatoBorrower: true,
+    Yamato: true,
+    Pool: true,
+    CurrencyOS: true,
+    ScoreRegistry: true,
+    ScoreWeightController: false,
+    YmtOS: false,
+  };
   const contractInstances = {};
 
   for (const contractName of contracts) {
-    const proxyAddress = readDeploymentAddress(
-      contractName,
-      "ERC1967Proxy",
-      currency
-    );
+    const requiresCurrency = currencyConfig[contractName];
+    const proxyAddress = requiresCurrency
+      ? readDeploymentAddress(contractName, "ERC1967Proxy", currency)
+      : readDeploymentAddress(contractName, "ERC1967Proxy");
+
     contractInstances[contractName] = new ethers.Contract(
       proxyAddress,
       genABI(contractName),
@@ -52,11 +69,12 @@ async function main() {
     const currency = process.env.CURRENCY;
     const currentImpl = await contractInstance.getImplementation();
     console.log(`${contractName}Proxy`, contractInstance.address);
-    const expectedImpl = readDeploymentAddress(
-      contractName,
-      "UUPSImpl",
-      currency
-    );
+
+    const requiresCurrency = currencyConfig[contractName];
+    const expectedImpl = requiresCurrency
+      ? readDeploymentAddress(contractName, "UUPSImpl", currency)
+      : readDeploymentAddress(contractName, "UUPSImpl");
+
     console.log(`${contractName}Impl`, currentImpl);
     console.log(`${contractName}Impl`, currentImpl.toString() === expectedImpl);
   }
