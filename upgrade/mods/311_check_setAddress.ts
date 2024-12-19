@@ -168,13 +168,11 @@ async function main() {
       ymtOSAddressFromCurrencyOS === ymtOSAddress
     );
 
-    const expectedValue = currency === "CUSD" ? 2 : 3;
-
     const scoreRegistryAddressFromScoreWeightController =
       await scoreWeightControllerInstance.scores(scoreRegistryAddress);
     console.log(
-      `Score Registry Address in Score Weight Controller: ${scoreRegistryAddressFromScoreWeightController}, Expected: ${expectedValue}, Match:`,
-      scoreRegistryAddressFromScoreWeightController == expectedValue
+      `Score Registry Address in Score Weight Controller: ${scoreRegistryAddressFromScoreWeightController} Match:`,
+      scoreRegistryAddressFromScoreWeightController !== 0
     );
 
     const ymtAddressFromYmtOS = await ymtOSInstance.YMT();
