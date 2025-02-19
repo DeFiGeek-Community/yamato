@@ -189,11 +189,13 @@ export function getDeploymentAddressPathWithTag(
 
 export function verifyWithEtherscan() {
   console.log("=== Fetching local addresses");
-
+  const currency = process.env.CURRENCY || undefined;
+  const priceFeedContract =
+    currency == "CUSD" ? "PriceFeedSingle" : "PriceFeed";
   let PriceFeedUUPSImpl = readFileSync(
-    getDeploymentAddressPathWithTag("PriceFeed", "UUPSImpl")
+    getDeploymentAddressPathWithTag(priceFeedContract, "UUPSImpl", currency)
   ).toString();
-  let CJPY = readFileSync(getDeploymentAddressPath("CJPY")).toString();
+  let CJPY = readFileSync(getDeploymentAddressPath(currency ? currency : "CJPY", currency)).toString();
   let YMT = readFileSync(getDeploymentAddressPath("YMT")).toString();
   let veYMT = readFileSync(getDeploymentAddressPath("veYMT")).toString();
   let YmtVesting = readFileSync(
@@ -203,45 +205,48 @@ export function verifyWithEtherscan() {
     getDeploymentAddressPathWithTag("FeePool", "UUPSImpl")
   ).toString();
   let CurrencyOSUUPSImpl = readFileSync(
-    getDeploymentAddressPathWithTag("CurrencyOS", "UUPSImpl")
+    getDeploymentAddressPathWithTag("CurrencyOS", "UUPSImpl", currency)
   ).toString();
   let YamatoUUPSImpl = readFileSync(
-    getDeploymentAddressPathWithTag("Yamato", "UUPSImpl")
+    getDeploymentAddressPathWithTag("Yamato", "UUPSImpl", currency)
   ).toString();
 
   let YamatoDepositorUUPSImpl = readFileSync(
-    getDeploymentAddressPathWithTag("YamatoDepositor", "UUPSImpl")
+    getDeploymentAddressPathWithTag("YamatoDepositor", "UUPSImpl", currency)
   ).toString();
   let YamatoBorrowerUUPSImpl = readFileSync(
-    getDeploymentAddressPathWithTag("YamatoBorrower", "UUPSImpl")
+    getDeploymentAddressPathWithTag("YamatoBorrower", "UUPSImpl", currency)
   ).toString();
   let YamatoRepayerUUPSImpl = readFileSync(
-    getDeploymentAddressPathWithTag("YamatoRepayer", "UUPSImpl")
+    getDeploymentAddressPathWithTag("YamatoRepayer", "UUPSImpl", currency)
   ).toString();
   let YamatoWithdrawerUUPSImpl = readFileSync(
-    getDeploymentAddressPathWithTag("YamatoWithdrawer", "UUPSImpl")
+    getDeploymentAddressPathWithTag("YamatoWithdrawer", "UUPSImpl", currency)
   ).toString();
   let YamatoRedeemerUUPSImpl = readFileSync(
-    getDeploymentAddressPathWithTag("YamatoRedeemer", "UUPSImpl")
+    getDeploymentAddressPathWithTag("YamatoRedeemer", "UUPSImpl", currency)
   ).toString();
   let YamatoSweeperUUPSImpl = readFileSync(
-    getDeploymentAddressPathWithTag("YamatoSweeper", "UUPSImpl")
+    getDeploymentAddressPathWithTag("YamatoSweeper", "UUPSImpl", currency)
   ).toString();
 
   let PoolUUPSImpl = readFileSync(
-    getDeploymentAddressPathWithTag("Pool", "UUPSImpl")
+    getDeploymentAddressPathWithTag("Pool", "UUPSImpl", currency)
   ).toString();
   let PriorityRegistryUUPSImpl = readFileSync(
-    getDeploymentAddressPathWithTag("PriorityRegistry", "UUPSImpl")
+    getDeploymentAddressPathWithTag("PriorityRegistry", "UUPSImpl", currency)
   ).toString();
   let ScoreRegistryUUPSImpl = readFileSync(
-    getDeploymentAddressPathWithTag("ScoreRegistry", "UUPSImpl")
+    getDeploymentAddressPathWithTag("ScoreRegistry", "UUPSImpl", currency)
   ).toString();
   let ScoreWeightControllerUUPSImpl = readFileSync(
     getDeploymentAddressPathWithTag("ScoreWeightController", "UUPSImpl")
   ).toString();
   let YmtMinterUUPSImpl = readFileSync(
     getDeploymentAddressPathWithTag("YmtMinter", "UUPSImpl")
+  ).toString();
+  let YmtOSUUPSImpl = readFileSync(
+    getDeploymentAddressPathWithTag("YmtOS", "UUPSImpl")
   ).toString();
   let PledgeLib = readFileSync(
     getDeploymentAddressPath("PledgeLib")
@@ -250,7 +255,7 @@ export function verifyWithEtherscan() {
   console.log("=== Verify started");
 
   try {
-    let name = getLatestContractName("PriceFeed");
+    let name = getLatestContractName(priceFeedContract);
     console.log(name);
     execSync(
       `npx hardhat verify --network ${getCurrentNetwork()} --contract contracts/${name}.sol:${name} ${PriceFeedUUPSImpl}`
@@ -262,8 +267,9 @@ export function verifyWithEtherscan() {
   }
 
   try {
+    let name = currency ? currency : "CJPY"
     execSync(
-      `npx hardhat verify --network ${getCurrentNetwork()} --contract contracts/CJPY.sol:CJPY ${CJPY}`
+      `npx hardhat verify --network ${getCurrentNetwork()} --contract contracts/${name}.sol:${name} ${CJPY}`
     );
   } catch (e) {
     console.log(e.message);
@@ -418,7 +424,7 @@ export function verifyWithEtherscan() {
     console.log(e.message);
   }
   try {
-    let name = "ScoreWeightController";
+    let name = getLatestContractName("ScoreWeightController");
     console.log(name);
     execSync(
       `npx hardhat verify --network ${getCurrentNetwork()} --contract contracts/${name}.sol:${name} ${ScoreWeightControllerUUPSImpl}`
@@ -431,6 +437,15 @@ export function verifyWithEtherscan() {
     console.log(name);
     execSync(
       `npx hardhat verify --network ${getCurrentNetwork()} --contract contracts/${name}.sol:${name} ${YmtMinterUUPSImpl}`
+    );
+  } catch (e) {
+    console.log(e.message);
+  }
+  try {
+    let name = "YmtOS";
+    console.log(name);
+    execSync(
+      `npx hardhat verify --network ${getCurrentNetwork()} --contract contracts/${name}.sol:${name} ${YmtOSUUPSImpl}`
     );
   } catch (e) {
     console.log(e.message);
@@ -570,8 +585,16 @@ export async function deployImplContract(
     implNameBase,
     contractFactoryOptions
   );
-  const contract = await Contract.deploy();
-  await contract.deployed();
+  // 現在のガス価格を取得
+  const provider = ethers.getDefaultProvider(getCurrentNetwork());
+  const gasPrice = await provider.getGasPrice();
+  const increasedGasPrice = gasPrice.mul(150).div(100); // 50%増し
+  console.log(Number(increasedGasPrice));
+  const contract = await Contract.deploy(...[], { gasPrice: increasedGasPrice, gasLimit:15000000 });
+  console.log(contract)
+  const tx = contract.deployTransaction;
+  console.log(`Waiting for ${implNameBase} deployTx...`);
+  let res = await tx.wait().catch((e) => console.log(e.message));
   console.log(`${implNameBase} deployed to:`, contract.address);
   const implNameWithoutVersion = implNameBase.replace(/V\d+$/, "");
   const implPath = getDeploymentAddressPathWithTag(
