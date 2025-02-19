@@ -4,6 +4,7 @@
 
 - `npx hardhat deploy --tags PriceFeed --network sepolia`
 - `npx hardhat deploy --tags CJPY --network sepolia`
+- `npx hardhat deploy --tags FeePool --network sepolia`
 - `npx hardhat deploy --tags CurrencyOS --network sepolia`
 - `npx hardhat deploy --tags Yamato --network sepolia`
 - `npx hardhat deploy --tags YamatoAction --network sepolia`
@@ -20,7 +21,7 @@
 
 ## ガバナンスをマルチシグへ移行
 
-- `npx hardhat run upgrade/safeTxCreate/290_v1acceptGovernance --network sepolia`
+- `npx hardhat run upgrade/safeTxCreate/090_v1acceptGovernance.ts --network sepolia`
 
 # Yamato v1.5 デプロイ
 
@@ -42,25 +43,86 @@
 
 - `npx hardhat deploy --tags setYmtToken --network sepolia`
 - `npx hardhat deploy --tags setMinter --network sepolia`
-- `npx hardhat deploy --tags setAddress --network sepolia`
-- `npx hardhat deploy --tags setScoreRegistry --network sepolia`
-- `npx hardhat deploy --tags setVeYMT --network sepolia`
 - `npx hardhat deploy --tags addScore --network sepolia`
 
 ## Etherscan の Verify
 
 - `npx hardhat deploy --tags Verify --network sepolia`
 
-## アップグレードの確認
-
-- `npx hardhat run upgrade/deployImpl/090_check_impl.ts --network sepolia`
-- `npx hardhat run upgrade/deployImpl/091_check_setAddress.ts --network sepolia`
-
 ## ガバナンスをマルチシグへ移行
 
-- `npx hardhat deploy --tags transferGovernanceV15 --network localhost`
+- `npx hardhat deploy --tags transferGovernanceV15 --network sepolia`
 - `npx hardhat run upgrade/safeTxCreate/091_v15acceptGovernance.ts  --network sepolia`
-- `npx hardhat run upgrade/deployImpl/092_check_governance.ts --network sepolia`
+
+## アップグレードの確認
+
+- `npx hardhat run upgrade/batches/v1.5-check-localTest.ts --network sepolia`
+
+# Yamato v2 デプロイ
+
+## CUSD デプロイ
+
+- `sed -i '' 's/^CURRENCY=.*/CURRENCY=CUSD/' .env`
+- `npx hardhat deploy --tags YmtOS_V2 --network sepolia`
+- `npx hardhat deploy --tags PriceFeed_USD_V2 --network sepolia`
+- `npx hardhat deploy --tags CURRENCY_V2 --network sepolia`
+- `npx hardhat deploy --tags CurrencyOS_V2 --network sepolia`
+- `npx hardhat deploy --tags Yamato_V2 --network sepolia`
+- `npx hardhat deploy --tags YamatoAction_V2 --network sepolia`
+- `npx hardhat deploy --tags Pool_V2 --network sepolia`
+- `npx hardhat deploy --tags PriorityRegistry_V2 --network sepolia`
+- `npx hardhat deploy --tags setDeps_V2 --network sepolia`
+- `npx hardhat deploy --tags addYamato_V2 --network sepolia`
+- `npx hardhat deploy --tags setYmtOS_V2 --network sepolia`
+- `npx hardhat deploy --tags setCurrencyOS_CURRRECY_V2 --network sepolia`
+- `npx hardhat deploy --tags addCurrencyOS_YmtOS_V2 --network sepolia`
+- `npx hardhat deploy --tags ScoreRegistry_V2 --network sepolia`
+- `npx hardhat deploy --tags setScoreRegistry_V2 --network sepolia`
+- `npx hardhat run upgrade/batches/v2-update-deployImpl.ts --network sepolia`
+- `npx hardhat run upgrade/batches/v2-update-safePropose.ts --network sepolia`
+
+## CEUR デプロイ
+
+- `sed -i '' 's/^CURRENCY=.*/CURRENCY=CEUR/' .env`
+- `npx hardhat deploy --tags PriceFeed_EUR_V2 --network sepolia`
+- `npx hardhat deploy --tags CURRENCY_V2 --network sepolia`
+- `npx hardhat deploy --tags CurrencyOS_V2 --network sepolia`
+- `npx hardhat deploy --tags Yamato_V2 --network sepolia`
+- `npx hardhat deploy --tags YamatoAction_V2 --network sepolia`
+- `npx hardhat deploy --tags Pool_V2 --network sepolia`
+- `npx hardhat deploy --tags PriorityRegistry_V2 --network sepolia`
+- `npx hardhat deploy --tags setDeps_V2 --network sepolia`
+- `npx hardhat deploy --tags addYamato_V2 --network sepolia`
+- `npx hardhat deploy --tags setYmtOS_V2 --network sepolia`
+- `npx hardhat deploy --tags setCurrencyOS_CURRRECY_V2 --network sepolia`
+- `npx hardhat deploy --tags addCurrencyOS_YmtOS_V2 --network sepolia`
+- `npx hardhat deploy --tags ScoreRegistry_V2 --network sepolia`
+- `npx hardhat deploy --tags setScoreRegistry_V2 --network sepolia`
+- `npx hardhat run upgrade/batches/v2-update-safeProposeSecond.ts --network sepolia`
+
+## 権限委譲
+
+### CUSD
+
+- `sed -i '' 's/^CURRENCY=.*/CURRENCY=CUSD/' .env`
+
+- `npx hardhat deploy --tags transferGovernance_V2 --network sepolia`
+- `npx hardhat run upgrade/batches/v2-update-governance.ts --network sepolia`
+
+### CUSD 確認
+
+- `npx hardhat run upgrade/batches/v2-update-check.ts --network sepolia`
+
+### CEUR
+
+- `sed -i '' 's/^CURRENCY=.*/CURRENCY=CEUR/' .env`
+
+- `npx hardhat deploy --tags transferGovernance_V2 --network sepolia`
+- `npx hardhat run upgrade/batches/v2-update-governanceSecond.ts --network sepolia`
+
+### CEUR 確認
+
+- `npx hardhat run upgrade/batches/v2-update-check.ts --network sepolia`
 
 # Localhost のテスト用デプロイ
 
@@ -90,20 +152,22 @@
 - `npx hardhat run upgrade/batches/v1.5-check-localTest.ts --network localhost`
 
 ## v2 デプロイ
+
 ### CUSD
-- .env を CURRENCY=CUSDに設定
+
+- .env を CURRENCY=CUSD に設定
 - .env の PRIVATE_KEY を デプロイする秘密鍵に変更する
 - `npx hardhat deploy --tags YmtOS_V2,PriceFeed_USD_V2,CURRENCY_V2,CurrencyOS_V2,Yamato_V2,YamatoAction_V2,Pool_V2,PriorityRegistry_V2,setDeps_V2,addYamato_V2,setYmtOS_V2,setCurrencyOS_CURRRECY_V2,addCurrencyOS_YmtOS_V2,ScoreRegistry_V2,setScoreRegistry_V2,transferGovernance_V2 --network localhost`
 - `npx hardhat run upgrade/batches/v2-update-deployImpl.ts --network localhost`
 
 ### CUSD
 
-- .env を CURRENCY=CEURに設定
+- .env を CURRENCY=CEUR に設定
 - `npx hardhat deploy --tags ChainLinkMockEurUsd,PriceFeed_EUR_V2,CURRENCY_V2,CurrencyOS_V2,Yamato_V2,YamatoAction_V2,Pool_V2,PriorityRegistry_V2,setDeps_V2,addYamato_V2,setYmtOS_V2,setCurrencyOS_CURRRECY_V2,addCurrencyOS_YmtOS_V2,ScoreRegistry_V2,setScoreRegistry_V2,transferGovernance_V2 --network localhost`
 
-- .env を CURRENCY=CUSDに設定
+- .env を CURRENCY=CUSD に設定
 - .env の PRIVATE_KEY を UUPS_PROXY_ADMIN_MULTISIG_ADDRESS の秘密鍵に変更する必要あり
 - `npx hardhat run upgrade/batches/v2-update-safePropose.ts --network localhost`
 
-- .env を CURRENCY=CEURに設定
+- .env を CURRENCY=CEUR に設定
 - `npx hardhat run upgrade/batches/v2-update-safeProposeSecond.ts --network localhost`
