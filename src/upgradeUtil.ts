@@ -296,15 +296,17 @@ export async function executeTransaction(
   args: any[] = []
 ) {
   // .envからDEPLOYER_PRIVATE_KEYを読み込む
-  const deployerPrivateKey = process.env.DEPLOYER_PRIVATE_KEY;
-  if (!deployerPrivateKey) {
+  const adminPrivateKey = process.env.LOCALHOST_ADMIN_PRIVATE_KEY;
+    if (!adminPrivateKey) {
     console.error("DEPLOYER_PRIVATE_KEY is not defined in .env file");
     return;
   }
 
   // JsonRpcProviderと秘密鍵からWalletを生成し、サイナーとして使用
-  const provider = new ethers.providers.JsonRpcProvider();
-  const signer = new ethers.Wallet(deployerPrivateKey, provider);
+  const provider = new ethers.providers.JsonRpcProvider(
+    "http://127.0.0.1:8545/"
+  );
+  const signer = new ethers.Wallet(adminPrivateKey, provider);
 
   const contract = new ethers.Contract(contractAddress, contractABI, signer);
 
