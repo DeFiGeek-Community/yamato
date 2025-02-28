@@ -79,29 +79,20 @@ module.exports = {
     },
     mainnet: {
       url: process.env.ALCHEMY_URL,
-      accounts: [
-        process.env.FOUNDATION_PRIVATE_KEY,
-        process.env.DEPLOYER_PRIVATE_KEY,
-      ],
+      accounts: [process.env.FOUNDATION_PRIVATE_KEY],
       live: true,
       saveDeployments: true,
     },
     goerli: {
       url: process.env.ALCHEMY_URL.replace(/mainnet/, "goerli"),
-      accounts: [
-        process.env.FOUNDATION_PRIVATE_KEY,
-        process.env.DEPLOYER_PRIVATE_KEY,
-      ],
+      accounts: [process.env.FOUNDATION_PRIVATE_KEY],
       live: true,
       saveDeployments: true,
       tags: ["staging"],
     },
     sepolia: {
       url: process.env.ALCHEMY_URL.replace(/mainnet/, "sepolia"),
-      accounts: [
-        process.env.FOUNDATION_PRIVATE_KEY,
-        process.env.DEPLOYER_PRIVATE_KEY,
-      ],
+      accounts: [process.env.FOUNDATION_PRIVATE_KEY],
       live: true,
       saveDeployments: true,
       tags: ["staging"],
