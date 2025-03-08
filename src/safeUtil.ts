@@ -11,15 +11,37 @@ interface Config {
   SAFE_ADDRESS: string;
 }
 
+// ネットワークごとの設定を定義
+const NETWORK_CONFIG = {
+  sepolia: {
+    CHAIN_ID: BigInt("11155111"),
+    RPC_URL: process.env.SEPOLIA_RPC_URL || "",
+  },
+  "base-sepolia": {
+    CHAIN_ID: BigInt("84532"),
+    RPC_URL: process.env.BASE_SEPOLIA_RPC_URL || "",
+  },
+  mainnet: {
+    CHAIN_ID: BigInt("1"),
+    RPC_URL: process.env.MAINNET_RPC_URL || "",
+  }
+};
+
 export async function createAndProposeTransaction(
   contractAddress: string,
   contractABI: any,
   functionName: string,
   args: any[] = []
 ) {
+  // 環境変数からネットワークを取得（デフォルトはsepolia）
+  const network = (process.env.NETWORK).toLowerCase();
+  
+  // 指定されたネットワークの設定を取得
+  const networkConfig = NETWORK_CONFIG[network as keyof typeof NETWORK_CONFIG] || NETWORK_CONFIG.sepolia;
+  
   const config: Config = {
-    CHAIN_ID: BigInt("11155111"),
-    RPC_URL: process.env.ALCHEMY_URL || "",
+    CHAIN_ID: networkConfig.CHAIN_ID,
+    RPC_URL: networkConfig.RPC_URL,
     SIGNER_ADDRESS_PRIVATE_KEY: process.env.SIGNER_ADDRESS_PRIVATE_KEY || "",
     SAFE_ADDRESS: process.env.UUPS_PROXY_ADMIN_MULTISIG_ADDRESS || "",
   };
@@ -71,4 +93,6 @@ export async function createAndProposeTransaction(
   console.log("- safeTxHash:", safeTxHash);
   console.log("- Sender:", signerAddress);
   console.log("- Sender signature:", signature.data);
+  console.log("- Network:", network);
+  console.log("- Chain ID:", config.CHAIN_ID.toString());
 }

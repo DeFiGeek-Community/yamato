@@ -42,3 +42,5 @@ main()
     console.error(error);
     process.exit(1);
   });
+
+  // npx hardhat run scripts/test/updateMockPrice.ts --network localhost

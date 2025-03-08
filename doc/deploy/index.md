@@ -4,6 +4,7 @@
 
 - `npx hardhat deploy --tags PriceFeed --network sepolia`
 - `npx hardhat deploy --tags CJPY --network sepolia`
+- `npx hardhat deploy --tags FeePool --network sepolia`
 - `npx hardhat deploy --tags CurrencyOS --network sepolia`
 - `npx hardhat deploy --tags Yamato --network sepolia`
 - `npx hardhat deploy --tags YamatoAction --network sepolia`
