@@ -15,15 +15,15 @@ interface Config {
 const NETWORK_CONFIG = {
   sepolia: {
     CHAIN_ID: BigInt("11155111"),
-    RPC_URL: process.env.SEPOLIA_RPC_URL || "",
+    RPC_URL: process.env.ALCHEMY_URL || "",
   },
   "base-sepolia": {
     CHAIN_ID: BigInt("84532"),
-    RPC_URL: process.env.BASE_SEPOLIA_RPC_URL || "",
+    RPC_URL: process.env.ALCHEMY_URL || "",
   },
   mainnet: {
     CHAIN_ID: BigInt("1"),
-    RPC_URL: process.env.MAINNET_RPC_URL || "",
+    RPC_URL: process.env.ALCHEMY_URL || "",
   }
 };
 

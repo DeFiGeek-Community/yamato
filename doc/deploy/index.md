@@ -21,7 +21,7 @@
 
 ## ガバナンスをマルチシグへ移行
 
-- `npx hardhat run upgrade/safeTxCreate/290_v1acceptGovernance --network sepolia`
+- `npx hardhat run upgrade/safeTxCreate/090_v1acceptGovernance.ts --network sepolia`
 
 # Yamato v1.5 デプロイ
 
