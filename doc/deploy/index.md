@@ -46,7 +46,6 @@
 
 - `npx hardhat deploy --tags setYmtToken --network sepolia`
 - `npx hardhat deploy --tags setMinter --network sepolia`
-- `npx hardhat deploy --tags setAddress --network sepolia`
 - `npx hardhat deploy --tags addScore --network sepolia`
 
 ## Etherscan の Verify

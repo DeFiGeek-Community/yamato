@@ -32,10 +32,14 @@ echo "========================================"
 echo "V1.5 deploy"
 echo "========================================"
 
-npx hardhat deploy --tags YmtVesting,YMT,veYMT,ScoreWeightController,YmtMinter,ScoreRegistry,setYmtToken,setMinter,addScore --network localhost
+npx hardhat deploy --tags YmtVesting,YMT,veYMT,ScoreWeightController,YmtMinter,ScoreRegistry --network localhost
 
 npx hardhat run upgrade/batches/v1.5-update-deployImpl.ts --network localhost
 npx hardhat run upgrade/batches/v1.5-update-safePropose.ts --network localhost
+npx hardhat run upgrade/batches/v1.5-update-safePropose2.ts --network localhost
+
+npx hardhat deploy --tags setYmtToken,setMinter,addScore --network localhost
+
 
 # 権限委譲
 npx hardhat deploy --tags transferGovernanceV15 --network localhost
