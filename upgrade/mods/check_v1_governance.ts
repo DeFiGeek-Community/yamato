@@ -39,11 +39,13 @@ async function main() {
       if (typeof instance.governance === "function") {
         const governanceAddress = await instance.governance();
         const pendingGovernanceAddress = await instance.pendingGovernance();
-        
+
         console.log(`${name}:`);
         console.log(`  現在のガバナンスアドレス: ${governanceAddress}`);
         // console.log(`  保留中のガバナンスアドレス: ${pendingGovernanceAddress}`);
-        console.log(`  マルチシグと一致: ${governanceAddress === multisigAddress}`);
+        console.log(
+          `  マルチシグと一致: ${governanceAddress === multisigAddress}`
+        );
         console.log("-------------------------------------------");
       } else {
         console.log(`${name} には governance 関数がありません。`);
@@ -55,7 +57,7 @@ async function main() {
   }
 }
 
-export default main; 
+export default main;
 main();
 
 // npx hardhat run upgrade/mods/check_v1_governance.ts --network sepolia

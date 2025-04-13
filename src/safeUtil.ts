@@ -24,7 +24,7 @@ const NETWORK_CONFIG = {
   mainnet: {
     CHAIN_ID: BigInt("1"),
     RPC_URL: process.env.ALCHEMY_URL || "",
-  }
+  },
 };
 
 export async function createAndProposeTransaction(
@@ -34,11 +34,13 @@ export async function createAndProposeTransaction(
   args: any[] = []
 ) {
   // 環境変数からネットワークを取得（デフォルトはsepolia）
-  const network = (process.env.NETWORK).toLowerCase();
-  
+  const network = process.env.NETWORK.toLowerCase();
+
   // 指定されたネットワークの設定を取得
-  const networkConfig = NETWORK_CONFIG[network as keyof typeof NETWORK_CONFIG] || NETWORK_CONFIG.sepolia;
-  
+  const networkConfig =
+    NETWORK_CONFIG[network as keyof typeof NETWORK_CONFIG] ||
+    NETWORK_CONFIG.sepolia;
+
   const config: Config = {
     CHAIN_ID: networkConfig.CHAIN_ID,
     RPC_URL: networkConfig.RPC_URL,

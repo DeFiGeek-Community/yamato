@@ -101,14 +101,11 @@ export async function getLinkedProxy<
   let implName;
   if (versionSpecification) {
     const contractVersion =
-    versionSpecification == 1
-      ? contractName
-      : `${contractName}V${versionSpecification}`;
+      versionSpecification == 1
+        ? contractName
+        : `${contractName}V${versionSpecification}`;
     contractFactory = <S>(
-      await getLinkedContractFactory(
-        contractVersion,
-        Libraries
-      )
+      await getLinkedContractFactory(contractVersion, Libraries)
     );
     implName = "";
   } else {

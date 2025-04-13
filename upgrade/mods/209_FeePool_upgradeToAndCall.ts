@@ -19,9 +19,12 @@ async function main() {
   if (!implAddress) return console.log("not UUPSImpl");
 
   // 現在のブロックタイムスタンプを取得
-  const latestBlock = await network.provider.send("eth_getBlockByNumber", ["latest", false]);
+  const latestBlock = await network.provider.send("eth_getBlockByNumber", [
+    "latest",
+    false,
+  ]);
   const currentTimestamp = parseInt(latestBlock.timestamp, 16);
-  
+
   // 3ヶ月後のタイムスタンプを計算（秒単位）
   // 1ヶ月を30日と仮定: 30日 * 3ヶ月 * 24時間 * 60分 * 60秒
   const threeMonthsInSeconds = 30 * 3 * 24 * 60 * 60;
@@ -29,10 +32,7 @@ async function main() {
   console.log("現在のタイムスタンプ:", currentTimestamp);
   console.log("3ヶ月後のタイムスタンプ:", number);
 
-  const bytes32Number = ethers.utils.solidityPack(
-    ["uint256"],
-    [number]
-  );
+  const bytes32Number = ethers.utils.solidityPack(["uint256"], [number]);
   const functionSelector = CONTRACT_ABI.getSighash("initializeV2(uint256)");
 
   const packedBytes = ethers.utils.solidityPack(

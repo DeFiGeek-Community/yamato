@@ -14,7 +14,11 @@ async function main() {
   const CONTRACT_ABI = genABI(implNameBase);
   if (process.env.NETWORK === "localhost") {
     // executeTransaction関数を使用して任意のメソッドを実行
-    await executeTransaction(CONTRACT_ADDRESS, CONTRACT_ABI, "toggleAllowCheckpointToken");
+    await executeTransaction(
+      CONTRACT_ADDRESS,
+      CONTRACT_ABI,
+      "toggleAllowCheckpointToken"
+    );
   } else {
     // createAndProposeTransaction関数を使用してトランザクションを作成し、提案する
     await createAndProposeTransaction(

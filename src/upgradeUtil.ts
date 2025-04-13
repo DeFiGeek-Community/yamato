@@ -297,7 +297,7 @@ export async function executeTransaction(
 ) {
   // .envからDEPLOYER_PRIVATE_KEYを読み込む
   const adminPrivateKey = process.env.LOCALHOST_ADMIN_PRIVATE_KEY;
-    if (!adminPrivateKey) {
+  if (!adminPrivateKey) {
     console.error("DEPLOYER_PRIVATE_KEY is not defined in .env file");
     return;
   }
