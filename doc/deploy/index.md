@@ -36,16 +36,17 @@
 
 ## アップグレード
 
-- `npx hardhat run upgrade/batches/v1.5-update.ts --network sepolia`
-- `npx hardhat run upgrade/batches/v1.5-update-safePropose.ts`
+- `npx hardhat run upgrade/batches/v1.5-update-deployImpl.ts --network sepolia`
+- `npx hardhat deploy --tags Verify --network sepolia`
+
+- `npx hardhat run upgrade/batches/v1.5-update-safePropose.ts  --network sepolia`
+- `npx hardhat run upgrade/batches/v1.5-update-safePropose2.ts  --network sepolia`
 
 ## アドレス初期設定
 
 - `npx hardhat deploy --tags setYmtToken --network sepolia`
 - `npx hardhat deploy --tags setMinter --network sepolia`
 - `npx hardhat deploy --tags setAddress --network sepolia`
-- `npx hardhat deploy --tags setScoreRegistry --network sepolia`
-- `npx hardhat deploy --tags setVeYMT --network sepolia`
 - `npx hardhat deploy --tags addScore --network sepolia`
 
 ## Etherscan の Verify
@@ -59,7 +60,7 @@
 
 ## ガバナンスをマルチシグへ移行
 
-- `npx hardhat deploy --tags transferGovernanceV15 --network localhost`
+- `npx hardhat deploy --tags transferGovernanceV15 --network sepolia`
 - `npx hardhat run upgrade/safeTxCreate/091_v15acceptGovernance.ts  --network sepolia`
 - `npx hardhat run upgrade/deployImpl/092_check_governance.ts --network sepolia`
 
