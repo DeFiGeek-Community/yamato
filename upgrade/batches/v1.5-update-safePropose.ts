@@ -23,9 +23,9 @@ async function main() {
   await _import("../mods/207_CurrencyOS_upgradeTo");
   await _import("../mods/208_Yamato_upgradeTo");
   await _import("../mods/209_FeePool_upgradeToAndCall");
-  await _import("../mods/230_Yamato_setScoreRegistry");
-  await _import("../mods/231_FeePool_setVeYMT");
-  await _import("../mods/232_CurrencyOS_setAddress");
+  // await _import("../mods/230_Yamato_setScoreRegistry");
+  // await _import("../mods/231_FeePool_setVeYMT");
+  // await _import("../mods/232_CurrencyOS_setAddress");
 }
 
 main();
