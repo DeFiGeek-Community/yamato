@@ -7,13 +7,13 @@ async function readContract(
   methodName: string,
   args: any[] = []
 ) {
-  const currency = process.env.CURRENCY;
+  // const currency = process.env.CURRENCY;
   const contractAddress = readDeploymentAddress(
     contractName,
-    "ERC1967Proxy",
-    currency
+    "ERC1967Proxy"
+    // currency
   );
-  const contractABI = genABI(contractName);
+  const contractABI = genABI(contractName + "V2");
 
   if (!contractAddress) {
     console.error(`${contractName} contract address not found.`);
@@ -45,8 +45,8 @@ async function readContract(
 }
 
 async function main() {
-  const contractName = "Yamato"; //readしたいコントラクト
-  const methodName = "currencyOS"; // readしたい関数名
+  const contractName = "FeePool"; //readしたいコントラクト
+  const methodName = "canCheckpointToken"; // readしたい関数名
   await readContract(contractName, methodName);
 }
 
