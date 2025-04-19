@@ -420,4 +420,20 @@ describe("PriorityRegistry consistency", () => {
       console.log((await PriorityRegistry.getSweepablesCap()).toNumber());
     });
   });
+
+  describe("setLICR authorization check",function() {
+    it(`should success by governor`, async function () {
+      const currentLICR = await PriorityRegistry.LICR();
+      const newLICR = currentLICR.add(1);
+      await PriorityRegistry.connect(accounts[0]).setLICR(newLICR);
+      expect(await PriorityRegistry.LICR()).eq(newLICR);
+    });
+
+    it(`should fail by not governor`, async function () {
+      const currentLICR = await PriorityRegistry.LICR();
+      const newLICR = currentLICR.add(1);
+      await PriorityRegistry.setLICR(newLICR);
+      await expect(PriorityRegistry.connect(accounts[1]).setLICR(newLICR)).to.be.reverted;
+    });
+  });
 });
