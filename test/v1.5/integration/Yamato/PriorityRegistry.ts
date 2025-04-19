@@ -7,6 +7,7 @@ import {
   takeSnapshot,
   SnapshotRestorer,
   reset,
+  setStorageAt,
 } from "@nomicfoundation/hardhat-network-helpers";
 import { toERC20 } from "../../../param/helper";
 import {
@@ -434,6 +435,47 @@ describe("PriorityRegistry consistency", () => {
       const newLICR = currentLICR.add(1);
       await PriorityRegistry.setLICR(newLICR);
       await expect(PriorityRegistry.connect(accounts[1]).setLICR(newLICR)).to.be.reverted;
+    });
+  });
+
+  describe("mainnet properties", function() {
+    before(async () => {
+      await reset("https://eth-mainnet.g.alchemy.com/v2/LSQunA2PMIGyHH_8iyVqtDwLsZ9qzbr3");
+    });
+    it("watch priorities",async function() {
+      PriorityRegistry = await ethers.getContractAt("PriorityRegistryV7","0x0c9Bdf09de9EaCbE692dB2c17a75bfdB5FF4190B");
+      console.log("LICR",(await PriorityRegistry.LICR()).toNumber());
+      for(var i=100;i<=130;i++) {
+        const queueLen = await PriorityRegistry.rankedQueueTotalLen(i);
+        if(queueLen.gt(0)) {
+          console.log(i,queueLen.toNumber());
+        }
+      }
+    });
+
+    it("LICR change simulate",async function() {
+      const PriorityRegistryAddr = "0x0c9Bdf09de9EaCbE692dB2c17a75bfdB5FF4190B";
+      PriorityRegistry = await ethers.getContractAt("PriorityRegistryV7",PriorityRegistryAddr);
+
+      console.log("LICR",(await PriorityRegistry.LICR()).toNumber());
+      
+      const currentRedeemablescap = await PriorityRegistry.getRedeemablesCap();
+      console.log("redeemablescap",currentRedeemablescap.toNumber());
+
+      let newLICR;
+      for(var i=100;i<=130;i++) {
+        const queueLen = await PriorityRegistry.rankedQueueTotalLen(i);
+        if(queueLen.gt(0)) {
+          newLICR = i;
+          console.log("newLICR",newLICR);
+          break;
+        }
+      }
+
+      await setStorageAt(PriorityRegistryAddr, 108, "0x" + BigInt(newLICR).toString(16).padStart(64, "0"));
+      console.log("LICR",(await PriorityRegistry.LICR()).toNumber());
+      console.log("redeemablescap",(await PriorityRegistry.getRedeemablesCap()).toNumber());
+
     });
   });
 });
