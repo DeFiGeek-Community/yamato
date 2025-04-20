@@ -12,7 +12,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { ethers, deployments } = hre;
   const { getContractFactory } = ethers;
 
-  const multisigAddr = process.env.UUPS_PROXY_ADMIN_MULTISIG_ADDRESS;
+  const multisigAddr = process.env.COMMUNITY_MULTISIG_ADDRESS;
   if (!multisigAddr) return console.log(`not admin address`);
 
   const ymtVestingAddr = readFileSync(
