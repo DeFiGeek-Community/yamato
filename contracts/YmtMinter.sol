@@ -60,10 +60,7 @@ contract YmtMinter is
         address scoreAddr_,
         address for_
     ) internal returns (uint256) {
-        require(
-            block.timestamp > startTime,
-            "Minting not yet started"
-        );
+        require(block.timestamp > startTime, "Minting not yet started");
         require(
             IScoreWeightController(scoreWeightController()).scores(scoreAddr_) >
                 0,

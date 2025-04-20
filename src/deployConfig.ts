@@ -1,3 +1,3 @@
 export const deployConfig = {
-    startTime: 1753412400,
-}
+  startTime: 1753412400,
+};

@@ -1,4 +1,4 @@
-import { ethers,network } from "hardhat";
+import { ethers, network } from "hardhat";
 import { FakeContract, smock } from "@defi-wonderland/smock";
 import chai, { expect } from "chai";
 import { Signer, BigNumber, Wallet, ContractReceipt } from "ethers";
@@ -87,11 +87,14 @@ describe("PriorityRegistry consistency", () => {
 
   let snapshot: SnapshotRestorer;
 
-  function viewPledgeInfo(pledge,price) {
-    console.log("pledge.coll",pledge.coll.toString());
-    console.log("pledge.debt",pledge.debt.toString());
-    console.log("pledge.priority",pledge.priority.toString());
-    console.log("pledge calculated priority",pledge.coll.mul(price).div(pledge.debt).toString());
+  function viewPledgeInfo(pledge, price) {
+    console.log("pledge.coll", pledge.coll.toString());
+    console.log("pledge.debt", pledge.debt.toString());
+    console.log("pledge.priority", pledge.priority.toString());
+    console.log(
+      "pledge calculated priority",
+      pledge.coll.mul(price).div(pledge.debt).toString()
+    );
   }
 
   before(async () => {
@@ -256,7 +259,7 @@ describe("PriorityRegistry consistency", () => {
     await snapshot.restore();
   });
 
-  describe("redeem()", function() {
+  describe("redeem()", function () {
     const depositAndBorrowValues = [
       { deposit: "0.1", borrow: "200" },
       { deposit: "10", borrow: "20100" },
@@ -282,77 +285,83 @@ describe("PriorityRegistry consistency", () => {
       }
       let pledge0;
       let pledge1;
-      
+
       console.log("---pledge setup---");
-      console.log("LICR",(await PriorityRegistry.LICR()).toNumber());
+      console.log("LICR", (await PriorityRegistry.LICR()).toNumber());
       pledge0 = await Yamato.getPledge(accounts[0].address);
       pledge1 = await Yamato.getPledge(accounts[1].address);
       console.log("---pledge0---");
-      viewPledgeInfo(pledge0,await PriceFeed.getPrice());
+      viewPledgeInfo(pledge0, await PriceFeed.getPrice());
       console.log("---pledge1---");
-      viewPledgeInfo(pledge1,await PriceFeed.getPrice());
+      viewPledgeInfo(pledge1, await PriceFeed.getPrice());
 
       console.log("---price dumped---");
       await (await ChainLinkEthUsd.setLastPrice(dumpPrice)).wait();
-      await (await ChainLinkUsdJpy.setLastPrice(100000000)).wait();  
+      await (await ChainLinkUsdJpy.setLastPrice(100000000)).wait();
       await Yamato.connect(accounts[0]).repay(BigNumber.from(1));
-      console.log("LICR",(await PriorityRegistry.LICR()).toNumber());
+      console.log("LICR", (await PriorityRegistry.LICR()).toNumber());
       pledge0 = await Yamato.getPledge(accounts[0].address);
       pledge1 = await Yamato.getPledge(accounts[1].address);
       console.log("---pledge0---");
-      viewPledgeInfo(pledge0,await PriceFeed.getPrice());
+      viewPledgeInfo(pledge0, await PriceFeed.getPrice());
       console.log("---pledge1---");
-      viewPledgeInfo(pledge1,await PriceFeed.getPrice());
+      viewPledgeInfo(pledge1, await PriceFeed.getPrice());
 
       console.log("---redeemed---");
-      await Yamato.connect(accounts[2]).redeem(redeemAmount.add(BigNumber.from(1)),false);
+      await Yamato.connect(accounts[2]).redeem(
+        redeemAmount.add(BigNumber.from(1)),
+        false
+      );
 
       console.log("---after status---");
-      console.log("LICR",(await PriorityRegistry.LICR()).toNumber());
+      console.log("LICR", (await PriorityRegistry.LICR()).toNumber());
       pledge0 = await Yamato.getPledge(accounts[0].address);
       pledge1 = await Yamato.getPledge(accounts[1].address);
       console.log("---pledge0---");
-      viewPledgeInfo(pledge0,await PriceFeed.getPrice());
+      viewPledgeInfo(pledge0, await PriceFeed.getPrice());
       console.log("---pledge1---");
-      viewPledgeInfo(pledge1,await PriceFeed.getPrice());
+      viewPledgeInfo(pledge1, await PriceFeed.getPrice());
 
       console.log("---next redeem revert---");
-      await expect(Yamato.connect(accounts[2]).redeem(BigNumber.from(1),false)).to.be.reverted;
+      await expect(Yamato.connect(accounts[2]).redeem(BigNumber.from(1), false))
+        .to.be.reverted;
 
       console.log("---after status---");
-      console.log("LICR",(await PriorityRegistry.LICR()).toNumber());
+      console.log("LICR", (await PriorityRegistry.LICR()).toNumber());
       pledge0 = await Yamato.getPledge(accounts[0].address);
       pledge1 = await Yamato.getPledge(accounts[1].address);
       console.log("---pledge0---");
-      viewPledgeInfo(pledge0,await PriceFeed.getPrice());
+      viewPledgeInfo(pledge0, await PriceFeed.getPrice());
       console.log("---pledge1---");
-      viewPledgeInfo(pledge1,await PriceFeed.getPrice());
+      viewPledgeInfo(pledge1, await PriceFeed.getPrice());
 
       console.log("---ICR force change---");
       await PriorityRegistry.setLICR(128);
       console.log("---next redeem not revert---");
-      await expect(Yamato.connect(accounts[2]).redeem(BigNumber.from(1),false)).not.to.be.reverted;
+      await expect(Yamato.connect(accounts[2]).redeem(BigNumber.from(1), false))
+        .not.to.be.reverted;
 
       console.log("---after status---");
       pledge0 = await Yamato.getPledge(accounts[0].address);
       pledge1 = await Yamato.getPledge(accounts[1].address);
       console.log("---pledge0---");
-      viewPledgeInfo(pledge0,await PriceFeed.getPrice());
+      viewPledgeInfo(pledge0, await PriceFeed.getPrice());
       console.log("---pledge1---");
-      viewPledgeInfo(pledge1,await PriceFeed.getPrice());
+      viewPledgeInfo(pledge1, await PriceFeed.getPrice());
       console.log((await PriorityRegistry.LICR()).toNumber());
 
-      for(var i=100;i<=300;i++) {
-        const rankedQueueLen = (await PriorityRegistry.rankedQueueLen(i)).toNumber();
+      for (var i = 100; i <= 300; i++) {
+        const rankedQueueLen = (
+          await PriorityRegistry.rankedQueueLen(i)
+        ).toNumber();
         if (rankedQueueLen > 0) {
-          console.log("rankedQueue",i,rankedQueueLen);
+          console.log("rankedQueue", i, rankedQueueLen);
         }
       }
     });
-
   });
 
-  describe("redeem range", function() {
+  describe("redeem range", function () {
     const depositAndBorrowValues = [
       { deposit: "1", borrow: "1000" },
       { deposit: "1", borrow: "1300" },
@@ -366,7 +375,9 @@ describe("PriorityRegistry consistency", () => {
       await Yamato.connect(accounts[0]).deposit({
         value: toERC20(depositAndBorrowValues[0].deposit),
       });
-      await Yamato.connect(accounts[0]).borrow(toERC20(depositAndBorrowValues[0].borrow));
+      await Yamato.connect(accounts[0]).borrow(
+        toERC20(depositAndBorrowValues[0].borrow)
+      );
 
       await (await ChainLinkEthUsd.setLastPrice(initPrice.mul(2))).wait();
       await (await ChainLinkUsdJpy.setLastPrice(100000000)).wait();
@@ -374,47 +385,51 @@ describe("PriorityRegistry consistency", () => {
       await Yamato.connect(accounts[1]).deposit({
         value: toERC20(depositAndBorrowValues[1].deposit),
       });
-      await Yamato.connect(accounts[1]).borrow(toERC20(depositAndBorrowValues[1].borrow));
+      await Yamato.connect(accounts[1]).borrow(
+        toERC20(depositAndBorrowValues[1].borrow)
+      );
 
       let pledge0;
       let pledge1;
-      
+
       console.log("---pledge setup---");
-      console.log("LICR",(await PriorityRegistry.LICR()).toNumber());
+      console.log("LICR", (await PriorityRegistry.LICR()).toNumber());
       pledge0 = await Yamato.getPledge(accounts[0].address);
       pledge1 = await Yamato.getPledge(accounts[1].address);
       console.log("---pledge0---");
-      viewPledgeInfo(pledge0,await PriceFeed.getPrice());
+      viewPledgeInfo(pledge0, await PriceFeed.getPrice());
       console.log("---pledge1---");
-      viewPledgeInfo(pledge1,await PriceFeed.getPrice());
-
+      viewPledgeInfo(pledge1, await PriceFeed.getPrice());
 
       console.log("---price dumped---");
       await (await ChainLinkEthUsd.setLastPrice(initPrice)).wait();
       await (await ChainLinkUsdJpy.setLastPrice(100000000)).wait();
 
-      console.log("LICR",(await PriorityRegistry.LICR()).toNumber());
+      console.log("LICR", (await PriorityRegistry.LICR()).toNumber());
       pledge0 = await Yamato.getPledge(accounts[0].address);
       pledge1 = await Yamato.getPledge(accounts[1].address);
       console.log("---pledge0---");
-      viewPledgeInfo(pledge0,await PriceFeed.getPrice());
+      viewPledgeInfo(pledge0, await PriceFeed.getPrice());
       console.log("---pledge1---");
-      viewPledgeInfo(pledge1,await PriceFeed.getPrice());
+      viewPledgeInfo(pledge1, await PriceFeed.getPrice());
 
-      await expect(Yamato.connect(accounts[0]).redeem(toERC20("900"),false)).to.be.reverted;
+      await expect(Yamato.connect(accounts[0]).redeem(toERC20("900"), false)).to
+        .be.reverted;
 
-      console.log("LICR",(await PriorityRegistry.LICR()).toNumber());
+      console.log("LICR", (await PriorityRegistry.LICR()).toNumber());
       pledge0 = await Yamato.getPledge(accounts[0].address);
       pledge1 = await Yamato.getPledge(accounts[1].address);
       console.log("---pledge0---");
-      viewPledgeInfo(pledge0,await PriceFeed.getPrice());
+      viewPledgeInfo(pledge0, await PriceFeed.getPrice());
       console.log("---pledge1---");
-      viewPledgeInfo(pledge1,await PriceFeed.getPrice());
+      viewPledgeInfo(pledge1, await PriceFeed.getPrice());
 
-      for(var i=100;i<=300;i++) {
-        const rankedQueueLen = (await PriorityRegistry.rankedQueueLen(i)).toNumber();
+      for (var i = 100; i <= 300; i++) {
+        const rankedQueueLen = (
+          await PriorityRegistry.rankedQueueLen(i)
+        ).toNumber();
         if (rankedQueueLen > 0) {
-          console.log("rankedQueue",i,rankedQueueLen);
+          console.log("rankedQueue", i, rankedQueueLen);
         }
       }
       console.log((await PriorityRegistry.getRedeemablesCap()).toNumber());
@@ -422,7 +437,7 @@ describe("PriorityRegistry consistency", () => {
     });
   });
 
-  describe("setLICR authorization check",function() {
+  describe("setLICR authorization check", function () {
     it(`should success by governor`, async function () {
       const currentLICR = await PriorityRegistry.LICR();
       const newLICR = currentLICR.add(1);
@@ -434,48 +449,63 @@ describe("PriorityRegistry consistency", () => {
       const currentLICR = await PriorityRegistry.LICR();
       const newLICR = currentLICR.add(1);
       await PriorityRegistry.setLICR(newLICR);
-      await expect(PriorityRegistry.connect(accounts[1]).setLICR(newLICR)).to.be.reverted;
+      await expect(PriorityRegistry.connect(accounts[1]).setLICR(newLICR)).to.be
+        .reverted;
     });
   });
 
-  describe("mainnet properties", function() {
+  describe("mainnet properties", function () {
     before(async () => {
-      await reset("https://eth-mainnet.g.alchemy.com/v2/LSQunA2PMIGyHH_8iyVqtDwLsZ9qzbr3");
+      await reset(
+        "https://eth-mainnet.g.alchemy.com/v2/LSQunA2PMIGyHH_8iyVqtDwLsZ9qzbr3"
+      );
     });
-    it("watch priorities",async function() {
-      PriorityRegistry = await ethers.getContractAt("PriorityRegistryV7","0x0c9Bdf09de9EaCbE692dB2c17a75bfdB5FF4190B");
-      console.log("LICR",(await PriorityRegistry.LICR()).toNumber());
-      for(var i=100;i<=130;i++) {
+    it("watch priorities", async function () {
+      PriorityRegistry = await ethers.getContractAt(
+        "PriorityRegistryV7",
+        "0x0c9Bdf09de9EaCbE692dB2c17a75bfdB5FF4190B"
+      );
+      console.log("LICR", (await PriorityRegistry.LICR()).toNumber());
+      for (var i = 100; i <= 130; i++) {
         const queueLen = await PriorityRegistry.rankedQueueTotalLen(i);
-        if(queueLen.gt(0)) {
-          console.log(i,queueLen.toNumber());
+        if (queueLen.gt(0)) {
+          console.log(i, queueLen.toNumber());
         }
       }
     });
 
-    it("LICR change simulate",async function() {
+    it("LICR change simulate", async function () {
       const PriorityRegistryAddr = "0x0c9Bdf09de9EaCbE692dB2c17a75bfdB5FF4190B";
-      PriorityRegistry = await ethers.getContractAt("PriorityRegistryV7",PriorityRegistryAddr);
+      PriorityRegistry = await ethers.getContractAt(
+        "PriorityRegistryV7",
+        PriorityRegistryAddr
+      );
 
-      console.log("LICR",(await PriorityRegistry.LICR()).toNumber());
-      
+      console.log("LICR", (await PriorityRegistry.LICR()).toNumber());
+
       const currentRedeemablescap = await PriorityRegistry.getRedeemablesCap();
-      console.log("redeemablescap",currentRedeemablescap.toNumber());
+      console.log("redeemablescap", currentRedeemablescap.toNumber());
 
       let newLICR;
-      for(var i=100;i<=130;i++) {
+      for (var i = 100; i <= 130; i++) {
         const queueLen = await PriorityRegistry.rankedQueueTotalLen(i);
-        if(queueLen.gt(0)) {
+        if (queueLen.gt(0)) {
           newLICR = i;
-          console.log("newLICR",newLICR);
+          console.log("newLICR", newLICR);
           break;
         }
       }
 
-      await setStorageAt(PriorityRegistryAddr, 108, "0x" + BigInt(newLICR).toString(16).padStart(64, "0"));
-      console.log("LICR",(await PriorityRegistry.LICR()).toNumber());
-      console.log("redeemablescap",(await PriorityRegistry.getRedeemablesCap()).toNumber());
-
+      await setStorageAt(
+        PriorityRegistryAddr,
+        108,
+        "0x" + BigInt(newLICR).toString(16).padStart(64, "0")
+      );
+      console.log("LICR", (await PriorityRegistry.LICR()).toNumber());
+      console.log(
+        "redeemablescap",
+        (await PriorityRegistry.getRedeemablesCap()).toNumber()
+      );
     });
   });
 });
