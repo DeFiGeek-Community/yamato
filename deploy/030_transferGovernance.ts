@@ -58,7 +58,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await (
     await YmtVesting.connect(getFoundation()).setAdmin(communityMultisigAddress)
   ).wait();
-  console.log(`log: YmtVesting.setAdmin(${communityMultisigAddress}) executed.`);
+  console.log(
+    `log: YmtVesting.setAdmin(${communityMultisigAddress}) executed.`
+  );
 
   await (
     await YmtMinter.connect(getFoundation()).setGovernance(multisigAddr)

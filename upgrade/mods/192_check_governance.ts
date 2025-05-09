@@ -94,12 +94,10 @@ async function main() {
             governanceAddress === multisigAddress
           );
         }
-
       } else {
         console.log(`${name} does not have a ${governanceFunction} function.`);
       }
     }
-
   } catch (error) {
     console.error(`Error verifying governance addresses:`, error);
   }
