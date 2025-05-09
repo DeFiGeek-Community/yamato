@@ -30,7 +30,7 @@
     "upgrade:goerli:redeemerDoS": "YMT_CLI_MODE=upgrade hardhat run upgrade/batches/commit79597f-202203280247.ts --network goerli",
     "verify:goerli": "hardhat verify --network goerli",
     "verify:goerli:all": "hardhat run src/verifyGoerliContracts.ts",
-        "verify:goerli:showURL": "ts-node src/showGoerliProxyVerificationURLs.ts"
+    "verify:goerli:showURL": "ts-node src/showGoerliProxyVerificationURLs.ts"
   },
   "dependencies": {
     "@openzeppelin/contracts": "v4.3.0-rc.0",

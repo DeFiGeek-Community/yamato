@@ -164,7 +164,7 @@ describe("ScoreRegistry kick", function () {
 
     ymtMinter = await getProxy<YmtMinter, YmtMinter__factory>(
       contractVersion["YmtMinter"],
-      [YMT.address, scoreWeightController.address]
+      [YMT.address, scoreWeightController.address, 0]
     );
 
     scoreRegistry = await getLinkedProxy<ScoreRegistry, ScoreRegistry__factory>(

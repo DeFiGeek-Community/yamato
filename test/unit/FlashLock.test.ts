@@ -206,7 +206,7 @@ describe("FlashLock :: contract Yamato", () => {
 
     YmtMinter = await getProxy<YmtMinter, YmtMinter__factory>(
       contractVersion["YmtMinter"],
-      [YMT.address, ScoreWeightController.address]
+      [YMT.address, ScoreWeightController.address, 0]
     );
 
     ScoreRegistry = await getLinkedProxy<ScoreRegistry, ScoreRegistry__factory>(

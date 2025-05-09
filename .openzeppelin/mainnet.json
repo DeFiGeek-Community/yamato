@@ -180,9 +180,7 @@
           },
           "t_enum(Status)4269": {
             "label": "enum IPriceFeedFlexV3.Status",
-            "members": [
-              "chainlinkWorking"
-            ],
+            "members": ["chainlinkWorking"],
             "numberOfBytes": "1"
           },
           "t_uint256": {

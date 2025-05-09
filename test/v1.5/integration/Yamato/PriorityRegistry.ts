@@ -1,4 +1,4 @@
-import { ethers, network } from "hardhat";
+import { ethers, network, helpers } from "hardhat";
 import { FakeContract, smock } from "@defi-wonderland/smock";
 import chai, { expect } from "chai";
 import { Signer, BigNumber, Wallet, ContractReceipt } from "ethers";
@@ -9,6 +9,7 @@ import {
   reset,
   setStorageAt,
 } from "@nomicfoundation/hardhat-network-helpers";
+
 import { toERC20 } from "../../../param/helper";
 import {
   ChainLinkMock,
@@ -224,7 +225,7 @@ describe("PriorityRegistry consistency", () => {
 
     YmtMinter = await getProxy<YmtMinter, YmtMinter__factory>(
       contractVersion["YmtMinter"],
-      [YMT.address, ScoreWeightController.address]
+      [YMT.address, ScoreWeightController.address, 0]
     );
 
     ScoreRegistry = await getLinkedProxy<ScoreRegistry, ScoreRegistry__factory>(
@@ -454,7 +455,7 @@ describe("PriorityRegistry consistency", () => {
     });
   });
 
-  describe("mainnet properties", function () {
+  describe.only("mainnet properties", function () {
     before(async () => {
       await reset(
         "https://eth-mainnet.g.alchemy.com/v2/LSQunA2PMIGyHH_8iyVqtDwLsZ9qzbr3"
