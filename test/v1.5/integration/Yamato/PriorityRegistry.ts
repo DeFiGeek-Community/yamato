@@ -1,4 +1,4 @@
-import { ethers, network, helpers } from "hardhat";
+import { ethers, network } from "hardhat";
 import { FakeContract, smock } from "@defi-wonderland/smock";
 import chai, { expect } from "chai";
 import { Signer, BigNumber, Wallet, ContractReceipt } from "ethers";
@@ -455,7 +455,7 @@ describe("PriorityRegistry consistency", () => {
     });
   });
 
-  describe.only("mainnet properties", function () {
+  describe("mainnet properties", function () {
     before(async () => {
       await reset(
         "https://eth-mainnet.g.alchemy.com/v2/LSQunA2PMIGyHH_8iyVqtDwLsZ9qzbr3"
