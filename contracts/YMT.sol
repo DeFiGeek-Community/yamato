@@ -45,7 +45,7 @@ contract YMT is ERC20Permit {
     constructor(
         address ymtVestingAddr,
         address initialMintAddr
-    ) ERC20Permit("Yamato") ERC20("Yamato", "YMT") {
+    ) ERC20Permit("Yamato DAO Token") ERC20("Yamato DAO Token", "YMT") {
         _mint(initialMintAddr, INITIAL_SUPPLY);
         _mint(ymtVestingAddr, VESTING_SUPPLY);
 
