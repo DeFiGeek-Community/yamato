@@ -16,6 +16,7 @@ interface EventData {
   allScore: number; // 全スコア
 }
 
+// --- 1. ICR 計算 ---------------------------------------------
 function calculateICR(
   collateral: BigNumber,
   debt: BigNumber,
@@ -24,11 +25,14 @@ function calculateICR(
   const collateralValue = Number(utils.formatUnits(collateral, 18));
   const debtValue = Number(utils.formatUnits(debt, 18));
   const priceValue = Number(utils.formatUnits(price, 18));
-  const collateralInCurrency = collateralValue * priceValue;
 
-  return collateralValue === 0 || debtValue === 0
-    ? 0
-    : (100 * collateralInCurrency) / debtValue;
+  // 完済(借入ゼロ) だが担保が残っているケース
+  if (debtValue === 0) {
+    return collateralValue === 0 ? 0 : 130; // “無限大” として扱う
+  }
+
+  const collateralInCurrency = collateralValue * priceValue;
+  return (100 * collateralInCurrency) / debtValue;
 }
 
 function calculateScore(icr: number): number {
@@ -112,16 +116,16 @@ export function processExtractedEvents() {
 
       const baseScore = event.icrScore * event.cjpy;
       event.baseScore = baseScore;
+      // --- 2. diffScore 計算 ---------------------------------------
       const previousEvent =
         index > 0 ? extractedEvents[address][index - 1] : null;
       const timeDifference = previousEvent
         ? event.blockNumber - previousEvent.blockNumber
         : 0;
-      event.diffScore =
-        previousEvent && previousEvent.diffScore !== 0
-          ? baseScore * timeDifference
-          : baseScore;
 
+      event.diffScore = previousEvent
+        ? previousEvent.baseScore * timeDifference // 直前の baseScore を期間で積分
+        : baseScore; // 初回イベントのみ
       event.allScore = previousEvent
         ? previousEvent.allScore + event.diffScore
         : event.diffScore;
