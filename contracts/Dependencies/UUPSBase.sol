@@ -25,11 +25,11 @@ contract UUPSBase is IUUPSEtherscanVerifiable, Initializable, UUPSUpgradeable {
     event UpdateGovernance(address _sender);
     event RevokeGovernance(address _sender);
 
-    function __UUPSBase_init() internal initializer {
+    function __UUPSBase_init() internal onlyInitializing {
         __UUPSBase_init_unchained();
     }
 
-    function __UUPSBase_init_unchained() internal initializer {
+    function __UUPSBase_init_unchained() internal onlyInitializing {
         governance = msg.sender;
         tester = msg.sender;
     }

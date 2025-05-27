@@ -14,6 +14,7 @@
 
 // delete PledgeLib goerli cache file
 import { setNetwork } from "../../src/deployUtil";
+import { _import } from "./importUtil";
 
 async function main() {
   setNetwork("goerli");
@@ -80,8 +81,4 @@ if (process.env.YMT_CLI_MODE == "upgrade") {
   downgrade().then();
 } else {
   throw new Error("Use YMT_CLI_MODE env var.");
-}
-
-async function _import(path: string) {
-  return await (await import(path)).default();
 }

@@ -20,7 +20,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { ethers, deployments } = hre;
   const { getContractFactory } = ethers;
 
-  const inst = await getProxy<FeePool, FeePool__factory>("FeePool", []);
+  const inst = await getProxy<FeePool, FeePool__factory>(
+    "FeePool",
+    [],
+    1,
+    true
+  );
   const implAddr = await inst.getImplementation();
   console.log(
     `FeePool is deployed as ${

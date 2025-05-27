@@ -15,7 +15,8 @@ typechain/*
 *.dbg.json
 cache/**/*
 !deployments/goerli/.chainId
-deployments/localhost
+!deployments/localhost/.chainId
+deployments/localhost/*
 typechain-types
 abis
 test/**/*.js

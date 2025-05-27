@@ -49,7 +49,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     )
   ) {
     await deployYamatoAction<YamatoBorrower, YamatoBorrower__factory>(
-      "Borrower"
+      "Borrower",
+      1
     );
   }
 

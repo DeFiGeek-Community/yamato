@@ -1,0 +1,1596 @@
+{
+  "totalScore": 1318072586228398.2,
+  "totalDistributedTokensBig": "49999999.999999999999999937",
+  "distributions": [
+    {
+      "address": "0xDb951423188b9cBE6293937eDB2303dcECFE559C",
+      "score": 9549757643.95,
+      "scorePercentage": 0.0007245244111537268,
+      "distributedTokens": "362.262205576863376229",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x13a365e49fee796365"
+      },
+      "maxBorrow": 20111,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x04423830cb5af8dc0000"
+      }
+    },
+    {
+      "address": "0x975793c7A6a077221aCa4E4FB9B7f9A46378463a",
+      "score": 104223972076942.11,
+      "scorePercentage": 7.907301400992947,
+      "distributedTokens": "3953650.700496473262595486",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x034537d57cda5e67c31d9e"
+      },
+      "maxBorrow": 25000000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x14adf4b7320334b9000000"
+      }
+    },
+    {
+      "address": "0x0917e9E60fAF685e399efF18a6739637Edd98493",
+      "score": 17010042654103.648,
+      "scorePercentage": 1.2905239690006052,
+      "distributedTokens": "645261.984500302489948235",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x88a3b8e6be82ad41904b"
+      },
+      "maxBorrow": 3222318,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x02aa5a35740b89dff80000"
+      }
+    },
+    {
+      "address": "0x52bEaF46D98a6caA234d5D6FD3870fD8a7727b74",
+      "score": 116529700234.0808,
+      "scorePercentage": 0.008840916763736432,
+      "distributedTokens": "4420.458381868215388168",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0xefa22ef5b785054808"
+      },
+      "maxBorrow": 60000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x0cb49b44ba602d800000"
+      }
+    },
+    {
+      "address": "0x790a6c3C8F66BF7b10Ef183eB587842C12b3Af7C",
+      "score": 89520046897.5,
+      "scorePercentage": 0.006791738773177685,
+      "distributedTokens": "3395.869386588842145017",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0xb817279f03f398b4f9"
+      },
+      "maxBorrow": 7705,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x01a1b05ae52910c40000"
+      }
+    },
+    {
+      "address": "0x06CE1F5D0ee2de871d962ed40Df5e9aE81faE604",
+      "score": 528086500000,
+      "scorePercentage": 0.04006505449833338,
+      "distributedTokens": "20032.527249166688110145",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x043df729943d2990c641"
+      },
+      "maxBorrow": 50000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x0a968163f0a57b400000"
+      }
+    },
+    {
+      "address": "0xF25C2b2248894884335AEa8BBDe39605Cd71E7B8",
+      "score": 71313256445232.16,
+      "scorePercentage": 5.410419516370615,
+      "distributedTokens": "2705209.758185306986931794",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x023cd9b6ffedf60a246652"
+      },
+      "maxBorrow": 12000000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x09ed194db19b238c000000"
+      }
+    },
+    {
+      "address": "0x541a5f29D2bb51B19b0f81C9871768a5Dd507D28",
+      "score": 2323218500000,
+      "scorePercentage": 0.17625876786101582,
+      "distributedTokens": "88129.383930507898613619",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x12a980e3cb4f261f6f73"
+      },
+      "maxBorrow": 200000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x2a5a058fc295ed000000"
+      }
+    },
+    {
+      "address": "0xdeC8e4316051565c03b3444B85641Ae7921E37A6",
+      "score": 613214976000,
+      "scorePercentage": 0.04652361200794604,
+      "distributedTokens": "23261.806003973017052059",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x04ed066862487c90239b"
+      },
+      "maxBorrow": 88000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x12a27d53bc0487000000"
+      }
+    },
+    {
+      "address": "0x3f13FCF31D1ed321E91ebdbD74b4E815f7130b73",
+      "score": 900660675000,
+      "scorePercentage": 0.06833164458546229,
+      "distributedTokens": "34165.82229273113874488",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x073c220834f4519d2230"
+      },
+      "maxBorrow": 350000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x4a1d89bb94865ec00000"
+      }
+    },
+    {
+      "address": "0xAbd263D64781A01fe3D9b17F12FC95f6FcCB2943",
+      "score": 252569420661.9602,
+      "scorePercentage": 0.01916202668205668,
+      "distributedTokens": "9581.013341028338625191",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x020763452747f0a3eaa7"
+      },
+      "maxBorrow": 100000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x152d02c7e14af6800000"
+      }
+    },
+    {
+      "address": "0xA60196D9F91F916F767124E5079D5DAC0B955118",
+      "score": 154972884036.85638,
+      "scorePercentage": 0.011757537912255948,
+      "distributedTokens": "5878.768956127972927729",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x013eb04ee28ba9c7a8f1"
+      },
+      "maxBorrow": 950000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0xc92b9a6adc4825c00000"
+      }
+    },
+    {
+      "address": "0x7738e7eFA86078F946beFb4ed7ca2Bf8B36F4E31",
+      "score": 12667382364367.5,
+      "scorePercentage": 0.9610534728299456,
+      "distributedTokens": "480526.736414972722133248",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x65c168157da773d9b900"
+      },
+      "maxBorrow": 2399955,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x01fc35d23d0172af6c0000"
+      }
+    },
+    {
+      "address": "0xd7Ce18835F371cF04A9aD8B61e61226875bCC2D8",
+      "score": 503386050000,
+      "scorePercentage": 0.03819107196823015,
+      "distributedTokens": "19095.535984115073798228",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x040b2bcbe5112435d054"
+      },
+      "maxBorrow": 200000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x2a5a058fc295ed000000"
+      }
+    },
+    {
+      "address": "0xf0d4d20e4a0105c7E95B10f0B9d1b295c235EBc7",
+      "score": 71333633205000,
+      "scorePercentage": 5.411965467631626,
+      "distributedTokens": "2705982.733815812696506695",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x023d039e310681708f0147"
+      },
+      "maxBorrow": 10000000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x084595161401484a000000"
+      }
+    },
+    {
+      "address": "0xC55AE491E46Ce0A31e600033f430Ca177faF305a",
+      "score": 796094295000,
+      "scorePercentage": 0.06039836525831903,
+      "distributedTokens": "30199.182629159510626633",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x066519d93717f7be5149"
+      },
+      "maxBorrow": 130000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x1b87506a3e7b0d400000"
+      }
+    },
+    {
+      "address": "0xB327deb67A7725f277bAE3C70A50C69255283908",
+      "score": 2571246100000,
+      "scorePercentage": 0.19507621407691195,
+      "distributedTokens": "97538.107038455963280881",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x14a78d27146fbbc765f1"
+      },
+      "maxBorrow": 400000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x54b40b1f852bda000000"
+      }
+    },
+    {
+      "address": "0xe779927f76fcf902cE7445e5602401BaE2E46efE",
+      "score": 5363948610000,
+      "scorePercentage": 0.4069539618716055,
+      "distributedTokens": "203476.980935802714795247",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x2b16825d7ddd1b172cef"
+      },
+      "maxBorrow": 1020000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0xd7fe4f90606305800000"
+      }
+    },
+    {
+      "address": "0xa806a4C9660E29c29465743E554E68b08a07D113",
+      "score": 2316799000000,
+      "scorePercentage": 0.17577173095067622,
+      "distributedTokens": "87885.865475338100570451",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x129c4d64728c5e6c7953"
+      },
+      "maxBorrow": 250000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x34f086f3b33b68400000"
+      }
+    },
+    {
+      "address": "0x55dD25A28B45a920Cbe53254Fb34CBAf54b964Fd",
+      "score": 50219784132.392044,
+      "scorePercentage": 0.00381009245295766,
+      "distributedTokens": "1905.046226478829675137",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x6745d3c99d71002281"
+      },
+      "maxBorrow": 20000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x043c33c1937564800000"
+      }
+    },
+    {
+      "address": "0x6FD397633EC8d9c07422f0c70C5494fBe86E7Ad7",
+      "score": 2204294030000,
+      "scorePercentage": 0.16723616385251452,
+      "distributedTokens": "83618.081926257257241127",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x11b4f1ff74587ae05a27"
+      },
+      "maxBorrow": 320000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x43c33c19375648000000"
+      }
+    },
+    {
+      "address": "0xEB27A4A1A776985a5F2926400529f6d49DE38212",
+      "score": 395720492431.25,
+      "scorePercentage": 0.03002266313447769,
+      "distributedTokens": "15011.331567238843987037",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x032dc412fef5df1ff45d"
+      },
+      "maxBorrow": 80000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x10f0cf064dd592000000"
+      }
+    },
+    {
+      "address": "0xd768DAFf5AeFFC055D334B5F4dB1bf401A84d12e",
+      "score": 2266261900000,
+      "scorePercentage": 0.17193756426455997,
+      "distributedTokens": "85968.782132279980672118",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x123460843b2e08dd4476"
+      },
+      "maxBorrow": 275000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x3a3bc7a5ab8e25e00000"
+      }
+    },
+    {
+      "address": "0xE0405e62f991E166A4783324cAc2806D8e50Ce2C",
+      "score": 7381051000000,
+      "scorePercentage": 0.5599882037696061,
+      "distributedTokens": "279994.101884803024584193",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x3b4a82bbbfe5d6f27e01"
+      },
+      "maxBorrow": 1400000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x01287626ee52197b000000"
+      }
+    },
+    {
+      "address": "0x587B938A8B21ea570325E91BDd01B161783A75e8",
+      "score": 10257641904221.143,
+      "scorePercentage": 0.7782304261082384,
+      "distributedTokens": "389115.213054119190249649",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x5265fa5c0bf72f50c0b1"
+      },
+      "maxBorrow": 5931710,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x04e816a4b7ad7f04380000"
+      }
+    },
+    {
+      "address": "0xA1BA71A032bD935274223e86c6BFBaB6B815B465",
+      "score": 1598542390000,
+      "scorePercentage": 0.12127878287599872,
+      "distributedTokens": "60639.391437999348818758",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x0cd7449b6f9856e2a346"
+      },
+      "maxBorrow": 700000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x943b1377290cbd800000"
+      }
+    },
+    {
+      "address": "0x3Fb22974f6878655dbc9C20cCfb0A942CdeD9CEc",
+      "score": 7719889810001.574,
+      "scorePercentage": 0.5856953471805123,
+      "distributedTokens": "292847.673590256107878101",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x3e034ddfc4dda5d576d5"
+      },
+      "maxBorrow": 3069928.5337077077,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x028a1528c6a4b1c745406e"
+      }
+    },
+    {
+      "address": "0x0A338782562E1740b9468F0855dD4C51F29dEfDE",
+      "score": 75345821500000,
+      "scorePercentage": 5.716363596909217,
+      "distributedTokens": "2858181.798454607921416711",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x025d3e5883de490a620a07"
+      },
+      "maxBorrow": 16000000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x0d3c21bcecceda10000000"
+      }
+    },
+    {
+      "address": "0x43C89407960a524cb8C6Ce09D647423FCeCC40C6",
+      "score": 113953500000,
+      "scorePercentage": 0.00864546468765218,
+      "distributedTokens": "4322.732343826089463675",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0xea55f653e46dcb4f7b"
+      },
+      "maxBorrow": 10000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x021e19e0c9bab2400000"
+      }
+    },
+    {
+      "address": "0x43c21cC46637Ae611d2b3BEEaD90A73aE56362b3",
+      "score": 2939746949254.9097,
+      "scorePercentage": 0.2230337676369444,
+      "distributedTokens": "111516.883818472199220953",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x179d57a68f20ae4ceed9"
+      },
+      "maxBorrow": 350000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x4a1d89bb94865ec00000"
+      }
+    },
+    {
+      "address": "0x6b1306e7A950Ece88Fc8B74138B0BdbE07f3719c",
+      "score": 5539381737275.73,
+      "scorePercentage": 0.4202637847985601,
+      "distributedTokens": "210131.892399280001883739",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x2c7f45d07aaa09bf9e5b"
+      },
+      "maxBorrow": 650000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x89a49213386742400000"
+      }
+    },
+    {
+      "address": "0x2b0D1140d264dCdf69f77Dc7fc23A36a5A9FcA1d",
+      "score": 113932475000,
+      "scorePercentage": 0.008643869555470564,
+      "distributedTokens": "4321.934777735280988894",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0xea4ae4cdc2264212de"
+      },
+      "maxBorrow": 10000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x021e19e0c9bab2400000"
+      }
+    },
+    {
+      "address": "0x2B6936778A7F8F6f0121F0982b1c2e04219243e3",
+      "score": 2278607500000,
+      "scorePercentage": 0.1728742046384658,
+      "distributedTokens": "86437.102319232898924587",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x124dc3c3c3f26215802b"
+      },
+      "maxBorrow": 200000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x2a5a058fc295ed000000"
+      }
+    },
+    {
+      "address": "0xA9F51db4725f0EAf9d530Bae8db0fd858D505547",
+      "score": 3279896235000,
+      "scorePercentage": 0.24884033468788438,
+      "distributedTokens": "124420.167343942189811492",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x1a58d4ae71043b198724"
+      },
+      "maxBorrow": 601000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x7f444678f587a5a00000"
+      }
+    },
+    {
+      "address": "0xD7433AaCD0BFb75865C6fee509A1862360E60257",
+      "score": 1435597460000,
+      "scorePercentage": 0.10891641894380745,
+      "distributedTokens": "54458.209471903721393252",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x0b882f79b6bc9a650c64"
+      },
+      "maxBorrow": 814000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0xac5f07468b29e0c00000"
+      }
+    },
+    {
+      "address": "0xb8EBD91544abF02e9d008f0a715fDC98C4D91C5b",
+      "score": 5771613605000,
+      "scorePercentage": 0.43788283477734685,
+      "distributedTokens": "218941.417388673412422604",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x2e5cd68869a75ad8dbcc"
+      },
+      "maxBorrow": 680000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x8ffedfb5959759000000"
+      }
+    },
+    {
+      "address": "0x46ebC776bF61E4a1E0776C4187aDF3311BD38d34",
+      "score": 15969652125000,
+      "scorePercentage": 1.211591250121998,
+      "distributedTokens": "605795.625060998918278357",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x80483f23b632a7258cd5"
+      },
+      "maxBorrow": 1500000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x013da329b6336471800000"
+      }
+    },
+    {
+      "address": "0xE96aBB22A6506f56E26df4c9fd8f3b70aC66Efb4",
+      "score": 749123050000,
+      "scorePercentage": 0.05683473412823036,
+      "distributedTokens": "28417.367064115176880058",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x06048230af26364d37ba"
+      },
+      "maxBorrow": 200000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x2a5a058fc295ed000000"
+      }
+    },
+    {
+      "address": "0x20bAaD48A5508342F416C552265c71EA059373D3",
+      "score": 2277399500000,
+      "scorePercentage": 0.17278255566460643,
+      "distributedTokens": "86391.277832303213429432",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x124b47d27bdf6fa642b8"
+      },
+      "maxBorrow": 400000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x54b40b1f852bda000000"
+      }
+    },
+    {
+      "address": "0xbfCAd3A0440c5B2EB42a48AE461c383208D8A77c",
+      "score": 1002032680000,
+      "scorePercentage": 0.07602257193340685,
+      "distributedTokens": "38011.28596670341743963",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x080c988f9a4adbd5358e"
+      },
+      "maxBorrow": 110000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x174b1ca8ab05a8c00000"
+      }
+    },
+    {
+      "address": "0xd5d7Ec0C74c401835bD87820afC21B5a207D7eBC",
+      "score": 364333200000,
+      "scorePercentage": 0.027641360863328635,
+      "distributedTokens": "13820.680431664314108714",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x02ed38786b7ed7cecb2a"
+      },
+      "maxBorrow": 40000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x0878678326eac9000000"
+      }
+    },
+    {
+      "address": "0x8ecF17eAC7D95beE21CF7D99201baebD4055B5b0",
+      "score": 2802197780000,
+      "scorePercentage": 0.21259813831788696,
+      "distributedTokens": "106299.069158943469057064",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x16827bed0b74028fb428"
+      },
+      "maxBorrow": 900000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0xbe951906eba2aa800000"
+      }
+    },
+    {
+      "address": "0x2A3cDC2C160754Cd1361d4917857dD490BB14987",
+      "score": 11938701400000.018,
+      "scorePercentage": 0.9057696461286735,
+      "distributedTokens": "452884.823064336695424386",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x5fe6ef79d2625fd5f582"
+      },
+      "maxBorrow": 1800000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x017d2a320dd74555000000"
+      }
+    },
+    {
+      "address": "0x65813Ad432936e594607Bd2b84219eE1DDaffa7C",
+      "score": 4430304100000,
+      "scorePercentage": 0.33611988795526837,
+      "distributedTokens": "168059.943977634156369838",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x23968c3dd3e9d4d9d7ae"
+      },
+      "maxBorrow": 800000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0xa968163f0a57b4000000"
+      }
+    },
+    {
+      "address": "0x932759561A5736d823fd60Aa57E2B186CDe0C980",
+      "score": 10434464112120,
+      "scorePercentage": 0.7916456362982043,
+      "distributedTokens": "395822.818149102073734349",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x53d199146b700660e4cd"
+      },
+      "maxBorrow": 1410000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x012a9440cf1bd42d400000"
+      }
+    },
+    {
+      "address": "0x22ab52BAc290dD91908224d2AdB19dD42b932134",
+      "score": 2430257000000,
+      "scorePercentage": 0.18437960286800778,
+      "distributedTokens": "92189.801434003876157597",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x13859e8099b98e49189d"
+      },
+      "maxBorrow": 450000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x5f4a8c8375d155400000"
+      }
+    },
+    {
+      "address": "0xa3fE5e20d002359428f9c7C0703aca69F6E7a381",
+      "score": 6517373620000,
+      "scorePercentage": 0.4944624209694819,
+      "distributedTokens": "247231.21048474092799538",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x345a6e4750c78d433df4"
+      },
+      "maxBorrow": 1030000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0xda1c69712a1db7c00000"
+      }
+    },
+    {
+      "address": "0xBe08D5Fb542ac0c808BDeA3BbCF85caeB2B5522c",
+      "score": 1221851200000,
+      "scorePercentage": 0.09269984162983534,
+      "distributedTokens": "46349.920814917663805849",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x09d0a25db0c32b4f5199"
+      },
+      "maxBorrow": 200000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x2a5a058fc295ed000000"
+      }
+    },
+    {
+      "address": "0xe491a345CDae4eEbaeC104456c0A229E1deaDff1",
+      "score": 3344952800000,
+      "scorePercentage": 0.253776069311283,
+      "distributedTokens": "126888.034655641473623656",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x1ade9d3865af851fa668"
+      },
+      "maxBorrow": 320000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x43c33c19375648000000"
+      }
+    },
+    {
+      "address": "0x59472f1D1073a553ea4f304649A56A838Ccfa007",
+      "score": 2258835750000,
+      "scorePercentage": 0.1713741544738102,
+      "distributedTokens": "85687.077236905076748406",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x12251b13655f73227076"
+      },
+      "maxBorrow": 1000000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0xd3c21bcecceda1000000"
+      }
+    },
+    {
+      "address": "0x9592BA99Ceb375c5de3a6E0693c4AC572719884D",
+      "score": 344744372990,
+      "scorePercentage": 0.02615518876517033,
+      "distributedTokens": "13077.594382585162454497",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x02c4f01472e5887d55e1"
+      },
+      "maxBorrow": 53644,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x0b5c0c0c95e82eb00000"
+      }
+    },
+    {
+      "address": "0x288e6e2b8526C56c7CfeC33F29F6517d8d514D17",
+      "score": 1299777260000,
+      "scorePercentage": 0.09861196367942456,
+      "distributedTokens": "49305.981839712272809624",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x0a70e1f420ee37287e98"
+      },
+      "maxBorrow": 530000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x703b5b89c3a6e7400000"
+      }
+    },
+    {
+      "address": "0x9eB75d5427F0617AAAe443c61ea82893Ec74BEb9",
+      "score": 1703900625000,
+      "scorePercentage": 0.1292721389400587,
+      "distributedTokens": "64636.069470029342920255",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x0dafeda8266b29f54e3f"
+      },
+      "maxBorrow": 150000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x1fc3842bd1f071c00000"
+      }
+    },
+    {
+      "address": "0x342b7a6636b095028E85354A2d33CdDe5C53852e",
+      "score": 661543220000,
+      "scorePercentage": 0.050190196421046454,
+      "distributedTokens": "25095.0982105232252086",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x05506872aef131c73718"
+      },
+      "maxBorrow": 600000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x7f0e10af47c1c7000000"
+      }
+    },
+    {
+      "address": "0xc4b84Ee1Cf1765Bf907ab59859B6a7d7a879d08f",
+      "score": 1070094000000,
+      "scorePercentage": 0.08118627237836899,
+      "distributedTokens": "40593.136189184495241856",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x08988eee346903baca80"
+      },
+      "maxBorrow": 500000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x69e10de76676d0800000"
+      }
+    },
+    {
+      "address": "0x30a11f534DA9B258F1F5D684C8c36D628219f651",
+      "score": 407081300000,
+      "scorePercentage": 0.030884588925777123,
+      "distributedTokens": "15442.294462888559568503",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x034520e2c536ee28e677"
+      },
+      "maxBorrow": 120000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x1969368974c05b000000"
+      }
+    },
+    {
+      "address": "0x9F13B8A3E27542a4FcD76f36Cc5285E3dCB1ADd7",
+      "score": 91037165000,
+      "scorePercentage": 0.006906840029235301,
+      "distributedTokens": "3453.420014617650513669",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0xbb35d4864a955bc705"
+      },
+      "maxBorrow": 47000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x09f3e006e753df600000"
+      }
+    },
+    {
+      "address": "0x0A1760Da72515503A8D36eE2ACb33698091EeD15",
+      "score": 5550751446190,
+      "scorePercentage": 0.4211263859203089,
+      "distributedTokens": "210563.192960154399894269",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x2c96a74fe1a6b2fb6afd"
+      },
+      "maxBorrow": 1010000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0xd5e035af96a853400000"
+      }
+    },
+    {
+      "address": "0xB08e6b21464539eF59AE2cE9C63165b30a09F7f5",
+      "score": 7370022475000,
+      "scorePercentage": 0.5591514877104733,
+      "distributedTokens": "279575.743855236625804845",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x3b33d4d9749021612e2d"
+      },
+      "maxBorrow": 650000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x89a49213386742400000"
+      }
+    },
+    {
+      "address": "0x2f234B7c3762327cDbE85FCaB3b87e880e13e3f3",
+      "score": 3898193610824.085,
+      "scorePercentage": 0.2957495400142248,
+      "distributedTokens": "147874.770007112406492956",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x1f504eae275beacb671c"
+      },
+      "maxBorrow": 3823910.12581499,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x0329be95527c95bf965f14"
+      }
+    },
+    {
+      "address": "0x68fAc3afA93709230aCcaa01374934ea675dD550",
+      "score": 1134137500000,
+      "scorePercentage": 0.08604514742585462,
+      "distributedTokens": "43022.573712927304024095",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x091c4226208aea79801f"
+      },
+      "maxBorrow": 100000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x152d02c7e14af6800000"
+      }
+    },
+    {
+      "address": "0xcA877897DACece27D2Df024fDd9C04F005EEBe28",
+      "score": 20052850000000,
+      "scorePercentage": 1.521376759483351,
+      "distributedTokens": "760688.379741675315823334",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0xa114ffec0349775c82e6"
+      },
+      "maxBorrow": 2000000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x01a784379d99db42000000"
+      }
+    },
+    {
+      "address": "0xba40A0A06b876690d399436fFB8F3111923fcf24",
+      "score": 8611879500000,
+      "scorePercentage": 0.6533691383903585,
+      "distributedTokens": "326684.569195179186399688",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x452d9b21a1fcae3529c8"
+      },
+      "maxBorrow": 3200000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x02a5a058fc295ed0000000"
+      }
+    },
+    {
+      "address": "0xbDCEe87119265FC0ec27a3113EFC3fBBB90D4D7b",
+      "score": 11300487500000,
+      "scorePercentage": 0.8573494068589806,
+      "distributedTokens": "428674.703429490328582727",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x5ac68092a133e859ba47"
+      },
+      "maxBorrow": 1000000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0xd3c21bcecceda1000000"
+      }
+    },
+    {
+      "address": "0x34DA74CE40b5D994B680B585745B35E7D6797719",
+      "score": 28688176000000,
+      "scorePercentage": 2.176524745279002,
+      "distributedTokens": "1088262.372639500918582416",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0xe672d249667651dfec90"
+      },
+      "maxBorrow": 3000000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x027b46536c66c8e3000000"
+      }
+    },
+    {
+      "address": "0xC1674596fFAa78398958ef3041ccF0C100F16d5D",
+      "score": 4499370100000,
+      "scorePercentage": 0.3413598118199797,
+      "distributedTokens": "170679.905909989833860202",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x242493846c3cd702646a"
+      },
+      "maxBorrow": 500000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x69e10de76676d0800000"
+      }
+    },
+    {
+      "address": "0x0d0a3c6DC8a7352A69b2B31E9DB99f05A4c779F1",
+      "score": 742246425000,
+      "scorePercentage": 0.05631301589572564,
+      "distributedTokens": "28156.507947862818835258",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x05f65e0aef02322c4b3a"
+      },
+      "maxBorrow": 550000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x74778f4b571c4bc00000"
+      }
+    },
+    {
+      "address": "0xE0276B19467e8A37EACFc93CF18d614910B06f6e",
+      "score": 2945891252500,
+      "scorePercentage": 0.2234999258219555,
+      "distributedTokens": "111749.962910977717510435",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x17a9fa45d6db00212123"
+      },
+      "maxBorrow": 1595000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x0151c11f8dafd20ee00000"
+      }
+    },
+    {
+      "address": "0xb79E346b8ce8Aee91D6B2A62d82Ee3BAE0a58494",
+      "score": 5861144317950,
+      "scorePercentage": 0.44467538276639107,
+      "distributedTokens": "222337.691383195514161413",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x2f14f34d7d70d5afc905"
+      },
+      "maxBorrow": 800000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0xa968163f0a57b4000000"
+      }
+    },
+    {
+      "address": "0x81c7863dd804F69D93F75d15903e6e560E5aE16C",
+      "score": 6684265500000,
+      "scorePercentage": 0.507124233508771,
+      "distributedTokens": "253562.11675438549761054",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x35b1a1409e713735d92c"
+      },
+      "maxBorrow": 600000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x7f0e10af47c1c7000000"
+      }
+    },
+    {
+      "address": "0x7A13565f60eaC799CD12ce30c829fB85e3657973",
+      "score": 6698664000000,
+      "scorePercentage": 0.5082166240303887,
+      "distributedTokens": "254108.312015194335857217",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x35cf3d3bfe4807d9ca41"
+      },
+      "maxBorrow": 1000000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0xd3c21bcecceda1000000"
+      }
+    },
+    {
+      "address": "0x0bF7D10FFdc557cb0348c66Ec6C25173EDf99aA8",
+      "score": 341828312500,
+      "scorePercentage": 0.025933952050252815,
+      "distributedTokens": "12966.976025126406427554",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x02bef0f118de7a2793a2"
+      },
+      "maxBorrow": 175000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x250ec4ddca432f600000"
+      }
+    },
+    {
+      "address": "0x6cDbd3b8363502F6332C8d89A84976CC13801186",
+      "score": 255516624900,
+      "scorePercentage": 0.019385626221932784,
+      "distributedTokens": "9692.813110966391838108",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x020d72cdb9b2f8b2959c"
+      },
+      "maxBorrow": 41700,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x08d48fc067ee5d100000"
+      }
+    },
+    {
+      "address": "0x9c035924d172A5Ba3ef6E544af9DDA28A47508c4",
+      "score": 761420725312.5,
+      "scorePercentage": 0.05776773853489125,
+      "distributedTokens": "28883.869267445617473729",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x061dcc357171964338c1"
+      },
+      "maxBorrow": 110000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x174b1ca8ab05a8c00000"
+      }
+    },
+    {
+      "address": "0xf3800C466184c59E1006892fac15aaE97f1Ca220",
+      "score": 285761025600,
+      "scorePercentage": 0.021680219176524376,
+      "distributedTokens": "10840.109588262187235823",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x024ba4bd9d299198f9ef"
+      },
+      "maxBorrow": 80000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x10f0cf064dd592000000"
+      }
+    },
+    {
+      "address": "0x409C6c5Ec5C479673f4c09fb80d0F182Fcff643e",
+      "score": 1196387160000,
+      "scorePercentage": 0.0907679267818933,
+      "distributedTokens": "45383.963390946646723033",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x099c45038985c37089d9"
+      },
+      "maxBorrow": 240000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x32d26d12e980b6000000"
+      }
+    },
+    {
+      "address": "0xaa4fF93201f029A54120D223Deb9FC6d0C8cDd45",
+      "score": 2446510333000,
+      "scorePercentage": 0.18561271651970035,
+      "distributedTokens": "92806.358259850172463905",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x13a70af2782c89287b21"
+      },
+      "maxBorrow": 1066200,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0xe1c6d15c564bcc600000"
+      }
+    },
+    {
+      "address": "0x9A3054d58e0eEd6d6a4D7f6Cc51Bb384890f5088",
+      "score": 2443955250000,
+      "scorePercentage": 0.18541886657344578,
+      "distributedTokens": "92709.433286722886367865",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x13a1c9d7caa52cfcfa79"
+      },
+      "maxBorrow": 1300000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x011349242670ce84800000"
+      }
+    },
+    {
+      "address": "0x86247f8E39A5AC9A723B0f5AA10Bf10b2275Ff14",
+      "score": 36637830000,
+      "scorePercentage": 0.002779651923786489,
+      "distributedTokens": "1389.82596189324430873",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x4b57b5b4ba766a0cfa"
+      },
+      "maxBorrow": 45000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x098774738bc822200000"
+      }
+    },
+    {
+      "address": "0x0fE5EBAc1b0C212225039c6dF437762D5f53C26E",
+      "score": 466941435000000,
+      "scorePercentage": 35.42607894881804,
+      "distributedTokens": "17713039.474409014243592611",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x0ea6e1cb41ddbb611789a3"
+      },
+      "maxBorrow": 75000000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x3e09de2596099e2b000000"
+      }
+    },
+    {
+      "address": "0xDFcA068fC7f0777653C5cAd2EA44817bE4Ccb75C",
+      "score": 1125040800000,
+      "scorePercentage": 0.08535499575324987,
+      "distributedTokens": "42677.497876624928160043",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x09098d427bb73c84392b"
+      },
+      "maxBorrow": 120000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x1969368974c05b000000"
+      }
+    },
+    {
+      "address": "0x6d063675b808a5462122A6Aa5FC0798bAe05984C",
+      "score": 48470356520,
+      "scorePercentage": 0.0036773662563376434,
+      "distributedTokens": "1838.683128168821292735",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x63acdab34f0e9ffebf"
+      },
+      "maxBorrow": 500000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x69e10de76676d0800000"
+      }
+    },
+    {
+      "address": "0xef19411cA4e50E61aa0d95f41f8c6B321D364076",
+      "score": 273195975000,
+      "scorePercentage": 0.020726929446407596,
+      "distributedTokens": "10363.464723203795771662",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x0231cdf6e1c3b62ce10e"
+      },
+      "maxBorrow": 30000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x065a4da25d3016c00000"
+      }
+    },
+    {
+      "address": "0xDa465B6d4af8Bfef08D428016EaE4bB50b99A636",
+      "score": 27263538750000,
+      "scorePercentage": 2.0684398594475977,
+      "distributedTokens": "1034219.929723798859656755",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0xdb012cbb37c3e70dae33"
+      },
+      "maxBorrow": 3500000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x02e5276153cd3fb3800000"
+      }
+    },
+    {
+      "address": "0xB0887e70bA285bfD356e630D83BF31572961d6b9",
+      "score": 11095731855,
+      "scorePercentage": 0.0008418149327230837,
+      "distributedTokens": "420.907466361541799437",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x16d143b697ad60ae0d"
+      },
+      "maxBorrow": 65000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x0dc3a8351f3d86a00000"
+      }
+    },
+    {
+      "address": "0x7950e9a8eef8DF107338b75c8b85834bB258bCB7",
+      "score": 71798549850.7695,
+      "scorePercentage": 0.005447237929150596,
+      "distributedTokens": "2723.618964575297553764",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x93a5ce59edf3d54564"
+      },
+      "maxBorrow": 25000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x054b40b1f852bda00000"
+      }
+    },
+    {
+      "address": "0xfbC5985E27f667d086262ECBBf09b39c158158A3",
+      "score": 2869164650000,
+      "scorePercentage": 0.2176788046407958,
+      "distributedTokens": "108839.402320397895956828",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x170c32216a88b6b7795c"
+      },
+      "maxBorrow": 1870000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x018bfce7335b6034c00000"
+      }
+    },
+    {
+      "address": "0x41Ce2a48c9e2d61d24158e93cEeee7f59baa432D",
+      "score": 3148218300000,
+      "scorePercentage": 0.23885014625852105,
+      "distributedTokens": "119425.073129260504214278",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x194a0bd2e5e82c6e6b06"
+      },
+      "maxBorrow": 1000000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0xd3c21bcecceda1000000"
+      }
+    },
+    {
+      "address": "0xEb500802eAaAdA8f44CaF98283d45AdeB8EDa0dA",
+      "score": 2630745600000,
+      "scorePercentage": 0.1995903433154431,
+      "distributedTokens": "99795.171657721544505187",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x1521e8376d37b708f763"
+      },
+      "maxBorrow": 1100000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0xe8ef1e96ae3897800000"
+      }
+    },
+    {
+      "address": "0x0E2e720044690F7ADF7B831cBa53D2C129671136",
+      "score": 10472789000000,
+      "scorePercentage": 0.7945532825295597,
+      "distributedTokens": "397276.641264779823771989",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x542068edb076264d7155"
+      },
+      "maxBorrow": 2000000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x01a784379d99db42000000"
+      }
+    },
+    {
+      "address": "0x2105fA218b5A675A3b1Dd95378590AbA2586c151",
+      "score": 1492932500000,
+      "scorePercentage": 0.11326633416084883,
+      "distributedTokens": "56633.167080424412661562",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x0bfe17135c445b4dc73a"
+      },
+      "maxBorrow": 200000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x2a5a058fc295ed000000"
+      }
+    },
+    {
+      "address": "0xF212cE21a97dbe30999a4c2B309d278BCcBb686A",
+      "score": 1416696400000,
+      "scorePercentage": 0.10748242659790148,
+      "distributedTokens": "53741.213298950740163905",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x0b6151279a3e9968bd41"
+      },
+      "maxBorrow": 700000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x943b1377290cbd800000"
+      }
+    },
+    {
+      "address": "0x23F318E306f9de7071133fA26205f3e58D75fCba",
+      "score": 7393146780000,
+      "scorePercentage": 0.5609058907108551,
+      "distributedTokens": "280452.945355427487513484",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x3b636277395fb5717b8c"
+      },
+      "maxBorrow": 1002000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0xd42e876228795e400000"
+      }
+    },
+    {
+      "address": "0xfd83F8bCEE04B49199BA72c65cd34cE3Ca938F96",
+      "score": 144723233117842.56,
+      "scorePercentage": 10.97991374905696,
+      "distributedTokens": "5489956.874528479716099265",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x048a8b289429845180c4c1"
+      },
+      "maxBorrow": 32200000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x1aa29d7f69604a0d000000"
+      }
+    },
+    {
+      "address": "0x0cD25946115f3c474A123b9147E7c5fA89c1e721",
+      "score": 2529171299104.1562,
+      "scorePercentage": 0.19188406811048694,
+      "distributedTokens": "95942.034055243453773882",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x14510730c28fd025383a"
+      },
+      "maxBorrow": 900000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0xbe951906eba2aa800000"
+      }
+    },
+    {
+      "address": "0xb6F1E44447ca266849e1a74a01bbC572c1F56788",
+      "score": 18258207000000,
+      "scorePercentage": 1.385220145746676,
+      "distributedTokens": "692610.07287333792668338",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x92aa779ff8dcd17f8af4"
+      },
+      "maxBorrow": 3000000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x027b46536c66c8e3000000"
+      }
+    },
+    {
+      "address": "0x139803fB9f73541c04e671aBbc8543D1F3958c39",
+      "score": 28842660000,
+      "scorePercentage": 0.0021882451923631832,
+      "distributedTokens": "1094.122596181591592451",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x3b5000505133ee0e03"
+      },
+      "maxBorrow": 660000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x8bc2abf40221f4800000"
+      }
+    },
+    {
+      "address": "0x0EEdD535D5FdEb33C41EAf98B52FA2EC5c984b2F",
+      "score": 22455000,
+      "scorePercentage": 0.0000017036239304736556,
+      "distributedTokens": "0.851811965236827643",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x0bd23e78235e55fb"
+      },
+      "maxBorrow": 30000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x065a4da25d3016c00000"
+      }
+    },
+    {
+      "address": "0x2eA64C6De91cE1cF3d3761930AC775476cDEC742",
+      "score": 587474400000,
+      "scorePercentage": 0.04457071682835237,
+      "distributedTokens": "22285.358414176182495661",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x04b81779accdd1e669ad"
+      },
+      "maxBorrow": 200000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x2a5a058fc295ed000000"
+      }
+    },
+    {
+      "address": "0x23E481379A64332F3C6a0667D26Bd083A12b364a",
+      "score": 2086615036500,
+      "scorePercentage": 0.1583080520983104,
+      "distributedTokens": "79154.026049155192389004",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x10c2f2c713b3f778fd8c"
+      },
+      "maxBorrow": 489900,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x67bd883f3e8ebb300000"
+      }
+    },
+    {
+      "address": "0xA083345EB51A1Eaa908770ACEC8b005279637114",
+      "score": 173885106683.964,
+      "scorePercentage": 0.01319237714984483,
+      "distributedTokens": "6596.188574922413706764",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x0165948160c97c940e0c"
+      },
+      "maxBorrow": 216137,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x2dc4cf6c65186b840000"
+      }
+    },
+    {
+      "address": "0xBb20677f45561d6C668F66Ba1631639f950Af728",
+      "score": 365062250000,
+      "scorePercentage": 0.027696672688156593,
+      "distributedTokens": "13848.336344078293587391",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x02eeb845f54f065ed5bf"
+      },
+      "maxBorrow": 100000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x152d02c7e14af6800000"
+      }
+    },
+    {
+      "address": "0x965e756066a96779EC7BD63A032bEBd264cf6962",
+      "score": 1632218652718.579,
+      "scorePercentage": 0.12383374555942285,
+      "distributedTokens": "61916.872779711420805453",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x0d1c8538df7ef857b14d"
+      },
+      "maxBorrow": 1000000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0xd3c21bcecceda1000000"
+      }
+    },
+    {
+      "address": "0x2988983d105436843757CE8E45be5B3aF3736445",
+      "score": 4923719000000,
+      "scorePercentage": 0.3735544651671261,
+      "distributedTokens": "186777.232583563026918884",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x278d36cd168f7d946de4"
+      },
+      "maxBorrow": 2000000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x01a784379d99db42000000"
+      }
+    },
+    {
+      "address": "0x4dD9e9172ffE9AC81cda3Fa9930ca46aEdFF9002",
+      "score": 86845125000,
+      "scorePercentage": 0.006588796846803648,
+      "distributedTokens": "3294.39842340182370646",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0xb296f6579cf09f9d5c"
+      },
+      "maxBorrow": 115000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x185a29990fe301e00000"
+      }
+    },
+    {
+      "address": "0xD3E15418C06f75E93969215fA81D2eD0E22be269",
+      "score": 2613013050000,
+      "scorePercentage": 0.19824500390202426,
+      "distributedTokens": "99122.501951012111949635",
+      "distributedTokensBigNumber": {
+        "type": "BigNumber",
+        "hex": "0x14fd710c8eec191c9f43"
+      },
+      "maxBorrow": 1020000,
+      "maxBorrowBigNumber": {
+        "type": "BigNumber",
+        "hex": "0xd7fe4f90606305800000"
+      }
+    }
+  ]
+}

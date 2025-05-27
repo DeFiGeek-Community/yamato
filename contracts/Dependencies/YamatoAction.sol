@@ -15,12 +15,12 @@ import "hardhat/console.sol";
 /// @title Yamato Action Base Contract
 /// @author 0xMotoko
 contract YamatoAction is YamatoBase {
-    function __YamatoAction_init(address _yamato) internal initializer {
+    function __YamatoAction_init(address _yamato) internal onlyInitializing {
         __YamatoBase_init(_yamato);
         __YamatoAction_init_unchained();
     }
 
-    function __YamatoAction_init_unchained() internal initializer {}
+    function __YamatoAction_init_unchained() internal onlyInitializing {}
 
     /*
         These accessors are mandatory for all actions to interact with.

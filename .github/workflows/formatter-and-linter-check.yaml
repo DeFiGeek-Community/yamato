@@ -1,24 +1,23 @@
 name: Formatter and Linter check
 on:
   push:
-    branches:
-      - master
+    branches: [master]
   pull_request:
-    branches:
-      - master
+    branches: [master]
 
 jobs:
   formatter-linter-check:
-    name: Formatter and Linter check
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
         with:
-          node-version: 14.x
+          node-version: 20
           registry-url: https://registry.npmjs.org
-      - uses: actions/cache@v2
+
+      - uses: actions/cache@v4
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -40,8 +39,8 @@ jobs:
       - name: Do check
         run: npm run lint:check
 
-      - name: discord notification（if failure）
+      - name: discord notification (if failure)
+        if: failure()
         uses: sarisia/actions-status-discord@v1
-        if: ${{ failure() }}
         with:
           webhook: ${{ secrets.DISCORD_WEBHOOK }}
