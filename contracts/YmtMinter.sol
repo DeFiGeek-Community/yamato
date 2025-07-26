@@ -35,9 +35,12 @@ contract YmtMinter is
     // ymtMinter -> user -> can mint?
     mapping(address => mapping(address => bool)) public allowedToMintFor; // A can mint for B if [A => B => true].
 
+    uint256 public startTime;
+
     function initialize(
         address ymtAddr,
-        address scoreWeightControllerAddr
+        address scoreWeightControllerAddr,
+        uint256 startTime_
     ) public initializer {
         __UUPSBase_init();
         __ReentrancyGuard_init();
@@ -46,6 +49,7 @@ contract YmtMinter is
         bytes32 WEIGHT_CONTROLLER_KEY = bytes32(
             keccak256(abi.encode(WEIGHT_CONTROLLER_SLOT_ID))
         );
+        startTime = startTime_;
         assembly {
             sstore(YMT_KEY, ymtAddr)
             sstore(WEIGHT_CONTROLLER_KEY, scoreWeightControllerAddr)
@@ -56,6 +60,7 @@ contract YmtMinter is
         address scoreAddr_,
         address for_
     ) internal returns (uint256) {
+        require(block.timestamp > startTime, "Minting not yet started");
         require(
             IScoreWeightController(scoreWeightController()).scores(scoreAddr_) >
                 0,

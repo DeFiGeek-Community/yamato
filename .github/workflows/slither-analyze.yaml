@@ -1,30 +1,34 @@
 name: Slither Analyze
 on:
   push:
-    branches:
-      - turnOffUntilIssue76IsSolved
+    branches: [turnOffUntilIssue76IsSolved]
   pull_request:
-    branches:
-      - turnOffUntilIssue76IsSolved
+    branches: [turnOffUntilIssue76IsSolved]
 
 jobs:
-  unit-tests:
-    name: Slither Analyze
+  slither-analyze:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      # Git checkout
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v2
+      # Node (for npm scripts)
+      - uses: actions/setup-node@v4
         with:
-          node-version: 14.x
+          node-version: 20
           registry-url: https://registry.npmjs.org
-      - uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+          cache: "npm" # npm キャッシュを actions/cache の代わりに自動付与可
+
+      # 旧スタイルでキャッシュしたい場合はこちら
+      # - uses: actions/cache@v4
+      #   with:
+      #     path: ~/.npm
+      #     key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-node-
+
+      # npm install
       - name: Install dependencies
         env:
           PRIVATE_KEY: ${{ secrets.CI_PRIVATE_KEY }}
@@ -32,36 +36,40 @@ jobs:
           mkdir -p ~/.ssh
           echo "$PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
           chmod 700 ~/.ssh/id_rsa
-          eval $(ssh-agent -s)
+          eval "$(ssh-agent -s)"
           ssh-add ~/.ssh/id_rsa
           ssh-keyscan -H github.com >> ~/.ssh/known_hosts
           npm ci
 
-      - uses: actions/setup-python@v2
+      # Python (for Slither)
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # solc & Slither
       - name: Install solc compiler
         run: |
-          sudo add-apt-repository ppa:ethereum/ethereum
+          sudo add-apt-repository -y ppa:ethereum/ethereum
           sudo apt-get update
-          sudo apt-get install solc
-
+          sudo apt-get install -y solc
       - name: Install slither
-        run: sudo pip install slither-analyzer
+        run: pip install --upgrade slither-analyzer
 
+      # Run Slither
       - name: Run slither analyze
-        run: |
-          npm run analyze || :
-          npm run analyze:resultRet
-          # exit $(npm run analyze:resultRet|tail -n1)
-          echo $(npm run analyze:resultRet|tail -n1) problems found
-          echo but I ignore them in this time.
-
         env:
           ALCHEMY_URL: ${{ secrets.ALCHEMY_URL }}
           DEPLOYER_PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
           FOUNDATION_PRIVATE_KEY: ${{ secrets.FOUNDATION_PRIVATE_KEY }}
+        run: |
+          # Slither の結果を無視するなら `|| :` でも良い
+          npm run analyze || :
+          npm run analyze:resultRet
+          echo "$(npm run analyze:resultRet | tail -n1) problems found (ignored for now)"
 
-      - name: discord notification（if failure）
+      # Discord 通知
+      - name: discord notification (if failure)
+        if: failure()
         uses: sarisia/actions-status-discord@v1
-        if: ${{ failure() }}
         with:
           webhook: ${{ secrets.DISCORD_WEBHOOK }}

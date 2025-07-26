@@ -1,10 +1,10 @@
 import { ethers } from "ethers";
-import { time } from "@nomicfoundation/hardhat-network-helpers";
 import { readDeploymentAddress } from "../../src/addressUtil";
 
 import { genABI } from "../../src/genABI";
 import { createAndProposeTransaction } from "../../src/safeUtil";
 import { executeTransaction } from "../../src/upgradeUtil";
+import { deployConfig } from "../../src/deployConfig";
 
 const IMPL_NAME_BASE = "FeePool";
 const version = "V2";
@@ -18,12 +18,9 @@ async function main() {
   const implAddress = readDeploymentAddress(IMPL_NAME_BASE, "UUPSImpl");
   if (!implAddress) return console.log("not UUPSImpl");
 
-  const number = await time.latest();
-  console.log("timeNumber", Number(number));
-
   const bytes32Number = ethers.utils.solidityPack(
     ["uint256"],
-    [Number(number)]
+    [deployConfig.startTime]
   );
   const functionSelector = CONTRACT_ABI.getSighash("initializeV2(uint256)");
 

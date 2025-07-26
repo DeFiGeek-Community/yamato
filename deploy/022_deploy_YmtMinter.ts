@@ -10,6 +10,7 @@ import {
 import { readFileSync, writeFileSync, existsSync } from "fs";
 import { YmtMinter, YmtMinter__factory } from "../typechain";
 import { getProxy } from "../src/testUtil";
+import { deployConfig } from "../src/deployConfig";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   if (existsSync(getDeploymentAddressPathWithTag("YmtMinter", "ERC1967Proxy")))
@@ -28,6 +29,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const inst = await getProxy<YmtMinter, YmtMinter__factory>("YmtMinter", [
     ymtAddr,
     controllerAddr,
+    deployConfig.startTime,
   ]);
   const implAddr = await inst.getImplementation();
 

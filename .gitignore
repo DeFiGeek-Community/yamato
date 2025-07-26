@@ -17,7 +17,6 @@ cache/**/*
 !deployments/goerli/.chainId
 !deployments/localhost/.chainId
 deployments/localhost/*
-scripts/events/*.json
 typechain-types
 abis
 test/**/*.js

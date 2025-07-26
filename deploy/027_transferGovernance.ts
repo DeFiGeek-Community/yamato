@@ -15,6 +15,8 @@ import { Contract } from "ethers";
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const multisigAddr = process.env.UUPS_PROXY_ADMIN_MULTISIG_ADDRESS;
   if (!multisigAddr) return;
+  const communityMultisigAddress = process.env.COMMUNITY_MULTISIG_ADDRESS;
+  if (!communityMultisigAddress) return;
 
   setNetwork(hre.network.name);
   const p = await setProvider();
@@ -54,9 +56,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log(`log: YMT.setAdmin(${multisigAddr}) executed.`);
 
   await (
-    await YmtVesting.connect(getFoundation()).setAdmin(multisigAddr)
+    await YmtVesting.connect(getFoundation()).setAdmin(communityMultisigAddress)
   ).wait();
-  console.log(`log: YmtVesting.setAdmin(${multisigAddr}) executed.`);
+  console.log(
+    `log: YmtVesting.setAdmin(${communityMultisigAddress}) executed.`
+  );
 
   await (
     await YmtMinter.connect(getFoundation()).setGovernance(multisigAddr)

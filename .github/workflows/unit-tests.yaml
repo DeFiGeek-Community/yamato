@@ -1,30 +1,26 @@
 name: Unit Tests
 on:
   push:
-    branches:
-      - master
+    branches: [master]
   pull_request:
-    branches:
-      - master
+    branches: [master]
 
 jobs:
   unit-tests:
-    name: Unit Tests
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: 14.x
-          registry-url: https://registry.npmjs.org
-      - uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+      # 1. ソース取得
+      - uses: actions/checkout@v4
 
+      # 2. Node セットアップ + npm キャッシュ
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20 # Node 18 でも可
+          registry-url: https://registry.npmjs.org
+          cache: "npm" # ~/.npm を自動キャッシュ
+
+      # 3. 依存インストール
       - name: Install dependencies
         env:
           PRIVATE_KEY: ${{ secrets.CI_PRIVATE_KEY }}
@@ -32,27 +28,31 @@ jobs:
           mkdir -p ~/.ssh
           echo "$PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
           chmod 700 ~/.ssh/id_rsa
-          eval $(ssh-agent -s)
+          eval "$(ssh-agent -s)"
           ssh-add ~/.ssh/id_rsa
           ssh-keyscan -H github.com >> ~/.ssh/known_hosts
           npm ci
 
+      # 4. コンパイル
       - name: Compile
+        env:
+          ALCHEMY_URL: ${{ secrets.ALCHEMY_URL }}
+          DEPLOYER_PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
+          FOUNDATION_PRIVATE_KEY: ${{ secrets.FOUNDATION_PRIVATE_KEY }}
         run: npm run compile
-        env:
-          ALCHEMY_URL: ${{ secrets.ALCHEMY_URL }}
-          DEPLOYER_PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
-          FOUNDATION_PRIVATE_KEY: ${{ secrets.FOUNDATION_PRIVATE_KEY }}
 
+      # 5. ユニットテスト
       - name: Run unit tests
-        run: "NODE_ENV=ci npm test"
         env:
+          NODE_ENV: ci
           ALCHEMY_URL: ${{ secrets.ALCHEMY_URL }}
           DEPLOYER_PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
           FOUNDATION_PRIVATE_KEY: ${{ secrets.FOUNDATION_PRIVATE_KEY }}
+        run: npm test
 
-      - name: discord notification（if failure）
+      # 6. Discord 通知 (失敗時)
+      - name: discord notification (if failure)
+        if: failure()
         uses: sarisia/actions-status-discord@v1
-        if: ${{ failure() }}
         with:
           webhook: ${{ secrets.DISCORD_WEBHOOK }}

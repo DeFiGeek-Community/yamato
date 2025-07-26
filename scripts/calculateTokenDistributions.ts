@@ -2,9 +2,11 @@ import { readFileSync, writeFileSync } from "fs";
 const { ethers } = require("hardhat");
 import { BigNumber } from "ethers";
 
+/* ===== 型定義 ===== */
 interface EventDetail {
   event: string;
   allScore: number;
+  cjpy?: number;            // processedEvents.json にある借入額(JPY)
 }
 
 interface EventMap {
@@ -14,16 +16,16 @@ interface EventMap {
 interface TokenDistribution {
   address: string;
   score: number;
-  scorePercentage: number; // スコアの全体に占める割合
-  distributedTokens: string; // 配布トークンの量
-  distributedTokensBigNumber: BigNumber; // 配布トークンの量 BigNumber
+  scorePercentage: number;
+  distributedTokens: string;
+  distributedTokensBigNumber: BigNumber;
+  /* new */ maxBorrow: number;                // 最大借入額(CJPY)
+  /* new */ maxBorrowBigNumber: BigNumber;    // 18dec BigNumber
 }
 
 export function toBigNumber(amount: number, decimals: number = 18): BigNumber {
-  const roundedAmount = amount.toFixed(decimals);
-  return ethers.utils.parseUnits(roundedAmount, decimals);
+  return ethers.utils.parseUnits(amount.toFixed(decimals), decimals);
 }
-
 export function fromBigNumber(
   amount: BigNumber,
   decimals: number = 18
@@ -31,71 +33,75 @@ export function fromBigNumber(
   return ethers.utils.formatUnits(amount, decimals);
 }
 
-// トータルトークン量
-const TOTAL_TOKEN_SUPPLY = 50000000;
-
-// 除外するアドレスのリスト
-const EXCLUDED_ADDRESSES: string[] = [
+/* ===== 定数 ===== */
+const TOTAL_TOKEN_SUPPLY = 50_000_000;
+const EXCLUDED_ADDRESSES = [
   "0x153d9DD730083e53615610A0d2f6F95Ab5A0Bc01",
 ];
 
+/* ===== メイン ===== */
 function calculateTokenDistributions() {
-  const eventsJson = readFileSync(
-    "./scripts/events/processedEvents.json",
-    "utf8"
+  const events: EventMap = JSON.parse(
+    readFileSync("./scripts/events/processedEvents.json", "utf8")
   );
-  const events: EventMap = JSON.parse(eventsJson);
 
   let totalScore = 0;
   let totalScoreBig = BigNumber.from(0);
-
   const distributions: TokenDistribution[] = [];
 
-  Object.entries(events).forEach(([address, eventDetails]) => {
-    // 除外するアドレスをチェック
-    const endEvent = eventDetails.find((detail) => detail.event === "end");
+  /* ---- 合計スコアを集計 ---- */
+  for (const [address, eventDetails] of Object.entries(events)) {
+    const endEvent = eventDetails.find((d) => d.event === "end");
     if (endEvent && !EXCLUDED_ADDRESSES.includes(address)) {
       totalScore += endEvent.allScore;
       totalScoreBig = totalScoreBig.add(toBigNumber(endEvent.allScore));
     }
-  });
+  }
 
   const totalTokenSupplyBig = toBigNumber(TOTAL_TOKEN_SUPPLY);
   let totalDistributedTokensBig = BigNumber.from(0);
 
-  Object.entries(events).forEach(([address, eventDetails]) => {
-    const endEvent = eventDetails.find((detail) => detail.event === "end");
-    // 除外するアドレスをチェックし、endイベントが存在するかを一つの条件で確認
-    if (endEvent && !EXCLUDED_ADDRESSES.includes(address)) {
-      const scorePercentage = (endEvent.allScore / totalScore) * 100;
+  /* ---- 個別配分計算 ---- */
+  for (const [address, eventDetails] of Object.entries(events)) {
+    const endEvent = eventDetails.find((d) => d.event === "end");
+    if (!endEvent || EXCLUDED_ADDRESSES.includes(address)) continue;
 
-      const scoreBig = toBigNumber(endEvent.allScore);
-      const distributedTokensBig = scoreBig
-        .mul(totalTokenSupplyBig)
-        .div(totalScoreBig);
+    const scorePercentage = (endEvent.allScore / totalScore) * 100;
 
-      // distributedTokensBigが0でない場合のみpushする
-      if (!distributedTokensBig.isZero()) {
-        totalDistributedTokensBig =
-          totalDistributedTokensBig.add(distributedTokensBig);
+    /* ---- 最大借入額(CJPY)を取得 ---- */
+    const maxBorrow = eventDetails.reduce(
+      (max, ev) => (ev.cjpy && ev.cjpy > max ? ev.cjpy : max),
+      0
+    );
+    const maxBorrowBig = toBigNumber(maxBorrow);
 
-        distributions.push({
-          address: address,
-          score: endEvent.allScore,
-          scorePercentage: scorePercentage,
-          distributedTokens: fromBigNumber(distributedTokensBig),
-          distributedTokensBigNumber: distributedTokensBig,
-        });
-      }
-    }
-  });
+    const scoreBig = toBigNumber(endEvent.allScore);
+    const distributedTokensBig = scoreBig
+      .mul(totalTokenSupplyBig)
+      .div(totalScoreBig);
 
+    if (distributedTokensBig.isZero()) continue;
+
+    totalDistributedTokensBig =
+      totalDistributedTokensBig.add(distributedTokensBig);
+
+    distributions.push({
+      address,
+      score: endEvent.allScore,
+      scorePercentage,
+      distributedTokens: fromBigNumber(distributedTokensBig),
+      distributedTokensBigNumber: distributedTokensBig,
+      /* new */ maxBorrow,
+      /* new */ maxBorrowBigNumber: maxBorrowBig,
+    });
+  }
+
+  /* ---- 出力 ---- */
   const result = {
     totalScore,
     totalDistributedTokensBig: fromBigNumber(totalDistributedTokensBig),
     distributions,
   };
-
   writeFileSync(
     "./scripts/events/TokenDistributions.json",
     JSON.stringify(result, null, 2)
@@ -105,10 +111,7 @@ function calculateTokenDistributions() {
     "totalDistributedTokens",
     fromBigNumber(totalDistributedTokensBig)
   );
-
-  console.log(
-    "Token distribution results have been saved to TokenDistributions.json."
-  );
+  console.log("Token distribution results have been saved to TokenDistributions.json.");
 }
 
 calculateTokenDistributions();

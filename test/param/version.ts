@@ -116,7 +116,7 @@ export const contractVersion: Deprecated__Version = {
   FeePool: "FeePoolV2",
   Pool: "PoolV2",
   PriceFeed: "PriceFeedV3",
-  PriorityRegistry: "PriorityRegistryV6",
+  PriorityRegistry: "PriorityRegistryV7",
   ScoreRegistry: "ScoreRegistry",
   ScoreWeightController: "ScoreWeightControllerV2",
   veYMT: "veYMT",

@@ -23,8 +23,8 @@ async function getCurrentBlockchainTime() {
 }
 
 async function main() {
-  const days = 0;
-  const hours = 1;
+  const days = 100;
+  const hours = 0;
   const minutes = 0;
   const seconds = 0;
 
@@ -45,3 +45,5 @@ main()
     console.error(error);
     process.exit(1);
   });
+
+// npx hardhat run scripts/test/advanceTime.ts --network localhost

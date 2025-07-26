@@ -1,29 +1,42 @@
-const fs = require("fs");
-const path = require("path");
+import fs from "fs";
+import path from "path";
 
-// JSONファイルのパス
+// ---------- 入出力パス ----------
 const jsonFilePath = path.join(__dirname, "events/TokenDistributions.json");
-// 出力するCSVファイルのパス
-const csvFilePath = path.join(__dirname, "events/Yamato_v1_distributions.csv");
+const csvFilePath  = path.join(__dirname, "events/Yamato_v1_distributions.csv");
 
-// JSONファイルを読み込む
-const jsonData = JSON.parse(fs.readFileSync(jsonFilePath, "utf8"));
-const distributions = jsonData.distributions;
+// ---------- JSON 読み込み ----------
+const jsonData       = JSON.parse(fs.readFileSync(jsonFilePath, "utf8"));
+const distributions  = jsonData.distributions as any[];
 
-// CSVのヘッダー
-let csvContent = "address,scorePercentage,distributedTokens\n";
+// ---------- BigNumber 判定 ----------
+function isBigNumberish(v: any): boolean {
+  return (
+    v &&
+    typeof v === "object" &&
+    (v.type === "BigNumber" || (v.hex && typeof v.hex === "string"))
+  );
+}
 
-// 各配布データをCSV形式に変換
-distributions.forEach((distribution) => {
-  const { address, scorePercentage, distributedTokens } = distribution;
-  // scorePercentageを8桁の小数点以下でフォーマットし、指数表記を避ける
-  const formattedScorePercentage = Number(scorePercentage).toFixed(12);
-  // distributedTokensも必要に応じてフォーマット可能
-  const formattedDistributedTokens = Number(distributedTokens);
-  csvContent += `${address},${formattedScorePercentage},${formattedDistributedTokens}\n`;
+// ---------- ヘッダー自動生成 ----------
+const headers = Object.keys(distributions[0]).filter(
+  (key) => !isBigNumberish(distributions[0][key])
+);
+let csvContent = headers.join(",") + "\n";
+
+// ---------- 本体 ----------
+distributions.forEach((dist) => {
+  const row = headers
+    .map((h) => {
+      const val = dist[h];
+      if (isBigNumberish(val)) return "";                     // 万一混入時
+      if (typeof val === "number") return val.toFixed(12);    // 数値 → 小数12桁
+      return String(val);                                     // 文字列などそのまま
+    })
+    .join(",");
+  csvContent += row + "\n";
 });
 
-// CSVファイルを書き出す
+// ---------- 書き出し ----------
 fs.writeFileSync(csvFilePath, csvContent);
-
 console.log(`CSVファイルが正常に生成されました: ${csvFilePath}`);
