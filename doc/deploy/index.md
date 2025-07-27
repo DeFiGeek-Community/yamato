@@ -98,7 +98,6 @@
 - `npx hardhat deploy --tags addYamato_V2 --network sepolia`
 - `npx hardhat deploy --tags setYmtOS_V2 --network sepolia`
 - `npx hardhat deploy --tags setCurrencyOS_CURRRECY_V2 --network sepolia`
-- `npx hardhat deploy --tags addCurrencyOS_YmtOS_V2 --network sepolia`
 - `npx hardhat deploy --tags ScoreRegistry_V2 --network sepolia`
 - `npx hardhat deploy --tags setScoreRegistry_V2 --network sepolia`
 - `npx hardhat run upgrade/batches/v2-update-safeProposeSecond.ts --network sepolia`
