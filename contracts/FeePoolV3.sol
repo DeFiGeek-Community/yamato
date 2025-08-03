@@ -9,7 +9,6 @@ pragma solidity ^0.8.4;
 //solhint-disable no-inline-assembly
 
 import "./Interfaces/IveYMT.sol";
-import "forge-std/console.sol";
 import "./Interfaces/IFeePoolV2.sol";
 import "./Dependencies/UUPSBase.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
@@ -310,15 +309,6 @@ contract FeePoolV3 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
                 // veForAtを使用して正しい過去の残高を取得
                 userBalance = veForAt(addr_, _weekCursor + WEEK - 1);
 
-
-                // デバッグログ
-                // console.log("=== Claim Debug for", addr_, "===");
-                // console.log("Week:", _weekCursor);
-                // console.log("User Balance:", userBalance);
-                // console.log("VeSupply:", veSupply[_weekCursor]);
-                // console.log("Tokens for week:", tokensPerWeek[_weekCursor]);
-                // console.log("==============================");
-
                 finalizedUserBalance[addr_][_weekCursor] = userBalance;
             }
             
@@ -525,10 +515,8 @@ contract FeePoolV3 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
         // 一定額以上の着金時のみチェックポイント（ガス節約）
         if (msg.value > 0) {
             // canCheckpointTokenがtrueの場合、または一定時間経過している場合
-            if (canCheckpointToken || 
-                block.timestamp > lastTokenTime + TOKEN_CHECKPOINT_DEADLINE) {
                 _checkpointToken();
-            }
+                _checkpointTotalSupply();
         }
     }
 }

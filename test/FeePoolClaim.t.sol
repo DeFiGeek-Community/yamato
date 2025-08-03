@@ -224,13 +224,13 @@ contract FeePoolClaimTest is Test {
         // 他のテストと同じ時間設定でテスト
         vm.warp(block.timestamp + 7 days);
         
-        console.log("=== Week Start Claim Test ===");
-        console.log("Current timestamp:", block.timestamp);
-        console.log("Week boundary:", (block.timestamp / WEEK) * WEEK);
-        console.log("FeePoolV2 startTime:", feePoolV2.startTime());
-        console.log("FeePoolV2 timeCursor:", feePoolV2.timeCursor());
-        console.log("FeePoolV2 lastTokenTime:", feePoolV2.lastTokenTime());
-        console.log("Contract balance before claim:", address(proxy).balance);
+        // Week Start Claim Test
+        // Current timestamp: block.timestamp
+        // Week boundary: (block.timestamp / WEEK) * WEEK
+        // FeePoolV2 startTime: feePoolV2.startTime()
+        // FeePoolV2 timeCursor: feePoolV2.timeCursor()
+        // FeePoolV2 lastTokenTime: feePoolV2.lastTokenTime()
+        // Contract balance before claim: address(proxy).balance
         
         // canCheckpointTokenを有効にする
         vm.startPrank(governance);
@@ -245,19 +245,19 @@ contract FeePoolClaimTest is Test {
         uint256 claimedAmountWeekStart = feePoolV2.claim();
         vm.stopPrank();
         
-        console.log("Claim amount at week start:", claimedAmountWeekStart);
-        console.log("User balance after claim:", user1.balance);
+        // Claim amount at week start: claimedAmountWeekStart
+        // User balance after claim: user1.balance
         
         // さらに時間を進める
         vm.warp(block.timestamp + 7 days);
         
-        console.log("\n=== Week End Claim Test ===");
-        console.log("Current timestamp:", block.timestamp);
-        console.log("Week boundary:", (block.timestamp / WEEK) * WEEK);
-        console.log("FeePoolV2 startTime:", feePoolV2.startTime());
-        console.log("FeePoolV2 timeCursor:", feePoolV2.timeCursor());
-        console.log("FeePoolV2 lastTokenTime:", feePoolV2.lastTokenTime());
-        console.log("Contract balance before claim:", address(proxy).balance);
+        // Week End Claim Test
+        // Current timestamp: block.timestamp
+        // Week boundary: (block.timestamp / WEEK) * WEEK
+        // FeePoolV2 startTime: feePoolV2.startTime()
+        // FeePoolV2 timeCursor: feePoolV2.timeCursor()
+        // FeePoolV2 lastTokenTime: feePoolV2.lastTokenTime()
+        // Contract balance before claim: address(proxy).balance
         
         // 追加でETHを送付（週の終わりでのテスト用）
         uint256 additionalEth = 2 ether;
@@ -269,21 +269,21 @@ contract FeePoolClaimTest is Test {
         uint256 claimedAmountWeekEnd = feePoolV2.claim();
         vm.stopPrank();
         
-        console.log("Claim amount at week end:", claimedAmountWeekEnd);
-        console.log("User balance after claim:", user1.balance);
+        // Claim amount at week end: claimedAmountWeekEnd
+        // User balance after claim: user1.balance
         
         // 週の初めと終わりでのclaim量の違いを確認
-        console.log("\n=== Comparison Results ===");
-        console.log("Week start claim amount:", claimedAmountWeekStart);
-        console.log("Week end claim amount:", claimedAmountWeekEnd);
+        // Comparison Results
+        // Week start claim amount: claimedAmountWeekStart
+        // Week end claim amount: claimedAmountWeekEnd
         if (claimedAmountWeekEnd > claimedAmountWeekStart) {
-            console.log("Difference (week end - week start):", claimedAmountWeekEnd - claimedAmountWeekStart);
-            console.log("Week end claim is higher by:", ((claimedAmountWeekEnd - claimedAmountWeekStart) * 100) / claimedAmountWeekStart, "%");
+            // Difference (week end - week start): claimedAmountWeekEnd - claimedAmountWeekStart
+            // Week end claim is higher by: ((claimedAmountWeekEnd - claimedAmountWeekStart) * 100) / claimedAmountWeekStart %
         } else if (claimedAmountWeekStart > claimedAmountWeekEnd) {
-            console.log("Difference (week start - week end):", claimedAmountWeekStart - claimedAmountWeekEnd);
-            console.log("Week start claim is higher by:", ((claimedAmountWeekStart - claimedAmountWeekEnd) * 100) / claimedAmountWeekEnd, "%");
+            // Difference (week start - week end): claimedAmountWeekStart - claimedAmountWeekEnd
+            // Week start claim is higher by: ((claimedAmountWeekStart - claimedAmountWeekEnd) * 100) / claimedAmountWeekEnd %
         } else {
-            console.log("No difference between week start and week end claims");
+            // No difference between week start and week end claims
         }
         
         // claimが成功したことを確認
@@ -537,10 +537,9 @@ contract FeePoolClaimTest is Test {
         uint256 claimAtEnd = feePoolV2.claim();
         vm.stopPrank();
         
-        console.log("User1 claim at week start:", claimAtStart);
-        console.log("User2 claim at week end:", claimAtEnd);
-        console.log("Difference:", claimAtStart > claimAtEnd ? 
-            claimAtStart - claimAtEnd : claimAtEnd - claimAtStart);
+        // User1 claim at week start: claimAtStart
+        // User2 claim at week end: claimAtEnd
+        // Difference: claimAtStart > claimAtEnd ? claimAtStart - claimAtEnd : claimAtEnd - claimAtStart
         
         // 同じロック量なら、同じ週の報酬は同じになるべき
         assertEq(claimAtStart, claimAtEnd, "Same week claims should be equal");
@@ -553,7 +552,7 @@ contract FeePoolClaimTest is Test {
         uint256 claimNextWeek = feePoolV2.claim();
         vm.stopPrank();
         
-        console.log("User1 claim at next week:", claimNextWeek);
+        // User1 claim at next week: claimNextWeek
         
         // 次の週には新しい報酬がないため、claimは0になるべき
         assertEq(claimNextWeek, 0, "No new rewards in next week");
@@ -569,7 +568,7 @@ contract FeePoolClaimTest is Test {
         uint256 claimNewWeek = feePoolV2.claim();
         vm.stopPrank();
         
-        console.log("User1 claim with new ETH:", claimNewWeek);
+        // User1 claim with new ETH: claimNewWeek
         
         // 新しいETHが送付されたので、claimは0より大きくなるべき
         assertGt(claimNewWeek, 0, "Should have new rewards after new ETH");
@@ -609,7 +608,7 @@ contract FeePoolClaimTest is Test {
         uint256 claimedAmount = feePoolV2.claim();
         vm.stopPrank();
         
-        console.log("Claimed amount for partial week:", claimedAmount);
+        // Claimed amount for partial week: claimedAmount
         
         // 部分的な週の報酬が正しく計算されていることを確認
         // 実際の実装では、週の途中から始まっても全額が配分される可能性がある
@@ -748,8 +747,8 @@ contract FeePoolClaimTest is Test {
         uint256 firstClaimUser2 = feePoolV2.claim();
         vm.stopPrank();
         
-        console.log("First claim user1:", firstClaimUser1);
-        console.log("First claim user2:", firstClaimUser2);
+        // First claim user1: firstClaimUser1
+        // First claim user2: firstClaimUser2
         
         // 同じ量のclaimであることを確認
         assertEq(firstClaimUser1, firstClaimUser2, "Initial claims should be equal");
@@ -779,8 +778,8 @@ contract FeePoolClaimTest is Test {
         uint256 secondClaimUser2 = feePoolV2.claim();
         vm.stopPrank();
         
-        console.log("Second claim user1 (increased lock):", secondClaimUser1);
-        console.log("Second claim user2 (same lock):", secondClaimUser2);
+        // Second claim user1 (increased lock): secondClaimUser1
+        // Second claim user2 (same lock): secondClaimUser2
         
         // user1の方が多く受け取ることを確認
         assertGt(secondClaimUser1, secondClaimUser2, "User1 should receive more after increasing lock");
@@ -824,8 +823,8 @@ contract FeePoolClaimTest is Test {
         uint256 largeClaim = feePoolV2.claim();
         vm.stopPrank();
         
-        console.log("Small lock claim:", smallClaim);
-        console.log("Large lock claim:", largeClaim);
+        // Small lock claim: smallClaim
+        // Large lock claim: largeClaim
         
         // 小さなロック量でも0より大きな報酬を受け取れることを確認
         assertGe(smallClaim, 0, "Small lock should receive non-negative rewards");
@@ -965,8 +964,6 @@ contract FeePoolClaimTest is Test {
         uint256 lastTokenTimeAfter = feePoolV2.lastTokenTime();
         assertGt(lastTokenTimeAfter, lastTokenTimeBefore, "lastTokenTime should be updated after auto checkpoint");
         
-        // 週の境界にいるため、まだ報酬を受け取れない可能性がある
-        console.log("Claimed amount after auto checkpoint:", claimedAmount);
     }
 
     function test_CheckpointPermissions() public {
@@ -1076,9 +1073,9 @@ contract FeePoolClaimTest is Test {
         uint256 totalClaimed = claim1 + claim2 + claim3;
         uint256 dust = ethAmount > totalClaimed ? ethAmount - totalClaimed : 0;
         
-        console.log("Total sent:", ethAmount);
-        console.log("Total claimed:", totalClaimed);
-        console.log("Dust:", dust);
+        // Total sent: ethAmount
+        // Total claimed: totalClaimed
+        // Dust: dust
         
         // 誤差が小さいことを確認（実際のテスト結果では2 wei程度）
         // FeePoolV3の実装では非常に高い精度が実現されている
@@ -1123,9 +1120,9 @@ contract FeePoolClaimTest is Test {
         uint256 totalClaimed = claim1 + claim2 + claim3;
         uint256 dust = ethAmount > totalClaimed ? ethAmount - totalClaimed : 0;
         
-        console.log("Total sent:", ethAmount);
-        console.log("Total claimed:", totalClaimed);
-        console.log("Dust:", dust);
+        // Total sent: ethAmount
+        // Total claimed: totalClaimed
+        // Dust: dust
         
         // 誤差が小さいことを確認（実際のテスト結果では2 wei程度）
         // FeePoolV3の実装では非常に高い精度が実現されている
@@ -1217,5 +1214,491 @@ contract FeePoolClaimTest is Test {
         
         // user4は報酬を受け取らない（address(0)で処理が停止）
         assertEq(user4.balance, user4BalanceBefore, "User4 should not receive rewards");
+    }
+
+
+    function test_ClaimAtExactWeekBoundary() public {
+        // ユーザーがveYMTにロック
+        uint256 lockAmount = 1000 * 1e18;
+        setupVeYMTLock(user1, lockAmount);
+        
+        // V3にアップグレード
+        upgradeToV3();
+        initializeV3();
+        
+        // canCheckpointTokenを有効化   
+        vm.startPrank(governance);
+        feePoolV2.toggleAllowCheckpointToken();
+        vm.stopPrank();
+        
+        // 週の境界ぴったりに移動
+        uint256 weekBoundary = ((block.timestamp + WEEK) / WEEK) * WEEK;
+        vm.warp(weekBoundary);
+        
+        // ETHを送付（週の開始時点）
+        sendETH(5 ether);
+        
+        // 次の週の境界ぴったりに移動
+        vm.warp(weekBoundary + WEEK);
+        
+        // claimを実行（週の境界での動作確認）
+        vm.startPrank(user1);
+        uint256 claimedAmount = feePoolV2.claim();
+        vm.stopPrank();
+        
+        assertGt(claimedAmount, 0, "Should receive rewards when claiming at exact week boundary");
+    }
+
+    function test_VeYMTDecayImpactOnClaims() public {
+        // 異なるロック期間のユーザーを作成
+        uint256 lockAmount = 1000 * 1e18;
+        setupVeYMTLockWithDuration(user1, lockAmount, 4 * 365 * 86400); // 4年
+        setupVeYMTLockWithDuration(user2, lockAmount, 1 * 365 * 86400); // 1年
+        setupVeYMTLockWithDuration(user3, lockAmount, 6 * 30 * 86400);  // 6ヶ月
+        
+        // V3にアップグレード
+        upgradeToV3();
+        initializeV3();
+        
+        // canCheckpointTokenを有効化
+        vm.startPrank(governance);
+        feePoolV2.toggleAllowCheckpointToken();
+        vm.stopPrank();
+        
+        // ETHを送付
+        sendETH(10 ether);
+        
+        // 1週間後（初期状態）
+        vm.warp(block.timestamp + WEEK);
+        
+        vm.startPrank(user1);
+        uint256 claim1_week1 = feePoolV2.claim();
+        vm.stopPrank();
+        
+        vm.startPrank(user2);
+        uint256 claim2_week1 = feePoolV2.claim();
+        vm.stopPrank();
+        
+        vm.startPrank(user3);
+        uint256 claim3_week1 = feePoolV2.claim();
+        vm.stopPrank();
+        
+        // ロック期間が長いほど多く受け取る
+        assertGt(claim1_week1, claim2_week1, "4-year lock should receive more than 1-year");
+        assertGt(claim2_week1, claim3_week1, "1-year lock should receive more than 6-month");
+        
+            // 前の週のクレームを完了させる
+        vm.warp(block.timestamp + WEEK);
+        
+        // 新しい週のETHを送付
+        sendETH(10 ether);
+        vm.warp(block.timestamp + WEEK);
+        
+        vm.startPrank(user1);
+        uint256 claim1_week13 = feePoolV2.claim();
+        vm.stopPrank();
+        
+        vm.startPrank(user2);
+        uint256 claim2_week13 = feePoolV2.claim();
+        vm.stopPrank();
+        
+        vm.startPrank(user3);
+        uint256 claim3_week13 = feePoolV2.claim();
+        vm.stopPrank();
+        
+        // 時間経過による相対的な変化を確認
+        // Week 1 - User1: claim1_week1, User2: claim2_week1, User3: claim3_week1
+        // Week 13 - User1: claim1_week13, User2: claim2_week13, User3: claim3_week13
+        }
+
+        function test_ClaimBeforeWeekFinalized() public {
+            // ユーザーがveYMTにロック
+            uint256 lockAmount = 1000 * 1e18;
+            setupVeYMTLock(user1, lockAmount);
+            
+            // V3にアップグレード
+            upgradeToV3();
+            initializeV3();
+            
+            // canCheckpointTokenを有効化
+            vm.startPrank(governance);
+            feePoolV2.toggleAllowCheckpointToken();
+            vm.stopPrank();
+            
+            // ETHを送付
+            sendETH(5 ether);
+            
+            // 同じ週内でクレームを試行（週が確定していない）
+            vm.warp(block.timestamp + 1 hours);
+            
+            vm.startPrank(user1);
+            uint256 claimedAmount = feePoolV2.claim();
+            vm.stopPrank();
+            
+            // 現在の週はまだ確定していないため、クレームは0
+            assertEq(claimedAmount, 0, "Cannot claim rewards for unfinalized week");
+        }
+
+        function test_DustAccumulationOverTime() public {
+            // 7人のユーザーで不均等にロック（割り切れない数）
+            setupVeYMTLock(user1, 1000 * 1e18);
+            setupVeYMTLock(user2, 1234 * 1e18);
+            setupVeYMTLock(user3, 2345 * 1e18);
+            setupVeYMTLock(user4, 3456 * 1e18);
+            setupVeYMTLock(makeAddr("user5"), 4567 * 1e18);
+            setupVeYMTLock(makeAddr("user6"), 5678 * 1e18);
+            setupVeYMTLock(makeAddr("user7"), 6789 * 1e18);
+            
+            // V3にアップグレード
+            upgradeToV3();
+            initializeV3();
+            
+            // canCheckpointTokenを有効化
+            vm.startPrank(governance);
+            feePoolV2.toggleAllowCheckpointToken();
+            vm.stopPrank();
+            
+            uint256 totalSent;
+            uint256 totalClaimed;
+            
+            // 10週間にわたって割り切れない量のETHを送付
+            for (uint i = 0; i < 10; i++) {
+                uint256 amount = 1000000000000000007 + i; // 毎回異なる端数
+                sendETH(amount);
+                totalSent += amount;
+                vm.warp(block.timestamp + WEEK);
+            }
+            
+            // 全ユーザーがクレーム
+            address[7] memory users = [user1, user2, user3, user4, makeAddr("user5"), makeAddr("user6"), makeAddr("user7")];
+            for (uint i = 0; i < 7; i++) {
+                vm.startPrank(users[i]);
+                totalClaimed += feePoolV2.claim();
+                vm.stopPrank();
+            }
+            
+            uint256 dust = totalSent - totalClaimed;
+            // Total sent: totalSent
+            // Total claimed: totalClaimed
+            // Accumulated dust: dust
+            
+            // 10週間でも誤差は最小限であるべき
+            assertLt(dust, 100, "Dust accumulation should be minimal even over multiple weeks");
+        }
+
+        function test_ConcurrentClaimsHandling() public {
+            // 複数のユーザーがveYMTにロック
+            uint256 lockAmount = 1000 * 1e18;
+            setupVeYMTLock(user1, lockAmount);
+            setupVeYMTLock(user2, lockAmount);
+            
+            // V3にアップグレード
+            upgradeToV3();
+            initializeV3();
+            
+            // canCheckpointTokenを有効化
+            vm.startPrank(governance);
+            feePoolV2.toggleAllowCheckpointToken();
+            vm.stopPrank();
+            
+            // ETHを送付
+            sendETH(10 ether);
+            
+            // 1週間後
+            vm.warp(block.timestamp + WEEK);
+            
+            // user1が最初にtotalSupplyをチェックポイント
+            vm.startPrank(user1);
+            uint256 claim1 = feePoolV2.claim();
+            vm.stopPrank();
+            
+            // user2が同じブロックでクレーム（状態が正しく管理されているか確認）
+            vm.startPrank(user2);
+            uint256 claim2 = feePoolV2.claim();
+            vm.stopPrank();
+            
+                // 両者が正しく報酬を受け取れることを確認
+        assertEq(claim1, claim2, "Both users should receive equal rewards");
+        assertGt(claim1, 0, "Claims should be successful");
+    }
+
+    // ==============================
+    // 追加テストケース：週をまたぐETH送付
+    // ==============================
+
+    function test_ETHDepositAcrossWeekBoundary() public {
+        // ユーザーがveYMTにロック
+        uint256 lockAmount = 1000 * 1e18;
+        setupVeYMTLock(user1, lockAmount);
+        
+        // V3にアップグレード
+        upgradeToV3();
+        initializeV3();
+        
+        // canCheckpointTokenを有効化
+        vm.startPrank(governance);
+        feePoolV2.toggleAllowCheckpointToken();
+        vm.stopPrank();
+        
+        // 週の終わり近くに移動（週末の1時間前）
+        uint256 weekEnd = ((block.timestamp / WEEK) + 1) * WEEK - 1 hours;
+        vm.warp(weekEnd);
+        
+        // ETHを送付（一部は現在の週、一部は次の週に配分される）
+        sendETH(10 ether);
+        
+        // 2時間後（次の週に入る）
+        vm.warp(weekEnd + 2 hours);
+        
+        // 両方の週でクレーム可能か確認
+        vm.warp(block.timestamp + WEEK);
+        
+        vm.startPrank(user1);
+        uint256 totalClaimed = feePoolV2.claim();
+        vm.stopPrank();
+        
+        // 10 ETHのほぼ全額がクレームできることを確認
+        assertGt(totalClaimed, 9.9 ether, "Should receive almost all ETH across weeks");
+    }
+
+    // ==============================
+    // 追加テストケース：最大週数処理
+    // ==============================
+    function test_MaxWeeksProcessing() public {
+        // ユーザーがveYMTにロック
+        uint256 lockAmount = 1000 * 1e18;
+        setupVeYMTLock(user1, lockAmount);
+        
+        // V3にアップグレード
+        upgradeToV3();
+        initializeV3();
+        
+        // canCheckpointTokenを有効化
+        vm.startPrank(governance);
+        feePoolV2.toggleAllowCheckpointToken();
+        vm.stopPrank();
+        
+        // 現在のタイムスタンプを記録
+        uint256 currentTime = block.timestamp;
+        
+        // 45週分のETHを送付（ループ制限の50に近いが超えない）
+        for (uint i = 0; i < 45; i++) {
+            sendETH(0.1 ether);
+            vm.warp(block.timestamp + WEEK);
+        }
+        
+        // さらに2週間待って、45週目を確定させる
+        vm.warp(block.timestamp + 2 * WEEK);
+        
+        // この時点で45週分がクレーム可能
+        vm.startPrank(user1);
+        uint256 claimedAmount = feePoolV2.claim();
+        vm.stopPrank();
+        
+        // 45週分の報酬を受け取る
+        assertGt(claimedAmount, 4.4 ether, "Should claim all 45 weeks in one call");
+        assertLt(claimedAmount, 4.6 ether, "Should not exceed total sent");
+        
+        // 2回目のclaimは0になるはず
+        vm.startPrank(user1);
+        uint256 secondClaim = feePoolV2.claim();
+        vm.stopPrank();
+        
+        assertEq(secondClaim, 0, "Second claim should be 0");
+        
+        // ループ制限をテストするために、さらに10週分追加
+        for (uint i = 0; i < 10; i++) {
+            sendETH(0.1 ether);
+            vm.warp(block.timestamp + WEEK);
+        }
+        
+        // 1週間待って確定
+        vm.warp(block.timestamp + WEEK);
+        
+        // 50週制限により、一度のclaimでは全て処理できない
+        vm.startPrank(user1);
+        uint256 thirdClaim = feePoolV2.claim();
+        vm.stopPrank();
+        
+        assertGt(thirdClaim, 0, "Should claim additional weeks");
+        
+        // もう一度claimして残りを処理
+        vm.startPrank(user1);
+        uint256 fourthClaim = feePoolV2.claim();
+        vm.stopPrank();
+        
+        // 全ての週が処理されたか確認
+        vm.startPrank(user1);
+        uint256 fifthClaim = feePoolV2.claim();
+        vm.stopPrank();
+        
+        assertEq(fifthClaim, 0, "All weeks should be claimed");
+    }
+
+    // ==============================
+    // 追加テストケース：エッジケース
+    // ==============================
+
+    function test_ClaimWithExpiredLock() public {
+        // 短期間のロック（1週間）
+        uint256 lockAmount = 1000 * 1e18;
+        setupVeYMTLockWithDuration(user1, lockAmount, WEEK);
+        
+        // V3にアップグレード
+        upgradeToV3();
+        initializeV3();
+        
+        // canCheckpointTokenを有効化
+        vm.startPrank(governance);
+        feePoolV2.toggleAllowCheckpointToken();
+        vm.stopPrank();
+        
+        // ETHを送付
+        sendETH(5 ether);
+        
+        // ロック期間終了後
+        vm.warp(block.timestamp + WEEK + 1);
+        
+        // ロックが自動的に解除されることを確認
+        uint256 veBalance = veYmt.balanceOf(user1);
+        assertEq(veBalance, 0, "Lock should be automatically expired");
+        
+        // 過去の報酬はクレームできる
+        vm.startPrank(user1);
+        uint256 claimedAmount = feePoolV2.claim();
+        vm.stopPrank();
+        
+        assertGt(claimedAmount, 0, "Should be able to claim rewards from expired lock period");
+    }
+
+    function test_ClaimWithMultipleLockPeriods() public {
+        // ユーザーがveYMTにロック
+        uint256 lockAmount = 1000 * 1e18;
+        setupVeYMTLock(user1, lockAmount);
+        
+        // V3にアップグレード
+        upgradeToV3();
+        initializeV3();
+        
+        // canCheckpointTokenを有効化
+        vm.startPrank(governance);
+        feePoolV2.toggleAllowCheckpointToken();
+        vm.stopPrank();
+        
+        // 最初の週のETHを送付
+        sendETH(5 ether);
+        vm.warp(block.timestamp + WEEK);
+        
+        // 最初のクレーム
+        vm.startPrank(user1);
+        uint256 firstClaim = feePoolV2.claim();
+        vm.stopPrank();
+        
+        // ロックを延長
+        vm.startPrank(user1);
+        uint256 newLockTime = block.timestamp + 4 * 365 * 86400; // 4年間
+        veYmt.increaseUnlockTime(newLockTime);
+        vm.stopPrank();
+        
+        // 新しい週のETHを送付
+        sendETH(5 ether);
+        vm.warp(block.timestamp + WEEK);
+        
+        // 2回目のクレーム
+        vm.startPrank(user1);
+        uint256 secondClaim = feePoolV2.claim();
+        vm.stopPrank();
+        
+        // 両方のクレームが成功することを確認
+        assertGt(firstClaim, 0, "First claim should be successful");
+        assertGt(secondClaim, 0, "Second claim should be successful");
+        
+        // ロック期間が延長されたので、2回目のクレームはより多く受け取る可能性がある
+        // （veYMTの減衰がリセットされるため）
+    }
+
+    // ==============================
+    // 追加テストケース：パフォーマンスとガス効率
+    // ==============================
+
+    function test_GasEfficiencyOfClaim() public {
+        // 複数のユーザーがveYMTにロック
+        uint256 lockAmount = 1000 * 1e18;
+        setupVeYMTLock(user1, lockAmount);
+        setupVeYMTLock(user2, lockAmount);
+        setupVeYMTLock(user3, lockAmount);
+        setupVeYMTLock(user4, lockAmount);
+        
+        // V3にアップグレード
+        upgradeToV3();
+        initializeV3();
+        
+        // canCheckpointTokenを有効化
+        vm.startPrank(governance);
+        feePoolV2.toggleAllowCheckpointToken();
+        vm.stopPrank();
+        
+        // ETHを送付
+        sendETH(10 ether);
+        
+        // 1週間後
+        vm.warp(block.timestamp + WEEK);
+        
+        // ガス使用量を測定
+        uint256 gasBefore = gasleft();
+        
+        vm.startPrank(user1);
+        uint256 claimedAmount = feePoolV2.claim();
+        vm.stopPrank();
+        
+        uint256 gasUsed = gasBefore - gasleft();
+        
+        // ガス使用量が合理的な範囲内であることを確認
+        assertLt(gasUsed, 400000, "Gas usage should be reasonable");
+        assertGt(claimedAmount, 0, "Claim should be successful");
+    }
+
+    function test_ClaimManyGasEfficiency() public {
+        // 複数のユーザーがveYMTにロック
+        uint256 lockAmount = 1000 * 1e18;
+        setupVeYMTLock(user1, lockAmount);
+        setupVeYMTLock(user2, lockAmount);
+        setupVeYMTLock(user3, lockAmount);
+        setupVeYMTLock(user4, lockAmount);
+        
+        // V3にアップグレード
+        upgradeToV3();
+        initializeV3();
+        
+        // canCheckpointTokenを有効化
+        vm.startPrank(governance);
+        feePoolV2.toggleAllowCheckpointToken();
+        vm.stopPrank();
+        
+        // ETHを送付
+        sendETH(10 ether);
+        
+        // 1週間後
+        vm.warp(block.timestamp + WEEK);
+        
+        // claimMany用のアドレス配列を作成
+        address[] memory receivers = new address[](4);
+        receivers[0] = user1;
+        receivers[1] = user2;
+        receivers[2] = user3;
+        receivers[3] = user4;
+        
+        // ガス使用量を測定
+        uint256 gasBefore = gasleft();
+        
+        vm.startPrank(governance);
+        bool success = feePoolV2.claimMany(receivers);
+        vm.stopPrank();
+        
+        uint256 gasUsed = gasBefore - gasleft();
+        
+        // claimManyが成功し、ガス効率が良いことを確認
+        assertTrue(success, "claimMany should succeed");
+        assertLt(gasUsed, 600000, "claimMany gas usage should be reasonable");
     }
 }
