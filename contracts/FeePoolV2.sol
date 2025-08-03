@@ -224,15 +224,28 @@ contract FeePoolV2 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
         IveYMT(_ve).checkpoint();
 
         for (uint256 i; i < 20; ) {
-            if (_t > _roundedTimestamp) break;
-            
-            // 直接その時点のtotalSupplyを計算（エポックに依存しない）
-            veSupply[_t] = IveYMT(_ve).totalSupply(_t);
-            _t += WEEK;
-            
-            unchecked { ++i; }
+            if (_t > _roundedTimestamp) {
+                break;
+            } else {
+                uint256 _epoch = _findTimestampEpoch(_ve, _t);
+                IveYMT.Point memory _pt = IveYMT(_ve).pointHistory(_epoch);
+                int128 _dt;
+                if (_t > _pt.ts) {
+                    _dt = int128(int256(_t) - int256(_pt.ts));
+                }
+                int128 _balance = _pt.bias - _pt.slope * _dt;
+                if (_balance < 0) {
+                    veSupply[_t] = 0;
+                } else {
+                    veSupply[_t] = uint256(uint128(_balance));
+                }
+                _t += WEEK;
+            }
+            unchecked {
+                ++i;
+            }
         }
-        
+
         timeCursor = _t;
     }
 
@@ -278,40 +291,120 @@ contract FeePoolV2 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
         address ve_,
         uint256 lastTokenTime_
     ) internal returns (uint256) {
+        // Minimal user_epoch is 0 (if user had no point)
+        uint256 _userEpoch;
         uint256 _toDistribute;
+
+        uint256 _maxUserEpoch = IveYMT(ve_).userPointEpoch(addr_);
         uint256 _startTime = startTime;
+
+        if (_maxUserEpoch == 0) {
+            // No lock = no fees
+            return 0;
+        }
 
         uint256 _weekCursor = timeCursorOf[addr_];
         if (_weekCursor == 0) {
-            _weekCursor = _startTime;
+            // Need to do the initial binary search
+            _userEpoch = _findTimestampUserEpoch(
+                ve_,
+                addr_,
+                _startTime,
+                _maxUserEpoch
+            );
+        } else {
+            _userEpoch = userEpochOf[addr_];
+        }
+
+        if (_userEpoch == 0) {
+            _userEpoch = 1;
+        }
+
+        IveYMT.Point memory _userPoint = IveYMT(ve_).userPointHistory(
+            addr_,
+            _userEpoch
+        );
+
+        if (_weekCursor == 0) {
+            _weekCursor = ((_userPoint.ts + WEEK - 1) / WEEK) * WEEK;
         }
 
         if (_weekCursor >= lastTokenTime_) {
             return 0;
         }
 
-        // 週ごとの処理
+        if (_weekCursor < _startTime) {
+            _weekCursor = _startTime;
+        }
+
+        IveYMT.Point memory _oldUserPoint = IveYMT.Point({
+            bias: 0,
+            slope: 0,
+            ts: 0,
+            blk: 0
+        });
+
+        // Iterate over weeks
         for (uint256 i; i < 50; ) {
             if (_weekCursor >= lastTokenTime_) {
                 break;
+            } else if (
+                _weekCursor >= _userPoint.ts && _userEpoch <= _maxUserEpoch
+            ) {
+                ++_userEpoch;
+                _oldUserPoint = IveYMT.Point({
+                    bias: _userPoint.bias,
+                    slope: _userPoint.slope,
+                    ts: _userPoint.ts,
+                    blk: _userPoint.blk
+                });
+                if (_userEpoch > _maxUserEpoch) {
+                    _userPoint = IveYMT.Point({
+                        bias: 0,
+                        slope: 0,
+                        ts: 0,
+                        blk: 0
+                    });
+                } else {
+                    _userPoint = IveYMT(ve_).userPointHistory(
+                        addr_,
+                        _userEpoch
+                    );
+                }
+            } else {
+                int256 _dt = int256(_weekCursor) - int256(_oldUserPoint.ts);
+                int256 _balanceOf = int256(_oldUserPoint.bias) -
+                    _dt *
+                    int256(_oldUserPoint.slope);
+                if (
+                    int256(_oldUserPoint.bias) -
+                        _dt *
+                        int256(_oldUserPoint.slope) <
+                    0
+                ) {
+                    _balanceOf = 0;
+                }
+
+                if (_balanceOf == 0 && _userEpoch > _maxUserEpoch) {
+                    break;
+                }
+                if (_balanceOf > 0) {
+                    _toDistribute +=
+                        (uint256(_balanceOf) * tokensPerWeek[_weekCursor]) /
+                        veSupply[_weekCursor];
+                }
+                _weekCursor += WEEK;
             }
-            
-            // エポックベースの計算を置き換え
-            uint256 userBalance = IveYMT(ve_).balanceOf(addr_, _weekCursor);
-            
-            if (userBalance > 0 && veSupply[_weekCursor] > 0) {
-                _toDistribute += 
-                    (userBalance * tokensPerWeek[_weekCursor]) / 
-                    veSupply[_weekCursor];
+            unchecked {
+                ++i;
             }
-            
-            _weekCursor += WEEK;
-            unchecked { ++i; }
         }
 
+        _userEpoch = Math.min(_maxUserEpoch, _userEpoch - 1);
+        userEpochOf[addr_] = _userEpoch;
         timeCursorOf[addr_] = _weekCursor;
 
-        emit Claimed(addr_, _toDistribute, 0, 0);
+        emit Claimed(addr_, _toDistribute, _userEpoch, _maxUserEpoch);
 
         return _toDistribute;
     }
