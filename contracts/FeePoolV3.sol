@@ -1,4 +1,4 @@
-pragma solidity 0.8.4;
+pragma solidity ^0.8.4;
 
 /*
  * SPDX-License-Identifier: GPL-3.0-or-later
@@ -9,6 +9,7 @@ pragma solidity 0.8.4;
 //solhint-disable no-inline-assembly
 
 import "./Interfaces/IveYMT.sol";
+import "forge-std/console.sol";
 import "./Interfaces/IFeePoolV2.sol";
 import "./Dependencies/UUPSBase.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
@@ -39,6 +40,11 @@ contract FeePoolV3 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
     bool public canCheckpointToken;
     bool public isKilled;
 
+    // 週ごとの確定状態を管理
+    mapping(uint256 => bool) public weekFinalized;
+    mapping(uint256 => uint256) public finalizedVeSupply;
+    mapping(address => mapping(uint256 => uint256)) public finalizedUserBalance;
+
     event ToggleAllowCheckpointToken(bool toggleFlag);
     event CheckpointToken(uint256 time, uint256 tokens);
     event Claimed(
@@ -49,6 +55,7 @@ contract FeePoolV3 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
     );
     event Received(address sender, uint256 value);
     event VeYMTSet(address sender, address veYMT);
+    event WeekFinalized(uint256 week, uint256 veSupply);
 
     function initialize() public initializer {
         __UUPSBase_init();
@@ -197,7 +204,7 @@ contract FeePoolV3 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
     function veForAt(
         address user_,
         uint256 timestamp_
-    ) external view returns (uint256) {
+    ) public view returns (uint256) {
         address _ve = veYMT();
         uint256 _maxUserEpoch = IveYMT(_ve).userPointEpoch(user_);
         uint256 _epoch = _findTimestampUserEpoch(
@@ -217,19 +224,49 @@ contract FeePoolV3 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
         }
     }
 
+    function _getTotalSupplyAt(uint256 timestamp_) internal view returns (uint256) {
+        address _ve = veYMT();
+        uint256 _epoch = _findTimestampEpoch(_ve, timestamp_);
+        IveYMT.Point memory _pt = IveYMT(_ve).pointHistory(_epoch);
+        
+        uint256 _dt;
+        if (timestamp_ > _pt.ts) {
+            _dt = timestamp_ - _pt.ts;
+        }
+        
+        int128 _balance = _pt.bias - _pt.slope * int128(int256(_dt));
+        if (_balance < 0) {
+            return 0;
+        } else {
+            return uint256(uint128(_balance));
+        }
+    }
+
+
     function _checkpointTotalSupply() internal {
         address _ve = veYMT();
         uint256 _t = timeCursor;
-        uint256 _roundedTimestamp = (block.timestamp / WEEK) * WEEK;
+        uint256 _currentWeek = (block.timestamp / WEEK) * WEEK;
         IveYMT(_ve).checkpoint();
 
         for (uint256 i; i < 20; ) {
-            if (_t > _roundedTimestamp) break;
+            if (_t >= _currentWeek) break; // 現在の週は確定しない
             
-            // 直接その時点のtotalSupplyを計算（エポックに依存しない）
-            veSupply[_t] = IveYMT(_ve).totalSupply(_t);
+            if (!weekFinalized[_t]) {
+                // 週の終了時点でのtotalSupplyを記録
+                uint256 weekEndTimestamp = _t + WEEK - 1;
+                
+                // finalizedVeSupplyを使用して一度だけ計算
+                if (finalizedVeSupply[_t] == 0) {
+                    finalizedVeSupply[_t] = _getTotalSupplyAt(_t + WEEK - 1);
+                }
+                veSupply[_t] = finalizedVeSupply[_t];
+                
+                weekFinalized[_t] = true;
+                emit WeekFinalized(_t, veSupply[_t]);
+            }
+            
             _t += WEEK;
-            
             unchecked { ++i; }
         }
         
@@ -241,36 +278,7 @@ contract FeePoolV3 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
      * @dev The checkpoint is also updated by the first claimant each new epoch week. This function may be called independently of a claim, to reduce claiming gas costs.
      */
     function checkpointTotalSupply() external {
-        address _ve = veYMT();
-        uint256 _t = timeCursor;
-        uint256 _roundedTimestamp = (block.timestamp / WEEK) * WEEK;
-        IveYMT(_ve).checkpoint();
-
-        for (uint256 i; i < 20; ) {
-            if (_t > _roundedTimestamp) {
-                break;
-            } else {
-                uint256 _epoch = _findTimestampEpoch(_ve, _t);
-                IveYMT.Point memory _pt = IveYMT(_ve).pointHistory(_epoch);
-                uint256 _dt;
-                if (_t > _pt.ts) {
-                    _dt = uint256(int256(_t) - int256(_pt.ts));
-                }
-
-                int128 _balance = _pt.bias - _pt.slope * int128(int256(_dt));
-                if (_balance < 0) {
-                    veSupply[_t] = 0;
-                } else {
-                    veSupply[_t] = uint256(uint128(_balance));
-                }
-            }
-            _t += WEEK;
-            unchecked {
-                ++i;
-            }
-        }
-
-        timeCursor = _t;
+        _checkpointTotalSupply();  // 内部関数を呼び出すだけにする
     }
 
     function _claim(
@@ -280,24 +288,39 @@ contract FeePoolV3 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
     ) internal returns (uint256) {
         uint256 _toDistribute;
         uint256 _startTime = startTime;
+        uint256 _currentWeek = (block.timestamp / WEEK) * WEEK;
 
         uint256 _weekCursor = timeCursorOf[addr_];
         if (_weekCursor == 0) {
             _weekCursor = _startTime;
         }
 
-        if (_weekCursor >= lastTokenTime_) {
-            return 0;
-        }
-
-        // 週ごとの処理
         for (uint256 i; i < 50; ) {
-            if (_weekCursor >= lastTokenTime_) {
+            // 現在の週より前の週のみ処理
+            if (_weekCursor >= _currentWeek || _weekCursor >= lastTokenTime_) {
                 break;
             }
             
-            // エポックベースの計算を置き換え
-            uint256 userBalance = IveYMT(ve_).balanceOf(addr_, _weekCursor);
+            // 週が確定していることを確認
+            require(weekFinalized[_weekCursor], "Week not finalized");
+            
+            // 週の終了時点での残高を使用
+            uint256 userBalance = finalizedUserBalance[addr_][_weekCursor];
+            if (userBalance == 0) {
+                // veForAtを使用して正しい過去の残高を取得
+                userBalance = veForAt(addr_, _weekCursor + WEEK - 1);
+
+
+                // デバッグログ
+                // console.log("=== Claim Debug for", addr_, "===");
+                // console.log("Week:", _weekCursor);
+                // console.log("User Balance:", userBalance);
+                // console.log("VeSupply:", veSupply[_weekCursor]);
+                // console.log("Tokens for week:", tokensPerWeek[_weekCursor]);
+                // console.log("==============================");
+
+                finalizedUserBalance[addr_][_weekCursor] = userBalance;
+            }
             
             if (userBalance > 0 && veSupply[_weekCursor] > 0) {
                 _toDistribute += 
@@ -310,9 +333,7 @@ contract FeePoolV3 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
         }
 
         timeCursorOf[addr_] = _weekCursor;
-
         emit Claimed(addr_, _toDistribute, 0, 0);
-
         return _toDistribute;
     }
 
@@ -500,5 +521,14 @@ contract FeePoolV3 is IFeePoolV2, UUPSBase, ReentrancyGuardUpgradeable {
 
     receive() external payable {
         emit Received(msg.sender, msg.value);
+        
+        // 一定額以上の着金時のみチェックポイント（ガス節約）
+        if (msg.value > 0) {
+            // canCheckpointTokenがtrueの場合、または一定時間経過している場合
+            if (canCheckpointToken || 
+                block.timestamp > lastTokenTime + TOKEN_CHECKPOINT_DEADLINE) {
+                _checkpointToken();
+            }
+        }
     }
 }
