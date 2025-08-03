@@ -1,0 +1,21 @@
+[profile.default]
+src = "contracts"
+out = "out"
+libs = ["node_modules", "lib"]
+remappings = [
+    "@ensdomains/=node_modules/@ensdomains/",
+    "eth-gas-reporter/=node_modules/eth-gas-reporter/",
+    "hardhat-deploy/=node_modules/hardhat-deploy/",
+    "hardhat/=node_modules/hardhat/",
+    "openzeppelin-solidity/=node_modules/openzeppelin-solidity/",
+    "prb-math/=node_modules/prb-math/",
+]
+ignore_compile = [
+    "contracts/Tester/",
+    "contracts/OracleMockBase.sol",
+    "contracts/TellorCallerMock.sol",
+    "lib/forge-std/src/console.sol",
+    "lib/forge-std/src/console2.sol",
+]
+
+# See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

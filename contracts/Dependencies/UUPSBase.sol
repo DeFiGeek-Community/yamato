@@ -9,7 +9,7 @@ pragma solidity 0.8.4;
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 import "../Interfaces/IUUPSEtherscanVerifiable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";

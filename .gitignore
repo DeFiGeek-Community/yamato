@@ -22,3 +22,12 @@ abis
 test/**/*.js
 /slither-output.json
 .openzeppelin/unknown-31337.json
+
+# Foundry
+out/
+cache/
+broadcast/
+cache_forge/
+cache_solc/
+lib/
+!lib/forge-std/
