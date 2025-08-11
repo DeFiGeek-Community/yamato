@@ -8,12 +8,12 @@ pragma solidity 0.8.4;
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
 
-import "./Currency.sol";
+import "./CurrencyV2.sol";
 
 /**
  * @title CToken (Convertible Token).
  * @notice Very stable.
  */
-contract CUSD is Currency {
-    constructor() Currency("Convertible USD Token", "CUSD") {}
+contract CUSD is CurrencyV2 {
+    constructor() CurrencyV2("Convertible USD Token", "CUSD") {}
 }
