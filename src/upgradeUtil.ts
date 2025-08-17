@@ -60,6 +60,48 @@ export async function upgradeProxy<
   return instance;
 }
 
+export async function deployUUPSProxy<
+  T extends BaseContract,
+  S extends ContractFactory
+>(
+  contractNameTo: string,
+  libraries?: string[],
+  args?: any[],
+): Promise<T> {
+  let Libraries = {};
+  if (libraries) {
+    for (const libraryName of libraries) {
+      Libraries[libraryName] = (await deployLibrary(libraryName)).address;
+    }
+  }
+
+  let contractFactory: S;
+  if (libraries?.length > 0) {
+    contractFactory = <S>(
+      await getLinkedContractFactory(contractNameTo, Libraries)
+    );
+  } else {
+    contractFactory = <S>await ethers.getContractFactory(contractNameTo);
+  }
+  const contract = await contractFactory.deploy();
+  await contract.deployed();
+  console.log("contract.address", contract.address);
+
+  const Proxy = await ethers.getContractFactory("ERC1967Proxy");
+  let proxy;
+  if(args){
+    const initData = contractFactory.interface.encodeFunctionData("initialize", args);
+    console.log("initData", initData);
+    proxy = await Proxy.deploy(contract.address, initData);
+
+  }else{
+    proxy = await Proxy.deploy(contract.address, []);
+  }
+  await proxy.deployed();
+  const viaProxy = contract.attach(proxy.address);
+  return viaProxy as T;
+}
+
 /*
   For multisig upgrade
 */
@@ -263,7 +305,7 @@ export function getLatestContractName(implNameBase) {
   let highestVersion = Math.max(...versions);
   const implName = `${implNameBase}V${highestVersion}`;
   if (versions?.length == 0) {
-    return "";
+    return implNameBase;
   } else {
     return implName;
   }

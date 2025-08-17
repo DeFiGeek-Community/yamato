@@ -5,7 +5,7 @@ import { FakeContract, smock } from "@defi-wonderland/smock";
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "fs";
 import { getDeploymentAddressPath, getCurrentNetwork } from "./deployUtil";
 import { genABI } from "./genABI";
-import { getLatestContractName, upgradeProxy } from "./upgradeUtil";
+import { getLatestContractName, upgradeProxy, deployUUPSProxy } from "./upgradeUtil";
 import chalk from "chalk";
 import {
   getDeploymentAddressPathWithTag,
@@ -52,32 +52,35 @@ export async function getProxy<
         ? contractName
         : `${contractName}V${versionSpecification}`;
     contractFactory = <S>await ethers.getContractFactory(contractVersion);
-    implName = "";
+    implName = contractVersion;
   } else {
     contractFactory = <S>await ethers.getContractFactory(contractName);
     implName = getLatestContractName(contractName);
   }
+  console.log("implName", implName);
+  
+  const proxy = await deployUUPSProxy(implName, [], args);
+  return proxy as T;
+  // defaultInst = <T>(
+  //   await upgrades.deployProxy(contractFactory, args, { kind: "uups" })
+  // );
 
-  defaultInst = <T>(
-    await upgrades.deployProxy(contractFactory, args, { kind: "uups" })
-  );
+  // if (isUpdateDisabled || implName.length == 0) {
+  //   return defaultInst;
+  // } else {
+  //   // console.log(`${implName} is going to be deployed to ERC1967Proxy...`);
 
-  if (isUpdateDisabled || implName.length == 0) {
-    return defaultInst;
-  } else {
-    // console.log(`${implName} is going to be deployed to ERC1967Proxy...`);
-
-    const inst: T = <T>(
-      await upgradeProxy(defaultInst.address, implName, [], options)
-    );
-    console.log(
-      chalk.gray(
-        `        [success] ${implName}=${inst.address} is upgraded to ERC1967Proxy`
-      )
-    );
-    return inst;
-  }
-}
+  //   const inst: T = <T>(
+  //     await upgradeProxy(defaultInst.address, implName, [], options)
+  //   );
+  //   console.log(
+  //     chalk.gray(
+  //       `        [success] ${implName}=${inst.address} is upgraded to ERC1967Proxy`
+  //     )
+  //   );
+  //   return inst;
+  // }
+} 
 
 export async function getLinkedProxy<
   T extends BaseContract,
@@ -107,32 +110,34 @@ export async function getLinkedProxy<
     contractFactory = <S>(
       await getLinkedContractFactory(contractVersion, Libraries)
     );
-    implName = "";
+    implName = contractVersion;
   } else {
     contractFactory = <S>(
       await getLinkedContractFactory(contractName, Libraries)
     );
     implName = getLatestContractName(contractName);
   }
+  const proxy = await deployUUPSProxy(implName, libralies, args);
+  return proxy as T;
 
-  defaultInst = <T>await upgrades.deployProxy(contractFactory, args, {
-    kind: "uups",
-    unsafeAllow: ["external-library-linking"],
-  });
+  // defaultInst = <T>await upgrades.deployProxy(contractFactory, args, {
+  //   kind: "uups",
+  //   unsafeAllow: ["external-library-linking"],
+  // });
 
-  if (implName.length == 0) {
-    return defaultInst;
-  } else {
-    const inst: T = <T>(
-      await upgradeProxy(defaultInst.address, implName, libralies)
-    );
-    console.log(
-      chalk.gray(
-        `        [success] ${implName}=${inst.address} is upgraded to ERC1967Proxy`
-      )
-    );
-    return inst;
-  }
+  // if (implName.length == 0) {
+  //   return defaultInst;
+  // } else {
+  //   const inst: T = <T>(
+  //     await upgradeProxy(defaultInst.address, implName, libralies)
+  //   );
+  //   console.log(
+  //     chalk.gray(
+  //       `        [success] ${implName}=${inst.address} is upgraded to ERC1967Proxy`
+  //     )
+  //   );
+  //   return inst;
+  // }
 }
 
 export async function deployLibrary(libraryName) {
