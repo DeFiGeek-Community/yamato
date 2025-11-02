@@ -1,6 +1,68 @@
 # Yamato デプロイ後の初期設定手順
 
-このドキュメントは、コントラクトデプロイ後に実行する必要がある初期設定関数をまとめたものです。
+このドキュメントは、コントラクトデプロイ時の初期化引数とデプロイ後に実行する必要がある初期設定関数をまとめたものです。
+
+---
+
+## デプロイ時の初期化引数
+
+### v1.0 デプロイ時の `initialize` 引数
+
+各UUPS proxyコントラクトのデプロイ時に`initialize`関数を呼び出す際の引数です。
+
+| コントラクト | 実装バージョン | 初期化関数 | 引数 |
+|------------|-------------|-----------|-----|
+| **PriceFeed** | PriceFeedV3 | `initialize` | `_ethPriceAggregatorInUSDAddress` (Chainlink ETH/USD Oracle)<br/>`_jpyPriceAggregatorInUSDAddress` (Chainlink JPY/USD Oracle) |
+| **FeePool** | FeePool | `initialize` | なし |
+| **CurrencyOS** | CurrencyOSV2 | `initialize` | `currencyAddr` (CJPYアドレス)<br/>`feedAddr` (PriceFeed プロキシアドレス)<br/>`feePoolAddr` (FeePool プロキシアドレス) |
+| **Yamato** | YamatoV3 | `initialize` | `_currencyOS` (CurrencyOS プロキシアドレス) |
+| **YamatoDepositor** | YamatoDepositorV2 | `initialize` | `_yamato` (Yamato プロキシアドレス) |
+| **YamatoBorrower** | YamatoBorrower | `initialize` | `_yamato` (Yamato プロキシアドレス) |
+| **YamatoRepayer** | YamatoRepayerV2 | `initialize` | `_yamato` (Yamato プロキシアドレス) |
+| **YamatoWithdrawer** | YamatoWithdrawerV2 | `initialize` | `_yamato` (Yamato プロキシアドレス) |
+| **YamatoRedeemer** | YamatoRedeemerV4 | `initialize` | `_yamato` (Yamato プロキシアドレス) |
+| **YamatoSweeper** | YamatoSweeperV2 | `initialize` | `_yamato` (Yamato プロキシアドレス) |
+| **Pool** | PoolV2 | `initialize` | `_yamato` (Yamato プロキシアドレス) |
+| **PriorityRegistry** | PriorityRegistryV6 | `initialize` | `_yamato` (Yamato プロキシアドレス) |
+
+**注意事項:**
+- **CJPY**: 通常のERC20コントラクト（非proxy）のため、コンストラクタで初期化されます。
+- **Chainlinkアドレス**: 本番環境では実際のChainlink Aggregatorアドレスを使用します。テスト環境ではモックアドレスを使用します。
+- **依存関係**: 初期化引数に他のコントラクトアドレスが必要なため、デプロイ順序が重要です。
+
+### v1.0 デプロイ順序
+
+依存関係に基づいた正しいデプロイ順序：
+
+```
+1. PriceFeed (PriceFeedV3)
+   ↓
+2. CJPY (CurrencyV2) - 非proxy
+   ↓
+3. FeePool (FeePool)
+   ↓
+4. CurrencyOS (CurrencyOSV2) - CJPY, PriceFeed, FeePoolが必要
+   ↓
+5. Yamato (YamatoV3) - CurrencyOSが必要
+   ↓
+6. YamatoDepositor (YamatoDepositorV2) - Yamatoが必要
+   ↓
+7. YamatoBorrower (YamatoBorrower) - Yamatoが必要
+   ↓
+8. YamatoRepayer (YamatoRepayerV2) - Yamatoが必要
+   ↓
+9. YamatoWithdrawer (YamatoWithdrawerV2) - Yamatoが必要
+   ↓
+10. YamatoRedeemer (YamatoRedeemerV4) - Yamatoが必要
+   ↓
+11. YamatoSweeper (YamatoSweeperV2) - Yamatoが必要
+   ↓
+12. Pool (PoolV2) - Yamatoが必要
+   ↓
+13. PriorityRegistry (PriorityRegistryV6) - Yamatoが必要
+```
+
+**デプロイ完了後、初期設定を実行します（次のセクション参照）。**
 
 ---
 

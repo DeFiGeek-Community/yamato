@@ -1,0 +1,131 @@
+
+🚀 Starting Yamato v1.0 deployment on localhost...
+
+============================================================
+
+
+📦 [1/14] Deploying Mock Oracles...
+────────────────────────────────────────────────────────────
+
+🌐 Network: localhost
+
+📡 Connected to localhost
+👤 Account: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+
+🚀 Deploying ChainlinkMock (ETH/USD)...
+
+🚀 Deploying ChainLinkMockEthUsd...
+  📝 Transaction hash: 0xf7c7ff74ccedad5762010128c0cc19ba84baa5f1f7fd376d645450bf973cdf3a
+  ✅ Deployed at: 0x2279b7a0a67db372996a5fab50d91eaa73d2ebe6
+✅ Saved ChainLinkMockEthUsd: 0x2279b7a0a67db372996a5fab50d91eaa73d2ebe6
+✅ ChainLinkMockEthUsd deployment complete!
+
+✅ ChainLinkMock (ETH/USD) deployed at: 0x2279b7a0a67db372996a5fab50d91eaa73d2ebe6
+
+🚀 Deploying ChainlinkMock (JPY/USD)...
+
+🚀 Deploying ChainLinkMockJpyUsd...
+  📝 Transaction hash: 0x21659faca762aae0b5ff1ac59de12e78b77c7973ddedac1acaeb0719ad45d2a2
+  ✅ Deployed at: 0x8a791620dd6260079bf849dc5567adc3f2fdc318
+✅ Saved ChainLinkMockJpyUsd: 0x8a791620dd6260079bf849dc5567adc3f2fdc318
+✅ ChainLinkMockJpyUsd deployment complete!
+
+✅ ChainLinkMock (JPY/USD) deployed at: 0x8a791620dd6260079bf849dc5567adc3f2fdc318
+
+🔧 Initializing oracle prices...
+✅ ETH/USD prices initialized
+✅ JPY/USD prices initialized
+
+
+✅ All oracle mocks deployed successfully!
+
+✅ Mock Oracles deployed successfully!
+
+📦 [2/14] Deploying PriceFeed...
+────────────────────────────────────────────────────────────
+
+🌐 Network: localhost
+
+📡 Connected to localhost
+👤 Account: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+
+📖 Loading mock oracle addresses...
+   ETH/USD Oracle: 0x2279b7a0a67db372996a5fab50d91eaa73d2ebe6
+   JPY/USD Oracle: 0x8a791620dd6260079bf849dc5567adc3f2fdc318
+✅ Mock addresses loaded
+
+
+🚀 Deploying PriceFeed...
+  📦 Deploying implementation...
+  ✅ Implementation deployed: 0x9a676e781a523b5d0c0e43731313a708cb607508
+  🔧 Encoding init data (function: initialize)...
+  📦 Deploying proxy...
+  ✅ Proxy deployed: 0x0b306bf915c4d645ff596e518faf3f9669b97016
+✅ Saved PriceFeedUUPSImpl: 0x9a676e781a523b5d0c0e43731313a708cb607508
+✅ Saved PriceFeedERC1967Proxy: 0x0b306bf915c4d645ff596e518faf3f9669b97016
+✅ PriceFeed deployment complete!
+
+
+✅ PriceFeed deployed!
+   Implementation: 0x9a676e781a523b5d0c0e43731313a708cb607508
+   Proxy: 0x0b306bf915c4d645ff596e518faf3f9669b97016
+
+✅ PriceFeed deployed successfully!
+
+📦 [3/14] Deploying CJPY...
+────────────────────────────────────────────────────────────
+
+🌐 Network: localhost
+
+📡 Connected to localhost
+👤 Account: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+
+
+🚀 Deploying CJPY...
+  📝 Transaction hash: 0xf1115a8d5e6a705395ffe31ce63a503bbc8ad0da012b125ba0cff7aa2d2f02b1
+  ✅ Deployed at: 0x959922be3caee4b8cd9a407cc3ac1c251c2007b1
+✅ Saved CJPY: 0x959922be3caee4b8cd9a407cc3ac1c251c2007b1
+✅ CJPY deployment complete!
+
+
+✅ CJPY deployed at: 0x959922be3caee4b8cd9a407cc3ac1c251c2007b1
+
+✅ CJPY deployed successfully!
+
+📦 [4/14] Deploying FeePool...
+────────────────────────────────────────────────────────────
+
+🌐 Network: localhost
+
+📡 Connected to localhost
+👤 Account: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+
+📖 Loading dependencies...
+✅ Dependencies loaded
+
+
+🚀 Deploying FeePool...
+  📦 Deploying implementation...
+  ✅ Implementation deployed: 0x9a9f2ccfde556a7e9ff0848998aa4a0cfd8863ae
+  🔧 Encoding init data (function: initialize)...
+❌ Error: AbiEncodingLengthMismatchError: ABI encoding params/values length mismatch.
+Expected length (params): 0
+Given length (values): 2
+
+Version: viem@2.38.6
+    at encodeAbiParameters (/Users/ryu/dev/yamato/new-deploy/node_modules/viem/utils/abi/encodeAbiParameters.ts:94:11)
+    at encodeFunctionData (/Users/ryu/dev/yamato/new-deploy/node_modules/viem/utils/abi/encodeFunctionData.ts:92:9)
+    at deployUUPS (/Users/ryu/dev/yamato/new-deploy/scripts/core/uups-deployer.ts:62:20)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async main (/Users/ryu/dev/yamato/new-deploy/scripts/deploy/v1/deploy-feepool.ts:32:18) {
+  details: undefined,
+  docsPath: undefined,
+  metaMessages: undefined,
+  shortMessage: 'ABI encoding params/values length mismatch.\n' +
+    'Expected length (params): 0\n' +
+    'Given length (values): 2',
+  version: '2.38.6'
+}
+
+❌ Failed to deploy FeePool
+Error: Command failed: npx tsx ./scripts/deploy/v1/deploy-feepool.ts --network=localhost

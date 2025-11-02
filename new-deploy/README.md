@@ -1,0 +1,197 @@
+# Yamato New Deploy Scripts
+
+viemベースの新しいデプロイスクリプトです。
+
+## セットアップ
+
+### 1. 依存関係のインストール
+
+```bash
+cd new-deploy
+npm install
+```
+
+### 2. 環境変数の設定
+
+```bash
+# .envファイルを作成
+cp .env.example .env
+
+# .envファイルを編集して実際の値を設定
+```
+
+必要な環境変数：
+- `SEPOLIA_RPC_URL`: Sepolia RPC URL
+- `MAINNET_RPC_URL`: Mainnet RPC URL  
+- `PRIVATE_KEY`: デプロイ用の秘密鍵（0xプレフィックス付き）
+- `ETHERSCAN_API_KEY`: Etherscan API Key（verify用）
+
+### 3. ローカルノードの起動
+
+**Anvilを使用（推奨）:**
+
+```bash
+# 別ターミナルで
+cd ..
+anvil
+```
+
+Anvilはポート8545で起動し、テスト用のアカウントと秘密鍵を自動生成します。
+デフォルトのアカウント#0の秘密鍵は既に`.env.example`に設定されています。
+
+### 4. コントラクトのコンパイル
+
+デプロイ前に、必ずルートディレクトリでコントラクトをコンパイルしてください：
+
+```bash
+cd ..
+npx hardhat compile
+cd new-deploy
+```
+
+## 使い方
+
+### v1.0 完全デプロイ
+
+v1.0の全コントラクトを一括デプロイ：
+
+```bash
+# ローカル環境（Anvil）
+npx tsx scripts/deploy/v1/deploy-all.ts --network=localhost
+
+# Sepolia環境
+npx tsx scripts/deploy/v1/deploy-all.ts --network=sepolia
+```
+
+**デプロイされるコントラクト（順番）:**
+1. PriceFeed (PriceFeedV3)
+2. CJPY
+3. FeePool
+4. CurrencyOS (CurrencyOSV2)
+5. Yamato (YamatoV3)
+6. YamatoDepositor (YamatoDepositorV2)
+7. YamatoBorrower
+8. YamatoRepayer (YamatoRepayerV2)
+9. YamatoWithdrawer (YamatoWithdrawerV2)
+10. YamatoRedeemer (YamatoRedeemerV4)
+11. YamatoSweeper (YamatoSweeperV2)
+12. Pool (PoolV2)
+13. PriorityRegistry (PriorityRegistryV6)
+
+### v1.0 初期設定
+
+デプロイ後、初期設定を実行：
+
+```bash
+npx tsx scripts/setup/v1/setup-all.ts --network=localhost
+```
+
+**実行される初期設定:**
+1. `Yamato.setDeps()` - 全依存コントラクトの登録
+2. `CurrencyOS.addYamato()` - YamatoをCurrencyOSに登録
+3. `CJPY.setCurrencyOS()` + `CJPY.revokeGovernance()` - CJPY設定とガバナンス放棄
+
+### 個別デプロイ・設定
+
+```bash
+# 個別デプロイ例
+npx tsx scripts/deploy/v1/deploy-cjpy.ts --network=localhost
+npx tsx scripts/deploy/v1/deploy-yamato.ts --network=localhost
+
+# 個別設定例
+npx tsx scripts/setup/v1/setup-yamato-deps.ts --network=localhost
+npx tsx scripts/setup/v1/setup-cjpy.ts --network=localhost
+```
+
+### v1.5デプロイ
+
+```bash
+npx tsx scripts/deploy/v1.5/deploy-ymt.ts --network=sepolia
+```
+
+### v2デプロイ
+
+```bash
+npx tsx scripts/deploy/v2/deploy-ymtos.ts --network=sepolia
+```
+
+## ディレクトリ構造
+
+```
+new-deploy/
+├── scripts/
+│   ├── core/              # コアモジュール
+│   │   ├── address-manager.ts
+│   │   ├── client.ts
+│   │   ├── contract-deployer.ts
+│   │   └── uups-deployer.ts
+│   ├── deploy/            # デプロイスクリプト
+│   │   ├── v1/
+│   │   ├── v1.5/
+│   │   └── v2/
+│   ├── upgrade/           # アップグレードスクリプト
+│   └── governance/        # ガバナンス操作
+├── config/
+│   └── networks.ts        # ネットワーク設定
+├── package.json
+├── tsconfig.json
+└── .env
+```
+
+## 注意事項
+
+1. **コンパイル**: デプロイ前に必ずルートで`npx hardhat compile`を実行
+2. **アドレス管理**: `../deployments/`ディレクトリに自動保存
+3. **ガス代**: 十分なETHを用意してください
+4. **秘密鍵管理**: `.env`ファイルは絶対にコミットしない
+
+## トラブルシューティング
+
+### ABI/Bytecodeが見つからない
+
+```bash
+# ルートディレクトリでコンパイル
+cd ..
+npx hardhat compile
+cd new-deploy
+```
+
+### アドレスが見つからない
+
+依存するコントラクトが先にデプロイされているか確認してください。
+
+### RPC接続エラー
+
+`.env`のRPC URLが正しく設定されているか確認してください。
+
+### "invalid chain id for signer" エラー
+
+ローカルテストでこのエラーが出る場合：
+
+1. **Anvilが起動しているか確認**
+   ```bash
+   # 別ターミナルで
+   anvil
+   ```
+
+2. **Chain IDの確認**
+   - Anvilのデフォルトchain ID: 31337
+   - `.env`の`LOCALHOST_CHAIN_ID`が31337になっているか確認
+
+3. **ポートの確認**
+   - Anvilのデフォルトポート: 8545
+   - `.env`の`LOCALHOST_RPC_URL`が`http://127.0.0.1:8545`になっているか確認
+
+4. **既存のプロセスの確認**
+   ```bash
+   # 既存のノードを停止
+   pkill -f "anvil"
+   pkill -f "hardhat node"
+   ```
+
+### ローカル vs 本番環境
+
+- **ローカル（Anvil）**: テスト・デバッグ用。失敗してもやり直し可能
+- **Sepolia**: テストネット。Etherscanで確認可能
+- **Mainnet**: 本番環境。慎重に実行してください
+

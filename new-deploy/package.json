@@ -1,0 +1,23 @@
+{
+  "name": "yamato-new-deploy",
+  "version": "1.0.0",
+  "description": "Yamato deployment scripts with viem",
+  "type": "module",
+  "scripts": {
+    "deploy:v1": "tsx scripts/deploy/v1/deploy-all.ts",
+    "deploy:yamato": "tsx scripts/deploy/v1/deploy-yamato.ts"
+  },
+  "keywords": ["yamato", "defi", "ethereum", "viem"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "viem": "^2.21.53",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
+
