@@ -7,6 +7,13 @@ import { getDeploymentAddressPathWithTag, setNetwork } from "./deployUtil";
 import { execSync } from "child_process";
 import { PriorityRegistry, PriorityRegistryV5 } from "../typechain";
 import chalk from "chalk";
+
+import type { Abi, Address, Hex } from "viem";
+import { createPublicClient, createWalletClient, http, parseEther, Abi as AbiViem } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
+import { localhost } from "viem/chains";
+import { getChain } from "./viemUtil";
+
 require("dotenv").config();
 
 /*
@@ -84,8 +91,11 @@ export async function deployUUPSProxy<
     contractFactory = <S>await ethers.getContractFactory(contractNameTo);
   }
   const contract = await contractFactory.deploy();
-  await contract.deployed();
+  console.log("contract.hash", contract.deployTransaction.hash);
   console.log("contract.address", contract.address);
+  // ハッシュでTX確定を待機
+  await ethers.provider.waitForTransaction(contract.deployTransaction.hash, 1);
+  // await contract.deployed();
 
   const Proxy = await ethers.getContractFactory("ERC1967Proxy");
   let proxy;
@@ -93,11 +103,18 @@ export async function deployUUPSProxy<
     const initData = contractFactory.interface.encodeFunctionData("initialize", args);
     console.log("initData", initData);
     proxy = await Proxy.deploy(contract.address, initData);
+    console.log("proxy.hash", proxy.deployTransaction.hash);
+    // ハッシュでTX確定を待機
+    await ethers.provider.waitForTransaction(proxy.deployTransaction.hash, 1);
 
   }else{
     proxy = await Proxy.deploy(contract.address, []);
+    console.log("proxy.hash", proxy.deployTransaction.hash);
+    console.log("proxy.address", proxy.address);
+    // ハッシュでTX確定を待機
+    await ethers.provider.waitForTransaction(proxy.deployTransaction.hash, 1);
   }
-  await proxy.deployed();
+  // await proxy.deployed();
   const viaProxy = contract.attach(proxy.address);
   return viaProxy as T;
 }
@@ -333,31 +350,86 @@ export async function upgradePriorityRegistryV2ToV5AndSync(
 // 汎用的なトランザクション実行関数
 export async function executeTransaction(
   contractAddress: string,
-  contractABI: any,
+  contractABI: Abi,
   methodName: string,
   args: any[] = []
 ) {
   // .envからDEPLOYER_PRIVATE_KEYを読み込む
-  const adminPrivateKey = process.env.LOCALHOST_ADMIN_PRIVATE_KEY;
-  if (!adminPrivateKey) {
-    console.error("DEPLOYER_PRIVATE_KEY is not defined in .env file");
-    return;
-  }
+  const pk = process.env.LOCALHOST_ADMIN_PRIVATE_KEY;
+  if (!pk) throw new Error("LOCALHOST_ADMIN_PRIVATE_KEY is not defined in .env");
+  const chain = getChain();
+  const account = privateKeyToAccount((pk.startsWith("0x") ? pk : `0x${pk}`) as Hex);
+  const transport = http("http://127.0.0.1:8545");
 
-  // JsonRpcProviderと秘密鍵からWalletを生成し、サイナーとして使用
-  const provider = new ethers.providers.JsonRpcProvider(
-    "http://127.0.0.1:8545/"
-  );
-  const signer = new ethers.Wallet(adminPrivateKey, provider);
+  const publicClient = createPublicClient({ chain, transport });
+  const walletClient = createWalletClient({ chain, transport, account });
 
-  const contract = new ethers.Contract(contractAddress, contractABI, signer);
+  // 任意メソッド呼び出し（ethers の contract[methodName](...args) 相当）
+  const hash = await walletClient.writeContract({
+    chain,
+    address: contractAddress as Address,
+    abi: contractABI,
+    functionName: methodName as any,          // 文字列名で指定
+    args,
+    account
+  });
 
-  const transactionResponse = await contract[methodName](...args);
-  await transactionResponse.wait(); // トランザクションの確定を待つ
+  // 取り込み（=1conf）まで待機（ethers の tx.wait() 相当）
+  const receipt = await publicClient.waitForTransactionReceipt({ hash });
 
   console.log(
     `Executing method: ${methodName} on contract: ${contractAddress} with arguments:`,
     args
   );
-  return transactionResponse;
+  console.log("tx.hash:", hash);
+  console.log("status:", receipt.status);
+  return { hash, receipt };
 }
+
+// FOUNDATION_PRIVATE_KEYを使用するバージョン
+export async function executeTransactionWithFoundation(
+  contractAddress: string,
+  contractABI: Abi,
+  methodName: string,
+  args: any[] = []
+) {
+  // .envからFOUNDATION_PRIVATE_KEYを読み込む
+  const pk = process.env.FOUNDATION_PRIVATE_KEY;
+  if (!pk) throw new Error("FOUNDATION_PRIVATE_KEY is not defined in .env");
+  const chain = getChain();
+  const account = privateKeyToAccount((pk.startsWith("0x") ? pk : `0x${pk}`) as Hex);
+  
+  // ネットワークに応じてRPC URLを設定
+  const network = process.env.NETWORK;
+  const rpcUrl = network === "localhost" || network === "hardhat"
+    ? "http://127.0.0.1:8545"
+    : (process.env.ALCHEMY_URL as string);
+  if (!rpcUrl) throw new Error("ALCHEMY_URL is not set");
+  
+  const transport = http(rpcUrl);
+
+  const publicClient = createPublicClient({ chain, transport });
+  const walletClient = createWalletClient({ chain, transport, account });
+
+  // 任意メソッド呼び出し（ethers の contract[methodName](...args) 相当）
+  const hash = await walletClient.writeContract({
+    chain,
+    address: contractAddress as Address,
+    abi: contractABI,
+    functionName: methodName as any,          // 文字列名で指定
+    args,
+    account
+  });
+
+  // 取り込み（=1conf）まで待機（ethers の tx.wait() 相当）
+  const receipt = await publicClient.waitForTransactionReceipt({ hash });
+
+  console.log(
+    `Executing method: ${methodName} on contract: ${contractAddress} with arguments:`,
+    args
+  );
+  console.log("tx.hash:", hash);
+  console.log("status:", receipt.status);
+  return { hash, receipt };
+}
+

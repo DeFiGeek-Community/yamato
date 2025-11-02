@@ -15,14 +15,23 @@ import { _import } from "./importUtil";
 
 async function main() {
   await _import("../mods/201_YamatoRepayer_upgradeTo");
+  console.log("201_YamatoRepayer_upgradeTo");
   await _import("../mods/202_YamatoRedeemer_upgradeTo");
+  console.log("202_YamatoRedeemer_upgradeTo");
   await _import("../mods/203_YamatoWithdrawer_upgradeTo");
+  console.log("203_YamatoWithdrawer_upgradeTo");
   await _import("../mods/204_YamatoSweeper_upgradeTo");
+  console.log("204_YamatoSweeper_upgradeTo");
   await _import("../mods/205_YamatoDepositor_upgradeTo");
+  console.log("205_YamatoDepositor_upgradeTo");
   await _import("../mods/206_YamatoBorrower_upgradeTo");
+  console.log("206_YamatoBorrower_upgradeTo");
   await _import("../mods/207_CurrencyOS_upgradeTo");
+  console.log("207_CurrencyOS_upgradeTo");
   await _import("../mods/208_Yamato_upgradeTo");
+  console.log("208_Yamato_upgradeTo");
   await _import("../mods/209_FeePool_upgradeToAndCall");
+  console.log("209_FeePool_upgradeToAndCall");
   // await _import("../mods/230_Yamato_setScoreRegistry");
   // await _import("../mods/231_FeePool_setVeYMT");
   // await _import("../mods/232_CurrencyOS_setAddress");

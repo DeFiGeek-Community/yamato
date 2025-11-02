@@ -2,6 +2,7 @@ import { readDeploymentAddress } from "../../src/addressUtil";
 import { genABI } from "../../src/genABI";
 import { createAndProposeTransaction } from "../../src/safeUtil";
 import { executeTransaction } from "../../src/upgradeUtil";
+import { readArtifact } from "../../src/viemUtil";
 
 async function main() {
   const currency = process.env.CURRENCY;
@@ -37,7 +38,9 @@ async function main() {
   // 各コントラクトに対してacceptGovernanceを呼び出す
   for (const { name, address, abi } of contracts) {
     if (process.env.NETWORK === "localhost") {
-      await executeTransaction(address, abi, "acceptGovernance");
+      const implArtifactPath = `./artifacts/contracts/${name}.sol/${name}.json`;
+      const implArtifact = readArtifact(implArtifactPath);
+      await executeTransaction(address, implArtifact.abi, "acceptGovernance");
     } else {
       await createAndProposeTransaction(address, abi, "acceptGovernance");
     }

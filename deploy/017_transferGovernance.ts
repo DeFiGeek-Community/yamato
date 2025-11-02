@@ -16,7 +16,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const multisigAddr = process.env.UUPS_PROXY_ADMIN_MULTISIG_ADDRESS;
   if (!multisigAddr) return;
 
-  setNetwork(hre.network.name);
+  setNetwork(process.env.NETWORK);
   const p = await setProvider();
 
   const _priceFeedAddr = readFileSync(

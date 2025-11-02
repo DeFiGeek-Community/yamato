@@ -6,6 +6,7 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync } from "fs";
 import { getDeploymentAddressPath, getCurrentNetwork } from "./deployUtil";
 import { genABI } from "./genABI";
 import { getLatestContractName, upgradeProxy, deployUUPSProxy } from "./upgradeUtil";
+import { deployUUPSProxyWithViem } from "./viemUtil";
 import chalk from "chalk";
 import {
   getDeploymentAddressPathWithTag,
@@ -59,7 +60,7 @@ export async function getProxy<
   }
   console.log("implName", implName);
   
-  const proxy = await deployUUPSProxy(implName, [], args);
+  const proxy = await deployUUPSProxyWithViem(implName, [], args);
   return proxy as T;
   // defaultInst = <T>(
   //   await upgrades.deployProxy(contractFactory, args, { kind: "uups" })
@@ -117,7 +118,7 @@ export async function getLinkedProxy<
     );
     implName = getLatestContractName(contractName);
   }
-  const proxy = await deployUUPSProxy(implName, libralies, args);
+  const proxy = await deployUUPSProxyWithViem(implName, libralies, args);
   return proxy as T;
 
   // defaultInst = <T>await upgrades.deployProxy(contractFactory, args, {

@@ -3,6 +3,7 @@ import { genABI } from "../../src/genABI";
 import { createAndProposeTransaction } from "../../src/safeUtil";
 import { executeTransaction } from "../../src/upgradeUtil";
 import { utils } from "ethers";
+import { readArtifact } from "../../src/viemUtil";
 
 const IMPL_NAME_BASE = "CurrencyOS";
 const version = "V4";
@@ -18,7 +19,9 @@ async function main() {
 
   if (process.env.NETWORK === "localhost") {
     // executeTransaction関数を使用して任意のメソッドを実行
-    await executeTransaction(CONTRACT_ADDRESS, CONTRACT_ABI, "setYmtOS", [
+    const implArtifactPath = `./artifacts/contracts/${implNameBase}.sol/${implNameBase}.json`;
+    const implArtifact = readArtifact(implArtifactPath);
+    await executeTransaction(CONTRACT_ADDRESS, implArtifact.abi, "setYmtOS", [
       ymtOSAddr,
     ]);
   } else {

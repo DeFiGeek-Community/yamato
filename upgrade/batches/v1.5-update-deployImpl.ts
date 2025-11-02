@@ -16,14 +16,23 @@ import { _import } from "./importUtil";
 
 async function main() {
   await _import("../mods/101_deployImpl_YamatoRepayer");
+  console.log("101_deployImpl_YamatoRepayer");
   await _import("../mods/102_deployImpl_YamatoRedeemer");
+  console.log("102_deployImpl_YamatoRedeemer");
   await _import("../mods/103_deployImpl_YamatoWithdrawer");
+  console.log("103_deployImpl_YamatoWithdrawer");
   await _import("../mods/104_deployImpl_YamatoSweeper");
+  console.log("104_deployImpl_YamatoSweeper");
   await _import("../mods/105_deployImpl_YamatoDepositor");
+  console.log("105_deployImpl_YamatoDepositor");
   await _import("../mods/106_deployImpl_YamatoBorrower");
+  console.log("106_deployImpl_YamatoBorrower");
   await _import("../mods/107_deployImpl_CurrencyOS");
+  console.log("107_deployImpl_CurrencyOS");
   await _import("../mods/108_deployImpl_Yamato");
+  console.log("108_deployImpl_Yamato");
   await _import("../mods/109_deployImpl_FeePool");
+  console.log("109_deployImpl_FeePool");
 }
 
 main();

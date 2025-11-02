@@ -76,6 +76,9 @@ module.exports = {
     },
     localhost: {
       url: "http://127.0.0.1:8545",
+      accounts: [process.env.FOUNDATION_PRIVATE_KEY],
+      live: true,
+      saveDeployments: true,
     },
     mainnet: {
       url: process.env.ALCHEMY_URL,
