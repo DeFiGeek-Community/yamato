@@ -105,7 +105,7 @@ npx hardhat run scripts/setup/v1/setup-all.ts --network localhost
 
 ```bash
 # .envにマルチシグアドレスを設定
-UUPS_PROXY_ADMIN_MULTISIG_ADDRESS=0x...
+SAFE_ADDRESS_SEPOLIA=0x...
 
 # デプロイ用の秘密鍵で実行
 npx hardhat run scripts/governance/v1-transfer-governance.ts --network sepolia
@@ -220,7 +220,7 @@ npx hardhat run scripts/setup/v1.5/setup-all.ts --network localhost
 
 ```bash
 # .envにマルチシグアドレスを設定
-UUPS_PROXY_ADMIN_MULTISIG_ADDRESS=0x...
+SAFE_ADDRESS_SEPOLIA=0x...（または SAFE_ADDRESS_MAINNET）
 COMMUNITY_MULTISIG_ADDRESS=0x...
 
 # デプロイ用の秘密鍵で実行
@@ -248,7 +248,7 @@ npx hardhat run scripts/governance/v1.5-accept-governance.ts --network sepolia
 
 ```bash
 # .envにマルチシグアドレスを設定
-UUPS_PROXY_ADMIN_MULTISIG_ADDRESS=0x...
+SAFE_ADDRESS_SEPOLIA=0x...
 
 # デプロイ用の秘密鍵で実行
 CURRENCY=CUSD npx hardhat run scripts/governance/v2-transfer-governance.ts --network sepolia

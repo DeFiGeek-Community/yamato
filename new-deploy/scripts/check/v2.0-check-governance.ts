@@ -1,5 +1,6 @@
 import hre from 'hardhat';
 import { loadProxyAddress, type NetworkName } from '../core/address-manager';
+import { getNetworkConfig } from '../../config/networks';
 import { getCurrency, getCurrencyContractName } from '../core/currency-manager';
 import { V2_CONTRACTS, V2_CURRENCY_CONTRACTS, CONTRACT_NAMES } from '../core/contract-definitions';
 import { getPriceFeedContractName } from '../core/currency-manager';
@@ -21,10 +22,11 @@ async function main() {
   console.log(`\n🔍 Checking v2.0 governance on ${network}...`);
   console.log(`💱 Currency: ${currency}\n`);
 
-  const multisigAddress = process.env.UUPS_PROXY_ADMIN_MULTISIG_ADDRESS;
+  const networkConfig = getNetworkConfig(network);
+  const multisigAddress = networkConfig.safeAddress;
 
   if (!multisigAddress) {
-    console.warn('⚠️  UUPS_PROXY_ADMIN_MULTISIG_ADDRESS is not set. Skipping governance checks.');
+    console.warn(`⚠️  SAFE_ADDRESS_${network.toUpperCase()} is not set. Skipping governance checks.`);
     return;
   }
 

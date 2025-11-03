@@ -1,5 +1,6 @@
 import hre from 'hardhat';
 import { loadAddress, loadProxyAddress, type NetworkName } from '../core/address-manager';
+import { getNetworkConfig } from '../../config/networks';
 import { V1_5_CONTRACTS, CONTRACT_NAMES } from '../core/contract-definitions';
 
 /**
@@ -8,20 +9,30 @@ import { V1_5_CONTRACTS, CONTRACT_NAMES } from '../core/contract-definitions';
  * YMT関連コントラクトの管理権限をマルチシグウォレットに移譲します。
  * 
  * 対象:
- * - YMT.setAdmin() -> UUPS_PROXY_ADMIN_MULTISIG_ADDRESS
+ * - YMT.setAdmin() -> SAFE_ADDRESS_*
  * - YmtVesting.setAdmin() -> COMMUNITY_MULTISIG_ADDRESS
- * - YmtMinter.setGovernance() -> UUPS_PROXY_ADMIN_MULTISIG_ADDRESS
- * - ScoreWeightController.setGovernance() -> UUPS_PROXY_ADMIN_MULTISIG_ADDRESS
- * - ScoreRegistry.setGovernance() -> UUPS_PROXY_ADMIN_MULTISIG_ADDRESS
+ * - YmtMinter.setGovernance() -> SAFE_ADDRESS_*
+ * - ScoreWeightController.setGovernance() -> SAFE_ADDRESS_*
+ * - ScoreRegistry.setGovernance() -> SAFE_ADDRESS_*
+ * 
+ * 環境変数:
+ * - sepolia: SAFE_ADDRESS_SEPOLIA
+ * - mainnet: SAFE_ADDRESS_MAINNET
+ * - localhost: テスト用アドレス（ハードコード）
  */
 async function main() {
   const network = hre.network.name as NetworkName;
+  const isLocalhost = network === 'localhost';
   console.log(`\n🔐 Transferring v1.5 governance to multisig on ${network}...\n`);
 
-  // マルチシグアドレスを環境変数から取得
-  const multisigAddr = process.env.UUPS_PROXY_ADMIN_MULTISIG_ADDRESS;
+  // マルチシグアドレスを取得
+  const networkConfig = getNetworkConfig(network);
+  const multisigAddr = isLocalhost
+    ? '0x70997970C51812dc3A010C7d01b50e0d17dc79C8' // Anvilのアカウント#1（テスト用）
+    : networkConfig.safeAddress;
+  
   if (!multisigAddr) {
-    throw new Error('UUPS_PROXY_ADMIN_MULTISIG_ADDRESS is not set in .env');
+    throw new Error(`SAFE_ADDRESS_${network.toUpperCase()} is not set in .env`);
   }
   
   const communityMultisigAddr = process.env.COMMUNITY_MULTISIG_ADDRESS;

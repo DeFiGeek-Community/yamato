@@ -1,12 +1,23 @@
 import hre from 'hardhat';
+import { createWalletClient, http, type WalletClient } from 'viem';
+import { privateKeyToAccount } from 'viem/accounts';
 import { loadProxyAddress, type NetworkName } from '../core/address-manager';
+import { getNetworkConfig } from '../../config/networks';
 import { V1_5_CONTRACTS, CONTRACT_NAMES } from '../core/contract-definitions';
 
 /**
  * v1.5 ガバナンス権限を受け入れ
  * 
  * マルチシグウォレットからYMT関連コントラクトのガバナンス権限を受け入れます。
- * この操作は、transferGovernance実行後にマルチシグの秘密鍵で実行する必要があります。
+ * この操作は、transferGovernance実行後にマルチシグ署名者の秘密鍵で実行する必要があります。
+ * 
+ * 実行方法:
+ * - localhost: PRIVATE_KEYを使用（テスト用）
+ * - その他（sepolia, mainnet）: SIGNER_ADDRESS_PRIVATE_KEYを使用（本番用）
+ * 
+ * 環境変数:
+ * - localhost: PRIVATE_KEY（デプロイ用の秘密鍵）
+ * - sepolia/mainnet: SIGNER_ADDRESS_PRIVATE_KEY（マルチシグ署名者の秘密鍵）
  * 
  * 注意: YMTとYmtVestingはacceptGovernanceを持たないため、対象外です。
  * 
@@ -17,14 +28,45 @@ import { V1_5_CONTRACTS, CONTRACT_NAMES } from '../core/contract-definitions';
  */
 async function main() {
   const network = hre.network.name as NetworkName;
+  const isLocalhost = network === 'localhost';
   console.log(`\n🔐 Accepting v1.5 governance from multisig on ${network}...\n`);
 
-  // マルチシグアドレスを環境変数から取得
-  const multisigAddr = process.env.UUPS_PROXY_ADMIN_MULTISIG_ADDRESS;
+  // マルチシグアドレスを取得（localhostの場合は使用しないが、チェック用に取得）
+  const networkConfig = getNetworkConfig(network);
+  const multisigAddr = isLocalhost 
+    ? '0x70997970C51812dc3A010C7d01b50e0d17dc79C8' // ローカルテスト用
+    : networkConfig.safeAddress;
+  
   if (!multisigAddr) {
-    throw new Error('UUPS_PROXY_ADMIN_MULTISIG_ADDRESS is not set in .env');
+    throw new Error(`SAFE_ADDRESS_${network.toUpperCase()} is not set in .env`);
   }
   console.log(`📝 Multisig address: ${multisigAddr}\n`);
+
+  let customWalletClient: WalletClient;
+  
+  if (isLocalhost) {
+    // ローカル環境: PRIVATE_KEYを使用（hre.viem.getWalletClients()から取得）
+    const [walletClient] = await hre.viem.getWalletClients();
+    customWalletClient = walletClient;
+    console.log(`👤 Signer address: ${walletClient.account.address}\n`);
+  } else {
+    // 本番環境: SIGNER_ADDRESS_PRIVATE_KEYのみを使用
+    const signerPrivateKey = process.env.SIGNER_ADDRESS_PRIVATE_KEY;
+    if (!signerPrivateKey) {
+      throw new Error('SIGNER_ADDRESS_PRIVATE_KEY is not set in .env (required for production)');
+    }
+    
+    // カスタムwalletClientを作成（マルチシグ署名者の秘密鍵を使用）
+    const networkConfig = getNetworkConfig(network);
+    const account = privateKeyToAccount(signerPrivateKey as `0x${string}`);
+    customWalletClient = createWalletClient({
+      account,
+      chain: networkConfig.chain,
+      transport: http(networkConfig.rpcUrl),
+    }) as WalletClient;
+    
+    console.log(`👤 Signer address: ${account.address}\n`);
+  }
 
   // contract-definitions.tsから定義を取得
   const contracts = [
@@ -45,7 +87,12 @@ async function main() {
       const proxyAddress = loadProxyAddress(network, name);
       const contract = await hre.viem.getContractAt(contractName, proxyAddress);
       
-      const hash = await contract.write.acceptGovernance();
+      // カスタムwalletClientを使用してトランザクションを送信
+      const hash = await customWalletClient.writeContract({
+        address: proxyAddress,
+        abi: contract.abi,
+        functionName: 'acceptGovernance',
+      });
       
       console.log(`   📝 Transaction hash: ${hash}`);
       const receipt = await publicClient.waitForTransactionReceipt({ hash });

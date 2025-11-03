@@ -2,6 +2,7 @@ import Safe from '@safe-global/protocol-kit';
 import SafeApiKit from '@safe-global/api-kit';
 import { SafeTransactionDataPartial } from '@safe-global/safe-core-sdk-types';
 import { encodeFunctionData, type Abi, type Address } from 'viem';
+import { getNetworkConfig, type NetworkName } from '../../config/networks';
 
 interface SafeConfig {
   chainId: bigint;
@@ -9,18 +10,6 @@ interface SafeConfig {
   signerPrivateKey: string;
   safeAddress: string;
 }
-
-// ネットワークごとの設定
-const NETWORK_CONFIG = {
-  sepolia: {
-    chainId: BigInt('11155111'),
-    rpcUrl: process.env.SEPOLIA_RPC_URL || process.env.ALCHEMY_URL || '',
-  },
-  mainnet: {
-    chainId: BigInt('1'),
-    rpcUrl: process.env.MAINNET_RPC_URL || process.env.ALCHEMY_URL || '',
-  },
-};
 
 /**
  * Safe Transactionを作成して提案
@@ -41,24 +30,24 @@ export async function createAndProposeSafeTransaction(
   console.log(`\n📝 Creating Safe Transaction for ${functionName}()...`);
 
   // ネットワーク設定を取得
-  const networkConfig = NETWORK_CONFIG[network as keyof typeof NETWORK_CONFIG];
-  if (!networkConfig) {
-    throw new Error(`Unsupported network: ${network}`);
-  }
+  const networkConfig = getNetworkConfig(network as NetworkName);
+  
+  // Safeアドレスを取得
+  const safeAddress = networkConfig.safeAddress || '';
 
   // Safe設定を取得
   const config: SafeConfig = {
-    chainId: networkConfig.chainId,
+    chainId: BigInt(networkConfig.chainId),
     rpcUrl: networkConfig.rpcUrl,
-    signerPrivateKey: process.env.SIGNER_ADDRESS_PRIVATE_KEY || process.env.PRIVATE_KEY || '',
-    safeAddress: process.env.UUPS_PROXY_ADMIN_MULTISIG_ADDRESS || '',
+    signerPrivateKey: process.env.SIGNER_ADDRESS_PRIVATE_KEY || '',
+    safeAddress,
   };
 
   if (!config.signerPrivateKey) {
-    throw new Error('SIGNER_ADDRESS_PRIVATE_KEY or PRIVATE_KEY is not set in .env');
+    throw new Error('SIGNER_ADDRESS_PRIVATE_KEY is not set in .env');
   }
   if (!config.safeAddress) {
-    throw new Error('UUPS_PROXY_ADMIN_MULTISIG_ADDRESS is not set in .env');
+    throw new Error(`SAFE_ADDRESS_${network.toUpperCase()} is not set in .env`);
   }
 
   // Protocol Kitを初期化

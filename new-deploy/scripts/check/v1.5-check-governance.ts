@@ -1,5 +1,6 @@
 import hre from 'hardhat';
 import { loadProxyAddress, loadAddress, type NetworkName } from '../core/address-manager';
+import { getNetworkConfig } from '../../config/networks';
 import { V1_5_CONTRACTS, V1_CONTRACTS, CONTRACT_NAMES } from '../core/contract-definitions';
 
 /**
@@ -19,11 +20,12 @@ async function main() {
   const network = hre.network.name as NetworkName;
   console.log(`\n🔍 Checking v1.5 governance on ${network}...\n`);
 
-  const multisigAddress = process.env.UUPS_PROXY_ADMIN_MULTISIG_ADDRESS;
+  const networkConfig = getNetworkConfig(network);
+  const multisigAddress = networkConfig.safeAddress;
   const communityMultisigAddress = process.env.COMMUNITY_MULTISIG_ADDRESS;
 
   if (!multisigAddress) {
-    console.warn('⚠️  UUPS_PROXY_ADMIN_MULTISIG_ADDRESS is not set. Skipping governance checks.');
+    console.warn(`⚠️  SAFE_ADDRESS_${network.toUpperCase()} is not set. Skipping governance checks.`);
     return;
   }
 

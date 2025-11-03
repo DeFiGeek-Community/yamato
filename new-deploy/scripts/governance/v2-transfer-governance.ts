@@ -1,5 +1,6 @@
 import hre from 'hardhat';
 import { loadProxyAddress, type NetworkName } from '../core/address-manager';
+import { getNetworkConfig } from '../../config/networks';
 import { getCurrency } from '../core/currency-manager';
 import { createAndProposeSafeTransaction } from '../core/safe-transaction';
 import { V2_CONTRACTS, V2_CURRENCY_CONTRACTS, V1_CONTRACTS, CONTRACT_NAMES } from '../core/contract-definitions';
@@ -42,12 +43,13 @@ async function main() {
   console.log(`📝 Execution mode: ${isLocalhost ? 'Direct' : 'Safe Transaction'}\n`);
 
   // マルチシグアドレスを取得
+  const networkConfig = getNetworkConfig(network);
   const multisigAddr = isLocalhost
     ? '0x70997970C51812dc3A010C7d01b50e0d17dc79C8' // Anvilのアカウント#1（テスト用）
-    : (process.env.UUPS_PROXY_ADMIN_MULTISIG_ADDRESS as `0x${string}`);
+    : (networkConfig.safeAddress as `0x${string}`);
 
   if (!multisigAddr) {
-    throw new Error('UUPS_PROXY_ADMIN_MULTISIG_ADDRESS is not set in .env');
+    throw new Error(`SAFE_ADDRESS_${network.toUpperCase()} is not set in .env`);
   }
 
   console.log(`🔐 Multisig Address: ${multisigAddr}\n`);

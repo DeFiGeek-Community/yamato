@@ -1,5 +1,6 @@
 import hre from 'hardhat';
 import { loadProxyAddress, type NetworkName } from '../core/address-manager';
+import { getNetworkConfig } from '../../config/networks';
 import { V1_CONTRACTS, CONTRACT_NAMES } from '../core/contract-definitions';
 
 /**
@@ -7,15 +8,25 @@ import { V1_CONTRACTS, CONTRACT_NAMES } from '../core/contract-definitions';
  * 
  * 全てのUUPSコントラクトの管理権限をマルチシグウォレットに移譲します。
  * この操作後、コントラクトのアップグレードはマルチシグの承認が必要になります。
+ * 
+ * 環境変数:
+ * - sepolia: SAFE_ADDRESS_SEPOLIA
+ * - mainnet: SAFE_ADDRESS_MAINNET
+ * - localhost: テスト用アドレス（ハードコード）
  */
 async function main() {
   const network = hre.network.name as NetworkName;
+  const isLocalhost = network === 'localhost';
   console.log(`\n🔐 Transferring governance to multisig on ${network}...\n`);
 
-  // マルチシグアドレスを環境変数から取得
-  const multisigAddr = process.env.UUPS_PROXY_ADMIN_MULTISIG_ADDRESS;
+  // マルチシグアドレスを取得
+  const networkConfig = getNetworkConfig(network);
+  const multisigAddr = isLocalhost
+    ? '0x70997970C51812dc3A010C7d01b50e0d17dc79C8' // Anvilのアカウント#1（テスト用）
+    : networkConfig.safeAddress;
+  
   if (!multisigAddr) {
-    throw new Error('UUPS_PROXY_ADMIN_MULTISIG_ADDRESS is not set in .env');
+    throw new Error(`SAFE_ADDRESS_${network.toUpperCase()} is not set in .env`);
   }
   console.log(`📝 Multisig address: ${multisigAddr}\n`);
 

@@ -12,7 +12,7 @@
 ## ガバナンスをマルチシグへ移行
 
 - `npx hardhat run scripts/governance/v1-transfer-governance.ts --network sepolia`
-- `.env`の`PRIVATE_KEY`をマルチシグ署名者の秘密鍵に変更
+- `.env`に`SIGNER_ADDRESS_PRIVATE_KEY`をマルチシグ署名者の秘密鍵に設定
 - `npx hardhat run scripts/governance/v1-accept-governance.ts --network sepolia`
 
 # Yamato v1.5 デプロイ
@@ -33,7 +33,7 @@
 ## ガバナンスをマルチシグへ移行
 
 - `npx hardhat run scripts/governance/v1.5-transfer-governance.ts --network sepolia`
-- `.env`の`PRIVATE_KEY`をマルチシグ署名者の秘密鍵に変更
+- `.env`に`SIGNER_ADDRESS_PRIVATE_KEY`をマルチシグ署名者の秘密鍵に設定
 - `npx hardhat run scripts/governance/v1.5-accept-governance.ts --network sepolia`
 
 # Yamato v2 デプロイ
@@ -65,11 +65,11 @@
 ### CUSD
 
 - `CURRENCY=CUSD npx hardhat run scripts/governance/v2-transfer-governance.ts --network sepolia`
-- `.env`の`PRIVATE_KEY`をマルチシグ署名者の秘密鍵に変更
+- `.env`に`SIGNER_ADDRESS_PRIVATE_KEY`をマルチシグ署名者の秘密鍵に設定
 - `CURRENCY=CUSD npx hardhat run scripts/governance/v2-accept-governance.ts --network sepolia`
 
 ### CEUR
 
 - `CURRENCY=CEUR npx hardhat run scripts/governance/v2-transfer-governance.ts --network sepolia`
-- `.env`の`PRIVATE_KEY`をマルチシグ署名者の秘密鍵に変更
+- `.env`に`SIGNER_ADDRESS_PRIVATE_KEY`をマルチシグ署名者の秘密鍵に設定
 - `CURRENCY=CEUR npx hardhat run scripts/governance/v2-accept-governance.ts --network sepolia`
