@@ -22,7 +22,7 @@ async function main() {
   console.log('✅ Dependencies loaded\n');
 
   const result = await deployUUPS({
-    name: getCurrencyContractName('Pool', currency),
+    name: getCurrencyContractName(CONTRACT_NAMES.Pool, currency),
     contractName: V2_CURRENCY_CONTRACTS.Pool,
     initFunction: 'initialize',
     initArgs: [yamatoAddr],

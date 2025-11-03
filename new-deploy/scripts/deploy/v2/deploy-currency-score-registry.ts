@@ -35,7 +35,7 @@ async function main() {
   const needsLibrary = requiresPledgeLib(V2_CURRENCY_CONTRACTS.ScoreRegistry, 'v2');
 
   const result = await deployUUPS({
-    name: getCurrencyContractName('ScoreRegistry', currency),
+    name: getCurrencyContractName(CONTRACT_NAMES.ScoreRegistry, currency),
     contractName: V2_CURRENCY_CONTRACTS.ScoreRegistry,
     initFunction: 'initialize',
     initArgs: [ymtMinterAddr, yamatoAddr],

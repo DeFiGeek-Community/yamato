@@ -28,7 +28,7 @@ async function main() {
   const needsLibrary = requiresPledgeLib(V2_CURRENCY_CONTRACTS.PriorityRegistry, 'v2');
 
   const result = await deployUUPS({
-    name: getCurrencyContractName('PriorityRegistry', currency),
+    name: getCurrencyContractName(CONTRACT_NAMES.PriorityRegistry, currency),
     contractName: V2_CURRENCY_CONTRACTS.PriorityRegistry,
     initFunction: 'initialize',
     initArgs: [yamatoAddr],

@@ -30,7 +30,7 @@ async function main() {
   console.log('✅ Dependencies loaded\n');
 
   const result = await deployUUPS({
-    name: getCurrencyContractName('Yamato', currency),
+    name: getCurrencyContractName(CONTRACT_NAMES.Yamato, currency),
     contractName: V2_CURRENCY_CONTRACTS.Yamato,
     initFunction: 'initialize',
     initArgs: [currencyOSAddr],

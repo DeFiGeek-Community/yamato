@@ -37,7 +37,7 @@ async function main() {
   console.log('✅ Dependencies loaded\n');
 
   const result = await deployUUPS({
-    name: getCurrencyContractName('CurrencyOS', currency),
+    name: getCurrencyContractName(CONTRACT_NAMES.CurrencyOS, currency),
     contractName: V2_CURRENCY_CONTRACTS.CurrencyOS,
     initFunction: 'initialize',
     initArgs: [currencyAddr, priceFeedAddr, feePoolAddr],
