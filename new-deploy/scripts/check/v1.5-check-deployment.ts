@@ -193,8 +193,11 @@ async function main() {
 
     // CurrencyOSV3の依存関係
     // 注意: これらの関数はCurrencyOSV3以降にのみ存在する
+    // v1.5アップグレード後はCurrencyOSV3になるため、正しいコントラクト名を使用
     try {
-      const currencyOS = await hre.viem.getContractAt(V1_CONTRACTS.CurrencyOS, currencyOSAddress);
+      // V1_5_UPGRADE_IMPLEMENTATIONSから正しいバージョンを取得
+      const currencyOSV3Name = 'CurrencyOSV3'; // v1.5アップグレード後のバージョン
+      const currencyOS = await hre.viem.getContractAt(currencyOSV3Name, currencyOSAddress);
       const ymtFromCurrencyOS = await currencyOS.read.YMT() as `0x${string}`;
       const veYmtFromCurrencyOS = await currencyOS.read.veYMT() as `0x${string}`;
       const minterFromCurrencyOS = await currencyOS.read.ymtMinter() as `0x${string}`;

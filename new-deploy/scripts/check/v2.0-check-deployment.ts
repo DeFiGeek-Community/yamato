@@ -301,22 +301,13 @@ async function main() {
     }
 
     // 通貨トークンの設定確認
+    // 注意: CurrencyV2にはcurrencyOS()のgetter関数がないため、確認をスキップ
+    // currencyOSはprivate変数で、setCurrencyOS()で設定されるのみ
     console.log('\n' + '─'.repeat(60));
-    const { loadAddress } = await import('../core/address-manager');
-    const { getCurrencyInfo } = await import('../core/currency-manager');
-    const currencyInfo = getCurrencyInfo(currency);
-    const currencyTokenAddress = loadAddress(network, currencyInfo.contractName);
-    const currencyToken = await hre.viem.getContractAt(currencyInfo.contractName, currencyTokenAddress);
-    
-    try {
-      const currencyOSFromToken = await currencyToken.read.currencyOS();
-      const matches = currencyOSFromToken.toLowerCase() === currencyOSAddress.toLowerCase();
-      console.log(`📋 ${currency} token dependencies:`);
-      console.log(`   CurrencyOS: ${matches ? '✅' : '❌'} ${currencyOSFromToken}`);
-    } catch (error) {
-      console.log(`📋 ${currency} token dependencies:`);
-      console.log(`   ⚠️  Could not check ${currency}.currencyOS(): ${error instanceof Error ? error.message : error}`);
-    }
+    console.log(`📋 ${currency} token configuration:`);
+    console.log(`   ⚠️  CurrencyV2 does not have a public currencyOS() getter`);
+    console.log(`   CurrencyOS should be set via setCurrencyOS() function`);
+    console.log(`   CurrencyOS address: ${currencyOSAddress}`);
 
     // 最終結果
     console.log('\n' + '='.repeat(60));
