@@ -64,19 +64,25 @@ npx hardhat run scripts/deploy/v1/deploy-all.ts --network sepolia
 ```
 
 **デプロイされるコントラクト（順番）:**
-1. PriceFeed (PriceFeedV3)
-2. CJPY
-3. FeePool
-4. CurrencyOS (CurrencyOSV2)
-5. Yamato (YamatoV3)
-6. YamatoDepositor (YamatoDepositorV2)
-7. YamatoBorrower
-8. YamatoRepayer (YamatoRepayerV2)
-9. YamatoWithdrawer (YamatoWithdrawerV2)
-10. YamatoRedeemer (YamatoRedeemerV4)
-11. YamatoSweeper (YamatoSweeperV2)
-12. Pool (PoolV2)
-13. PriorityRegistry (PriorityRegistryV6)
+1. ChainLinkMock (ETH/USD, JPY/USD) - localhost環境のみ
+2. PriceFeed (PriceFeedV3)
+3. CJPY
+4. FeePool
+5. CurrencyOS (CurrencyOSV2)
+6. Yamato (YamatoV3)
+7. PledgeLib
+8. YamatoDepositor (YamatoDepositorV2)
+9. YamatoBorrower
+10. YamatoRepayer (YamatoRepayerV2)
+11. YamatoWithdrawer (YamatoWithdrawerV2)
+12. YamatoRedeemer (YamatoRedeemerV4)
+13. YamatoSweeper (YamatoSweeperV2)
+14. Pool (PoolV2)
+15. PriorityRegistry (PriorityRegistryV6)
+
+**⚠️ 注意:**
+- localhost環境では、ChainLinkMockが自動的にデプロイされます
+- 本番環境（mainnet/sepolia）では、Chainlinkの実際のオラクルを使用します
 
 ### v1.0 初期設定
 
@@ -234,10 +240,31 @@ npx hardhat run scripts/governance/v1.5-accept-governance.ts --network sepolia
 - YMTとYmtVestingは`acceptGovernance()`を持たないため、`setAdmin()`のみで完了します
 - YmtMinter、ScoreWeightController、ScoreRegistryは`acceptGovernance()`が必要です
 
-### v2デプロイ
+### v2.0 ガバナンス移譲（本番環境のみ）
+
+本番環境では、通貨別コントラクトのガバナンス権限をマルチシグウォレットに移譲します：
+
+#### ステップ1: ガバナンス移譲
 
 ```bash
-npx hardhat run scripts/deploy/v2/deploy-ymtos.ts --network sepolia
+# .envにマルチシグアドレスを設定
+UUPS_PROXY_ADMIN_MULTISIG_ADDRESS=0x...
+
+# デプロイ用の秘密鍵で実行
+CURRENCY=CUSD npx hardhat run scripts/governance/v2-transfer-governance.ts --network sepolia
+# または
+CURRENCY=CEUR npx hardhat run scripts/governance/v2-transfer-governance.ts --network sepolia
+```
+
+#### ステップ2: ガバナンス受け入れ
+
+```bash
+# .envのPRIVATE_KEYをマルチシグ署名者の秘密鍵に変更
+
+# マルチシグ署名者の秘密鍵で実行
+CURRENCY=CUSD npx hardhat run scripts/governance/v2-accept-governance.ts --network sepolia
+# または
+CURRENCY=CEUR npx hardhat run scripts/governance/v2-accept-governance.ts --network sepolia
 ```
 
 ## ディレクトリ構造
@@ -249,17 +276,40 @@ new-deploy/
 │   │   ├── address-manager.ts
 │   │   ├── client.ts
 │   │   ├── contract-deployer.ts
+│   │   ├── contract-definitions.ts
+│   │   ├── currency-manager.ts
 │   │   └── uups-deployer.ts
 │   ├── deploy/            # デプロイスクリプト
 │   │   ├── v1/
 │   │   ├── v1.5/
 │   │   └── v2/
+│   ├── setup/             # セットアップスクリプト
+│   │   ├── v1/
+│   │   ├── v1.5/
+│   │   └── v2/
 │   ├── upgrade/           # アップグレードスクリプト
-│   └── governance/        # ガバナンス操作
+│   │   ├── v1.5/
+│   │   └── v2/
+│   ├── governance/        # ガバナンス操作
+│   │   ├── v1-*.ts
+│   │   ├── v1.5-*.ts
+│   │   └── v2-*.ts
+│   ├── verify/            # Etherscan検証
+│   │   └── verify-with-etherscan.ts
+│   ├── test/              # テストスクリプト
+│   │   ├── test-yamato-basic-operations.ts
+│   │   └── test-all-versions.sh
+│   └── check/             # デプロイ確認
+│       ├── v1.0-check-deployment.ts
+│       ├── v1.5-check-*.ts
+│       └── v2.0-check-*.ts
 ├── config/
 │   └── networks.ts        # ネットワーク設定
 ├── package.json
 ├── tsconfig.json
+├── README.md
+├── TEST_RESULTS.md
+├── COMPARISON_REPORT.md
 └── .env
 ```
 
@@ -345,14 +395,19 @@ CURRENCY=CEUR npx hardhat run scripts/deploy/v2/deploy-all-ceur.ts --network loc
 ```
 
 **デプロイされるコントラクト:**
-1. CEUR トークン
-2. PriceFeed (EUR用 - PriceFeedV3)
-3. CurrencyOS (CEUR)
-4. Yamato (CEUR)
-5. YamatoActions (CEUR)
-6. Pool (CEUR)
-7. PriorityRegistry (CEUR)
-8. ScoreRegistry (CEUR)
+1. ChainLinkMock (EUR/USD) - localhost環境のみ（自動実行）
+2. CEUR トークン
+3. PriceFeed (EUR用 - PriceFeedV3)
+4. CurrencyOS (CEUR)
+5. Yamato (CEUR)
+6. YamatoActions (CEUR)
+7. Pool (CEUR)
+8. PriorityRegistry (CEUR)
+9. ScoreRegistry (CEUR)
+
+**⚠️ 注意:**
+- localhost環境では、`deploy-all-ceur.ts`が自動的にChainLinkMock (EUR/USD)をデプロイします
+- 本番環境（mainnet/sepolia）では、Chainlinkの実際のEUR/USDオラクルを使用します
 
 #### ステップ7: CEUR初期設定
 
@@ -490,4 +545,70 @@ cd new-deploy
 - **ローカル（Anvil）**: テスト・デバッグ用。失敗してもやり直し可能
 - **Sepolia**: テストネット。Etherscanで確認可能
 - **Mainnet**: 本番環境。慎重に実行してください
+
+## Etherscan検証
+
+デプロイ後、コントラクトをEtherscanで検証できます：
+
+```bash
+# v1.0 + v1.5の全コントラクト検証
+npx hardhat run scripts/verify/verify-with-etherscan.ts --network sepolia
+
+# CUSD追加検証（PriceFeedSingleを含む）
+CURRENCY=CUSD npx hardhat run scripts/verify/verify-with-etherscan.ts --network sepolia
+
+# CEUR追加検証（CEURトークンを含む）
+CURRENCY=CEUR npx hardhat run scripts/verify/verify-with-etherscan.ts --network sepolia
+```
+
+**検証されるコントラクト:**
+- 実装コントラクト（UUPS実装）
+- 非UUPSコントラクト（CJPY、CUSD、CEUR、YMT、veYMT、YmtVesting等）
+- プロキシ検証URLの表示（手動検証が必要）
+
+**⚠️ 注意:**
+- プロキシ検証は手動でEtherscanのProxy Contract Checkerから実行する必要があります
+- スクリプトが表示するURLを開いて手動で検証してください
+
+## 基本動作テスト
+
+デプロイ後のYamatoコントラクトの基本動作をテストできます：
+
+```bash
+# CJPY用（デフォルト）
+npx hardhat run scripts/test/test-yamato-basic-operations.ts --network localhost
+
+# CUSD用
+CURRENCY=CUSD npx hardhat run scripts/test/test-yamato-basic-operations.ts --network localhost
+
+# CEUR用
+CURRENCY=CEUR npx hardhat run scripts/test/test-yamato-basic-operations.ts --network localhost
+```
+
+**テスト内容:**
+1. `deposit()` - ETHを預ける（1 ETH）
+2. `borrow()` - 通貨を借りる（500通貨単位）
+3. `repay()` - 借入額を返す（残高と債務の小さい方）
+4. `withdraw()` - ETHを引き出す（一部引き出し）
+
+**テスト結果:**
+- ✅ v1.0/v1.5 (CJPY): 全操作が正常に動作
+- ✅ v2.0 (CUSD): 全操作が正常に動作
+- ✅ v2.0 (CEUR): 全操作が正常に動作
+
+詳細なテスト結果は`TEST_RESULTS.md`を参照してください。
+
+## 全バージョンテスト
+
+全てのバージョンで一括テストを実行：
+
+```bash
+# 全バージョンのテストを実行
+./scripts/test/test-all-versions.sh localhost
+```
+
+このスクリプトは以下の順番でテストを実行します：
+1. v1.0/v1.5 (CJPY)
+2. v2.0 (CUSD)
+3. v2.0 (CEUR)
 
