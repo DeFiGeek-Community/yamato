@@ -64,10 +64,14 @@ export function getCurrencyInfo(currency: Currency): {
 }
 
 /**
- * 通貨別のPriceFeedコントラクト名を取得
+ * 通貨別のPriceFeedコントラクト名（CONTRACT_NAMESの値）を取得
+ * 
+ * アドレス管理でのコントラクト名を返します。
+ * - CUSD: 'PriceFeedSingle'
+ * - CJPY/CEUR: 'PriceFeed'
  */
 export function getPriceFeedContractName(currency: Currency): string {
-  // CUSDはPriceFeedSingleを使用、CJPY/CEURはPriceFeedV3を使用
-  return currency === 'CUSD' ? 'PriceFeedSingle' : 'PriceFeedV3';
+  // CUSDはPriceFeedSingleを使用、CJPY/CEURはPriceFeedを使用
+  return currency === 'CUSD' ? 'PriceFeedSingle' : 'PriceFeed';
 }
 

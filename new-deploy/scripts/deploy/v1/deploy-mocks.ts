@@ -1,6 +1,6 @@
 import hre from 'hardhat';
 import { deployContract } from '../../core/contract-deployer-hh';
-import type { NetworkName } from '../../core/address-manager';
+import { hasAddress, loadAddress, type NetworkName } from '../../core/address-manager';
 import { V1_CONTRACTS } from '../../core/contract-definitions';
 
 async function main() {
@@ -20,6 +20,21 @@ async function main() {
     contractName: V1_CONTRACTS.ChainLinkMock,
     args: ['JPY/USD'],
   });
+
+  // ChainlinkMock (EUR/USD)のデプロイ（CEUR用、既に存在する場合はスキップ）
+  let eurUsdResult;
+  if (!hasAddress(network, 'ChainLinkMockEurUsd')) {
+    eurUsdResult = await deployContract({
+      name: 'ChainLinkMockEurUsd',
+      contractName: V1_CONTRACTS.ChainLinkMock,
+      args: ['EUR/USD'],
+    });
+    console.log(`✅ ChainLinkMock (EUR/USD) deployed: ${eurUsdResult.address}`);
+  } else {
+    const eurUsdAddress = loadAddress(network, 'ChainLinkMockEurUsd');
+    console.log(`⏭️  ChainLinkMock (EUR/USD) already exists: ${eurUsdAddress}`);
+    eurUsdResult = { address: eurUsdAddress };
+  }
 
   // 価格データの初期化（simulatePriceMove）
   console.log('🔧 Initializing oracle prices...');
@@ -50,7 +65,19 @@ async function main() {
     });
     await publicClient.waitForTransactionReceipt({ hash });
   }
-  console.log('✅ JPY/USD prices initialized\n');
+  console.log('✅ JPY/USD prices initialized');
+  
+  // EUR/USD: 2回の価格移動をシミュレート
+  for (let i = 0; i < 2; i++) {
+    const hash = await walletClient.writeContract({
+      address: eurUsdResult.address,
+      abi: artifact.abi,
+      functionName: 'simulatePriceMove',
+      args: [],
+    });
+    await publicClient.waitForTransactionReceipt({ hash });
+  }
+  console.log('✅ EUR/USD prices initialized\n');
 
   console.log(`\n✅ All oracle mocks deployed successfully!\n`);
 }
