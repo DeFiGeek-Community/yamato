@@ -1,5 +1,6 @@
 import hre from 'hardhat';
 import { loadAddress, type NetworkName } from '../../core/address-manager';
+import { V1_5_CONTRACTS } from '../../core/contract-definitions';
 
 /**
  * YmtVesting.setYmtToken() 実行
@@ -11,13 +12,13 @@ async function main() {
   console.log(`\n🌐 Network: ${network}\n`);
 
   console.log('📖 Loading addresses...');
-  const ymtVestingAddr = loadAddress(network, 'YmtVesting');
-  const ymtAddr = loadAddress(network, 'YMT');
+  const ymtVestingAddr = loadAddress(network, V1_5_CONTRACTS.YmtVesting);
+  const ymtAddr = loadAddress(network, V1_5_CONTRACTS.YMT);
   console.log(`   YmtVesting: ${ymtVestingAddr}`);
   console.log(`   YMT: ${ymtAddr}`);
   console.log('✅ Addresses loaded\n');
 
-  const ymtVesting = await hre.viem.getContractAt('YmtVesting', ymtVestingAddr);
+  const ymtVesting = await hre.viem.getContractAt(V1_5_CONTRACTS.YmtVesting, ymtVestingAddr);
   const publicClient = await hre.viem.getPublicClient();
 
   // 既に設定済みかチェック
@@ -43,4 +44,3 @@ main()
     console.error('❌ Error:', error);
     process.exit(1);
   });
-

@@ -1,5 +1,6 @@
 import hre from 'hardhat';
 import { loadAddress, type NetworkName } from '../../core/address-manager';
+import { V1_CONTRACTS } from '../../core/contract-definitions';
 
 async function main() {
   const network = hre.network.name as NetworkName;
@@ -19,7 +20,7 @@ async function main() {
   console.log('✅ All addresses loaded\n');
 
   // Yamatoコントラクトを取得
-  const yamato = await hre.viem.getContractAt('YamatoV3', yamatoAddress);
+  const yamato = await hre.viem.getContractAt(V1_CONTRACTS.Yamato, yamatoAddress);
 
   // Yamato.setDeps()を実行
   console.log('🚀 Executing Yamato.setDeps()...');
@@ -48,4 +49,3 @@ main()
     console.error('❌ Error:', error);
     process.exit(1);
   });
-

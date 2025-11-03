@@ -399,6 +399,48 @@ npm run deploy:v2:ceur
 npm run setup:v2:ceur
 ```
 
+## コントラクト定義の一元管理
+
+全てのコントラクト名は`scripts/core/contract-definitions.ts`で一元管理されています。
+
+### 利点
+
+1. **一貫性**: 全スクリプトで同じコントラクト名を使用
+2. **保守性**: コントラクト名の変更が一箇所で完結
+3. **型安全性**: TypeScriptの型システムで誤りを防止
+4. **ライブラリリンク管理**: PledgeLibリンクが必要なコントラクトを明示的に定義
+
+### 使用例
+
+```typescript
+import { 
+  V1_CONTRACTS, 
+  V1_5_UPGRADE_IMPLEMENTATIONS,
+  V2_CURRENCY_CONTRACTS,
+  requiresPledgeLib 
+} from './core/contract-definitions';
+
+// v1.0のコントラクト名を取得
+const yamatoContract = V1_CONTRACTS.Yamato; // 'YamatoV3'
+
+// v1.5アップグレード実装を取得
+const newYamato = V1_5_UPGRADE_IMPLEMENTATIONS.Yamato; // 'YamatoV4'
+
+// v2.0通貨別コントラクトを取得
+const currencyOS = V2_CURRENCY_CONTRACTS.CurrencyOS; // 'CurrencyOSV4'
+
+// ライブラリリンクが必要かチェック
+const needsLib = requiresPledgeLib('YamatoBorrowerV2', 'v2'); // true
+```
+
+### 定義されているコントラクト
+
+- **v1.0**: 基本コントラクト（CJPY、Yamato、Actions、PriceFeed等）
+- **v1.5**: 新規コントラクト（YMT、veYMT等）とアップグレード実装
+- **v2.0**: マルチカレンシー対応コントラクト（CUSD、CEUR、YmtOS等）
+
+詳細は`scripts/core/contract-definitions.ts`を参照してください。
+
 ## トラブルシューティング
 
 ### ABI/Bytecodeが見つからない

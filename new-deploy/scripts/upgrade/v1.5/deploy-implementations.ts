@@ -1,5 +1,10 @@
 import hre from 'hardhat';
-import { saveAddress, type NetworkName } from '../../core/address-manager';
+import { saveAddress, type NetworkName, loadAddress } from '../../core/address-manager';
+import { 
+  V1_5_UPGRADE_IMPLEMENTATIONS, 
+  V1_CONTRACTS,
+  requiresPledgeLib 
+} from '../../core/contract-definitions';
 
 /**
  * v1.5 新しい実装コントラクトをデプロイ
@@ -23,47 +28,32 @@ async function main() {
   console.log(`\n🌐 Network: ${network}\n`);
   console.log('📦 Deploying v1.5 implementation contracts...\n');
 
-  // PledgeLib linkReferencesの実態に基づいた設定:
-  // - YamatoRepayerV3: リンク必要
-  // - YamatoRedeemerV5: リンク必要
-  // - YamatoWithdrawerV3: リンク必要
-  // - YamatoSweeperV3: リンク必要
-  // - YamatoDepositorV3: リンク必要（V2は不要だったがV3は必要）
-  // - YamatoBorrowerV2: リンク必要
-  // - CurrencyOSV3: リンク不要
-  // - YamatoV4: リンク不要
-  // - FeePoolV2: リンク不要
+  // contract-definitions.tsから定義を取得
   const implementations = [
-    { name: 'YamatoRepayer', version: 'V3', contractName: 'YamatoRepayerV3', libraries: true },
-    { name: 'YamatoRedeemer', version: 'V5', contractName: 'YamatoRedeemerV5', libraries: true },
-    { name: 'YamatoWithdrawer', version: 'V3', contractName: 'YamatoWithdrawerV3', libraries: true },
-    { name: 'YamatoSweeper', version: 'V3', contractName: 'YamatoSweeperV3', libraries: true },
-    { name: 'YamatoDepositor', version: 'V3', contractName: 'YamatoDepositorV3', libraries: true },
-    { name: 'YamatoBorrower', version: 'V2', contractName: 'YamatoBorrowerV2', libraries: true },
-    { name: 'CurrencyOS', version: 'V3', contractName: 'CurrencyOSV3' },
-    { name: 'Yamato', version: 'V4', contractName: 'YamatoV4' },
-    { name: 'FeePool', version: 'V2', contractName: 'FeePoolV2' },
+    { name: 'YamatoRepayer', version: 'V3', contractName: V1_5_UPGRADE_IMPLEMENTATIONS.YamatoRepayer },
+    { name: 'YamatoRedeemer', version: 'V5', contractName: V1_5_UPGRADE_IMPLEMENTATIONS.YamatoRedeemer },
+    { name: 'YamatoWithdrawer', version: 'V3', contractName: V1_5_UPGRADE_IMPLEMENTATIONS.YamatoWithdrawer },
+    { name: 'YamatoSweeper', version: 'V3', contractName: V1_5_UPGRADE_IMPLEMENTATIONS.YamatoSweeper },
+    { name: 'YamatoDepositor', version: 'V3', contractName: V1_5_UPGRADE_IMPLEMENTATIONS.YamatoDepositor },
+    { name: 'YamatoBorrower', version: 'V2', contractName: V1_5_UPGRADE_IMPLEMENTATIONS.YamatoBorrower },
+    { name: 'CurrencyOS', version: 'V3', contractName: V1_5_UPGRADE_IMPLEMENTATIONS.CurrencyOS },
+    { name: 'Yamato', version: 'V4', contractName: V1_5_UPGRADE_IMPLEMENTATIONS.Yamato },
+    { name: 'FeePool', version: 'V2', contractName: V1_5_UPGRADE_IMPLEMENTATIONS.FeePool },
   ];
 
   const publicClient = await hre.viem.getPublicClient();
   let successCount = 0;
 
   // PledgeLibアドレスを取得（ライブラリリンク用）
-  const pledgeLibAddr = await (async () => {
-    try {
-      const { loadAddress } = await import('../../core/address-manager');
-      return loadAddress(network, 'PledgeLib');
-    } catch {
-      return null;
-    }
-  })();
+  const pledgeLibAddr = loadAddress(network, V1_CONTRACTS.PledgeLib);
 
   for (const impl of implementations) {
     try {
       console.log(`🔄 [${successCount + 1}/${implementations.length}] Deploying ${impl.contractName}...`);
 
-      // ライブラリリンクが必要な場合
-      const libraries = impl.libraries && pledgeLibAddr
+      // contract-definitions.tsでライブラリリンクが必要かチェック
+      const needsLibrary = requiresPledgeLib(impl.contractName, 'v1.5');
+      const libraries = needsLibrary && pledgeLibAddr
         ? { 'contracts/Dependencies/PledgeLib.sol:PledgeLib': pledgeLibAddr }
         : undefined;
 
@@ -106,4 +96,3 @@ main()
     console.error('❌ Error:', error);
     process.exit(1);
   });
-

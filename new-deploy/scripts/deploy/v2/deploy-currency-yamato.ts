@@ -1,7 +1,8 @@
 import hre from 'hardhat';
 import { deployUUPS } from '../../core/uups-deployer';
-import { loadAddress, saveAddress, type NetworkName } from '../../core/address-manager';
+import { loadAddress, type NetworkName } from '../../core/address-manager';
 import { getCurrency, getCurrencyContractName } from '../../core/currency-manager';
+import { V2_CURRENCY_CONTRACTS } from '../../core/contract-definitions';
 
 /**
  * 通貨別Yamato デプロイ
@@ -30,7 +31,7 @@ async function main() {
 
   const result = await deployUUPS({
     name: getCurrencyContractName('Yamato', currency),
-    contractName: 'YamatoV4',
+    contractName: V2_CURRENCY_CONTRACTS.Yamato,
     initFunction: 'initialize',
     initArgs: [currencyOSAddr],
   });
@@ -46,4 +47,3 @@ main()
     console.error('❌ Error:', error);
     process.exit(1);
   });
-

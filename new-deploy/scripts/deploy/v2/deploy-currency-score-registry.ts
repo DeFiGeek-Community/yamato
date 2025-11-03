@@ -2,6 +2,7 @@ import hre from 'hardhat';
 import { deployUUPS } from '../../core/uups-deployer';
 import { loadAddress, type NetworkName } from '../../core/address-manager';
 import { getCurrency, getCurrencyContractName } from '../../core/currency-manager';
+import { V2_CURRENCY_CONTRACTS, V1_CONTRACTS, requiresPledgeLib } from '../../core/contract-definitions';
 
 /**
  * 通貨別ScoreRegistry デプロイ
@@ -23,21 +24,23 @@ async function main() {
   console.log('📖 Loading dependencies...');
   const ymtMinterAddr = loadAddress(network, 'YmtMinterERC1967Proxy'); // YmtMinterは全通貨共有
   const yamatoAddr = loadAddress(network, getCurrencyContractName('YamatoERC1967Proxy', currency));
-  const pledgeLibAddr = loadAddress(network, 'PledgeLib');
+  const pledgeLibAddr = loadAddress(network, V1_CONTRACTS.PledgeLib);
   
   console.log(`   YmtMinter (shared): ${ymtMinterAddr}`);
   console.log(`   Yamato (${currency}): ${yamatoAddr}`);
   console.log(`   PledgeLib: ${pledgeLibAddr}`);
   console.log('✅ Dependencies loaded\n');
 
+  const needsLibrary = requiresPledgeLib(V2_CURRENCY_CONTRACTS.ScoreRegistry, 'v2');
+
   const result = await deployUUPS({
     name: getCurrencyContractName('ScoreRegistry', currency),
-    contractName: 'ScoreRegistry',
+    contractName: V2_CURRENCY_CONTRACTS.ScoreRegistry,
     initFunction: 'initialize',
     initArgs: [ymtMinterAddr, yamatoAddr],
-    libraries: {
+    libraries: needsLibrary ? {
       'contracts/Dependencies/PledgeLib.sol:PledgeLib': pledgeLibAddr,
-    },
+    } : undefined,
   });
 
   console.log(`\n✅ ScoreRegistry (${currency}) deployed!`);
@@ -51,4 +54,3 @@ main()
     console.error('❌ Error:', error);
     process.exit(1);
   });
-

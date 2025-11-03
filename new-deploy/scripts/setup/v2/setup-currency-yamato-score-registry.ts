@@ -1,6 +1,7 @@
 import hre from 'hardhat';
 import { loadAddress, type NetworkName } from '../../core/address-manager';
 import { getCurrency, getCurrencyContractName } from '../../core/currency-manager';
+import { V2_CURRENCY_CONTRACTS } from '../../core/contract-definitions';
 
 /**
  * 通貨別YamatoにScoreRegistryを設定
@@ -23,7 +24,7 @@ async function main() {
   console.log(`   ScoreRegistry: ${scoreRegistryAddr}`);
   console.log('✅ Addresses loaded\n');
 
-  const yamato = await hre.viem.getContractAt('YamatoV4', yamatoAddr);
+  const yamato = await hre.viem.getContractAt(V2_CURRENCY_CONTRACTS.Yamato, yamatoAddr);
 
   console.log('🔄 Calling Yamato.setScoreRegistry()...');
   const hash = await yamato.write.setScoreRegistry([scoreRegistryAddr]);
@@ -42,4 +43,3 @@ main()
     console.error('❌ Error:', error);
     process.exit(1);
   });
-

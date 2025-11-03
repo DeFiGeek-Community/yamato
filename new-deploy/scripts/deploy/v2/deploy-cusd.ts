@@ -1,6 +1,7 @@
 import hre from 'hardhat';
 import { deployContract } from '../../core/contract-deployer-hh';
 import { type NetworkName } from '../../core/address-manager';
+import { V2_CONTRACTS } from '../../core/contract-definitions';
 
 /**
  * CUSD デプロイ
@@ -17,7 +18,7 @@ async function main() {
 
   const result = await deployContract({
     name: 'CUSD',
-    contractName: 'CUSD',
+    contractName: V2_CONTRACTS.CUSD,
     args: [], // コンストラクタ引数なし
   });
 
@@ -34,4 +35,3 @@ main()
     console.error('❌ Error:', error);
     process.exit(1);
   });
-

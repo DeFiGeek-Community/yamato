@@ -1,5 +1,6 @@
 import hre from 'hardhat';
 import { loadAddress, type NetworkName } from '../../core/address-manager';
+import { V1_CONTRACTS } from '../../core/contract-definitions';
 
 async function main() {
   const network = hre.network.name as NetworkName;
@@ -7,12 +8,12 @@ async function main() {
 
   // アドレスを読み込む
   console.log('📖 Loading contract addresses...');
-  const cjpyAddress = loadAddress(network, 'CJPY');
+  const cjpyAddress = loadAddress(network, V1_CONTRACTS.CJPY);
   const currencyOSAddress = loadAddress(network, 'CurrencyOSERC1967Proxy');
   console.log('✅ Addresses loaded\n');
 
   // CJPYコントラクトを取得
-  const cjpy = await hre.viem.getContractAt('CJPY', cjpyAddress);
+  const cjpy = await hre.viem.getContractAt(V1_CONTRACTS.CJPY, cjpyAddress);
   const publicClient = await hre.viem.getPublicClient();
 
   // CJPY.setCurrencyOS()を実行
@@ -42,4 +43,3 @@ main()
     console.error('❌ Error:', error);
     process.exit(1);
   });
-

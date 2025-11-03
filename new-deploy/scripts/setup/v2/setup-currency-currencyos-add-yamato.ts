@@ -1,6 +1,7 @@
 import hre from 'hardhat';
 import { loadAddress, type NetworkName } from '../../core/address-manager';
 import { getCurrency, getCurrencyContractName } from '../../core/currency-manager';
+import { V2_CURRENCY_CONTRACTS } from '../../core/contract-definitions';
 
 /**
  * 通貨別CurrencyOSにYamatoを追加
@@ -23,7 +24,7 @@ async function main() {
   console.log(`   Yamato: ${yamatoAddr}`);
   console.log('✅ Addresses loaded\n');
 
-  const currencyOS = await hre.viem.getContractAt('CurrencyOSV4', currencyOSAddr);
+  const currencyOS = await hre.viem.getContractAt(V2_CURRENCY_CONTRACTS.CurrencyOS, currencyOSAddr);
 
   console.log('🔄 Calling CurrencyOS.addYamato()...');
   const hash = await currencyOS.write.addYamato([yamatoAddr]);
@@ -42,4 +43,3 @@ main()
     console.error('❌ Error:', error);
     process.exit(1);
   });
-

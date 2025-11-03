@@ -1,6 +1,7 @@
 import hre from 'hardhat';
 import { loadAddress, type NetworkName } from '../../core/address-manager';
 import { parseEther } from 'viem';
+import { V1_5_CONTRACTS } from '../../core/contract-definitions';
 
 /**
  * ScoreWeightController.addScore() 実行
@@ -19,7 +20,7 @@ async function main() {
   console.log(`   ScoreRegistry: ${scoreRegistryAddr}`);
   console.log('✅ Addresses loaded\n');
 
-  const controller = await hre.viem.getContractAt('ScoreWeightController', controllerAddr);
+  const controller = await hre.viem.getContractAt(V1_5_CONTRACTS.ScoreWeightController, controllerAddr);
   const publicClient = await hre.viem.getPublicClient();
 
   // ウェイト（デフォルト: 1 ether）
@@ -42,4 +43,3 @@ main()
     console.error('❌ Error:', error);
     process.exit(1);
   });
-

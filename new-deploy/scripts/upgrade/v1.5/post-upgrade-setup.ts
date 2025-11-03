@@ -1,6 +1,10 @@
 import hre from 'hardhat';
 import { loadAddress, type NetworkName } from '../../core/address-manager';
 import { createAndProposeSafeTransaction } from '../../core/safe-transaction';
+import { 
+  V1_5_UPGRADE_IMPLEMENTATIONS, 
+  V1_5_CONTRACTS 
+} from '../../core/contract-definitions';
 
 /**
  * v1.5 アップグレード後の初期設定
@@ -34,8 +38,8 @@ async function main() {
   const feePoolAddr = loadAddress(network, 'FeePoolERC1967Proxy');
   const currencyOSAddr = loadAddress(network, 'CurrencyOSERC1967Proxy');
   const scoreRegistryAddr = loadAddress(network, 'ScoreRegistryERC1967Proxy');
-  const veYmtAddr = loadAddress(network, 'veYMT');
-  const ymtAddr = loadAddress(network, 'YMT');
+  const veYmtAddr = loadAddress(network, V1_5_CONTRACTS.veYMT);
+  const ymtAddr = loadAddress(network, V1_5_CONTRACTS.YMT);
   const ymtMinterAddr = loadAddress(network, 'YmtMinterERC1967Proxy');
   const scoreWeightControllerAddr = loadAddress(network, 'ScoreWeightControllerERC1967Proxy');
   
@@ -86,7 +90,7 @@ async function main() {
   try {
     await executeOrPropose(
       1,
-      'YamatoV4',
+      V1_5_UPGRADE_IMPLEMENTATIONS.Yamato,
       yamatoAddr,
       'setScoreRegistry',
       [scoreRegistryAddr]
@@ -101,7 +105,7 @@ async function main() {
   try {
     await executeOrPropose(
       2,
-      'FeePoolV2',
+      V1_5_UPGRADE_IMPLEMENTATIONS.FeePool,
       feePoolAddr,
       'setVeYMT',
       [veYmtAddr]
@@ -116,7 +120,7 @@ async function main() {
   try {
     await executeOrPropose(
       3,
-      'CurrencyOSV3',
+      V1_5_UPGRADE_IMPLEMENTATIONS.CurrencyOS,
       currencyOSAddr,
       'setYMT',
       [ymtAddr]
@@ -131,7 +135,7 @@ async function main() {
   try {
     await executeOrPropose(
       4,
-      'CurrencyOSV3',
+      V1_5_UPGRADE_IMPLEMENTATIONS.CurrencyOS,
       currencyOSAddr,
       'setVeYMT',
       [veYmtAddr]
@@ -146,7 +150,7 @@ async function main() {
   try {
     await executeOrPropose(
       5,
-      'CurrencyOSV3',
+      V1_5_UPGRADE_IMPLEMENTATIONS.CurrencyOS,
       currencyOSAddr,
       'setYmtMinter',
       [ymtMinterAddr]
@@ -161,7 +165,7 @@ async function main() {
   try {
     await executeOrPropose(
       6,
-      'CurrencyOSV3',
+      V1_5_UPGRADE_IMPLEMENTATIONS.CurrencyOS,
       currencyOSAddr,
       'setScoreWeightController',
       [scoreWeightControllerAddr]
@@ -176,7 +180,7 @@ async function main() {
   try {
     await executeOrPropose(
       7,
-      'FeePoolV2',
+      V1_5_UPGRADE_IMPLEMENTATIONS.FeePool,
       feePoolAddr,
       'toggleAllowCheckpointToken',
       []
@@ -201,4 +205,3 @@ main()
     console.error('❌ Error:', error);
     process.exit(1);
   });
-

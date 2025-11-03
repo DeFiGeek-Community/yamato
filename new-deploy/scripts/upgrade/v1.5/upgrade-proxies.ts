@@ -2,6 +2,10 @@ import hre from 'hardhat';
 import { loadAddress, type NetworkName } from '../../core/address-manager';
 import { encodeFunctionData } from 'viem';
 import { createAndProposeSafeTransaction } from '../../core/safe-transaction';
+import { 
+  V1_5_UPGRADE_IMPLEMENTATIONS, 
+  V1_5_UPGRADE_PROXIES,
+} from '../../core/contract-definitions';
 
 /**
  * v1.5 プロキシをアップグレード
@@ -26,16 +30,17 @@ async function main() {
   console.log(`📝 Execution mode: ${isLocalhost ? 'Direct' : 'Safe Transaction'}\n`);
   console.log('🔄 Upgrading proxies to v1.5 implementations...\n');
 
+  // contract-definitions.tsから定義を取得
   const upgrades = [
-    { name: 'YamatoRepayer', version: 'V3', proxyContract: 'YamatoRepayerV2', method: 'upgradeTo' },
-    { name: 'YamatoRedeemer', version: 'V5', proxyContract: 'YamatoRedeemerV4', method: 'upgradeTo' },
-    { name: 'YamatoWithdrawer', version: 'V3', proxyContract: 'YamatoWithdrawerV2', method: 'upgradeTo' },
-    { name: 'YamatoSweeper', version: 'V3', proxyContract: 'YamatoSweeperV2', method: 'upgradeTo' },
-    { name: 'YamatoDepositor', version: 'V3', proxyContract: 'YamatoDepositorV2', method: 'upgradeTo' },
-    { name: 'YamatoBorrower', version: 'V2', proxyContract: 'YamatoBorrower', method: 'upgradeTo' },
-    { name: 'CurrencyOS', version: 'V3', proxyContract: 'CurrencyOSV2', method: 'upgradeTo' },
-    { name: 'Yamato', version: 'V4', proxyContract: 'YamatoV3', method: 'upgradeTo' },
-    { name: 'FeePool', version: 'V2', proxyContract: 'FeePool', method: 'upgradeToAndCall' },
+    { name: 'YamatoRepayer', version: 'V3', proxyContract: V1_5_UPGRADE_PROXIES.YamatoRepayer, method: 'upgradeTo' },
+    { name: 'YamatoRedeemer', version: 'V5', proxyContract: V1_5_UPGRADE_PROXIES.YamatoRedeemer, method: 'upgradeTo' },
+    { name: 'YamatoWithdrawer', version: 'V3', proxyContract: V1_5_UPGRADE_PROXIES.YamatoWithdrawer, method: 'upgradeTo' },
+    { name: 'YamatoSweeper', version: 'V3', proxyContract: V1_5_UPGRADE_PROXIES.YamatoSweeper, method: 'upgradeTo' },
+    { name: 'YamatoDepositor', version: 'V3', proxyContract: V1_5_UPGRADE_PROXIES.YamatoDepositor, method: 'upgradeTo' },
+    { name: 'YamatoBorrower', version: 'V2', proxyContract: V1_5_UPGRADE_PROXIES.YamatoBorrower, method: 'upgradeTo' },
+    { name: 'CurrencyOS', version: 'V3', proxyContract: V1_5_UPGRADE_PROXIES.CurrencyOS, method: 'upgradeTo' },
+    { name: 'Yamato', version: 'V4', proxyContract: V1_5_UPGRADE_PROXIES.Yamato, method: 'upgradeTo' },
+    { name: 'FeePool', version: 'V2', proxyContract: V1_5_UPGRADE_PROXIES.FeePool, method: 'upgradeToAndCall' },
   ];
 
   const publicClient = await hre.viem.getPublicClient();
@@ -70,7 +75,7 @@ async function main() {
           console.log(`   🔄 Calling upgradeToAndCall() with initializeV2(${startTime})...`);
           
           // 新しい実装のABIを取得してinitializeV2のcalldataをエンコード
-          const newImpl = await hre.viem.getContractAt('FeePoolV2', newImplAddress);
+          const newImpl = await hre.viem.getContractAt(V1_5_UPGRADE_IMPLEMENTATIONS.FeePool, newImplAddress);
           const initData = encodeFunctionData({
             abi: newImpl.abi,
             functionName: 'initializeV2',
@@ -94,7 +99,7 @@ async function main() {
           console.log(`   📝 Proposing upgradeToAndCall() with initializeV2(${startTime})...`);
           
           // 新しい実装のABIを取得してinitializeV2のcalldataをエンコード
-          const newImpl = await hre.viem.getContractAt('FeePoolV2', newImplAddress);
+          const newImpl = await hre.viem.getContractAt(V1_5_UPGRADE_IMPLEMENTATIONS.FeePool, newImplAddress);
           const initData = encodeFunctionData({
             abi: newImpl.abi,
             functionName: 'initializeV2',
@@ -133,9 +138,6 @@ async function main() {
   console.log(`\n✅ Proxy upgrade completed!`);
   console.log(`\n📊 Summary:`);
   console.log(`   Upgraded: ${successCount}/${upgrades.length} proxies`);
-  console.log(`\n📝 Next step:`);
-  console.log(`   Run: npx hardhat run scripts/upgrade/v1.5/post-upgrade-setup.ts --network ${network}`);
-  console.log(`\n${'='.repeat(60)}\n`);
 }
 
 main()
@@ -144,4 +146,3 @@ main()
     console.error('❌ Error:', error);
     process.exit(1);
   });
-

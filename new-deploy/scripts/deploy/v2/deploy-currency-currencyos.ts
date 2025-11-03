@@ -2,6 +2,7 @@ import hre from 'hardhat';
 import { deployUUPS } from '../../core/uups-deployer';
 import { loadAddress, type NetworkName } from '../../core/address-manager';
 import { getCurrency, getCurrencyContractName, getCurrencyInfo, getPriceFeedContractName } from '../../core/currency-manager';
+import { V2_CURRENCY_CONTRACTS } from '../../core/contract-definitions';
 
 /**
  * 通貨別CurrencyOS デプロイ
@@ -37,7 +38,7 @@ async function main() {
 
   const result = await deployUUPS({
     name: getCurrencyContractName('CurrencyOS', currency),
-    contractName: 'CurrencyOSV4',
+    contractName: V2_CURRENCY_CONTRACTS.CurrencyOS,
     initFunction: 'initialize',
     initArgs: [currencyAddr, priceFeedAddr, feePoolAddr],
   });
@@ -53,4 +54,3 @@ main()
     console.error('❌ Error:', error);
     process.exit(1);
   });
-

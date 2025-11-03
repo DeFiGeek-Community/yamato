@@ -1,5 +1,6 @@
 import hre from 'hardhat';
 import { loadAddress, type NetworkName } from '../core/address-manager';
+import { V1_CONTRACTS } from '../core/contract-definitions';
 
 /**
  * v1.0 ガバナンス権限を受け入れ
@@ -18,20 +19,20 @@ async function main() {
   }
   console.log(`📝 Multisig address: ${multisigAddr}\n`);
 
-  // 全てのUUPSコントラクトのリスト
+  // contract-definitions.tsから定義を取得
   const contracts = [
-    { name: 'PriceFeed', contractName: 'PriceFeedV3' },
-    { name: 'FeePool', contractName: 'FeePool' },
-    { name: 'CurrencyOS', contractName: 'CurrencyOSV2' },
-    { name: 'Pool', contractName: 'PoolV2' },
-    { name: 'PriorityRegistry', contractName: 'PriorityRegistryV6' },
-    { name: 'Yamato', contractName: 'YamatoV3' },
-    { name: 'YamatoDepositor', contractName: 'YamatoDepositorV2' },
-    { name: 'YamatoBorrower', contractName: 'YamatoBorrower' },
-    { name: 'YamatoRepayer', contractName: 'YamatoRepayerV2' },
-    { name: 'YamatoWithdrawer', contractName: 'YamatoWithdrawerV2' },
-    { name: 'YamatoRedeemer', contractName: 'YamatoRedeemerV4' },
-    { name: 'YamatoSweeper', contractName: 'YamatoSweeperV2' },
+    { name: 'PriceFeed', contractName: V1_CONTRACTS.PriceFeed },
+    { name: 'FeePool', contractName: V1_CONTRACTS.FeePool },
+    { name: 'CurrencyOS', contractName: V1_CONTRACTS.CurrencyOS },
+    { name: 'Pool', contractName: V1_CONTRACTS.Pool },
+    { name: 'PriorityRegistry', contractName: V1_CONTRACTS.PriorityRegistry },
+    { name: 'Yamato', contractName: V1_CONTRACTS.Yamato },
+    { name: 'YamatoDepositor', contractName: V1_CONTRACTS.YamatoDepositor },
+    { name: 'YamatoBorrower', contractName: V1_CONTRACTS.YamatoBorrower },
+    { name: 'YamatoRepayer', contractName: V1_CONTRACTS.YamatoRepayer },
+    { name: 'YamatoWithdrawer', contractName: V1_CONTRACTS.YamatoWithdrawer },
+    { name: 'YamatoRedeemer', contractName: V1_CONTRACTS.YamatoRedeemer },
+    { name: 'YamatoSweeper', contractName: V1_CONTRACTS.YamatoSweeper },
   ];
 
   const publicClient = await hre.viem.getPublicClient();
@@ -74,4 +75,3 @@ main()
     console.error('❌ Error:', error);
     process.exit(1);
   });
-

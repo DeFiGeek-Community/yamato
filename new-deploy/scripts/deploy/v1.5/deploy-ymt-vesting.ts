@@ -1,6 +1,7 @@
 import hre from 'hardhat';
 import { deployContract } from '../../core/contract-deployer-hh';
 import { type NetworkName } from '../../core/address-manager';
+import { V1_5_CONTRACTS } from '../../core/contract-definitions';
 
 /**
  * YmtVesting デプロイ
@@ -14,7 +15,7 @@ async function main() {
 
   const result = await deployContract({
     name: 'YmtVesting',
-    contractName: 'YmtVesting',
+    contractName: V1_5_CONTRACTS.YmtVesting,
     args: [],
   });
 
@@ -28,4 +29,3 @@ main()
     console.error('❌ Error:', error);
     process.exit(1);
   });
-

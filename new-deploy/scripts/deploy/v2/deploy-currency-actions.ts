@@ -2,6 +2,7 @@ import hre from 'hardhat';
 import { deployUUPS } from '../../core/uups-deployer';
 import { loadAddress, type NetworkName } from '../../core/address-manager';
 import { getCurrency, getCurrencyContractName } from '../../core/currency-manager';
+import { V2_CURRENCY_CONTRACTS, V1_CONTRACTS, requiresPledgeLib } from '../../core/contract-definitions';
 
 /**
  * 通貨別アクションコントラクト デプロイ
@@ -28,18 +29,19 @@ async function main() {
 
   console.log('📖 Loading dependencies...');
   const yamatoAddr = loadAddress(network, getCurrencyContractName('YamatoERC1967Proxy', currency));
-  const pledgeLibAddr = loadAddress(network, 'PledgeLib');
+  const pledgeLibAddr = loadAddress(network, V1_CONTRACTS.PledgeLib);
   console.log(`   Yamato (${currency}): ${yamatoAddr}`);
   console.log(`   PledgeLib: ${pledgeLibAddr}`);
   console.log('✅ Dependencies loaded\n');
 
+  // contract-definitions.tsから定義を取得
   const actions = [
-    { name: 'YamatoDepositor', version: 'V3', contractName: 'YamatoDepositorV3', libraries: true },
-    { name: 'YamatoBorrower', version: 'V2', contractName: 'YamatoBorrowerV2', libraries: true },
-    { name: 'YamatoRepayer', version: 'V3', contractName: 'YamatoRepayerV3', libraries: true },
-    { name: 'YamatoWithdrawer', version: 'V3', contractName: 'YamatoWithdrawerV3', libraries: true },
-    { name: 'YamatoRedeemer', version: 'V5', contractName: 'YamatoRedeemerV5', libraries: true },
-    { name: 'YamatoSweeper', version: 'V3', contractName: 'YamatoSweeperV3', libraries: true },
+    { name: 'YamatoDepositor', version: 'V3', contractName: V2_CURRENCY_CONTRACTS.YamatoDepositor },
+    { name: 'YamatoBorrower', version: 'V2', contractName: V2_CURRENCY_CONTRACTS.YamatoBorrower },
+    { name: 'YamatoRepayer', version: 'V3', contractName: V2_CURRENCY_CONTRACTS.YamatoRepayer },
+    { name: 'YamatoWithdrawer', version: 'V3', contractName: V2_CURRENCY_CONTRACTS.YamatoWithdrawer },
+    { name: 'YamatoRedeemer', version: 'V5', contractName: V2_CURRENCY_CONTRACTS.YamatoRedeemer },
+    { name: 'YamatoSweeper', version: 'V3', contractName: V2_CURRENCY_CONTRACTS.YamatoSweeper },
   ];
 
   let successCount = 0;
@@ -48,12 +50,15 @@ async function main() {
     try {
       console.log(`🔄 [${successCount + 1}/${actions.length}] Deploying ${action.name}${action.version}...`);
 
+      // contract-definitions.tsでライブラリリンクが必要かチェック
+      const needsLibrary = requiresPledgeLib(action.contractName, 'v2');
+      
       const result = await deployUUPS({
         name: getCurrencyContractName(action.name, currency),
         contractName: action.contractName,
         initFunction: 'initialize',
         initArgs: [yamatoAddr],
-        libraries: action.libraries ? {
+        libraries: needsLibrary ? {
           'contracts/Dependencies/PledgeLib.sol:PledgeLib': pledgeLibAddr,
         } : undefined,
       });

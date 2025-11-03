@@ -1,5 +1,6 @@
 import hre from 'hardhat';
 import { loadAddress, type NetworkName } from '../core/address-manager';
+import { V1_5_CONTRACTS } from '../core/contract-definitions';
 
 /**
  * v1.5 ガバナンス権限を受け入れ
@@ -25,10 +26,11 @@ async function main() {
   }
   console.log(`📝 Multisig address: ${multisigAddr}\n`);
 
+  // contract-definitions.tsから定義を取得
   const contracts = [
-    { name: 'YmtMinter', contractName: 'YmtMinter' },
-    { name: 'ScoreWeightController', contractName: 'ScoreWeightController' },
-    { name: 'ScoreRegistry', contractName: 'ScoreRegistry' },
+    { name: 'YmtMinter', contractName: V1_5_CONTRACTS.YmtMinter },
+    { name: 'ScoreWeightController', contractName: V1_5_CONTRACTS.ScoreWeightController },
+    { name: 'ScoreRegistry', contractName: V1_5_CONTRACTS.ScoreRegistry },
   ];
 
   const publicClient = await hre.viem.getPublicClient();
@@ -71,4 +73,3 @@ main()
     console.error('❌ Error:', error);
     process.exit(1);
   });
-

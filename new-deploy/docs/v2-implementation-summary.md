@@ -8,6 +8,16 @@ Yamato v2.0のマルチカレンシー対応デプロイスクリプトを`hardh
 
 ### ✅ 1. コアユーティリティ
 
+- **`scripts/core/contract-definitions.ts`**: コントラクト定義の一元管理 ⭐ NEW
+  - `V1_CONTRACTS`: v1.0コントラクト定義
+  - `V1_5_CONTRACTS`: v1.5新規コントラクト定義
+  - `V1_5_UPGRADE_IMPLEMENTATIONS`: v1.5アップグレード実装定義
+  - `V2_CONTRACTS`: v2.0新規コントラクト定義
+  - `V2_CURRENCY_CONTRACTS`: v2.0通貨別コントラクト定義
+  - `requiresPledgeLib()`: ライブラリリンク判定関数
+  - `getV1_5UpgradeInfo()`: v1.5アップグレード情報取得
+  - `getV2UpgradeInfo()`: v2.0アップグレード情報取得
+
 - **`scripts/core/currency-manager.ts`**: 通貨管理ユーティリティ
   - `getCurrency()`: 環境変数からCURRENCYを取得
   - `getCurrencyContractName()`: 通貨別コントラクト名生成
@@ -83,6 +93,44 @@ Yamato v2.0のマルチカレンシー対応デプロイスクリプトを`hardh
   - `governance:accept:v2`
 
 ## 主要な設計決定
+
+### 0. コントラクト定義の一元管理 ⭐ NEW
+
+全てのコントラクト名を`contract-definitions.ts`で一元管理：
+
+```typescript
+// v1.0コントラクト
+export const V1_CONTRACTS = {
+  Yamato: 'YamatoV3',
+  CurrencyOS: 'CurrencyOSV2',
+  // ...
+} as const;
+
+// v1.5アップグレード実装
+export const V1_5_UPGRADE_IMPLEMENTATIONS = {
+  Yamato: 'YamatoV4',
+  CurrencyOS: 'CurrencyOSV3',
+  // ...
+} as const;
+
+// v2.0通貨別コントラクト
+export const V2_CURRENCY_CONTRACTS = {
+  Yamato: 'YamatoV4',
+  CurrencyOS: 'CurrencyOSV4',
+  // ...
+} as const;
+
+// ライブラリリンク判定
+export function requiresPledgeLib(contractName: string, version: 'v1' | 'v1.5' | 'v2'): boolean {
+  // ...
+}
+```
+
+**メリット:**
+- ✅ 一貫性: 全スクリプトで同じコントラクト名を使用
+- ✅ 保守性: コントラクト名の変更が一箇所で完結
+- ✅ 型安全性: TypeScriptの型システムで誤りを防止
+- ✅ ライブラリリンク管理: PledgeLibリンクが必要なコントラクトを明示的に定義
 
 ### 1. 通貨別コントラクト名規則
 
@@ -195,6 +243,7 @@ v1.0 → v1.5 → v2.0
 new-deploy/
 ├── scripts/
 │   ├── core/
+│   │   ├── contract-definitions.ts      # 新規 ⭐
 │   │   ├── currency-manager.ts          # 新規
 │   │   ├── address-manager.ts
 │   │   ├── uups-deployer.ts
@@ -240,9 +289,9 @@ new-deploy/
 
 ## 実装統計
 
-- **新規ファイル**: 25個
-- **更新ファイル**: 3個（package.json, README.md, address-manager.ts）
-- **総行数**: 約2,500行
+- **新規ファイル**: 26個（contract-definitions.ts追加）
+- **更新ファイル**: 6個（package.json, README.md, upgrade-proxies.ts, deploy-implementations.ts, deploy-currency-actions.ts, v2-implementation-summary.md）
+- **総行数**: 約3,000行
 - **対応通貨**: CJPY, CUSD, CEUR
 - **デプロイ対象コントラクト**: 
   - 共有: 1個（YmtOS）

@@ -1,5 +1,6 @@
 import hre from 'hardhat';
 import { loadAddress, type NetworkName } from '../../core/address-manager';
+import { V1_5_CONTRACTS } from '../../core/contract-definitions';
 
 /**
  * YMT.setMinter() 実行
@@ -11,13 +12,13 @@ async function main() {
   console.log(`\n🌐 Network: ${network}\n`);
 
   console.log('📖 Loading addresses...');
-  const ymtAddr = loadAddress(network, 'YMT');
+  const ymtAddr = loadAddress(network, V1_5_CONTRACTS.YMT);
   const ymtMinterAddr = loadAddress(network, 'YmtMinterERC1967Proxy');
   console.log(`   YMT: ${ymtAddr}`);
   console.log(`   YmtMinter: ${ymtMinterAddr}`);
   console.log('✅ Addresses loaded\n');
 
-  const ymt = await hre.viem.getContractAt('YMT', ymtAddr);
+  const ymt = await hre.viem.getContractAt(V1_5_CONTRACTS.YMT, ymtAddr);
   const publicClient = await hre.viem.getPublicClient();
 
   // 既に設定済みかチェック
@@ -43,4 +44,3 @@ main()
     console.error('❌ Error:', error);
     process.exit(1);
   });
-

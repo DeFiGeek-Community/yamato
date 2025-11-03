@@ -1,6 +1,7 @@
 import hre from 'hardhat';
 import { deployUUPS } from '../../core/uups-deployer';
 import { loadAddress, type NetworkName } from '../../core/address-manager';
+import { V1_CONTRACTS, requiresPledgeLib } from '../../core/contract-definitions';
 
 async function main() {
   const network = hre.network.name as NetworkName;
@@ -8,19 +9,21 @@ async function main() {
 
   console.log('📖 Loading dependencies...');
   const yamatoAddress = loadAddress(network, 'YamatoERC1967Proxy');
-  const pledgeLibAddress = loadAddress(network, 'PledgeLib');
+  const pledgeLibAddress = loadAddress(network, V1_CONTRACTS.PledgeLib);
   console.log(`   Yamato: ${yamatoAddress}`);
   console.log(`   PledgeLib: ${pledgeLibAddress}`);
   console.log('✅ Dependencies loaded\n');
 
+  const needsLibrary = requiresPledgeLib(V1_CONTRACTS.YamatoBorrower, 'v1');
+
   const result = await deployUUPS({
     name: 'YamatoBorrower',
-    contractName: 'YamatoBorrower',
+    contractName: V1_CONTRACTS.YamatoBorrower,
     initFunction: 'initialize',
     initArgs: [yamatoAddress],
-    libraries: {
+    libraries: needsLibrary ? {
       'contracts/Dependencies/PledgeLib.sol:PledgeLib': pledgeLibAddress,
-    },
+    } : undefined,
   });
 
   console.log(`\n✅ YamatoBorrower deployed!`);

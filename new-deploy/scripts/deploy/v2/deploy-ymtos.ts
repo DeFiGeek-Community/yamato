@@ -1,6 +1,7 @@
 import hre from 'hardhat';
 import { deployUUPS } from '../../core/uups-deployer';
 import { loadAddress, type NetworkName } from '../../core/address-manager';
+import { V2_CONTRACTS } from '../../core/contract-definitions';
 
 /**
  * YmtOS デプロイ
@@ -24,7 +25,7 @@ async function main() {
 
   const result = await deployUUPS({
     name: 'YmtOS',
-    contractName: 'YmtOS',
+    contractName: V2_CONTRACTS.YmtOS,
     initFunction: 'initialize',
     initArgs: [cjpyCurrencyOSAddr],
   });
@@ -43,4 +44,3 @@ main()
     console.error('❌ Error:', error);
     process.exit(1);
   });
-

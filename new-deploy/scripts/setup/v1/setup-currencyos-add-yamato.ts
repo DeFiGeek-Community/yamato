@@ -1,5 +1,6 @@
 import hre from 'hardhat';
 import { loadAddress, type NetworkName } from '../../core/address-manager';
+import { V1_CONTRACTS } from '../../core/contract-definitions';
 
 async function main() {
   const network = hre.network.name as NetworkName;
@@ -12,7 +13,7 @@ async function main() {
   console.log('✅ Addresses loaded\n');
 
   // CurrencyOSコントラクトを取得
-  const currencyOS = await hre.viem.getContractAt('CurrencyOSV2', currencyOSAddress);
+  const currencyOS = await hre.viem.getContractAt(V1_CONTRACTS.CurrencyOS, currencyOSAddress);
 
   // CurrencyOS.addYamato()を実行
   console.log('🚀 Executing CurrencyOS.addYamato()...');
@@ -34,4 +35,3 @@ main()
     console.error('❌ Error:', error);
     process.exit(1);
   });
-

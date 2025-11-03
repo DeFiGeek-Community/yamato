@@ -1,6 +1,7 @@
 import hre from 'hardhat';
 import { deployUUPS } from '../../core/uups-deployer';
 import { loadAddress, type NetworkName } from '../../core/address-manager';
+import { V1_CONTRACTS } from '../../core/contract-definitions';
 
 async function main() {
   const network = hre.network.name as NetworkName;
@@ -8,7 +9,7 @@ async function main() {
 
   // 依存コントラクトのアドレスを読み込む
   console.log('📖 Loading dependencies...');
-  const cjpyAddress = loadAddress(network, 'CJPY');
+  const cjpyAddress = loadAddress(network, V1_CONTRACTS.CJPY);
   const priceFeedAddress = loadAddress(network, 'PriceFeedERC1967Proxy');
   const feePoolAddress = loadAddress(network, 'FeePoolERC1967Proxy');
   console.log(`   CJPY: ${cjpyAddress}`);
@@ -19,7 +20,7 @@ async function main() {
   // CurrencyOSをデプロイ
   const result = await deployUUPS({
     name: 'CurrencyOS',
-    contractName: 'CurrencyOSV2',
+    contractName: V1_CONTRACTS.CurrencyOS,
     initFunction: 'initialize',
     initArgs: [cjpyAddress, priceFeedAddress, feePoolAddress],
   });

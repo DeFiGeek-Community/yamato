@@ -1,6 +1,7 @@
 import hre from 'hardhat';
 import { deployUUPS } from '../../core/uups-deployer';
 import { loadAddress, type NetworkName } from '../../core/address-manager';
+import { V1_CONTRACTS, requiresPledgeLib } from '../../core/contract-definitions';
 
 /**
  * YamatoSweeper デプロイ
@@ -14,19 +15,21 @@ async function main() {
 
   console.log('📖 Loading dependencies...');
   const yamatoAddr = loadAddress(network, 'YamatoERC1967Proxy');
-  const pledgeLibAddr = loadAddress(network, 'PledgeLib');
+  const pledgeLibAddr = loadAddress(network, V1_CONTRACTS.PledgeLib);
   console.log(`   Yamato: ${yamatoAddr}`);
   console.log(`   PledgeLib: ${pledgeLibAddr}`);
   console.log('✅ Dependencies loaded\n');
 
+  const needsLibrary = requiresPledgeLib(V1_CONTRACTS.YamatoSweeper, 'v1');
+
   const result = await deployUUPS({
     name: 'YamatoSweeper',
-    contractName: 'YamatoSweeperV2',
+    contractName: V1_CONTRACTS.YamatoSweeper,
     initFunction: 'initialize',
     initArgs: [yamatoAddr],
-    libraries: {
+    libraries: needsLibrary ? {
       'contracts/Dependencies/PledgeLib.sol:PledgeLib': pledgeLibAddr,
-    },
+    } : undefined,
   });
 
   console.log(`\n✅ YamatoSweeper deployed!`);

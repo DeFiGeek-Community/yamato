@@ -1,6 +1,7 @@
 import hre from 'hardhat';
 import { deployUUPS } from '../../core/uups-deployer';
 import { loadAddress, type NetworkName } from '../../core/address-manager';
+import { V1_CONTRACTS } from '../../core/contract-definitions';
 
 async function main() {
   const network = hre.network.name as NetworkName;
@@ -15,7 +16,7 @@ async function main() {
   // Yamatoをデプロイ
   const result = await deployUUPS({
     name: 'Yamato',
-    contractName: 'YamatoV3',
+    contractName: V1_CONTRACTS.Yamato,
     initFunction: 'initialize',
     initArgs: [currencyOSAddress],
   });

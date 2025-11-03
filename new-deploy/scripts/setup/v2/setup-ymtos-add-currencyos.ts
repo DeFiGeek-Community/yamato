@@ -1,6 +1,7 @@
 import hre from 'hardhat';
 import { loadAddress, type NetworkName } from '../../core/address-manager';
 import { getCurrency, getCurrencyContractName } from '../../core/currency-manager';
+import { V2_CONTRACTS } from '../../core/contract-definitions';
 
 /**
  * YmtOSにCurrencyOSを追加
@@ -23,7 +24,7 @@ async function main() {
   console.log(`   CurrencyOS (${currency}): ${currencyOSAddr}`);
   console.log('✅ Addresses loaded\n');
 
-  const ymtOS = await hre.viem.getContractAt('YmtOS', ymtOSAddr);
+  const ymtOS = await hre.viem.getContractAt(V2_CONTRACTS.YmtOS, ymtOSAddr);
 
   console.log('🔄 Calling YmtOS.addCurrencyOS()...');
   const hash = await ymtOS.write.addCurrencyOS([currencyOSAddr]);
@@ -42,4 +43,3 @@ main()
     console.error('❌ Error:', error);
     process.exit(1);
   });
-

@@ -1,6 +1,7 @@
 import hre from 'hardhat';
 import { loadAddress, saveAddress, type NetworkName } from '../../core/address-manager';
 import { createAndProposeSafeTransaction } from '../../core/safe-transaction';
+import { V2_UPGRADE_IMPLEMENTATIONS, V2_UPGRADE_PROXIES } from '../../core/contract-definitions';
 
 /**
  * CJPY CurrencyOS v3→v4 アップグレード
@@ -25,7 +26,7 @@ async function main() {
 
   // 1. 新しい実装をデプロイ
   console.log('📦 Deploying CurrencyOSV4 implementation...');
-  const implementation = await hre.viem.deployContract('CurrencyOSV4', []);
+  const implementation = await hre.viem.deployContract(V2_UPGRADE_IMPLEMENTATIONS.CurrencyOS, []);
   const newImplAddress = implementation.address;
   console.log(`   ✅ New implementation deployed: ${newImplAddress}`);
   
@@ -36,7 +37,7 @@ async function main() {
   const proxyAddress = loadAddress(network, 'CurrencyOSERC1967Proxy');
   console.log(`   📍 Proxy: ${proxyAddress}\n`);
 
-  const proxy = await hre.viem.getContractAt('CurrencyOSV3', proxyAddress);
+  const proxy = await hre.viem.getContractAt(V2_UPGRADE_PROXIES.CurrencyOS, proxyAddress);
 
   if (isLocalhost) {
     // ローカル環境: 直接実行
@@ -71,4 +72,3 @@ main()
     console.error('❌ Error:', error);
     process.exit(1);
   });
-

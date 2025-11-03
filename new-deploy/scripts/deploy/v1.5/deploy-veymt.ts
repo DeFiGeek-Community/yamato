@@ -1,6 +1,7 @@
 import hre from 'hardhat';
 import { deployContract } from '../../core/contract-deployer-hh';
 import { loadAddress, type NetworkName } from '../../core/address-manager';
+import { V1_5_CONTRACTS } from '../../core/contract-definitions';
 
 /**
  * veYMT デプロイ
@@ -16,13 +17,13 @@ async function main() {
   console.log(`\n🌐 Network: ${network}\n`);
 
   console.log('📖 Loading dependencies...');
-  const ymtAddr = loadAddress(network, 'YMT');
+  const ymtAddr = loadAddress(network, V1_5_CONTRACTS.YMT);
   console.log(`   YMT: ${ymtAddr}`);
   console.log('✅ Dependencies loaded\n');
 
   const result = await deployContract({
     name: 'veYMT',
-    contractName: 'veYMT',
+    contractName: V1_5_CONTRACTS.veYMT,
     args: [ymtAddr],
   });
 
@@ -36,4 +37,3 @@ main()
     console.error('❌ Error:', error);
     process.exit(1);
   });
-

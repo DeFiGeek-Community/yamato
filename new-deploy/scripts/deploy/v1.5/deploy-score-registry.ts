@@ -1,6 +1,7 @@
 import hre from 'hardhat';
 import { deployUUPS } from '../../core/uups-deployer';
 import { loadAddress, type NetworkName } from '../../core/address-manager';
+import { V1_5_CONTRACTS, V1_CONTRACTS, requiresPledgeLib } from '../../core/contract-definitions';
 
 /**
  * ScoreRegistry デプロイ
@@ -19,20 +20,22 @@ async function main() {
   console.log('📖 Loading dependencies...');
   const ymtMinterAddr = loadAddress(network, 'YmtMinterERC1967Proxy');
   const yamatoAddr = loadAddress(network, 'YamatoERC1967Proxy');
-  const pledgeLibAddr = loadAddress(network, 'PledgeLib');
+  const pledgeLibAddr = loadAddress(network, V1_CONTRACTS.PledgeLib);
   console.log(`   YmtMinter: ${ymtMinterAddr}`);
   console.log(`   Yamato: ${yamatoAddr}`);
   console.log(`   PledgeLib: ${pledgeLibAddr}`);
   console.log('✅ Dependencies loaded\n');
 
+  const needsLibrary = requiresPledgeLib(V1_5_CONTRACTS.ScoreRegistry, 'v1.5');
+
   const result = await deployUUPS({
     name: 'ScoreRegistry',
-    contractName: 'ScoreRegistry',
+    contractName: V1_5_CONTRACTS.ScoreRegistry,
     initFunction: 'initialize',
     initArgs: [ymtMinterAddr, yamatoAddr],
-    libraries: {
+    libraries: needsLibrary ? {
       'contracts/Dependencies/PledgeLib.sol:PledgeLib': pledgeLibAddr,
-    },
+    } : undefined,
   });
 
   console.log(`\n✅ ScoreRegistry deployed!`);
@@ -46,4 +49,3 @@ main()
     console.error('❌ Error:', error);
     process.exit(1);
   });
-

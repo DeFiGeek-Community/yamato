@@ -1,6 +1,7 @@
 import hre from 'hardhat';
 import { deployContract } from '../../core/contract-deployer-hh';
 import { loadAddress, type NetworkName } from '../../core/address-manager';
+import { V1_5_CONTRACTS } from '../../core/contract-definitions';
 
 /**
  * YMT デプロイ
@@ -24,13 +25,13 @@ async function main() {
   console.log(`📝 Admin address: ${adminAddr}\n`);
 
   console.log('📖 Loading dependencies...');
-  const ymtVestingAddr = loadAddress(network, 'YmtVesting');
+  const ymtVestingAddr = loadAddress(network, V1_5_CONTRACTS.YmtVesting);
   console.log(`   YmtVesting: ${ymtVestingAddr}`);
   console.log('✅ Dependencies loaded\n');
 
   const result = await deployContract({
     name: 'YMT',
-    contractName: 'YMT',
+    contractName: V1_5_CONTRACTS.YMT,
     args: [ymtVestingAddr, adminAddr],
   });
 
@@ -44,4 +45,3 @@ main()
     console.error('❌ Error:', error);
     process.exit(1);
   });
-

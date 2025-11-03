@@ -2,6 +2,7 @@ import hre from 'hardhat';
 import { deployUUPS } from '../../core/uups-deployer';
 import { loadAddress, type NetworkName } from '../../core/address-manager';
 import { getCurrency, getCurrencyContractName } from '../../core/currency-manager';
+import { V2_CURRENCY_CONTRACTS } from '../../core/contract-definitions';
 
 /**
  * 通貨別Pool デプロイ
@@ -22,7 +23,7 @@ async function main() {
 
   const result = await deployUUPS({
     name: getCurrencyContractName('Pool', currency),
-    contractName: 'PoolV2',
+    contractName: V2_CURRENCY_CONTRACTS.Pool,
     initFunction: 'initialize',
     initArgs: [yamatoAddr],
   });
@@ -38,4 +39,3 @@ main()
     console.error('❌ Error:', error);
     process.exit(1);
   });
-
