@@ -270,6 +270,135 @@ new-deploy/
 3. **ガス代**: 十分なETHを用意してください
 4. **秘密鍵管理**: `.env`ファイルは絶対にコミットしない
 
+### v2.0 マルチカレンシー対応
+
+v2.0では、CUSD（米ドル）とCEUR（ユーロ）を追加します。
+
+#### 前提条件
+- v1.5までのデプロイと設定が完了していること
+- v1.5のアップグレードが完了していること
+
+#### ステップ1: YmtOSデプロイ
+
+```bash
+npm run deploy:v2:ymtos
+# または
+npx hardhat run scripts/deploy/v2/deploy-ymtos.ts --network localhost
+```
+
+#### ステップ2: CJPYのCurrencyOSをV4にアップグレード
+
+```bash
+npm run upgrade:v2:cjpy-currencyos
+# または
+npx hardhat run scripts/upgrade/v2/upgrade-cjpy-currencyos.ts --network localhost
+```
+
+#### ステップ3: ScoreWeightControllerをV2にアップグレード
+
+```bash
+npm run upgrade:v2:score-weight-controller
+# または
+npx hardhat run scripts/upgrade/v2/upgrade-score-weight-controller.ts --network localhost
+```
+
+#### ステップ4: CUSDデプロイ
+
+```bash
+npm run deploy:v2:cusd
+# または
+CURRENCY=CUSD npx hardhat run scripts/deploy/v2/deploy-all-cusd.ts --network localhost
+```
+
+**デプロイされるコントラクト:**
+1. CUSD トークン
+2. PriceFeedSingle (USD用)
+3. CurrencyOS (CUSD)
+4. Yamato (CUSD)
+5. YamatoActions (CUSD)
+6. Pool (CUSD)
+7. PriorityRegistry (CUSD)
+8. ScoreRegistry (CUSD)
+
+#### ステップ5: CUSD初期設定
+
+```bash
+npm run setup:v2:cusd
+# または
+CURRENCY=CUSD npx hardhat run scripts/setup/v2/setup-all-cusd.ts --network localhost
+```
+
+**実行される初期設定:**
+1. `Yamato.setDeps()`
+2. `CurrencyOS.addYamato()`
+3. `CurrencyOS.setYmtOS()`
+4. `CUSD.setCurrencyOS()` + `CUSD.revokeGovernance()`
+5. `YmtOS.addCurrencyOS()`
+6. `Yamato.setScoreRegistry()`
+
+#### ステップ6: CEURデプロイ（オプション）
+
+```bash
+npm run deploy:v2:ceur
+# または
+CURRENCY=CEUR npx hardhat run scripts/deploy/v2/deploy-all-ceur.ts --network localhost
+```
+
+**デプロイされるコントラクト:**
+1. CEUR トークン
+2. PriceFeed (EUR用 - PriceFeedV3)
+3. CurrencyOS (CEUR)
+4. Yamato (CEUR)
+5. YamatoActions (CEUR)
+6. Pool (CEUR)
+7. PriorityRegistry (CEUR)
+8. ScoreRegistry (CEUR)
+
+#### ステップ7: CEUR初期設定
+
+```bash
+npm run setup:v2:ceur
+# または
+CURRENCY=CEUR npx hardhat run scripts/setup/v2/setup-all-ceur.ts --network localhost
+```
+
+**実行される初期設定:**
+1. `Yamato.setDeps()`
+2. `CurrencyOS.addYamato()`
+3. `CurrencyOS.setYmtOS()`
+4. `CEUR.setCurrencyOS()` + `CEUR.revokeGovernance()`
+5. `Yamato.setScoreRegistry()`
+
+⚠️ **注意:** CEURは`YmtOS.addCurrencyOS()`を実行しません（index.mdに基づく）
+
+#### v2.0 完全フロー（ローカルテスト用）
+
+```bash
+# 1. v1.0デプロイ
+npm run deploy:v1
+npm run setup:v1
+
+# 2. v1.5デプロイ
+npm run deploy:v1.5
+npm run setup:v1.5
+
+# 3. v1.5アップグレード
+npm run upgrade:v1.5
+
+# 4. v2.0デプロイ
+npm run deploy:v2:ymtos
+npm run upgrade:v2:cjpy-currencyos
+npm run upgrade:v2:score-weight-controller
+
+# 5. CUSDデプロイ
+npm run deploy:v2:cusd
+npm run setup:v2:cusd
+
+# 6. CEURデプロイ（オプション）
+npm run deploy:v2:ceur
+npm run setup:v2:ceur
+```
+
 ## トラブルシューティング
 
 ### ABI/Bytecodeが見つからない
