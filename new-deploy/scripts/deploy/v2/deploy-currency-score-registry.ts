@@ -1,4 +1,5 @@
 import hre from 'hardhat';
+import type { Address } from 'viem';
 import { deployUUPS } from '../../core/uups-deployer';
 import { loadAddress, loadProxyAddress, type NetworkName } from '../../core/address-manager';
 import { getCurrency, getCurrencyContractName } from '../../core/currency-manager';
@@ -39,7 +40,7 @@ async function main() {
     initFunction: 'initialize',
     initArgs: [ymtMinterAddr, yamatoAddr],
     libraries: needsLibrary ? {
-      'contracts/Dependencies/PledgeLib.sol:PledgeLib': pledgeLibAddr,
+      'contracts/Dependencies/PledgeLib.sol:PledgeLib': pledgeLibAddr as `0x${string}`,
     } : undefined,
   });
 

@@ -1,4 +1,5 @@
 import hre from 'hardhat';
+import type { Address } from 'viem';
 import { saveAddress, type NetworkName } from './address-manager';
 
 export interface DeployContractParams {
@@ -34,7 +35,7 @@ export async function deployContract(params: DeployContractParams): Promise<Depl
     }
   );
   
-  const address = contract.address;
+  const address = contract.address as Address;
   console.log(`  ✅ Contract deployed: ${address}`);
 
   // アドレスを保存
@@ -42,7 +43,7 @@ export async function deployContract(params: DeployContractParams): Promise<Depl
 
   console.log(`✅ ${params.name} deployment complete!\n`);
 
-  return { address };
+  return { address: address as `0x${string}` };
 }
 
 /**
@@ -59,7 +60,7 @@ export async function deployLibrary(params: {
   // ライブラリをデプロイ
   const library = await hre.viem.deployContract(params.contractName, []);
   
-  const address = library.address;
+  const address = library.address as Address;
   console.log(`  ✅ Library deployed: ${address}`);
 
   // アドレスを保存
@@ -67,6 +68,6 @@ export async function deployLibrary(params: {
 
   console.log(`✅ ${params.name} library deployment complete!\n`);
 
-  return address;
+  return address as `0x${string}`;
 }
 

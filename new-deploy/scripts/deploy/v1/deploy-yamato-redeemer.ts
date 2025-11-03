@@ -1,4 +1,5 @@
 import hre from 'hardhat';
+import type { Address } from 'viem';
 import { deployUUPS } from '../../core/uups-deployer';
 import { loadAddress, loadProxyAddress, type NetworkName } from '../../core/address-manager';
 import { V1_CONTRACTS, requiresPledgeLib, CONTRACT_NAMES } from '../../core/contract-definitions';
@@ -28,7 +29,7 @@ async function main() {
     initFunction: 'initialize',
     initArgs: [yamatoAddr],
     libraries: needsLibrary ? {
-      'contracts/Dependencies/PledgeLib.sol:PledgeLib': pledgeLibAddr,
+      'contracts/Dependencies/PledgeLib.sol:PledgeLib': pledgeLibAddr as `0x${string}`,
     } : undefined,
   });
 

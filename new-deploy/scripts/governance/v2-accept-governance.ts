@@ -89,7 +89,11 @@ async function main() {
 
       if (isLocalhost && multisigSigner) {
         // ローカル環境: アカウント#1で直接実行
-        const hash = await contractInstance.write.acceptGovernance({ account: multisigSigner.account });
+        const hash = await multisigSigner.writeContract({
+          address: contract.address,
+          abi: contractInstance.abi,
+          functionName: 'acceptGovernance',
+        });
         const receipt = await publicClient!.waitForTransactionReceipt({ hash });
         console.log(`   📝 Transaction hash: ${hash}`);
         console.log(`   ✅ Confirmed in block ${receipt.blockNumber}\n`);
