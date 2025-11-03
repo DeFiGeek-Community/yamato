@@ -130,11 +130,109 @@ npx hardhat run scripts/setup/v1/setup-yamato-deps.ts --network localhost
 npx hardhat run scripts/setup/v1/setup-cjpy.ts --network localhost
 ```
 
-### v1.5デプロイ
+### v1.5 完全デプロイ
+
+v1.5の全コントラクト（YMT関連）を一括デプロイ：
 
 ```bash
-npx hardhat run scripts/deploy/v1.5/deploy-ymt.ts --network sepolia
+# ローカル環境（Anvil）
+npx hardhat run scripts/deploy/v1.5/deploy-all.ts --network localhost
+
+# Sepolia環境
+npx hardhat run scripts/deploy/v1.5/deploy-all.ts --network sepolia
 ```
+
+**デプロイされるコントラクト（順番）:**
+1. YmtVesting
+2. YMT
+3. veYMT
+4. ScoreWeightController
+5. YmtMinter
+6. ScoreRegistry
+
+### v1.5 アップグレード（v1.0 → v1.5）
+
+**⚠️ 重要**: v1.5では既存のv1.0コントラクトをアップグレードする必要があります。
+
+#### 実行方法の違い
+
+| 環境 | 実行方法 | 説明 |
+|-----|---------|------|
+| **localhost** | 直接トランザクション実行 | テスト用。即座に実行される |
+| **sepolia/mainnet** | Safe Transaction提案 | 本番用。マルチシグの承認が必要 |
+
+```bash
+# ローカル環境: 全アップグレード手順を一括実行
+npx hardhat run scripts/upgrade/v1.5/upgrade-all.ts --network localhost
+
+# 本番環境: Safe Transaction提案（マルチシグ承認が必要）
+npx hardhat run scripts/upgrade/v1.5/upgrade-all.ts --network sepolia
+```
+
+**または個別実行:**
+
+```bash
+# 1. 新しい実装コントラクトをデプロイ
+npx hardhat run scripts/upgrade/v1.5/deploy-implementations.ts --network localhost
+
+# 2. プロキシをアップグレード
+npx hardhat run scripts/upgrade/v1.5/upgrade-proxies.ts --network localhost
+
+# 3. アップグレード後の初期設定
+npx hardhat run scripts/upgrade/v1.5/post-upgrade-setup.ts --network localhost
+```
+
+**アップグレード対象（9コントラクト）:**
+- YamatoRepayer: V2 → V3 (`upgradeTo`)
+- YamatoRedeemer: V4 → V5 (`upgradeTo`)
+- YamatoWithdrawer: V2 → V3 (`upgradeTo`)
+- YamatoSweeper: V2 → V3 (`upgradeTo`)
+- YamatoDepositor: V2 → V3 (`upgradeTo`)
+- YamatoBorrower: V1 → V2 (`upgradeTo`)
+- CurrencyOS: V2 → V3 (`upgradeTo`)
+- Yamato: V3 → V4 (`upgradeTo`)
+- FeePool: V1 → V2 (`upgradeToAndCall` + `initializeV2`)
+
+### v1.5 初期設定
+
+デプロイ後、初期設定を実行：
+
+```bash
+npx hardhat run scripts/setup/v1.5/setup-all.ts --network localhost
+```
+
+**実行される初期設定:**
+1. `YmtVesting.setYmtToken()` - YMTトークンアドレスを設定
+2. `YMT.setMinter()` - Minter権限を設定
+3. `ScoreWeightController.addScore()` - ScoreRegistryを登録
+
+### v1.5 ガバナンス移譲（本番環境のみ）
+
+本番環境では、YMT関連コントラクトのガバナンス権限をマルチシグウォレットに移譲します：
+
+#### ステップ1: ガバナンス移譲
+
+```bash
+# .envにマルチシグアドレスを設定
+UUPS_PROXY_ADMIN_MULTISIG_ADDRESS=0x...
+COMMUNITY_MULTISIG_ADDRESS=0x...
+
+# デプロイ用の秘密鍵で実行
+npx hardhat run scripts/governance/v1.5-transfer-governance.ts --network sepolia
+```
+
+#### ステップ2: ガバナンス受け入れ
+
+```bash
+# .envのPRIVATE_KEYをマルチシグ署名者の秘密鍵に変更
+
+# マルチシグ署名者の秘密鍵で実行
+npx hardhat run scripts/governance/v1.5-accept-governance.ts --network sepolia
+```
+
+**⚠️ 重要:**
+- YMTとYmtVestingは`acceptGovernance()`を持たないため、`setAdmin()`のみで完了します
+- YmtMinter、ScoreWeightController、ScoreRegistryは`acceptGovernance()`が必要です
 
 ### v2デプロイ
 

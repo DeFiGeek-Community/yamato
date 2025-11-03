@@ -3,27 +3,34 @@ import { deployUUPS } from '../../core/uups-deployer';
 import { loadAddress, type NetworkName } from '../../core/address-manager';
 
 /**
- * Pool デプロイ
+ * ScoreWeightController デプロイ
  * 
- * 償還プールと清算プールを管理するコントラクトです。
+ * 複数のScoreRegistryのウェイトを管理するコントラクトです。
+ * UUPSプロキシパターンでデプロイされます。
+ * 
+ * 初期化引数:
+ * - _ymtAddr: YMTトークンアドレス
+ * - _veYmtAddr: veYMTアドレス
  */
 async function main() {
   const network = hre.network.name as NetworkName;
   console.log(`\n🌐 Network: ${network}\n`);
 
   console.log('📖 Loading dependencies...');
-  const yamatoAddr = loadAddress(network, 'YamatoERC1967Proxy');
-  console.log(`   Yamato: ${yamatoAddr}`);
+  const ymtAddr = loadAddress(network, 'YMT');
+  const veYmtAddr = loadAddress(network, 'veYMT');
+  console.log(`   YMT: ${ymtAddr}`);
+  console.log(`   veYMT: ${veYmtAddr}`);
   console.log('✅ Dependencies loaded\n');
 
   const result = await deployUUPS({
-    name: 'Pool',
-    contractName: 'PoolV2',
+    name: 'ScoreWeightController',
+    contractName: 'ScoreWeightController',
     initFunction: 'initialize',
-    initArgs: [yamatoAddr],
+    initArgs: [ymtAddr, veYmtAddr],
   });
 
-  console.log(`\n✅ Pool deployed!`);
+  console.log(`\n✅ ScoreWeightController deployed!`);
   console.log(`   Implementation: ${result.implAddress}`);
   console.log(`   Proxy: ${result.proxyAddress}\n`);
 }
@@ -34,3 +41,4 @@ main()
     console.error('❌ Error:', error);
     process.exit(1);
   });
+

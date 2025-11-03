@@ -131,6 +131,48 @@
 
 ## v1.5 初期設定（YMT追加）
 
+### 前提: v1.0コントラクトのアップグレード
+
+v1.5では、まず既存のv1.0コントラクトを新しいバージョンにアップグレードする必要があります。
+
+#### アップグレード対象コントラクト
+
+| コントラクト | v1.0 → v1.5 |
+|------------|-------------|
+| YamatoRepayer | V2 → V3 |
+| YamatoRedeemer | V4 → V5 |
+| YamatoWithdrawer | V2 → V3 |
+| YamatoSweeper | V2 → V3 |
+| YamatoDepositor | V2 → V3 |
+| YamatoBorrower | V1 → V2 |
+| CurrencyOS | V2 → V3 |
+| Yamato | V3 → V4 |
+| FeePool | V1 → V2 |
+
+#### アップグレード手順
+
+1. **新しい実装コントラクトをデプロイ**
+   - 各コントラクトの新バージョン実装をデプロイ
+   - ライブラリリンクが必要なコントラクトはPledgeLibをリンク
+
+2. **プロキシをアップグレード**
+   - **通常のコントラクト（8個）**: `upgradeTo(newImplAddress)`を実行
+   - **FeePool**: `upgradeToAndCall(newImplAddress, initData)`を実行
+     - `initData`は`initializeV2(startTime)`のエンコード
+     - `startTime`: FeePool配布開始時刻（UNIX timestamp）
+     - 例: `1753412400` (2025-05-24 00:00:00 UTC)
+
+3. **アップグレード後の初期設定**
+   - `Yamato.setScoreRegistry()` - ScoreRegistryアドレスを設定
+   - `FeePool.setVeYMT()` - veYMTアドレスを設定
+   - `CurrencyOS.setYMT()` - YMTアドレスを設定
+   - `CurrencyOS.setVeYMT()` - veYMTアドレスを設定
+   - `CurrencyOS.setYmtMinter()` - YmtMinterアドレスを設定
+   - `CurrencyOS.setScoreWeightController()` - ScoreWeightControllerアドレスを設定
+   - `FeePool.toggleAllowCheckpointToken()` - チェックポイント機能を有効化
+
+---
+
 ### 1. YmtVestingにYMTトークンを設定
 **関数**: `YmtVesting.setYmtToken()`
 
@@ -261,7 +303,21 @@
 ```
 1. デプロイ: YmtVesting, YMT, veYMT, ScoreWeightController, YmtMinter, ScoreRegistry
    ↓
-2. アップグレード: 既存コントラクトの実装をv1.5にアップグレード
+2. アップグレード手順:
+   a. 新しい実装コントラクトをデプロイ
+      (YamatoRepayerV3, YamatoRedeemerV5, YamatoWithdrawerV3, YamatoSweeperV3,
+       YamatoDepositorV3, YamatoBorrowerV2, CurrencyOSV3, YamatoV4, FeePoolV2)
+   ↓
+   b. 各プロキシをアップグレード (upgradeTo)
+   ↓
+   c. アップグレード後の初期設定
+      - Yamato.setScoreRegistry()
+      - FeePool.setVeYMT()
+      - CurrencyOS.setYMT()
+      - CurrencyOS.setVeYMT()
+      - CurrencyOS.setYmtMinter()
+      - CurrencyOS.setScoreWeightController()
+      - FeePool.toggleAllowCheckpointToken()
    ↓
 3. YmtVesting.setYmtToken()
    ↓
