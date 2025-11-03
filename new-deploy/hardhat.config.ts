@@ -4,7 +4,6 @@ import "dotenv/config";
 import path from "path";
 
 const config: HardhatUserConfig = {
-  allowUnlimitedContractSize: true,
   solidity: {
     compilers: [
       {
