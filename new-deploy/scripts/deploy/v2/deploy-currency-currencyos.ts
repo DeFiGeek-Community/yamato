@@ -1,7 +1,7 @@
 import hre from 'hardhat';
 import { deployUUPS } from '../../core/uups-deployer';
-import { loadAddress, type NetworkName } from '../../core/address-manager';
-import { getCurrency, getCurrencyContractName, getCurrencyInfo, getPriceFeedContractName } from '../../core/currency-manager';
+import { loadAddress, loadProxyAddress, type NetworkName } from '../../core/address-manager';
+import { getCurrency, getCurrencyInfo, getPriceFeedContractName, getCurrencyContractName } from '../../core/currency-manager';
 import { V2_CURRENCY_CONTRACTS } from '../../core/contract-definitions';
 
 /**
@@ -28,8 +28,8 @@ async function main() {
   console.log('📖 Loading dependencies...');
   const currencyAddr = loadAddress(network, currencyInfo.contractName);
   const priceFeedName = getPriceFeedContractName(currency);
-  const priceFeedAddr = loadAddress(network, getCurrencyContractName(`${priceFeedName}ERC1967Proxy`, currency));
-  const feePoolAddr = loadAddress(network, 'FeePoolERC1967Proxy'); // FeePoolは全通貨共有
+  const priceFeedAddr = loadProxyAddress(network, priceFeedName, currency);
+  const feePoolAddr = loadProxyAddress(network, 'FeePool'); // FeePoolは全通貨共有
   
   console.log(`   ${currency}: ${currencyAddr}`);
   console.log(`   PriceFeed (${priceFeedName}): ${priceFeedAddr}`);

@@ -1,5 +1,5 @@
 import hre from 'hardhat';
-import { loadAddress, type NetworkName } from '../../core/address-manager';
+import { loadProxyAddress, loadImplementationAddress, type NetworkName } from '../../core/address-manager';
 import { encodeFunctionData } from 'viem';
 import { createAndProposeSafeTransaction } from '../../core/safe-transaction';
 import { 
@@ -55,12 +55,12 @@ async function main() {
     try {
       console.log(`🔄 [${successCount + 1}/${upgrades.length}] Upgrading ${upgrade.name}...`);
 
-      // プロキシアドレスを取得
-      const proxyAddress = loadAddress(network, `${upgrade.name}ERC1967Proxy`);
+      // プロキシアドレスを取得（共通関数を使用）
+      const proxyAddress = loadProxyAddress(network, upgrade.name);
       console.log(`   📍 Proxy: ${proxyAddress}`);
 
-      // 新しい実装アドレスを取得
-      const newImplAddress = loadAddress(network, `${upgrade.name}${upgrade.version}Impl`);
+      // 新しい実装アドレスを取得（共通関数を使用）
+      const newImplAddress = loadImplementationAddress(network, upgrade.name, upgrade.version);
       console.log(`   📦 New Implementation: ${newImplAddress}`);
 
       // プロキシコントラクトを取得（現在のバージョンのABIを使用）

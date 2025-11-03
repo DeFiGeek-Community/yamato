@@ -1,6 +1,6 @@
 import hre from 'hardhat';
 import { deployUUPS } from '../../core/uups-deployer';
-import { loadAddress, type NetworkName } from '../../core/address-manager';
+import { loadAddress, loadProxyAddress, type NetworkName } from '../../core/address-manager';
 import { V1_CONTRACTS, requiresPledgeLib } from '../../core/contract-definitions';
 
 /**
@@ -14,7 +14,7 @@ async function main() {
   console.log(`\n🌐 Network: ${network}\n`);
 
   console.log('📖 Loading dependencies...');
-  const yamatoAddr = loadAddress(network, 'YamatoERC1967Proxy');
+  const yamatoAddr = loadProxyAddress(network, 'Yamato');
   const pledgeLibAddr = loadAddress(network, V1_CONTRACTS.PledgeLib);
   console.log(`   Yamato: ${yamatoAddr}`);
   console.log(`   PledgeLib: ${pledgeLibAddr}`);

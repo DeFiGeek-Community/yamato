@@ -28,7 +28,7 @@ async function main() {
   console.log(`💱 Currency: ${currency}\n`);
 
   console.log('📖 Loading dependencies...');
-  const yamatoAddr = loadAddress(network, getCurrencyContractName('YamatoERC1967Proxy', currency));
+  const yamatoAddr = loadProxyAddress(network, 'Yamato', currency);
   const pledgeLibAddr = loadAddress(network, V1_CONTRACTS.PledgeLib);
   console.log(`   Yamato (${currency}): ${yamatoAddr}`);
   console.log(`   PledgeLib: ${pledgeLibAddr}`);

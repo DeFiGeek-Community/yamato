@@ -1,5 +1,5 @@
 import hre from 'hardhat';
-import { loadAddress, type NetworkName } from '../core/address-manager';
+import { loadProxyAddress, type NetworkName } from '../core/address-manager';
 import { V1_CONTRACTS } from '../core/contract-definitions';
 
 /**
@@ -43,7 +43,8 @@ async function main() {
     try {
       console.log(`🔄 [${successCount + 1}/${contracts.length}] ${name}.setGovernance()...`);
       
-      const proxyAddress = loadAddress(network, `${name}ERC1967Proxy`);
+      // 共通関数を使用
+      const proxyAddress = loadProxyAddress(network, name);
       const contract = await hre.viem.getContractAt(contractName, proxyAddress);
       
       const hash = await contract.write.setGovernance([multisigAddr as `0x${string}`]);

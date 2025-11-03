@@ -1,6 +1,6 @@
 import hre from 'hardhat';
 import { deployUUPS } from '../../core/uups-deployer';
-import { loadAddress, type NetworkName } from '../../core/address-manager';
+import { loadProxyAddress, type NetworkName } from '../../core/address-manager';
 import { V2_CONTRACTS } from '../../core/contract-definitions';
 
 /**
@@ -19,7 +19,7 @@ async function main() {
   console.log(`\n🌐 Network: ${network}\n`);
 
   console.log('📖 Loading dependencies...');
-  const cjpyCurrencyOSAddr = loadAddress(network, 'CurrencyOSERC1967Proxy');
+  const cjpyCurrencyOSAddr = loadProxyAddress(network, 'CurrencyOS');
   console.log(`   CJPY CurrencyOS: ${cjpyCurrencyOSAddr}`);
   console.log('✅ Dependencies loaded\n');
 

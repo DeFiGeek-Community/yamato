@@ -1,5 +1,5 @@
 import hre from 'hardhat';
-import { loadAddress, type NetworkName } from '../../core/address-manager';
+import { loadProxyAddress, type NetworkName } from '../../core/address-manager';
 import { V1_CONTRACTS } from '../../core/contract-definitions';
 
 async function main() {
@@ -8,8 +8,8 @@ async function main() {
 
   // アドレスを読み込む
   console.log('📖 Loading contract addresses...');
-  const currencyOSAddress = loadAddress(network, 'CurrencyOSERC1967Proxy');
-  const yamatoAddress = loadAddress(network, 'YamatoERC1967Proxy');
+  const currencyOSAddress = loadProxyAddress(network, 'CurrencyOS');
+  const yamatoAddress = loadProxyAddress(network, 'Yamato');
   console.log('✅ Addresses loaded\n');
 
   // CurrencyOSコントラクトを取得

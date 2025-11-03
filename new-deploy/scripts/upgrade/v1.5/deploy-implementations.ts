@@ -1,5 +1,5 @@
 import hre from 'hardhat';
-import { saveAddress, type NetworkName, loadAddress } from '../../core/address-manager';
+import { saveImplementationAddress, type NetworkName, loadAddress } from '../../core/address-manager';
 import { 
   V1_5_UPGRADE_IMPLEMENTATIONS, 
   V1_CONTRACTS,
@@ -71,8 +71,8 @@ async function main() {
       const implAddress = implementation.address;
       console.log(`   ✅ Deployed: ${implAddress}`);
 
-      // アドレスを保存（v1.5用の命名規則）
-      saveAddress(network, `${impl.name}${impl.version}Impl`, implAddress);
+      // アドレスを保存（共通関数を使用）
+      saveImplementationAddress(network, impl.name, impl.version, implAddress);
 
       successCount++;
     } catch (error) {

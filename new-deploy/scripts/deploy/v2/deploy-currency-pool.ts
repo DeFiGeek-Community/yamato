@@ -1,6 +1,6 @@
 import hre from 'hardhat';
 import { deployUUPS } from '../../core/uups-deployer';
-import { loadAddress, type NetworkName } from '../../core/address-manager';
+import { loadProxyAddress, type NetworkName } from '../../core/address-manager';
 import { getCurrency, getCurrencyContractName } from '../../core/currency-manager';
 import { V2_CURRENCY_CONTRACTS } from '../../core/contract-definitions';
 
@@ -17,7 +17,7 @@ async function main() {
   console.log(`💱 Currency: ${currency}\n`);
 
   console.log('📖 Loading dependencies...');
-  const yamatoAddr = loadAddress(network, getCurrencyContractName('YamatoERC1967Proxy', currency));
+  const yamatoAddr = loadProxyAddress(network, 'Yamato', currency);
   console.log(`   Yamato (${currency}): ${yamatoAddr}`);
   console.log('✅ Dependencies loaded\n');
 

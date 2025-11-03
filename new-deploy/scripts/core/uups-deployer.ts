@@ -1,6 +1,6 @@
 import hre from 'hardhat';
 import { encodeFunctionData } from 'viem';
-import { saveAddress, type NetworkName } from './address-manager';
+import { saveProxyAddress, saveAddress, type NetworkName } from './address-manager';
 
 export interface DeployUUPSParams {
   name: string;
@@ -61,8 +61,18 @@ export async function deployUUPS(params: DeployUUPSParams): Promise<DeployUUPSRe
   console.log(`  ✅ Proxy deployed: ${proxyAddress}`);
 
   // 4. アドレスを保存
+  // nameパラメータが通貨別の場合（例: 'Yamato_CUSD'）に対応
+  // 'Yamato_CUSD' → 'Yamato'を抽出
+  const contractName = params.name.includes('_') 
+    ? params.name.split('_')[0] 
+    : params.name;
+  const currency = params.name.includes('_') 
+    ? params.name.split('_')[1] as 'CJPY' | 'CUSD' | 'CEUR'
+    : undefined;
+  
+  // 実装アドレスは通常のsaveAddressを使用（命名規則が異なるため）
   saveAddress(network, `${params.name}UUPSImpl`, implAddress);
-  saveAddress(network, `${params.name}ERC1967Proxy`, proxyAddress);
+  saveProxyAddress(network, contractName, proxyAddress, currency);
 
   console.log(`✅ ${params.name} deployment complete!\n`);
 

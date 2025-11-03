@@ -1,5 +1,5 @@
 import hre from 'hardhat';
-import { loadAddress, type NetworkName } from '../../core/address-manager';
+import { loadProxyAddress, loadAddress, type NetworkName } from '../../core/address-manager';
 import { createAndProposeSafeTransaction } from '../../core/safe-transaction';
 import { 
   V1_5_UPGRADE_IMPLEMENTATIONS, 
@@ -32,16 +32,16 @@ async function main() {
   console.log(`📝 Execution mode: ${isLocalhost ? 'Direct' : 'Safe Transaction'}\n`);
   console.log('⚙️  Executing post-upgrade setup...\n');
 
-  // 必要なアドレスを読み込み
+  // 必要なアドレスを読み込み（共通関数を使用）
   console.log('📖 Loading addresses...');
-  const yamatoAddr = loadAddress(network, 'YamatoERC1967Proxy');
-  const feePoolAddr = loadAddress(network, 'FeePoolERC1967Proxy');
-  const currencyOSAddr = loadAddress(network, 'CurrencyOSERC1967Proxy');
-  const scoreRegistryAddr = loadAddress(network, 'ScoreRegistryERC1967Proxy');
+  const yamatoAddr = loadProxyAddress(network, 'Yamato');
+  const feePoolAddr = loadProxyAddress(network, 'FeePool');
+  const currencyOSAddr = loadProxyAddress(network, 'CurrencyOS');
+  const scoreRegistryAddr = loadProxyAddress(network, 'ScoreRegistry');
   const veYmtAddr = loadAddress(network, V1_5_CONTRACTS.veYMT);
   const ymtAddr = loadAddress(network, V1_5_CONTRACTS.YMT);
-  const ymtMinterAddr = loadAddress(network, 'YmtMinterERC1967Proxy');
-  const scoreWeightControllerAddr = loadAddress(network, 'ScoreWeightControllerERC1967Proxy');
+  const ymtMinterAddr = loadProxyAddress(network, 'YmtMinter');
+  const scoreWeightControllerAddr = loadProxyAddress(network, 'ScoreWeightController');
   
   console.log(`   Yamato: ${yamatoAddr}`);
   console.log(`   FeePool: ${feePoolAddr}`);

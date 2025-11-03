@@ -1,6 +1,6 @@
 import hre from 'hardhat';
-import { loadAddress, type NetworkName } from '../../core/address-manager';
-import { getCurrency, getCurrencyContractName, getCurrencyInfo } from '../../core/currency-manager';
+import { loadAddress, loadProxyAddress, type NetworkName } from '../../core/address-manager';
+import { getCurrency, getCurrencyInfo } from '../../core/currency-manager';
 
 /**
  * 通貨トークンにCurrencyOSを設定とガバナンス権限の放棄
@@ -18,7 +18,7 @@ async function main() {
 
   console.log('📖 Loading addresses...');
   const currencyAddr = loadAddress(network, currencyInfo.contractName);
-  const currencyOSAddr = loadAddress(network, getCurrencyContractName('CurrencyOSERC1967Proxy', currency));
+  const currencyOSAddr = loadProxyAddress(network, 'CurrencyOS', currency);
   
   console.log(`   ${currency}: ${currencyAddr}`);
   console.log(`   CurrencyOS: ${currencyOSAddr}`);
@@ -50,4 +50,3 @@ main()
     console.error('❌ Error:', error);
     process.exit(1);
   });
-

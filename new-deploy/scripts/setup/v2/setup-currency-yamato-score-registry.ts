@@ -1,6 +1,6 @@
 import hre from 'hardhat';
-import { loadAddress, type NetworkName } from '../../core/address-manager';
-import { getCurrency, getCurrencyContractName } from '../../core/currency-manager';
+import { loadProxyAddress, type NetworkName } from '../../core/address-manager';
+import { getCurrency } from '../../core/currency-manager';
 import { V2_CURRENCY_CONTRACTS } from '../../core/contract-definitions';
 
 /**
@@ -17,8 +17,8 @@ async function main() {
   console.log('⚙️  Setting ScoreRegistry in Yamato...\n');
 
   console.log('📖 Loading addresses...');
-  const yamatoAddr = loadAddress(network, getCurrencyContractName('YamatoERC1967Proxy', currency));
-  const scoreRegistryAddr = loadAddress(network, getCurrencyContractName('ScoreRegistryERC1967Proxy', currency));
+  const yamatoAddr = loadProxyAddress(network, 'Yamato', currency);
+  const scoreRegistryAddr = loadProxyAddress(network, 'ScoreRegistry', currency);
   
   console.log(`   Yamato: ${yamatoAddr}`);
   console.log(`   ScoreRegistry: ${scoreRegistryAddr}`);

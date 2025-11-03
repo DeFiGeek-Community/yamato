@@ -1,6 +1,6 @@
 import hre from 'hardhat';
-import { loadAddress, type NetworkName } from '../core/address-manager';
-import { getCurrency, getCurrencyContractName, getPriceFeedContractName } from '../core/currency-manager';
+import { loadProxyAddress, type NetworkName } from '../core/address-manager';
+import { getCurrency } from '../core/currency-manager';
 import { createAndProposeSafeTransaction } from '../core/safe-transaction';
 import { V2_CONTRACTS, V2_CURRENCY_CONTRACTS, V1_CONTRACTS } from '../core/contract-definitions';
 
@@ -53,43 +53,26 @@ async function main() {
   console.log(`🔐 Multisig Address: ${multisigAddr}\n`);
   console.log('🔄 Accepting governance...\n');
 
-  // アドレスを読み込み
-  console.log('📖 Loading addresses...');
-  const ymtOSAddr = loadAddress(network, 'YmtOSERC1967Proxy');
-  const priceFeedName = getPriceFeedContractName(currency);
-  const priceFeedAddr = loadAddress(network, getCurrencyContractName(`${priceFeedName}ERC1967Proxy`, currency));
-  const currencyOSAddr = loadAddress(network, getCurrencyContractName('CurrencyOSERC1967Proxy', currency));
-  const poolAddr = loadAddress(network, getCurrencyContractName('PoolERC1967Proxy', currency));
-  const priorityRegistryAddr = loadAddress(network, getCurrencyContractName('PriorityRegistryERC1967Proxy', currency));
-  const yamatoAddr = loadAddress(network, getCurrencyContractName('YamatoERC1967Proxy', currency));
-  const depositorAddr = loadAddress(network, getCurrencyContractName('YamatoDepositorERC1967Proxy', currency));
-  const borrowerAddr = loadAddress(network, getCurrencyContractName('YamatoBorrowerERC1967Proxy', currency));
-  const repayerAddr = loadAddress(network, getCurrencyContractName('YamatoRepayerERC1967Proxy', currency));
-  const withdrawerAddr = loadAddress(network, getCurrencyContractName('YamatoWithdrawerERC1967Proxy', currency));
-  const redeemerAddr = loadAddress(network, getCurrencyContractName('YamatoRedeemerERC1967Proxy', currency));
-  const sweeperAddr = loadAddress(network, getCurrencyContractName('YamatoSweeperERC1967Proxy', currency));
-  const scoreRegistryAddr = loadAddress(network, getCurrencyContractName('ScoreRegistryERC1967Proxy', currency));
-  console.log('✅ Addresses loaded\n');
-
   // contract-definitions.tsから定義を取得
   const priceFeedContractName = currency === 'CUSD' 
     ? V2_CONTRACTS.PriceFeedSingle 
     : V1_CONTRACTS.PriceFeed;
 
+  // 共通関数を使用してアドレスを読み込み
   const contracts = [
-    { name: 'YmtOS', address: ymtOSAddr, contractName: V2_CONTRACTS.YmtOS },
-    { name: `PriceFeed (${currency})`, address: priceFeedAddr, contractName: priceFeedContractName },
-    { name: `CurrencyOS (${currency})`, address: currencyOSAddr, contractName: V2_CURRENCY_CONTRACTS.CurrencyOS },
-    { name: `Pool (${currency})`, address: poolAddr, contractName: V2_CURRENCY_CONTRACTS.Pool },
-    { name: `PriorityRegistry (${currency})`, address: priorityRegistryAddr, contractName: V2_CURRENCY_CONTRACTS.PriorityRegistry },
-    { name: `Yamato (${currency})`, address: yamatoAddr, contractName: V2_CURRENCY_CONTRACTS.Yamato },
-    { name: `YamatoDepositor (${currency})`, address: depositorAddr, contractName: V2_CURRENCY_CONTRACTS.YamatoDepositor },
-    { name: `YamatoBorrower (${currency})`, address: borrowerAddr, contractName: V2_CURRENCY_CONTRACTS.YamatoBorrower },
-    { name: `YamatoRepayer (${currency})`, address: repayerAddr, contractName: V2_CURRENCY_CONTRACTS.YamatoRepayer },
-    { name: `YamatoWithdrawer (${currency})`, address: withdrawerAddr, contractName: V2_CURRENCY_CONTRACTS.YamatoWithdrawer },
-    { name: `YamatoRedeemer (${currency})`, address: redeemerAddr, contractName: V2_CURRENCY_CONTRACTS.YamatoRedeemer },
-    { name: `YamatoSweeper (${currency})`, address: sweeperAddr, contractName: V2_CURRENCY_CONTRACTS.YamatoSweeper },
-    { name: `ScoreRegistry (${currency})`, address: scoreRegistryAddr, contractName: V2_CURRENCY_CONTRACTS.ScoreRegistry },
+    { name: 'YmtOS', contractName: V2_CONTRACTS.YmtOS, address: loadProxyAddress(network, 'YmtOS') },
+    { name: `PriceFeed (${currency})`, contractName: priceFeedContractName, address: loadProxyAddress(network, currency === 'CUSD' ? 'PriceFeedSingle' : 'PriceFeed', currency) },
+    { name: `CurrencyOS (${currency})`, contractName: V2_CURRENCY_CONTRACTS.CurrencyOS, address: loadProxyAddress(network, 'CurrencyOS', currency) },
+    { name: `Pool (${currency})`, contractName: V2_CURRENCY_CONTRACTS.Pool, address: loadProxyAddress(network, 'Pool', currency) },
+    { name: `PriorityRegistry (${currency})`, contractName: V2_CURRENCY_CONTRACTS.PriorityRegistry, address: loadProxyAddress(network, 'PriorityRegistry', currency) },
+    { name: `Yamato (${currency})`, contractName: V2_CURRENCY_CONTRACTS.Yamato, address: loadProxyAddress(network, 'Yamato', currency) },
+    { name: `YamatoDepositor (${currency})`, contractName: V2_CURRENCY_CONTRACTS.YamatoDepositor, address: loadProxyAddress(network, 'YamatoDepositor', currency) },
+    { name: `YamatoBorrower (${currency})`, contractName: V2_CURRENCY_CONTRACTS.YamatoBorrower, address: loadProxyAddress(network, 'YamatoBorrower', currency) },
+    { name: `YamatoRepayer (${currency})`, contractName: V2_CURRENCY_CONTRACTS.YamatoRepayer, address: loadProxyAddress(network, 'YamatoRepayer', currency) },
+    { name: `YamatoWithdrawer (${currency})`, contractName: V2_CURRENCY_CONTRACTS.YamatoWithdrawer, address: loadProxyAddress(network, 'YamatoWithdrawer', currency) },
+    { name: `YamatoRedeemer (${currency})`, contractName: V2_CURRENCY_CONTRACTS.YamatoRedeemer, address: loadProxyAddress(network, 'YamatoRedeemer', currency) },
+    { name: `YamatoSweeper (${currency})`, contractName: V2_CURRENCY_CONTRACTS.YamatoSweeper, address: loadProxyAddress(network, 'YamatoSweeper', currency) },
+    { name: `ScoreRegistry (${currency})`, contractName: V2_CURRENCY_CONTRACTS.ScoreRegistry, address: loadProxyAddress(network, 'ScoreRegistry', currency) },
   ];
 
   const publicClient = isLocalhost ? await hre.viem.getPublicClient() : null;

@@ -1,5 +1,5 @@
 import hre from 'hardhat';
-import { loadAddress, saveAddress, type NetworkName } from '../../core/address-manager';
+import { loadProxyAddress, saveImplementationAddress, type NetworkName } from '../../core/address-manager';
 import { createAndProposeSafeTransaction } from '../../core/safe-transaction';
 import { V2_UPGRADE_IMPLEMENTATIONS, V2_UPGRADE_PROXIES } from '../../core/contract-definitions';
 
@@ -30,11 +30,11 @@ async function main() {
   const newImplAddress = implementation.address;
   console.log(`   ✅ New implementation deployed: ${newImplAddress}`);
   
-  // アドレスを保存
-  saveAddress(network, 'ScoreWeightControllerV2Impl', newImplAddress);
+  // アドレスを保存（共通関数を使用）
+  saveImplementationAddress(network, 'ScoreWeightController', 'V2', newImplAddress);
 
-  // 2. プロキシをアップグレード
-  const proxyAddress = loadAddress(network, 'ScoreWeightControllerERC1967Proxy');
+  // 2. プロキシをアップグレード（共通関数を使用）
+  const proxyAddress = loadProxyAddress(network, 'ScoreWeightController');
   console.log(`   📍 Proxy: ${proxyAddress}\n`);
 
   const proxy = await hre.viem.getContractAt(V2_UPGRADE_PROXIES.ScoreWeightController, proxyAddress);

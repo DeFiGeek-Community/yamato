@@ -1,6 +1,6 @@
 import hre from 'hardhat';
-import { loadAddress, type NetworkName } from '../../core/address-manager';
-import { getCurrency, getCurrencyContractName } from '../../core/currency-manager';
+import { loadProxyAddress, type NetworkName } from '../../core/address-manager';
+import { getCurrency } from '../../core/currency-manager';
 import { V2_CURRENCY_CONTRACTS } from '../../core/contract-definitions';
 
 /**
@@ -17,15 +17,15 @@ async function main() {
   console.log('⚙️  Setting Yamato dependencies...\n');
 
   console.log('📖 Loading addresses...');
-  const yamatoAddr = loadAddress(network, getCurrencyContractName('YamatoERC1967Proxy', currency));
-  const depositorAddr = loadAddress(network, getCurrencyContractName('YamatoDepositorERC1967Proxy', currency));
-  const borrowerAddr = loadAddress(network, getCurrencyContractName('YamatoBorrowerERC1967Proxy', currency));
-  const repayerAddr = loadAddress(network, getCurrencyContractName('YamatoRepayerERC1967Proxy', currency));
-  const withdrawerAddr = loadAddress(network, getCurrencyContractName('YamatoWithdrawerERC1967Proxy', currency));
-  const redeemerAddr = loadAddress(network, getCurrencyContractName('YamatoRedeemerERC1967Proxy', currency));
-  const sweeperAddr = loadAddress(network, getCurrencyContractName('YamatoSweeperERC1967Proxy', currency));
-  const poolAddr = loadAddress(network, getCurrencyContractName('PoolERC1967Proxy', currency));
-  const priorityRegistryAddr = loadAddress(network, getCurrencyContractName('PriorityRegistryERC1967Proxy', currency));
+  const yamatoAddr = loadProxyAddress(network, 'Yamato', currency);
+  const depositorAddr = loadProxyAddress(network, 'YamatoDepositor', currency);
+  const borrowerAddr = loadProxyAddress(network, 'YamatoBorrower', currency);
+  const repayerAddr = loadProxyAddress(network, 'YamatoRepayer', currency);
+  const withdrawerAddr = loadProxyAddress(network, 'YamatoWithdrawer', currency);
+  const redeemerAddr = loadProxyAddress(network, 'YamatoRedeemer', currency);
+  const sweeperAddr = loadProxyAddress(network, 'YamatoSweeper', currency);
+  const poolAddr = loadProxyAddress(network, 'Pool', currency);
+  const priorityRegistryAddr = loadProxyAddress(network, 'PriorityRegistry', currency);
   
   console.log(`   Yamato: ${yamatoAddr}`);
   console.log(`   YamatoDepositor: ${depositorAddr}`);

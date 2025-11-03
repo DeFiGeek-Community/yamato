@@ -1,5 +1,5 @@
 import hre from 'hardhat';
-import { loadAddress, type NetworkName } from '../core/address-manager';
+import { loadAddress, loadProxyAddress, type NetworkName } from '../core/address-manager';
 import { V1_5_CONTRACTS } from '../core/contract-definitions';
 
 /**
@@ -35,7 +35,7 @@ async function main() {
   const publicClient = await hre.viem.getPublicClient();
   let successCount = 0;
 
-  // YMT.setAdmin()
+  // YMT.setAdmin() - 非UUPSコントラクト
   try {
     console.log(`🔄 [1/5] YMT.setAdmin()...`);
     const ymtAddr = loadAddress(network, V1_5_CONTRACTS.YMT);
@@ -51,7 +51,7 @@ async function main() {
     throw error;
   }
 
-  // YmtVesting.setAdmin()
+  // YmtVesting.setAdmin() - 非UUPSコントラクト
   try {
     console.log(`\n🔄 [2/5] YmtVesting.setAdmin()...`);
     const ymtVestingAddr = loadAddress(network, V1_5_CONTRACTS.YmtVesting);
@@ -67,10 +67,10 @@ async function main() {
     throw error;
   }
 
-  // YmtMinter.setGovernance()
+  // YmtMinter.setGovernance() - UUPSコントラクト
   try {
     console.log(`\n🔄 [3/5] YmtMinter.setGovernance()...`);
-    const ymtMinterAddr = loadAddress(network, 'YmtMinterERC1967Proxy');
+    const ymtMinterAddr = loadProxyAddress(network, 'YmtMinter');
     const ymtMinter = await hre.viem.getContractAt(V1_5_CONTRACTS.YmtMinter, ymtMinterAddr);
     
     const hash = await ymtMinter.write.setGovernance([multisigAddr as `0x${string}`]);
@@ -83,10 +83,10 @@ async function main() {
     throw error;
   }
 
-  // ScoreWeightController.setGovernance()
+  // ScoreWeightController.setGovernance() - UUPSコントラクト
   try {
     console.log(`\n🔄 [4/5] ScoreWeightController.setGovernance()...`);
-    const controllerAddr = loadAddress(network, 'ScoreWeightControllerERC1967Proxy');
+    const controllerAddr = loadProxyAddress(network, 'ScoreWeightController');
     const controller = await hre.viem.getContractAt(V1_5_CONTRACTS.ScoreWeightController, controllerAddr);
     
     const hash = await controller.write.setGovernance([multisigAddr as `0x${string}`]);
@@ -99,10 +99,10 @@ async function main() {
     throw error;
   }
 
-  // ScoreRegistry.setGovernance()
+  // ScoreRegistry.setGovernance() - UUPSコントラクト
   try {
     console.log(`\n🔄 [5/5] ScoreRegistry.setGovernance()...`);
-    const scoreRegistryAddr = loadAddress(network, 'ScoreRegistryERC1967Proxy');
+    const scoreRegistryAddr = loadProxyAddress(network, 'ScoreRegistry');
     const scoreRegistry = await hre.viem.getContractAt(V1_5_CONTRACTS.ScoreRegistry, scoreRegistryAddr);
     
     const hash = await scoreRegistry.write.setGovernance([multisigAddr as `0x${string}`]);

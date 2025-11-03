@@ -1,6 +1,6 @@
 import hre from 'hardhat';
 import { deployUUPS } from '../../core/uups-deployer';
-import { loadAddress, type NetworkName } from '../../core/address-manager';
+import { loadAddress, loadProxyAddress, type NetworkName } from '../../core/address-manager';
 import { V1_5_CONTRACTS } from '../../core/contract-definitions';
 
 /**
@@ -20,7 +20,7 @@ async function main() {
 
   console.log('📖 Loading dependencies...');
   const ymtAddr = loadAddress(network, V1_5_CONTRACTS.YMT);
-  const controllerAddr = loadAddress(network, 'ScoreWeightControllerERC1967Proxy');
+  const controllerAddr = loadProxyAddress(network, 'ScoreWeightController');
   console.log(`   YMT: ${ymtAddr}`);
   console.log(`   ScoreWeightController: ${controllerAddr}`);
   console.log('✅ Dependencies loaded\n');

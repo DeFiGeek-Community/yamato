@@ -1,5 +1,5 @@
 import hre from 'hardhat';
-import { loadAddress, type NetworkName } from '../../core/address-manager';
+import { loadAddress, loadProxyAddress, type NetworkName } from '../../core/address-manager';
 import { V1_5_CONTRACTS } from '../../core/contract-definitions';
 
 /**
@@ -13,7 +13,7 @@ async function main() {
 
   console.log('📖 Loading addresses...');
   const ymtAddr = loadAddress(network, V1_5_CONTRACTS.YMT);
-  const ymtMinterAddr = loadAddress(network, 'YmtMinterERC1967Proxy');
+  const ymtMinterAddr = loadProxyAddress(network, 'YmtMinter');
   console.log(`   YMT: ${ymtAddr}`);
   console.log(`   YmtMinter: ${ymtMinterAddr}`);
   console.log('✅ Addresses loaded\n');

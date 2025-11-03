@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { join, resolve } from 'path';
 import type { Address } from 'viem';
+import { getCurrencyContractName, type Currency } from './currency-manager';
 
 export type NetworkName = 'sepolia' | 'mainnet' | 'localhost';
 
@@ -90,5 +91,100 @@ export function loadChainId(network: NetworkName): number {
   }
 
   return parseInt(readFileSync(filePath, 'utf-8').trim());
+}
+
+/**
+ * プロキシ名を生成
+ * 
+ * @param contractName - コントラクト名（例: 'Yamato', 'CurrencyOS'）
+ * @param currency - 通貨（オプション、v2で通貨別の場合に指定）
+ * @returns プロキシ名（例: 'YamatoERC1967Proxy' または 'YamatoERC1967Proxy_CUSD'）
+ */
+export function getProxyName(contractName: string, currency?: Currency): string {
+  if (currency) {
+    return getCurrencyContractName(`${contractName}ERC1967Proxy`, currency);
+  }
+  return `${contractName}ERC1967Proxy`;
+}
+
+/**
+ * 実装名を生成
+ * 
+ * @param contractName - コントラクト名（例: 'Yamato'）
+ * @param version - バージョン（例: 'V4'）
+ * @returns 実装名（例: 'YamatoV4Impl'）
+ */
+export function getImplementationName(contractName: string, version: string): string {
+  return `${contractName}${version}Impl`;
+}
+
+/**
+ * プロキシアドレスを読み込む
+ * 
+ * @param network - ネットワーク名
+ * @param contractName - コントラクト名（例: 'Yamato', 'CurrencyOS'）
+ * @param currency - 通貨（オプション、v2で通貨別の場合に指定）
+ * @returns プロキシアドレス
+ */
+export function loadProxyAddress(
+  network: NetworkName, 
+  contractName: string, 
+  currency?: Currency
+): Address {
+  const proxyName = getProxyName(contractName, currency);
+  return loadAddress(network, proxyName);
+}
+
+/**
+ * 実装アドレスを読み込む
+ * 
+ * @param network - ネットワーク名
+ * @param contractName - コントラクト名（例: 'Yamato'）
+ * @param version - バージョン（例: 'V4'）
+ * @returns 実装アドレス
+ */
+export function loadImplementationAddress(
+  network: NetworkName,
+  contractName: string,
+  version: string
+): Address {
+  const implName = getImplementationName(contractName, version);
+  return loadAddress(network, implName);
+}
+
+/**
+ * プロキシアドレスを保存
+ * 
+ * @param network - ネットワーク名
+ * @param contractName - コントラクト名
+ * @param address - プロキシアドレス
+ * @param currency - 通貨（オプション、v2で通貨別の場合に指定）
+ */
+export function saveProxyAddress(
+  network: NetworkName,
+  contractName: string,
+  address: Address,
+  currency?: Currency
+): void {
+  const proxyName = getProxyName(contractName, currency);
+  saveAddress(network, proxyName, address);
+}
+
+/**
+ * 実装アドレスを保存
+ * 
+ * @param network - ネットワーク名
+ * @param contractName - コントラクト名
+ * @param version - バージョン
+ * @param address - 実装アドレス
+ */
+export function saveImplementationAddress(
+  network: NetworkName,
+  contractName: string,
+  version: string,
+  address: Address
+): void {
+  const implName = getImplementationName(contractName, version);
+  saveAddress(network, implName, address);
 }
 
