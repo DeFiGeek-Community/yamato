@@ -1,92 +1,68 @@
-import {
-  type Address,
-  type WalletClient,
-  type PublicClient,
-  encodeFunctionData,
-} from 'viem';
-import { saveAddress } from './address-manager.js';
-import type { NetworkName } from '../../config/networks.js';
+import hre from 'hardhat';
+import { encodeFunctionData } from 'viem';
+import { saveAddress, type NetworkName } from './address-manager';
 
 export interface DeployUUPSParams {
   name: string;
-  implementation: {
-    abi: any;
-    bytecode: `0x${string}`;
-    args?: any[];
-  };
-  proxy: {
-    initFunction?: string;  // デフォルト: 'initialize'
-    initArgs: any[];
-  };
-  proxyAbi: any;
-  proxyBytecode: `0x${string}`;
-  walletClient: WalletClient;
-  publicClient: PublicClient;
-  network: NetworkName;
+  contractName: string;
+  initFunction?: string;  // デフォルト: 'initialize'
+  initArgs: any[];
+  libraries?: Record<string, `0x${string}`>;
 }
 
 export interface DeployUUPSResult {
-  implAddress: Address;
-  proxyAddress: Address;
+  implAddress: `0x${string}`;
+  proxyAddress: `0x${string}`;
 }
 
 /**
- * UUPSプロキシパターンでコントラクトをデプロイ
+ * UUPSプロキシパターンでコントラクトをデプロイ（hardhat-viem版）
  */
 export async function deployUUPS(params: DeployUUPSParams): Promise<DeployUUPSResult> {
+  const network = hre.network.name as NetworkName;
+  
   console.log(`\n🚀 Deploying ${params.name}...`);
 
-  // 1. 実装コントラクトのデプロイ
+  // 1. 実装コントラクトをデプロイ（ライブラリリンク付き）
   console.log(`  📦 Deploying implementation...`);
-  const implHash = await params.walletClient.deployContract({
-    abi: params.implementation.abi,
-    bytecode: params.implementation.bytecode,
-    args: params.implementation.args || [],
-  });
-
-  const implReceipt = await params.publicClient.waitForTransactionReceipt({
-    hash: implHash,
-  });
-
-  if (!implReceipt.contractAddress) {
-    throw new Error('Implementation deployment failed: no contract address');
+  if (params.libraries) {
+    console.log(`  🔗 Linking libraries...`);
   }
-
-  const implAddress = implReceipt.contractAddress;
+  
+  const implementation = await hre.viem.deployContract(
+    params.contractName,
+    [],
+    {
+      libraries: params.libraries,
+    }
+  );
+  
+  const implAddress = implementation.address;
   console.log(`  ✅ Implementation deployed: ${implAddress}`);
 
-  // 2. 初期化データのエンコード
-  const initFunctionName = params.proxy.initFunction || 'initialize';
+  // 2. 初期化データをエンコード
+  const initFunctionName = params.initFunction || 'initialize';
   console.log(`  🔧 Encoding init data (function: ${initFunctionName})...`);
-
+  
   const initData = encodeFunctionData({
-    abi: params.implementation.abi,
+    abi: implementation.abi,
     functionName: initFunctionName,
-    args: params.proxy.initArgs,
+    args: params.initArgs,
   });
 
-  // 3. プロキシコントラクトのデプロイ
+  // 3. プロキシをデプロイ
   console.log(`  📦 Deploying proxy...`);
-  const proxyHash = await params.walletClient.deployContract({
-    abi: params.proxyAbi,
-    bytecode: params.proxyBytecode,
-    args: [implAddress, initData],
-  });
-
-  const proxyReceipt = await params.publicClient.waitForTransactionReceipt({
-    hash: proxyHash,
-  });
-
-  if (!proxyReceipt.contractAddress) {
-    throw new Error('Proxy deployment failed: no contract address');
-  }
-
-  const proxyAddress = proxyReceipt.contractAddress;
+  const proxy = await hre.viem.deployContract(
+    '@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol:ERC1967Proxy',
+    [implAddress, initData]
+  );
+  
+  const proxyAddress = proxy.address;
   console.log(`  ✅ Proxy deployed: ${proxyAddress}`);
 
-  // 4. アドレスの保存
-  saveAddress(params.network, `${params.name}UUPSImpl`, implAddress);
-  saveAddress(params.network, `${params.name}ERC1967Proxy`, proxyAddress);
+  // 4. アドレスを保存
+  saveAddress(network, `${params.name}UUPSImpl`, implAddress);
+  saveAddress(network, `${params.name}ERC1967Proxy`, proxyAddress);
 
   console.log(`✅ ${params.name} deployment complete!\n`);
 

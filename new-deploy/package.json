@@ -1,23 +1,25 @@
 {
   "name": "yamato-new-deploy",
   "version": "1.0.0",
-  "description": "Yamato deployment scripts with viem",
-  "type": "module",
+  "description": "Yamato deployment scripts with hardhat-viem",
   "scripts": {
-    "deploy:v1": "tsx scripts/deploy/v1/deploy-all.ts",
-    "deploy:yamato": "tsx scripts/deploy/v1/deploy-yamato.ts"
+    "compile": "hardhat compile",
+    "deploy:v1": "hardhat run scripts/deploy/v1/deploy-all.ts --network localhost",
+    "deploy:yamato": "hardhat run scripts/deploy/v1/deploy-yamato.ts --network localhost",
+    "setup:v1": "hardhat run scripts/setup/v1/setup-all.ts --network localhost"
   },
-  "keywords": ["yamato", "defi", "ethereum", "viem"],
+  "keywords": ["yamato", "defi", "ethereum", "hardhat", "viem"],
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "viem": "^2.21.53",
     "dotenv": "^16.4.5"
   },
   "devDependencies": {
+    "@nomicfoundation/hardhat-viem": "^2.0.0",
     "@types/node": "^22.10.1",
-    "tsx": "^4.19.2",
-    "typescript": "^5.7.2"
+    "hardhat": "^2.22.0",
+    "typescript": "^5.7.2",
+    "viem": "^2.21.53"
   }
 }
 

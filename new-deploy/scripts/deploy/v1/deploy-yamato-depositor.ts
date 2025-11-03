@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { createClients } from '../../core/client.js';
-import { deployUUPS } from '../../core/uups-deployer.js';
+import { deployUUPSWithLibraries } from '../../core/uups-deployer-with-libraries.js';
 import { loadAddress } from '../../core/address-manager.js';
 import { loadArtifact } from '../../core/artifact-loader.js';
 import type { NetworkName } from '../../../config/networks.js';
@@ -17,6 +17,7 @@ async function main() {
   // 依存コントラクトのアドレスを読み込む
   console.log('📖 Loading dependencies...');
   const yamatoAddress = loadAddress(network, 'YamatoERC1967Proxy');
+  const pledgeLibAddress = loadAddress(network, 'PledgeLib');
   console.log('✅ Dependencies loaded\n');
 
   // YamatoDepositorV2のABI/Bytecodeを読み込む
@@ -27,13 +28,16 @@ async function main() {
     '@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol/ERC1967Proxy'
   );
 
-  // YamatoDepositorをデプロイ
-  const result = await deployUUPS({
+  // YamatoDepositorをデプロイ（ライブラリリンク付き）
+  const result = await deployUUPSWithLibraries({
     name: 'YamatoDepositor',
     implementation: {
       abi,
       bytecode,
       args: [],
+      libraries: {
+        PledgeLib: pledgeLibAddress,
+      },
     },
     proxy: {
       initFunction: 'initialize',

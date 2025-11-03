@@ -1,17 +1,9 @@
-import 'dotenv/config';
-import { createClients } from '../../core/client.js';
-import { loadAddress } from '../../core/address-manager.js';
-import { loadArtifact } from '../../core/artifact-loader.js';
-import type { NetworkName } from '../../../config/networks.js';
+import hre from 'hardhat';
+import { loadAddress, type NetworkName } from '../../core/address-manager';
 
 async function main() {
-  const args = process.argv.slice(2);
-  const networkArg = args.find((arg) => arg.startsWith('--network='));
-  const network = (networkArg?.split('=')[1] || 'localhost') as NetworkName;
-
+  const network = hre.network.name as NetworkName;
   console.log(`\n🔧 Setting CurrencyOS and revoking governance for CJPY on ${network}...\n`);
-
-  const { publicClient, walletClient } = createClients(network);
 
   // アドレスを読み込む
   console.log('📖 Loading contract addresses...');
@@ -19,16 +11,13 @@ async function main() {
   const currencyOSAddress = loadAddress(network, 'CurrencyOSERC1967Proxy');
   console.log('✅ Addresses loaded\n');
 
-  // CJPYのABIを読み込む
-  const { abi } = loadArtifact('CJPY');
+  // CJPYコントラクトを取得
+  const cjpy = await hre.viem.getContractAt('CJPY', cjpyAddress);
+  const publicClient = await hre.viem.getPublicClient();
 
   // CJPY.setCurrencyOS()を実行
   console.log('🚀 Executing CJPY.setCurrencyOS()...');
-  const setCurrencyOSHash = await walletClient.writeContract({
-    address: cjpyAddress,
-    abi,
-    functionName: 'setCurrencyOS',
-    args: [currencyOSAddress],
+  const setCurrencyOSHash = await cjpy.write.setCurrencyOS([currencyOSAddress], {
     gas: 10000000n,
   });
 
@@ -38,12 +27,7 @@ async function main() {
 
   // CJPY.revokeGovernance()を実行
   console.log('\n🚀 Executing CJPY.revokeGovernance()...');
-  const revokeHash = await walletClient.writeContract({
-    address: cjpyAddress,
-    abi,
-    functionName: 'revokeGovernance',
-    args: [],
-  });
+  const revokeHash = await cjpy.write.revokeGovernance();
 
   console.log(`  📝 Transaction hash: ${revokeHash}`);
   const revokeReceipt = await publicClient.waitForTransactionReceipt({ hash: revokeHash });

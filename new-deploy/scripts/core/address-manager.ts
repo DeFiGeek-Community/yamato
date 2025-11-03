@@ -1,15 +1,17 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
-import { join } from 'path';
+import { join, resolve } from 'path';
 import type { Address } from 'viem';
 
 export type NetworkName = 'sepolia' | 'mainnet' | 'localhost';
+
+// 親ディレクトリのdeploymentsを参照
+const DEPLOYMENTS_DIR = resolve(__dirname, '../../../deployments');
 
 /**
  * deploymentsディレクトリのパスを取得
  */
 function getDeploymentsPath(network: NetworkName): string {
-  // new-deploy/ から見て ../deployments/
-  return join(process.cwd(), '..', 'deployments', network);
+  return join(DEPLOYMENTS_DIR, network);
 }
 
 /**

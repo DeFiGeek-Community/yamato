@@ -2,26 +2,32 @@
 
 ## 方針
 
-**既存のコントラクトとパッケージはそのまま使用し、デプロイスクリプトのみをviemベースで刷新します。**
+**既存のコントラクトとパッケージはそのまま使用し、デプロイスクリプトのみをhardhat-viemベースで刷新します。**
 
-- ✅ 既存のコントラクト（そのまま使用、コピーしない）
-- ✅ 既存のアドレス管理（`deployments/`ディレクトリ）そのまま活用
-- 🆕 新規デプロイ: **viem**（TypeScript）で実装
-- 🆕 アップグレード・Safe操作: **viem**（TypeScript）で実装
+- ✅ 既存のコントラクト（Hardhatの`paths`設定で参照）
+- ✅ 既存のアドレス管理（`deployments/`ディレクトリ、相対パスで参照）
+- 🆕 新規デプロイ: **hardhat-viem**（TypeScript + Hardhat）で実装
+- 🆕 アップグレード・Safe操作: **hardhat-viem**（TypeScript + Hardhat）で実装
+- 🔒 ライブラリリンク: **hardhat-viemの公式機能**で安全に実装
+- 🌍 クロスプラットフォーム: **シンボリックリンク不要**でWindows対応
 
 ---
 
 ## デプロイ方式の選択
 
-### 新規デプロイ → viem (TypeScript)
-- UUPSプロキシのデプロイ（自前実装）
+### 新規デプロイ → hardhat-viem (TypeScript)
+- UUPSプロキシのデプロイ（hardhat-viemのヘルパー使用）
+- ライブラリリンク（`resolveBytecodeWithLinkedLibraries`使用）
 - 通常のコントラクトデプロイ
 - 初期設定
-- **理由**: TypeScriptで統一、柔軟性が高い
-- **注意**: viemにはUUPSデプロイライブラリがないため、自分で実装が必要
+- **理由**: 
+  - TypeScriptで統一、型安全
+  - ライブラリリンクが公式サポート（自前実装不要）
+  - Hardhat環境との統合が容易
+- **注意**: `new-deploy`内に独立したHardhat環境を構築
 
-### アップグレード → viem (TypeScript)
-- **ローカル**: viemで直接実行（確認用）
+### アップグレード → hardhat-viem (TypeScript)
+- **ローカル**: hardhat-viemで直接実行（確認用）
 - **本番**: Safe Transaction作成→マルチシグ承認→実行
 - **理由**: デプロイと同じ技術スタックで統一
 
@@ -31,7 +37,7 @@
 
 ```
 yamato/                          # 既存プロジェクト
-├── contracts/                   # ✅ 既存のまま（参照のみ）
+├── contracts/                   # ✅ 既存のまま
 │   ├── Yamato.sol
 │   ├── YamatoV3.sol
 │   ├── YamatoV4.sol
@@ -45,14 +51,14 @@ yamato/                          # 既存プロジェクト
 │   │   └── ...
 │   └── mainnet/
 ├── deploy/                      # 既存（保持）
-├── new-deploy/                  # 🆕 新しいデプロイスクリプト（全てここで完結）
-│   ├── .env                     # 環境変数（このディレクトリ内で管理）
+├── new-deploy/                  # 🆕 新しいデプロイ環境（独立したHardhat環境）
+│   ├── hardhat.config.ts        # paths設定で../contractsを参照
+│   ├── .env                     # 環境変数
 │   ├── .env.example             # 環境変数テンプレート
-│   ├── scripts/                 # viemデプロイ・操作スクリプト
+│   ├── scripts/                 # hardhat-viemデプロイスクリプト
 │   │   ├── core/
-│   │   │   ├── address-manager.ts    # アドレス管理
+│   │   │   ├── address-manager.ts    # アドレス管理（../deploymentsを参照）
 │   │   │   ├── uups-deployer.ts      # UUPSデプロイヘルパー
-│   │   │   ├── contract-deployer.ts  # 通常のコントラクトデプロイ
 │   │   │   └── safe-manager.ts       # Safe操作
 │   │   ├── deploy/
 │   │   │   ├── v1/
@@ -78,9 +84,9 @@ yamato/                          # 既存プロジェクト
 │   │   │   └── upgrade-currencyos.ts
 │   │   └── governance/
 │   │       └── transfer-governance.ts
-│   ├── config/
-│   │   └── networks.ts          # ネットワーク設定
-│   ├── package.json             # new-deploy専用のpackage.json
+│   ├── artifacts/               # new-deploy内に生成
+│   ├── cache/                   # new-deploy内に生成
+│   ├── package.json             # hardhat-viem環境のpackage.json
 │   ├── tsconfig.json            # TypeScript設定
 │   └── README.md                # 使い方
 └── package.json                 # 既存（保持）
@@ -101,134 +107,224 @@ deployments/sepolia/
 └── ...
 ```
 
-**viemスクリプト**から読み書き可能にします。
+**hardhat-viemスクリプト**から`path.resolve()`で親ディレクトリの`deployments/`を参照して読み書きします。
+
+```typescript
+// new-deploy/scripts/core/address-manager.ts
+import { resolve } from 'path';
+
+// 親ディレクトリのdeploymentsを参照
+const DEPLOYMENTS_DIR = resolve(__dirname, '../../../deployments');
+```
 
 ---
 
-## UUPSデプロイの実装
+## UUPSデプロイの実装（hardhat-viem使用）
 
-viemにはUUPSデプロイライブラリがないため、以下の手順を自前で実装する必要があります：
+hardhat-viemを使用することで、ライブラリリンクを含むUUPSデプロイが安全に実行できます。
 
-### 1. 実装コントラクトのデプロイ
-
-```typescript
-// 実装コントラクトをデプロイ
-const implHash = await walletClient.deployContract({
-  abi: YamatoABI,
-  bytecode: YamatoBytecode,
-  args: [],
-});
-const implReceipt = await publicClient.waitForTransactionReceipt({ hash: implHash });
-const implAddress = implReceipt.contractAddress;
-
-// アドレスを保存
-await saveAddress(network, 'YamatoUUPSImpl', implAddress);
-```
-
-### 2. プロキシコントラクトのデプロイと初期化
+### 1. 基本的なUUPSデプロイ
 
 ```typescript
-// 初期化データをエンコード
-const initData = encodeFunctionData({
-  abi: YamatoABI,
-  functionName: 'initialize',
-  args: [arg1, arg2, ...],
-});
+// scripts/deploy/v1/deploy-yamato.ts
+import hre from 'hardhat';
+import { saveAddress, loadAddress } from '../../core/address-manager';
 
-// ERC1967Proxyをデプロイ
-const proxyHash = await walletClient.deployContract({
-  abi: ERC1967ProxyABI,
-  bytecode: ERC1967ProxyBytecode,
-  args: [implAddress, initData],
-});
-const proxyReceipt = await publicClient.waitForTransactionReceipt({ hash: proxyHash });
-const proxyAddress = proxyReceipt.contractAddress;
-
-// アドレスを保存
-await saveAddress(network, 'YamatoERC1967Proxy', proxyAddress);
-```
-
-### 3. UUPS Deployerヘルパー
-
-```typescript
-// scripts/core/uups-deployer.ts
-export async function deployUUPS(params: {
-  name: string;
-  implementation: {
-    abi: any;
-    bytecode: `0x${string}`;
-    args?: any[];
-  };
-  proxy: {
-    initFunction?: string;     // デフォルト: 'initialize'
-    initArgs: any[];
-  };
-  walletClient: WalletClient;
-  publicClient: PublicClient;
-  network: string;
-}) {
-  // 1. 実装コントラクトのデプロイ
+async function main() {
+  const network = hre.network.name;
+  
+  // 依存コントラクトのアドレスを読み込む
+  const currencyOSAddress = loadAddress(network, 'CurrencyOSERC1967Proxy');
+  
+  // YamatoV3のartifactを取得
+  const artifact = await hre.artifacts.readArtifact('YamatoV3');
+  
+  // クライアントを取得
+  const publicClient = await hre.viem.getPublicClient();
+  const [walletClient] = await hre.viem.getWalletClients();
+  
+  // 実装コントラクトをデプロイ
   const implHash = await walletClient.deployContract({
-    abi: params.implementation.abi,
-    bytecode: params.implementation.bytecode,
-    args: params.implementation.args || [],
+    abi: artifact.abi,
+    bytecode: artifact.bytecode as `0x${string}`,
+    args: [],
   });
   const implReceipt = await publicClient.waitForTransactionReceipt({ hash: implHash });
-  const implAddress = implReceipt.contractAddress;
+  const implAddress = implReceipt.contractAddress!;
   
-  // 2. 初期化データのエンコード
+  // 初期化データをエンコード
   const initData = encodeFunctionData({
-    abi: params.implementation.abi,
-    functionName: params.proxy.initFunction || 'initialize',  // デフォルトは 'initialize'
-    args: params.proxy.initArgs,
+    abi: artifact.abi,
+    functionName: 'initialize',
+    args: [currencyOSAddress],
   });
   
-  // 3. プロキシコントラクトのデプロイ
+  // プロキシをデプロイ
+  const proxyArtifact = await hre.artifacts.readArtifact('ERC1967Proxy');
   const proxyHash = await walletClient.deployContract({
-    abi: ERC1967ProxyABI,
-    bytecode: ERC1967ProxyBytecode,
+    abi: proxyArtifact.abi,
+    bytecode: proxyArtifact.bytecode as `0x${string}`,
     args: [implAddress, initData],
   });
   const proxyReceipt = await publicClient.waitForTransactionReceipt({ hash: proxyHash });
-  const proxyAddress = proxyReceipt.contractAddress;
+  const proxyAddress = proxyReceipt.contractAddress!;
   
-  // 4. アドレスの保存
+  // アドレスを保存
+  await saveAddress(network, 'YamatoUUPSImpl', implAddress);
+  await saveAddress(network, 'YamatoERC1967Proxy', proxyAddress);
+  
+  console.log(`Yamato deployed!`);
+  console.log(`  Implementation: ${implAddress}`);
+  console.log(`  Proxy: ${proxyAddress}`);
+}
+```
+
+### 2. ライブラリリンク付きUUPSデプロイ
+
+```typescript
+// scripts/deploy/v1/deploy-yamato-borrower.ts
+import hre from 'hardhat';
+import { saveAddress, loadAddress } from '../../core/address-manager';
+
+async function main() {
+  const network = hre.network.name;
+  
+  // 依存アドレスを読み込む
+  const yamatoAddress = loadAddress(network, 'YamatoERC1967Proxy');
+  const pledgeLibAddress = loadAddress(network, 'PledgeLib');
+  
+  // YamatoBorrowerのartifactを取得
+  const artifact = await hre.artifacts.readArtifact('YamatoBorrower');
+  
+  // ライブラリリンク済みのbytecodeを取得
+  const linkedBytecode = await hre.viem.resolveBytecodeWithLinkedLibraries(
+    artifact,
+    {
+      PledgeLib: pledgeLibAddress,
+    }
+  );
+  
+  // クライアントを取得
+  const publicClient = await hre.viem.getPublicClient();
+  const [walletClient] = await hre.viem.getWalletClients();
+  
+  // 実装コントラクトをデプロイ（リンク済みbytecode使用）
+  const implHash = await walletClient.deployContract({
+    abi: artifact.abi,
+    bytecode: linkedBytecode,
+    args: [],
+  });
+  const implReceipt = await publicClient.waitForTransactionReceipt({ hash: implHash });
+  const implAddress = implReceipt.contractAddress!;
+  
+  // 初期化データをエンコード
+  const initData = encodeFunctionData({
+    abi: artifact.abi,
+    functionName: 'initialize',
+    args: [yamatoAddress],
+  });
+  
+  // プロキシをデプロイ
+  const proxyArtifact = await hre.artifacts.readArtifact('ERC1967Proxy');
+  const proxyHash = await walletClient.deployContract({
+    abi: proxyArtifact.abi,
+    bytecode: proxyArtifact.bytecode as `0x${string}`,
+    args: [implAddress, initData],
+  });
+  const proxyReceipt = await publicClient.waitForTransactionReceipt({ hash: proxyHash });
+  const proxyAddress = proxyReceipt.contractAddress!;
+  
+  // アドレスを保存
+  await saveAddress(network, 'YamatoBorrowerUUPSImpl', implAddress);
+  await saveAddress(network, 'YamatoBorrowerERC1967Proxy', proxyAddress);
+  
+  console.log(`YamatoBorrower deployed!`);
+  console.log(`  Implementation: ${implAddress}`);
+  console.log(`  Proxy: ${proxyAddress}`);
+}
+```
+
+### 3. UUPS Deployerヘルパー（hardhat-viem版）
+
+```typescript
+// scripts/core/uups-deployer.ts
+import hre from 'hardhat';
+import { encodeFunctionData } from 'viem';
+import { saveAddress } from './address-manager';
+
+export async function deployUUPS(params: {
+  name: string;
+  contractName: string;
+  initFunction?: string;
+  initArgs: any[];
+  libraries?: Record<string, `0x${string}`>;
+}) {
+  const network = hre.network.name;
+  
+  // Artifactを取得
+  const artifact = await hre.artifacts.readArtifact(params.contractName);
+  
+  // ライブラリリンク（必要な場合）
+  let bytecode = artifact.bytecode as `0x${string}`;
+  if (params.libraries) {
+    bytecode = await hre.viem.resolveBytecodeWithLinkedLibraries(
+      artifact,
+      params.libraries
+    );
+  }
+  
+  // クライアントを取得
+  const publicClient = await hre.viem.getPublicClient();
+  const [walletClient] = await hre.viem.getWalletClients();
+  
+  // 実装コントラクトをデプロイ
+  const implHash = await walletClient.deployContract({
+    abi: artifact.abi,
+    bytecode,
+    args: [],
+  });
+  const implReceipt = await publicClient.waitForTransactionReceipt({ hash: implHash });
+  const implAddress = implReceipt.contractAddress!;
+  
+  // 初期化データをエンコード
+  const initData = encodeFunctionData({
+    abi: artifact.abi,
+    functionName: params.initFunction || 'initialize',
+    args: params.initArgs,
+  });
+  
+  // プロキシをデプロイ
+  const proxyArtifact = await hre.artifacts.readArtifact('ERC1967Proxy');
+  const proxyHash = await walletClient.deployContract({
+    abi: proxyArtifact.abi,
+    bytecode: proxyArtifact.bytecode as `0x${string}`,
+    args: [implAddress, initData],
+  });
+  const proxyReceipt = await publicClient.waitForTransactionReceipt({ hash: proxyHash });
+  const proxyAddress = proxyReceipt.contractAddress!;
+  
+  // アドレスを保存
   await saveAddress(network, `${params.name}UUPSImpl`, implAddress);
   await saveAddress(network, `${params.name}ERC1967Proxy`, proxyAddress);
   
-  // 5. 結果を返す
   return { implAddress, proxyAddress };
 }
 
-// 使用例1: デフォルトの 'initialize' を使用
+// 使用例1: 通常のUUPSデプロイ
 await deployUUPS({
   name: 'Yamato',
-  implementation: {
-    abi: YamatoABI,
-    bytecode: YamatoBytecode,
-  },
-  proxy: {
-    initArgs: [priceFeedAddress, currencyAddress],
-  },
-  walletClient,
-  publicClient,
-  network: 'sepolia',
+  contractName: 'YamatoV3',
+  initArgs: [currencyOSAddress],
 });
 
-// 使用例2: カスタム初期化関数名を指定
+// 使用例2: ライブラリリンク付きUUPSデプロイ
 await deployUUPS({
-  name: 'CurrencyOS',
-  implementation: {
-    abi: CurrencyOSABI,
-    bytecode: CurrencyOSBytecode,
+  name: 'YamatoBorrower',
+  contractName: 'YamatoBorrower',
+  initArgs: [yamatoAddress],
+  libraries: {
+    PledgeLib: pledgeLibAddress,
   },
-  proxy: {
-    initFunction: '__CurrencyOS_init',  // カスタム関数名
-    initArgs: [yamatoAddress],
-  },
-  walletClient,
-  publicClient,
-  network: 'sepolia',
 });
 ```
 
@@ -266,19 +362,25 @@ await deployUUPS({
 
 ## コマンド例
 
-### viemデプロイ（新規）
+### hardhat-viemデプロイ（新規）
 
 ```bash
 cd new-deploy
 
+# コントラクトをコンパイル（親ディレクトリのcontractsを参照）
+npx hardhat compile
+
 # v1.0デプロイ（.envを自動で読み込む）
-npx tsx scripts/deploy/v1/deploy-yamato.ts --network sepolia
+npx hardhat run scripts/deploy/v1/deploy-yamato.ts --network sepolia
 
 # 特定のコントラクトのみ
-npx tsx scripts/deploy/v1/deploy-cjpy.ts --network sepolia
+npx hardhat run scripts/deploy/v1/deploy-cjpy.ts --network sepolia
 
 # 初期設定
-npx tsx scripts/deploy/v1/setup-dependencies.ts --network sepolia
+npx hardhat run scripts/deploy/v1/setup-dependencies.ts --network sepolia
+
+# または、tsxで直接実行も可能
+npx tsx scripts/deploy/v1/deploy-yamato.ts
 ```
 
 ### アップグレード
@@ -286,68 +388,54 @@ npx tsx scripts/deploy/v1/setup-dependencies.ts --network sepolia
 ```bash
 cd new-deploy
 
-# ローカル確認（viemで直接実行）
-npx tsx scripts/upgrade/upgrade-yamato.ts \
-  --network localhost \
-  --version v1.5
+# ローカル確認（hardhat-viemで直接実行）
+npx hardhat run scripts/upgrade/upgrade-yamato.ts \
+  --network localhost
 
 # 本番（Safe Transaction作成）
-npx tsx scripts/upgrade/upgrade-yamato.ts \
-  --network sepolia \
-  --version v1.5 \
-  --use-safe
+npx hardhat run scripts/upgrade/upgrade-yamato.ts \
+  --network sepolia
 
 # Safe Transaction実行（マルチシグ承認後）
-npx tsx scripts/upgrade/execute-upgrade.ts \
-  --network sepolia \
-  --tx-hash 0x...
+npx hardhat run scripts/upgrade/execute-upgrade.ts \
+  --network sepolia
 ```
 
 ---
 
 ## メリット
 
-### viemを使う理由
+### hardhat-viemを使う理由
 
 1. **TypeScriptで統一**: デプロイもアップグレードも同じ言語・ツールで実装
-2. **型安全**: TypeScriptの型チェックが効く
-3. **柔軟性**: 複雑なロジックや条件分岐が書きやすい
-4. **環境切り替え**: ローカル/本番の違いを容易に吸収
-5. **既存資産活用**: 既存のcontractsをそのまま参照
-6. **モダンなツール**: 最新のEthereumライブラリ
-7. **デバッグ容易**: TypeScriptのデバッガーが使える
+2. **型安全**: TypeScriptとviemの型チェックが効く
+3. **ライブラリリンクが安全**: `resolveBytecodeWithLinkedLibraries`で公式サポート
+4. **柔軟性**: 複雑なロジックや条件分岐が書きやすい
+5. **環境切り替え**: ローカル/本番の違いを容易に吸収
+6. **既存資産活用**: `paths`設定でcontractsとdeploymentsを参照
+7. **モダンなツール**: 最新のEthereumライブラリ（viem）とHardhatの統合
+8. **デバッグ容易**: TypeScriptのデバッガーが使える
+9. **バージョン独立**: 既存のHardhat環境に影響しない
+10. **クロスプラットフォーム**: シンボリックリンク不要でWindows/Mac/Linux対応
 
 ### デメリットと対策
 
-1. **UUPSデプロイライブラリがない**
-   - 対策: `uups-deployer.ts`として自前実装
-   - 実装コンポーネント:
-     - 実装コントラクトのデプロイ
-     - プロキシコントラクトのデプロイ
-     - 初期化データのエンコード
-     - アドレス管理
+1. **独立したHardhat環境が必要**
+   - 対策: `new-deploy`内に独立した環境を構築
+   - `paths`設定で既存のcontractsを参照
 
-2. **ガス見積もり**
+2. **コンパイルが必要**
+   - 対策: `npx hardhat compile`で親ディレクトリのcontractsをコンパイル
+   - artifactsは`new-deploy`内に生成
+
+3. **ガス見積もり**
    - 対策: デプロイ前に`estimateGas()`で確認
-
-3. **コンパイル**
-   - 対策: 既存のHardhat/Foundryを活用してABI/Bytecodeを生成
 
 ---
 
 ## 必要な準備
 
-### 1. コントラクトのコンパイル（既存の方法を使用）
-
-```bash
-# Hardhatでコンパイル
-npx hardhat compile
-
-# または Foundryでコンパイル
-forge build
-```
-
-### 2. new-deploy/ の初期化
+### 1. new-deploy/ の初期化
 
 ```bash
 mkdir new-deploy
@@ -356,11 +444,11 @@ cd new-deploy
 # package.json作成
 npm init -y
 
-# 必要なパッケージをインストール
-npm install viem dotenv
+# Hardhat + hardhat-viemをインストール
+npm install --save-dev hardhat @nomicfoundation/hardhat-viem viem
 
-# 開発用パッケージ
-npm install --save-dev typescript tsx @types/node
+# その他の必要なパッケージ
+npm install --save-dev typescript tsx @types/node dotenv
 
 # .env.exampleを作成
 cat > .env.example << EOF
@@ -389,6 +477,49 @@ EOF
 cp .env.example .env
 # → .envを編集して実際の値を設定
 
+# hardhat.config.ts作成
+cat > hardhat.config.ts << 'EOF'
+import { HardhatUserConfig } from "hardhat/config";
+import "@nomicfoundation/hardhat-viem";
+import "dotenv/config";
+import path from "path";
+
+const config: HardhatUserConfig = {
+  solidity: {
+    version: "0.8.4",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 200,
+      },
+    },
+  },
+  networks: {
+    localhost: {
+      url: process.env.LOCALHOST_RPC_URL || "http://127.0.0.1:8545",
+      chainId: parseInt(process.env.LOCALHOST_CHAIN_ID || "31337"),
+    },
+    sepolia: {
+      url: process.env.SEPOLIA_RPC_URL || "",
+      chainId: 11155111,
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+    },
+    mainnet: {
+      url: process.env.MAINNET_RPC_URL || "",
+      chainId: 1,
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+    },
+  },
+  paths: {
+    sources: path.resolve(__dirname, "../contracts"),  // 親のcontractsを参照
+    artifacts: "./artifacts",                          // new-deploy内に生成
+    cache: "./cache",                                  // new-deploy内に生成
+  },
+};
+
+export default config;
+EOF
+
 # tsconfig.json作成
 cat > tsconfig.json << EOF
 {
@@ -404,10 +535,18 @@ cat > tsconfig.json << EOF
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true
   },
-  "include": ["scripts/**/*", "config/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["scripts/**/*", "hardhat.config.ts"],
+  "exclude": ["node_modules", "dist", "artifacts", "cache"]
 }
 EOF
+```
+
+### 2. コントラクトのコンパイル
+
+```bash
+# new-deploy内でコンパイル（paths設定で親のcontractsを参照）
+cd new-deploy
+npx hardhat compile
 ```
 
 ---
@@ -416,25 +555,29 @@ EOF
 
 ### Week 1: 環境構築とUUPSデプロイヘルパー
 - [ ] `new-deploy/`ディレクトリ作成
-- [ ] `new-deploy/`内でnpm初期化
-- [ ] `.env`、`package.json`、`tsconfig.json`作成
+- [ ] `new-deploy/`内でHardhat + hardhat-viem環境を初期化
+- [ ] `hardhat.config.ts`の`paths`設定で親の`contracts/`を参照
+- [ ] `.env`、`hardhat.config.ts`、`tsconfig.json`作成
 - [ ] アドレス管理ユーティリティ実装（`address-manager.ts`）
+  - [ ] `resolve(__dirname, '../../../deployments')`で親の`deployments/`を参照
 - [ ] **UUPSデプロイヘルパー実装（`uups-deployer.ts`）**
+  - [ ] hardhat-viemの`resolveBytecodeWithLinkedLibraries`を活用
   - [ ] 実装コントラクトのデプロイ
   - [ ] プロキシコントラクトのデプロイ
   - [ ] 初期化データのエンコード
   - [ ] アドレスの保存
 
-### Week 2-3: viemデプロイスクリプト実装
+### Week 2-3: hardhat-viemデプロイスクリプト実装
 - [ ] v1.0デプロイスクリプト
-  - [ ] PriceFeed
-  - [ ] CJPY
+  - [ ] PriceFeed（UUPS）
+  - [ ] CJPY（通常）
   - [ ] FeePool（UUPS）
   - [ ] CurrencyOS（UUPS）
   - [ ] Yamato（UUPS）
-  - [ ] YamatoActions（UUPS×6）
-  - [ ] Pool（UUPS）
-  - [ ] PriorityRegistry（UUPS）
+  - [ ] PledgeLib（ライブラリ）
+  - [ ] YamatoActions（UUPS×6、ライブラリリンク付き）
+  - [ ] Pool（UUPS、ライブラリリンク付き）
+  - [ ] PriorityRegistry（UUPS、ライブラリリンク付き）
   - [ ] 初期設定スクリプト
 - [ ] ローカルでの動作確認
 
@@ -453,51 +596,67 @@ EOF
 
 ## 制約事項
 
-### viemで対応できないもの
+### hardhat-viemで対応できないもの
 
-1. **コントラクトのコンパイル**: Hardhat/Foundryを使用
-2. **Etherscan Verify**: 別ツール使用（hardhat-verify等）
+1. **Etherscan Verify**: 別ツール使用（hardhat-verify等）
 
-### viemで対応できるもの
+### hardhat-viemで対応できるもの
 
-1. **新規デプロイ**: 全て対応可能（UUPSも自前実装で対応）
-2. **初期設定**: setAddrs等
-3. **アドレス管理**: `deployments/`へ読み書き
-4. **アップグレード**: 直接実行またはSafe Transaction作成
+1. **コントラクトのコンパイル**: Hardhat内蔵
+2. **新規デプロイ**: 全て対応可能（UUPSもライブラリリンクも対応）
+3. **初期設定**: setAddrs等
+4. **アドレス管理**: `deployments/`へ読み書き
+5. **アップグレード**: 直接実行またはSafe Transaction作成
 
 ### ローカル vs 本番
 
 | 操作 | ローカル | 本番 |
 |------|---------|------|
-| コンパイル | Hardhat/Foundry | Hardhat/Foundry |
-| 新規デプロイ | viem直接実行 | viem直接実行 |
-| アップグレード | viem直接実行 | Safe Transaction |
-| 初期設定 | viem直接実行 | viem/Safe |
+| コンパイル | Hardhat | Hardhat |
+| 新規デプロイ | hardhat-viem直接実行 | hardhat-viem直接実行 |
+| アップグレード | hardhat-viem直接実行 | Safe Transaction |
+| 初期設定 | hardhat-viem直接実行 | hardhat-viem/Safe |
 
 ---
 
 ## トラブルシューティング
 
 ### Q: UUPSプロキシのデプロイ方法は？
-A: `uups-deployer.ts`で以下を実装：
-1. 実装コントラクトをデプロイ
-2. `encodeFunctionData`で初期化データを作成
-3. ERC1967Proxyをデプロイ（実装アドレス + 初期化データ）
-4. 両方のアドレスを保存
+A: hardhat-viemを使用して以下の手順で実装：
+1. `hre.artifacts.readArtifact()`でartifactを取得
+2. ライブラリリンクが必要な場合は`hre.viem.resolveBytecodeWithLinkedLibraries()`を使用
+3. 実装コントラクトをデプロイ
+4. `encodeFunctionData`で初期化データを作成
+5. ERC1967Proxyをデプロイ（実装アドレス + 初期化データ）
+6. 両方のアドレスを保存
 
 **初期化関数名について**:
 - デフォルトは`'initialize'`
 - `initFunction`パラメータで変更可能（例: `'__CurrencyOS_init'`, `'setUp'`）
 - 各コントラクトのABIを確認して必要に応じて指定
 
+### Q: ライブラリリンクはどうする？
+A: hardhat-viemの`resolveBytecodeWithLinkedLibraries()`を使用：
+```typescript
+const linkedBytecode = await hre.viem.resolveBytecodeWithLinkedLibraries(
+  artifact,
+  {
+    PledgeLib: pledgeLibAddress,
+  }
+);
+```
+
 ### Q: アドレスファイルの読み書きは？
-A: Node.jsの`fs`モジュールを使用。既存形式で保存。
+A: Node.jsの`fs`モジュールを使用。既存形式で保存。`path.resolve()`で親の`deployments/`を参照して保存。
 
 ### Q: 既存のdeploymentsディレクトリとの互換性は？
-A: 完全に互換性あり。同じファイル名・形式で読み書き。
+A: 完全に互換性あり。`path.resolve()`で既存の`deployments/`を参照し、同じファイル名・形式で読み書き。
 
 ### Q: ABI/Bytecodeはどこから取得？
-A: Hardhatの`artifacts/`ディレクトリまたはFoundryの`out/`ディレクトリから読み込み。
+A: hardhat-viemの`hre.artifacts.readArtifact()`で取得。`paths`設定で親の`contracts/`を参照してコンパイルしたartifactsを使用。
+
+### Q: 既存のHardhat環境に影響は？
+A: 影響なし。`new-deploy`内に独立したHardhat環境を構築し、`paths`設定で必要なファイルのみ参照。
 
 ---
 
@@ -510,21 +669,31 @@ A: Hardhatの`artifacts/`ディレクトリまたはFoundryの`out/`ディレク
    mkdir new-deploy
    cd new-deploy
    npm init -y
-   npm install viem dotenv
-   npm install --save-dev typescript tsx @types/node
+   npm install --save-dev hardhat @nomicfoundation/hardhat-viem viem
+   npm install --save-dev typescript tsx @types/node dotenv
+   
+   # シンボリックリンク作成
+   ln -s ../contracts contracts
+   ln -s ../deployments deployments
    ```
 
-2. **環境変数設定**
+2. **Hardhat環境設定**
+   - `hardhat.config.ts`作成
    - `.env.example`作成
    - `.env`作成して実際の値を設定
+   - `tsconfig.json`作成
 
-3. **UUPSデプロイヘルパー実装**
-   - `scripts/core/uups-deployer.ts`
+3. **コントラクトのコンパイル**
+   ```bash
+   npx hardhat compile
+   ```
+
+4. **UUPSデプロイヘルパー実装**
+   - `scripts/core/uups-deployer.ts`（hardhat-viem使用）
    - `scripts/core/address-manager.ts`
-   - `scripts/core/contract-deployer.ts`
 
-4. **viemデプロイスクリプト作成**
+5. **hardhat-viemデプロイスクリプト作成**
    - v1.0デプロイスクリプト
    - 初期設定スクリプト
 
-どこから始めますか？
+準備完了！実装を開始しましょう。

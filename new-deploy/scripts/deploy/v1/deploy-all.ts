@@ -27,6 +27,7 @@ const scripts = [
   { name: 'FeePool', path: './scripts/deploy/v1/deploy-feepool.ts' },
   { name: 'CurrencyOS', path: './scripts/deploy/v1/deploy-currencyos.ts' },
   { name: 'Yamato', path: './scripts/deploy/v1/deploy-yamato.ts' },
+  { name: 'PledgeLib', path: './scripts/deploy/v1/deploy-pledgelib.ts' },
   { name: 'YamatoDepositor', path: './scripts/deploy/v1/deploy-yamato-depositor.ts' },
   { name: 'YamatoBorrower', path: './scripts/deploy/v1/deploy-yamato-borrower.ts' },
   { name: 'YamatoRepayer', path: './scripts/deploy/v1/deploy-yamato-repayer.ts' },
@@ -45,7 +46,7 @@ for (const script of scripts) {
   console.log(`${'─'.repeat(60)}`);
   
   try {
-    execSync(`npx tsx ${script.path} --network=${network}`, {
+    execSync(`npx hardhat run ${script.path} --network ${network}`, {
       stdio: 'inherit',
       cwd: process.cwd(),
     });
@@ -68,7 +69,7 @@ console.log(`   Total contracts deployed: ${deployedCount}/${scripts.length}`);
 console.log(`   Network: ${network}`);
 console.log(`   Duration: ${duration}s`);
 console.log(`\n📝 Next steps:`);
-console.log(`   1. Run setup script: npx tsx scripts/setup/v1/setup-all.ts --network=${network}`);
+console.log(`   1. Run setup script: npx hardhat run scripts/setup/v1/setup-all.ts --network ${network}`);
 console.log(`   2. Verify deployments in: deployments/${network}/`);
 console.log(`\n${'='.repeat(60)}\n`);
 

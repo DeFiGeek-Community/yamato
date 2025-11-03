@@ -1,0 +1,79 @@
+import hre from 'hardhat';
+import { loadAddress, type NetworkName } from '../core/address-manager';
+
+/**
+ * v1.0 ガバナンス権限をマルチシグに移譲
+ * 
+ * 全てのUUPSコントラクトの管理権限をマルチシグウォレットに移譲します。
+ * この操作後、コントラクトのアップグレードはマルチシグの承認が必要になります。
+ */
+async function main() {
+  const network = hre.network.name as NetworkName;
+  console.log(`\n🔐 Transferring governance to multisig on ${network}...\n`);
+
+  // マルチシグアドレスを環境変数から取得
+  const multisigAddr = process.env.UUPS_PROXY_ADMIN_MULTISIG_ADDRESS;
+  if (!multisigAddr) {
+    throw new Error('UUPS_PROXY_ADMIN_MULTISIG_ADDRESS is not set in .env');
+  }
+  console.log(`📝 Multisig address: ${multisigAddr}\n`);
+
+  // 全てのUUPSコントラクトのリスト
+  const contracts = [
+    { name: 'PriceFeed', contractName: 'PriceFeedV3' },
+    { name: 'FeePool', contractName: 'FeePool' },
+    { name: 'CurrencyOS', contractName: 'CurrencyOSV2' },
+    { name: 'Pool', contractName: 'PoolV2' },
+    { name: 'PriorityRegistry', contractName: 'PriorityRegistryV6' },
+    { name: 'Yamato', contractName: 'YamatoV3' },
+    { name: 'YamatoDepositor', contractName: 'YamatoDepositorV2' },
+    { name: 'YamatoBorrower', contractName: 'YamatoBorrower' },
+    { name: 'YamatoRepayer', contractName: 'YamatoRepayerV2' },
+    { name: 'YamatoWithdrawer', contractName: 'YamatoWithdrawerV2' },
+    { name: 'YamatoRedeemer', contractName: 'YamatoRedeemerV4' },
+    { name: 'YamatoSweeper', contractName: 'YamatoSweeperV2' },
+  ];
+
+  const publicClient = await hre.viem.getPublicClient();
+  let successCount = 0;
+
+  // 各コントラクトに対してsetGovernance()を実行
+  for (const { name, contractName } of contracts) {
+    try {
+      console.log(`🔄 [${successCount + 1}/${contracts.length}] ${name}.setGovernance()...`);
+      
+      const proxyAddress = loadAddress(network, `${name}ERC1967Proxy`);
+      const contract = await hre.viem.getContractAt(contractName, proxyAddress);
+      
+      const hash = await contract.write.setGovernance([multisigAddr as `0x${string}`]);
+      
+      console.log(`   📝 Transaction hash: ${hash}`);
+      const receipt = await publicClient.waitForTransactionReceipt({ hash });
+      console.log(`   ✅ Confirmed in block ${receipt.blockNumber}`);
+      
+      successCount++;
+    } catch (error) {
+      console.error(`   ❌ Failed to transfer governance for ${name}:`, error);
+      throw error;
+    }
+  }
+
+  console.log(`\n${'='.repeat(60)}`);
+  console.log(`\n🎉 Governance transfer completed!`);
+  console.log(`\n📊 Summary:`);
+  console.log(`   Total contracts: ${successCount}/${contracts.length}`);
+  console.log(`   Multisig address: ${multisigAddr}`);
+  console.log(`\n📝 Next steps:`);
+  console.log(`   1. Switch PRIVATE_KEY in .env to multisig signer's key`);
+  console.log(`   2. Run: npx hardhat run scripts/governance/v1-accept-governance.ts --network ${network}`);
+  console.log(`\n⚠️  Warning: Contract upgrades now require multisig approval!`);
+  console.log(`\n${'='.repeat(60)}\n`);
+}
+
+main()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error('❌ Error:', error);
+    process.exit(1);
+  });
+

@@ -1,49 +1,23 @@
-import 'dotenv/config';
-import { createClients } from '../../core/client.js';
-import { deployUUPS } from '../../core/uups-deployer.js';
-import { loadAddress } from '../../core/address-manager.js';
-import { loadArtifact } from '../../core/artifact-loader.js';
-import type { NetworkName } from '../../../config/networks.js';
+import hre from 'hardhat';
+import { deployUUPS } from '../../core/uups-deployer';
+import { loadAddress, type NetworkName } from '../../core/address-manager';
 
 async function main() {
-  const args = process.argv.slice(2);
-  const networkArg = args.find((arg) => arg.startsWith('--network='));
-  const network = (networkArg?.split('=')[1] || 'localhost') as NetworkName;
-
+  const network = hre.network.name as NetworkName;
   console.log(`\n🌐 Network: ${network}\n`);
-
-  const { publicClient, walletClient } = createClients(network);
 
   // 依存コントラクトのアドレスを読み込む
   console.log('📖 Loading dependencies...');
   const currencyOSAddress = loadAddress(network, 'CurrencyOSERC1967Proxy');
+  console.log(`   CurrencyOS: ${currencyOSAddress}`);
   console.log('✅ Dependencies loaded\n');
-
-  // YamatoV3のABI/Bytecodeを読み込む
-  const { abi, bytecode } = loadArtifact('YamatoV3');
-  
-  // OpenZeppelin ERC1967Proxyのアーティファクトを読み込む
-  const { abi: proxyAbi, bytecode: proxyBytecode } = loadArtifact(
-    '@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol/ERC1967Proxy'
-  );
 
   // Yamatoをデプロイ
   const result = await deployUUPS({
     name: 'Yamato',
-    implementation: {
-      abi,
-      bytecode,
-      args: [],
-    },
-    proxy: {
-      initFunction: 'initialize',
-      initArgs: [currencyOSAddress],
-    },
-    proxyAbi,
-    proxyBytecode,
-    walletClient,
-    publicClient,
-    network,
+    contractName: 'YamatoV3',
+    initFunction: 'initialize',
+    initArgs: [currencyOSAddress],
   });
 
   console.log(`\n✅ Yamato deployed!`);
@@ -57,4 +31,3 @@ main()
     console.error('❌ Error:', error);
     process.exit(1);
   });
-

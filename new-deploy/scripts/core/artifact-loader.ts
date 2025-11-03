@@ -5,22 +5,41 @@ import { join } from 'path';
  * HardhatのartifactsからABIとBytecodeを読み込む
  */
 export function loadArtifact(contractName: string) {
+  let artifactPath: string;
+  
   // @で始まる場合（例: @openzeppelin/...）はcontracts/を含めない
-  const artifactPath = contractName.startsWith('@')
-    ? join(
-        process.cwd(),
-        '..',
-        'artifacts',
-        `${contractName}.json`
-      )
-    : join(
-        process.cwd(),
-        '..',
-        'artifacts',
-        'contracts',
-        `${contractName}.sol`,
-        `${contractName}.json`
-      );
+  if (contractName.startsWith('@')) {
+    artifactPath = join(
+      process.cwd(),
+      '..',
+      'artifacts',
+      `${contractName}.json`
+    );
+  }
+  // Dependencies/ で始まる場合は contracts/Dependencies/ 配下を探す
+  else if (contractName.startsWith('Dependencies/')) {
+    const baseName = contractName.split('/')[1]; // 'Dependencies/PledgeLib' -> 'PledgeLib'
+    artifactPath = join(
+      process.cwd(),
+      '..',
+      'artifacts',
+      'contracts',
+      'Dependencies',
+      `${baseName}.sol`,
+      `${baseName}.json`
+    );
+  }
+  // 通常のコントラクト
+  else {
+    artifactPath = join(
+      process.cwd(),
+      '..',
+      'artifacts',
+      'contracts',
+      `${contractName}.sol`,
+      `${contractName}.json`
+    );
+  }
 
   try {
     const artifact = JSON.parse(readFileSync(artifactPath, 'utf-8'));

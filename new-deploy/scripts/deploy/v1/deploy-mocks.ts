@@ -1,56 +1,37 @@
-import 'dotenv/config';
-import { createClients } from '../../core/client.js';
-import { deployContract } from '../../core/contract-deployer.js';
-import { loadArtifact } from '../../core/artifact-loader.js';
-import type { NetworkName } from '../../../config/networks.js';
+import hre from 'hardhat';
+import { deployContract } from '../../core/contract-deployer-hh';
+import type { NetworkName } from '../../core/address-manager';
 
 async function main() {
-  const args = process.argv.slice(2);
-  const networkArg = args.find((arg) => arg.startsWith('--network='));
-  const network = (networkArg?.split('=')[1] || 'localhost') as NetworkName;
-
+  const network = hre.network.name as NetworkName;
   console.log(`\n🌐 Network: ${network}\n`);
 
-  const { publicClient, walletClient } = createClients(network);
-
   // ChainlinkMock (ETH/USD)のデプロイ
-  console.log('🚀 Deploying ChainlinkMock (ETH/USD)...');
-  const { abi: ethUsdAbi, bytecode: ethUsdBytecode } = loadArtifact('ChainLinkMock');
-  
-  const ethUsdAddress = await deployContract({
+  const ethUsdResult = await deployContract({
     name: 'ChainLinkMockEthUsd',
-    abi: ethUsdAbi,
-    bytecode: ethUsdBytecode,
-    args: ['ETH/USD'], // コンストラクタ引数を追加
-    walletClient,
-    publicClient,
-    network,
+    contractName: 'ChainLinkMock',
+    args: ['ETH/USD'],
   });
-
-  console.log(`✅ ChainLinkMock (ETH/USD) deployed at: ${ethUsdAddress}\n`);
 
   // ChainlinkMock (JPY/USD)のデプロイ
-  console.log('🚀 Deploying ChainlinkMock (JPY/USD)...');
-  const jpyUsdAddress = await deployContract({
+  const jpyUsdResult = await deployContract({
     name: 'ChainLinkMockJpyUsd',
-    abi: ethUsdAbi, // 同じABI
-    bytecode: ethUsdBytecode, // 同じBytecode
-    args: ['JPY/USD'], // コンストラクタ引数を追加
-    walletClient,
-    publicClient,
-    network,
+    contractName: 'ChainLinkMock',
+    args: ['JPY/USD'],
   });
-
-  console.log(`✅ ChainLinkMock (JPY/USD) deployed at: ${jpyUsdAddress}\n`);
 
   // 価格データの初期化（simulatePriceMove）
   console.log('🔧 Initializing oracle prices...');
   
+  const publicClient = await hre.viem.getPublicClient();
+  const [walletClient] = await hre.viem.getWalletClients();
+  const artifact = await hre.artifacts.readArtifact('ChainLinkMock');
+  
   // ETH/USD: 2回の価格移動をシミュレート
   for (let i = 0; i < 2; i++) {
     const hash = await walletClient.writeContract({
-      address: ethUsdAddress,
-      abi: ethUsdAbi,
+      address: ethUsdResult.address,
+      abi: artifact.abi,
       functionName: 'simulatePriceMove',
       args: [],
     });
@@ -61,8 +42,8 @@ async function main() {
   // JPY/USD: 2回の価格移動をシミュレート
   for (let i = 0; i < 2; i++) {
     const hash = await walletClient.writeContract({
-      address: jpyUsdAddress,
-      abi: ethUsdAbi,
+      address: jpyUsdResult.address,
+      abi: artifact.abi,
       functionName: 'simulatePriceMove',
       args: [],
     });

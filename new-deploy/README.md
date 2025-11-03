@@ -57,10 +57,10 @@ v1.0の全コントラクトを一括デプロイ：
 
 ```bash
 # ローカル環境（Anvil）
-npx tsx scripts/deploy/v1/deploy-all.ts --network=localhost
+npx hardhat run scripts/deploy/v1/deploy-all.ts --network localhost
 
 # Sepolia環境
-npx tsx scripts/deploy/v1/deploy-all.ts --network=sepolia
+npx hardhat run scripts/deploy/v1/deploy-all.ts --network sepolia
 ```
 
 **デプロイされるコントラクト（順番）:**
@@ -83,7 +83,7 @@ npx tsx scripts/deploy/v1/deploy-all.ts --network=sepolia
 デプロイ後、初期設定を実行：
 
 ```bash
-npx tsx scripts/setup/v1/setup-all.ts --network=localhost
+npx hardhat run scripts/setup/v1/setup-all.ts --network localhost
 ```
 
 **実行される初期設定:**
@@ -91,28 +91,55 @@ npx tsx scripts/setup/v1/setup-all.ts --network=localhost
 2. `CurrencyOS.addYamato()` - YamatoをCurrencyOSに登録
 3. `CJPY.setCurrencyOS()` + `CJPY.revokeGovernance()` - CJPY設定とガバナンス放棄
 
+### v1.0 ガバナンス移譲（本番環境のみ）
+
+本番環境では、ガバナンス権限をマルチシグウォレットに移譲します：
+
+#### ステップ1: ガバナンス移譲
+
+```bash
+# .envにマルチシグアドレスを設定
+UUPS_PROXY_ADMIN_MULTISIG_ADDRESS=0x...
+
+# デプロイ用の秘密鍵で実行
+npx hardhat run scripts/governance/v1-transfer-governance.ts --network sepolia
+```
+
+#### ステップ2: ガバナンス受け入れ
+
+```bash
+# .envのPRIVATE_KEYをマルチシグ署名者の秘密鍵に変更
+
+# マルチシグ署名者の秘密鍵で実行
+npx hardhat run scripts/governance/v1-accept-governance.ts --network sepolia
+```
+
+**⚠️ 重要:**
+- ガバナンス移譲後、全てのアップグレードはマルチシグの承認が必要になります
+- ローカルテストでは実行不要です
+
 ### 個別デプロイ・設定
 
 ```bash
 # 個別デプロイ例
-npx tsx scripts/deploy/v1/deploy-cjpy.ts --network=localhost
-npx tsx scripts/deploy/v1/deploy-yamato.ts --network=localhost
+npx hardhat run scripts/deploy/v1/deploy-cjpy.ts --network localhost
+npx hardhat run scripts/deploy/v1/deploy-yamato.ts --network localhost
 
 # 個別設定例
-npx tsx scripts/setup/v1/setup-yamato-deps.ts --network=localhost
-npx tsx scripts/setup/v1/setup-cjpy.ts --network=localhost
+npx hardhat run scripts/setup/v1/setup-yamato-deps.ts --network localhost
+npx hardhat run scripts/setup/v1/setup-cjpy.ts --network localhost
 ```
 
 ### v1.5デプロイ
 
 ```bash
-npx tsx scripts/deploy/v1.5/deploy-ymt.ts --network=sepolia
+npx hardhat run scripts/deploy/v1.5/deploy-ymt.ts --network sepolia
 ```
 
 ### v2デプロイ
 
 ```bash
-npx tsx scripts/deploy/v2/deploy-ymtos.ts --network=sepolia
+npx hardhat run scripts/deploy/v2/deploy-ymtos.ts --network sepolia
 ```
 
 ## ディレクトリ構造

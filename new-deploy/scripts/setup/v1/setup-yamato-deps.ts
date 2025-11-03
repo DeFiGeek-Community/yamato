@@ -1,17 +1,9 @@
-import 'dotenv/config';
-import { createClients } from '../../core/client.js';
-import { loadAddress } from '../../core/address-manager.js';
-import { loadArtifact } from '../../core/artifact-loader.js';
-import type { NetworkName } from '../../../config/networks.js';
+import hre from 'hardhat';
+import { loadAddress, type NetworkName } from '../../core/address-manager';
 
 async function main() {
-  const args = process.argv.slice(2);
-  const networkArg = args.find((arg) => arg.startsWith('--network='));
-  const network = (networkArg?.split('=')[1] || 'localhost') as NetworkName;
-
+  const network = hre.network.name as NetworkName;
   console.log(`\n🔧 Setting up Yamato dependencies on ${network}...\n`);
-
-  const { publicClient, walletClient } = createClients(network);
 
   // 全てのアドレスを読み込む
   console.log('📖 Loading contract addresses...');
@@ -26,28 +18,24 @@ async function main() {
   const priorityRegistryAddress = loadAddress(network, 'PriorityRegistryERC1967Proxy');
   console.log('✅ All addresses loaded\n');
 
-  // YamatoのABIを読み込む
-  const { abi } = loadArtifact('YamatoV3');
+  // Yamatoコントラクトを取得
+  const yamato = await hre.viem.getContractAt('YamatoV3', yamatoAddress);
 
   // Yamato.setDeps()を実行
   console.log('🚀 Executing Yamato.setDeps()...');
-  const hash = await walletClient.writeContract({
-    address: yamatoAddress,
-    abi,
-    functionName: 'setDeps',
-    args: [
-      depositorAddress,
-      borrowerAddress,
-      repayerAddress,
-      withdrawerAddress,
-      redeemerAddress,
-      sweeperAddress,
-      poolAddress,
-      priorityRegistryAddress,
-    ],
-  });
+  const hash = await yamato.write.setDeps([
+    depositorAddress,
+    borrowerAddress,
+    repayerAddress,
+    withdrawerAddress,
+    redeemerAddress,
+    sweeperAddress,
+    poolAddress,
+    priorityRegistryAddress,
+  ]);
 
   console.log(`  📝 Transaction hash: ${hash}`);
+  const publicClient = await hre.viem.getPublicClient();
   const receipt = await publicClient.waitForTransactionReceipt({ hash });
   console.log(`  ✅ Transaction confirmed in block ${receipt.blockNumber}`);
 

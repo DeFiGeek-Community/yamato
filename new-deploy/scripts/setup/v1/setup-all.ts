@@ -29,7 +29,7 @@ for (const script of scripts) {
   console.log(`${'─'.repeat(60)}`);
   
   try {
-    execSync(`npx tsx ${script.path} --network=${network}`, {
+    execSync(`npx hardhat run ${script.path} --network ${network}`, {
       stdio: 'inherit',
       cwd: process.cwd(),
     });
