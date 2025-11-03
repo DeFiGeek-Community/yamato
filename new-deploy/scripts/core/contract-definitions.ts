@@ -162,6 +162,47 @@ export const V2_CURRENCY_CONTRACTS_WITH_PLEDGELIB = [
 ] as const;
 
 // ============================================================================
+// コントラクト名キー定数（型安全性のため）
+// ============================================================================
+
+/**
+ * 全てのコントラクト名キー
+ * この定数を使用することで、型チェックでコントラクト名の誤りを検出できます。
+ */
+export const CONTRACT_NAMES = {
+  // v1.0
+  CJPY: 'CJPY',
+  PriceFeed: 'PriceFeed',
+  FeePool: 'FeePool',
+  CurrencyOS: 'CurrencyOS',
+  Yamato: 'Yamato',
+  YamatoDepositor: 'YamatoDepositor',
+  YamatoBorrower: 'YamatoBorrower',
+  YamatoRepayer: 'YamatoRepayer',
+  YamatoWithdrawer: 'YamatoWithdrawer',
+  YamatoRedeemer: 'YamatoRedeemer',
+  YamatoSweeper: 'YamatoSweeper',
+  Pool: 'Pool',
+  PriorityRegistry: 'PriorityRegistry',
+  
+  // v1.5
+  YMT: 'YMT',
+  veYMT: 'veYMT',
+  YmtVesting: 'YmtVesting',
+  YmtMinter: 'YmtMinter',
+  ScoreWeightController: 'ScoreWeightController',
+  ScoreRegistry: 'ScoreRegistry',
+  
+  // v2.0
+  YmtOS: 'YmtOS',
+  PriceFeedSingle: 'PriceFeedSingle',
+  CUSD: 'CUSD',
+  CEUR: 'CEUR',
+} as const;
+
+export type ContractNameKey = typeof CONTRACT_NAMES[keyof typeof CONTRACT_NAMES];
+
+// ============================================================================
 // ヘルパー関数
 // ============================================================================
 

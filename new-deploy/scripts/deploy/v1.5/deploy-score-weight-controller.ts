@@ -1,7 +1,7 @@
 import hre from 'hardhat';
 import { deployUUPS } from '../../core/uups-deployer';
 import { loadAddress, type NetworkName } from '../../core/address-manager';
-import { V1_5_CONTRACTS } from '../../core/contract-definitions';
+import { V1_5_CONTRACTS, CONTRACT_NAMES } from '../../core/contract-definitions';
 
 /**
  * ScoreWeightController デプロイ
@@ -25,7 +25,7 @@ async function main() {
   console.log('✅ Dependencies loaded\n');
 
   const result = await deployUUPS({
-    name: 'ScoreWeightController',
+    name: CONTRACT_NAMES.ScoreWeightController,
     contractName: V1_5_CONTRACTS.ScoreWeightController,
     initFunction: 'initialize',
     initArgs: [ymtAddr, veYmtAddr],

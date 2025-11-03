@@ -1,7 +1,7 @@
 import hre from 'hardhat';
 import { deployUUPS } from '../../core/uups-deployer';
 import type { NetworkName } from '../../core/address-manager';
-import { V1_CONTRACTS } from '../../core/contract-definitions';
+import { V1_CONTRACTS, CONTRACT_NAMES } from '../../core/contract-definitions';
 
 async function main() {
   const network = hre.network.name as NetworkName;
@@ -9,7 +9,7 @@ async function main() {
 
   // FeePoolをデプロイ
   const result = await deployUUPS({
-    name: 'FeePool',
+    name: CONTRACT_NAMES.FeePool,
     contractName: V1_CONTRACTS.FeePool,
     initFunction: 'initialize',
     initArgs: [], // FeePoolのinitializeは引数なし

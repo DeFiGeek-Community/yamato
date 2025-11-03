@@ -2,7 +2,7 @@ import hre from 'hardhat';
 import { loadProxyAddress, type NetworkName } from '../core/address-manager';
 import { getCurrency } from '../core/currency-manager';
 import { createAndProposeSafeTransaction } from '../core/safe-transaction';
-import { V2_CONTRACTS, V2_CURRENCY_CONTRACTS, V1_CONTRACTS } from '../core/contract-definitions';
+import { V2_CONTRACTS, V2_CURRENCY_CONTRACTS, V1_CONTRACTS, CONTRACT_NAMES } from '../core/contract-definitions';
 
 /**
  * v2.0 ガバナンス承認
@@ -60,19 +60,19 @@ async function main() {
 
   // 共通関数を使用してアドレスを読み込み
   const contracts = [
-    { name: 'YmtOS', contractName: V2_CONTRACTS.YmtOS, address: loadProxyAddress(network, 'YmtOS') },
-    { name: `PriceFeed (${currency})`, contractName: priceFeedContractName, address: loadProxyAddress(network, currency === 'CUSD' ? 'PriceFeedSingle' : 'PriceFeed', currency) },
-    { name: `CurrencyOS (${currency})`, contractName: V2_CURRENCY_CONTRACTS.CurrencyOS, address: loadProxyAddress(network, 'CurrencyOS', currency) },
-    { name: `Pool (${currency})`, contractName: V2_CURRENCY_CONTRACTS.Pool, address: loadProxyAddress(network, 'Pool', currency) },
-    { name: `PriorityRegistry (${currency})`, contractName: V2_CURRENCY_CONTRACTS.PriorityRegistry, address: loadProxyAddress(network, 'PriorityRegistry', currency) },
-    { name: `Yamato (${currency})`, contractName: V2_CURRENCY_CONTRACTS.Yamato, address: loadProxyAddress(network, 'Yamato', currency) },
-    { name: `YamatoDepositor (${currency})`, contractName: V2_CURRENCY_CONTRACTS.YamatoDepositor, address: loadProxyAddress(network, 'YamatoDepositor', currency) },
-    { name: `YamatoBorrower (${currency})`, contractName: V2_CURRENCY_CONTRACTS.YamatoBorrower, address: loadProxyAddress(network, 'YamatoBorrower', currency) },
-    { name: `YamatoRepayer (${currency})`, contractName: V2_CURRENCY_CONTRACTS.YamatoRepayer, address: loadProxyAddress(network, 'YamatoRepayer', currency) },
-    { name: `YamatoWithdrawer (${currency})`, contractName: V2_CURRENCY_CONTRACTS.YamatoWithdrawer, address: loadProxyAddress(network, 'YamatoWithdrawer', currency) },
-    { name: `YamatoRedeemer (${currency})`, contractName: V2_CURRENCY_CONTRACTS.YamatoRedeemer, address: loadProxyAddress(network, 'YamatoRedeemer', currency) },
-    { name: `YamatoSweeper (${currency})`, contractName: V2_CURRENCY_CONTRACTS.YamatoSweeper, address: loadProxyAddress(network, 'YamatoSweeper', currency) },
-    { name: `ScoreRegistry (${currency})`, contractName: V2_CURRENCY_CONTRACTS.ScoreRegistry, address: loadProxyAddress(network, 'ScoreRegistry', currency) },
+    { name: CONTRACT_NAMES.YmtOS, contractName: V2_CONTRACTS.YmtOS, address: loadProxyAddress(network, CONTRACT_NAMES.YmtOS) },
+    { name: `PriceFeed (${currency})`, contractName: priceFeedContractName, address: loadProxyAddress(network, currency === 'CUSD' ? CONTRACT_NAMES.PriceFeedSingle : CONTRACT_NAMES.PriceFeed, currency) },
+    { name: `CurrencyOS (${currency})`, contractName: V2_CURRENCY_CONTRACTS.CurrencyOS, address: loadProxyAddress(network, CONTRACT_NAMES.CurrencyOS, currency) },
+    { name: `Pool (${currency})`, contractName: V2_CURRENCY_CONTRACTS.Pool, address: loadProxyAddress(network, CONTRACT_NAMES.Pool, currency) },
+    { name: `PriorityRegistry (${currency})`, contractName: V2_CURRENCY_CONTRACTS.PriorityRegistry, address: loadProxyAddress(network, CONTRACT_NAMES.PriorityRegistry, currency) },
+    { name: `Yamato (${currency})`, contractName: V2_CURRENCY_CONTRACTS.Yamato, address: loadProxyAddress(network, CONTRACT_NAMES.Yamato, currency) },
+    { name: `YamatoDepositor (${currency})`, contractName: V2_CURRENCY_CONTRACTS.YamatoDepositor, address: loadProxyAddress(network, CONTRACT_NAMES.YamatoDepositor, currency) },
+    { name: `YamatoBorrower (${currency})`, contractName: V2_CURRENCY_CONTRACTS.YamatoBorrower, address: loadProxyAddress(network, CONTRACT_NAMES.YamatoBorrower, currency) },
+    { name: `YamatoRepayer (${currency})`, contractName: V2_CURRENCY_CONTRACTS.YamatoRepayer, address: loadProxyAddress(network, CONTRACT_NAMES.YamatoRepayer, currency) },
+    { name: `YamatoWithdrawer (${currency})`, contractName: V2_CURRENCY_CONTRACTS.YamatoWithdrawer, address: loadProxyAddress(network, CONTRACT_NAMES.YamatoWithdrawer, currency) },
+    { name: `YamatoRedeemer (${currency})`, contractName: V2_CURRENCY_CONTRACTS.YamatoRedeemer, address: loadProxyAddress(network, CONTRACT_NAMES.YamatoRedeemer, currency) },
+    { name: `YamatoSweeper (${currency})`, contractName: V2_CURRENCY_CONTRACTS.YamatoSweeper, address: loadProxyAddress(network, CONTRACT_NAMES.YamatoSweeper, currency) },
+    { name: `ScoreRegistry (${currency})`, contractName: V2_CURRENCY_CONTRACTS.ScoreRegistry, address: loadProxyAddress(network, CONTRACT_NAMES.ScoreRegistry, currency) },
   ];
 
   const publicClient = isLocalhost ? await hre.viem.getPublicClient() : null;

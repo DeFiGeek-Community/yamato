@@ -111,11 +111,10 @@ export function getProxyName(contractName: string, currency?: Currency): string 
  * 実装名を生成
  * 
  * @param contractName - コントラクト名（例: 'Yamato'）
- * @param version - バージョン（例: 'V4'）
- * @returns 実装名（例: 'YamatoV4Impl'）
+ * @returns 実装名（例: 'YamatoImpl'）
  */
-export function getImplementationName(contractName: string, version: string): string {
-  return `${contractName}${version}Impl`;
+export function getImplementationName(contractName: string): string {
+  return `${contractName}Impl`;
 }
 
 /**
@@ -140,15 +139,13 @@ export function loadProxyAddress(
  * 
  * @param network - ネットワーク名
  * @param contractName - コントラクト名（例: 'Yamato'）
- * @param version - バージョン（例: 'V4'）
  * @returns 実装アドレス
  */
 export function loadImplementationAddress(
   network: NetworkName,
-  contractName: string,
-  version: string
+  contractName: string
 ): Address {
-  const implName = getImplementationName(contractName, version);
+  const implName = getImplementationName(contractName);
   return loadAddress(network, implName);
 }
 
@@ -175,16 +172,14 @@ export function saveProxyAddress(
  * 
  * @param network - ネットワーク名
  * @param contractName - コントラクト名
- * @param version - バージョン
  * @param address - 実装アドレス
  */
 export function saveImplementationAddress(
   network: NetworkName,
   contractName: string,
-  version: string,
   address: Address
 ): void {
-  const implName = getImplementationName(contractName, version);
+  const implName = getImplementationName(contractName);
   saveAddress(network, implName, address);
 }
 

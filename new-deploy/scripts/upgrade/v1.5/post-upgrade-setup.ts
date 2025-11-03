@@ -3,7 +3,8 @@ import { loadProxyAddress, loadAddress, type NetworkName } from '../../core/addr
 import { createAndProposeSafeTransaction } from '../../core/safe-transaction';
 import { 
   V1_5_UPGRADE_IMPLEMENTATIONS, 
-  V1_5_CONTRACTS 
+  V1_5_CONTRACTS,
+  CONTRACT_NAMES 
 } from '../../core/contract-definitions';
 
 /**
@@ -34,14 +35,14 @@ async function main() {
 
   // 必要なアドレスを読み込み（共通関数を使用）
   console.log('📖 Loading addresses...');
-  const yamatoAddr = loadProxyAddress(network, 'Yamato');
-  const feePoolAddr = loadProxyAddress(network, 'FeePool');
-  const currencyOSAddr = loadProxyAddress(network, 'CurrencyOS');
-  const scoreRegistryAddr = loadProxyAddress(network, 'ScoreRegistry');
+  const yamatoAddr = loadProxyAddress(network, CONTRACT_NAMES.Yamato);
+  const feePoolAddr = loadProxyAddress(network, CONTRACT_NAMES.FeePool);
+  const currencyOSAddr = loadProxyAddress(network, CONTRACT_NAMES.CurrencyOS);
+  const scoreRegistryAddr = loadProxyAddress(network, CONTRACT_NAMES.ScoreRegistry);
   const veYmtAddr = loadAddress(network, V1_5_CONTRACTS.veYMT);
   const ymtAddr = loadAddress(network, V1_5_CONTRACTS.YMT);
-  const ymtMinterAddr = loadProxyAddress(network, 'YmtMinter');
-  const scoreWeightControllerAddr = loadProxyAddress(network, 'ScoreWeightController');
+  const ymtMinterAddr = loadProxyAddress(network, CONTRACT_NAMES.YmtMinter);
+  const scoreWeightControllerAddr = loadProxyAddress(network, CONTRACT_NAMES.ScoreWeightController);
   
   console.log(`   Yamato: ${yamatoAddr}`);
   console.log(`   FeePool: ${feePoolAddr}`);

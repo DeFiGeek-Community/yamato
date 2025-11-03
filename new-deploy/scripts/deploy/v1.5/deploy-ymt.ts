@@ -1,7 +1,7 @@
 import hre from 'hardhat';
 import { deployContract } from '../../core/contract-deployer-hh';
 import { loadAddress, type NetworkName } from '../../core/address-manager';
-import { V1_5_CONTRACTS } from '../../core/contract-definitions';
+import { V1_5_CONTRACTS, CONTRACT_NAMES } from '../../core/contract-definitions';
 
 /**
  * YMT デプロイ
@@ -30,7 +30,7 @@ async function main() {
   console.log('✅ Dependencies loaded\n');
 
   const result = await deployContract({
-    name: 'YMT',
+    name: CONTRACT_NAMES.YMT,
     contractName: V1_5_CONTRACTS.YMT,
     args: [ymtVestingAddr, adminAddr],
   });

@@ -1,7 +1,7 @@
 import hre from 'hardhat';
 import { loadProxyAddress, type NetworkName } from '../../core/address-manager';
 import { parseEther } from 'viem';
-import { V1_5_CONTRACTS } from '../../core/contract-definitions';
+import { V1_5_CONTRACTS, CONTRACT_NAMES } from '../../core/contract-definitions';
 
 /**
  * ScoreWeightController.addScore() 実行
@@ -14,8 +14,8 @@ async function main() {
   console.log(`\n🌐 Network: ${network}\n`);
 
   console.log('📖 Loading addresses...');
-  const controllerAddr = loadProxyAddress(network, 'ScoreWeightController');
-  const scoreRegistryAddr = loadProxyAddress(network, 'ScoreRegistry');
+  const controllerAddr = loadProxyAddress(network, CONTRACT_NAMES.ScoreWeightController);
+  const scoreRegistryAddr = loadProxyAddress(network, CONTRACT_NAMES.ScoreRegistry);
   console.log(`   ScoreWeightController: ${controllerAddr}`);
   console.log(`   ScoreRegistry: ${scoreRegistryAddr}`);
   console.log('✅ Addresses loaded\n');

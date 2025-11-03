@@ -1,6 +1,7 @@
 import hre from 'hardhat';
 import { encodeFunctionData } from 'viem';
-import { saveProxyAddress, saveAddress, type NetworkName } from './address-manager';
+import type { Address } from 'viem';
+import { saveProxyAddress, saveImplementationAddress, type NetworkName } from './address-manager';
 
 export interface DeployUUPSParams {
   name: string;
@@ -37,7 +38,7 @@ export async function deployUUPS(params: DeployUUPSParams): Promise<DeployUUPSRe
     }
   );
   
-  const implAddress = implementation.address;
+  const implAddress = implementation.address as Address;
   console.log(`  ✅ Implementation deployed: ${implAddress}`);
 
   // 2. 初期化データをエンコード
@@ -57,7 +58,7 @@ export async function deployUUPS(params: DeployUUPSParams): Promise<DeployUUPSRe
     [implAddress, initData]
   );
   
-  const proxyAddress = proxy.address;
+  const proxyAddress = proxy.address as Address;
   console.log(`  ✅ Proxy deployed: ${proxyAddress}`);
 
   // 4. アドレスを保存
@@ -70,12 +71,15 @@ export async function deployUUPS(params: DeployUUPSParams): Promise<DeployUUPSRe
     ? params.name.split('_')[1] as 'CJPY' | 'CUSD' | 'CEUR'
     : undefined;
   
-  // 実装アドレスは通常のsaveAddressを使用（命名規則が異なるため）
-  saveAddress(network, `${params.name}UUPSImpl`, implAddress);
+  // 実装アドレスを保存（統一された命名規則: {ContractName}Impl）
+  saveImplementationAddress(network, contractName, implAddress);
   saveProxyAddress(network, contractName, proxyAddress, currency);
 
   console.log(`✅ ${params.name} deployment complete!\n`);
 
-  return { implAddress, proxyAddress };
+  return { 
+    implAddress: implAddress as `0x${string}`, 
+    proxyAddress: proxyAddress as `0x${string}` 
+  };
 }
 

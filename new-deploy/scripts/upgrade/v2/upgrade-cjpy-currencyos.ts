@@ -1,7 +1,7 @@
 import hre from 'hardhat';
 import { loadProxyAddress, saveImplementationAddress, type NetworkName } from '../../core/address-manager';
 import { createAndProposeSafeTransaction } from '../../core/safe-transaction';
-import { V2_UPGRADE_IMPLEMENTATIONS, V2_UPGRADE_PROXIES } from '../../core/contract-definitions';
+import { V2_UPGRADE_IMPLEMENTATIONS, V2_UPGRADE_PROXIES, CONTRACT_NAMES } from '../../core/contract-definitions';
 
 /**
  * CJPY CurrencyOS v3→v4 アップグレード
@@ -31,10 +31,10 @@ async function main() {
   console.log(`   ✅ New implementation deployed: ${newImplAddress}`);
   
   // アドレスを保存（共通関数を使用）
-  saveImplementationAddress(network, 'CurrencyOS', 'V4', newImplAddress);
+  saveImplementationAddress(network, CONTRACT_NAMES.CurrencyOS, newImplAddress);
 
   // 2. プロキシをアップグレード（共通関数を使用）
-  const proxyAddress = loadProxyAddress(network, 'CurrencyOS');
+  const proxyAddress = loadProxyAddress(network, CONTRACT_NAMES.CurrencyOS);
   console.log(`   📍 Proxy: ${proxyAddress}\n`);
 
   const proxy = await hre.viem.getContractAt(V2_UPGRADE_PROXIES.CurrencyOS, proxyAddress);

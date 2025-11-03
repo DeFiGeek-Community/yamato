@@ -3,7 +3,8 @@ import { saveImplementationAddress, type NetworkName, loadAddress } from '../../
 import { 
   V1_5_UPGRADE_IMPLEMENTATIONS, 
   V1_CONTRACTS,
-  requiresPledgeLib 
+  requiresPledgeLib,
+  CONTRACT_NAMES 
 } from '../../core/contract-definitions';
 
 /**
@@ -30,15 +31,15 @@ async function main() {
 
   // contract-definitions.tsから定義を取得
   const implementations = [
-    { name: 'YamatoRepayer', version: 'V3', contractName: V1_5_UPGRADE_IMPLEMENTATIONS.YamatoRepayer },
-    { name: 'YamatoRedeemer', version: 'V5', contractName: V1_5_UPGRADE_IMPLEMENTATIONS.YamatoRedeemer },
-    { name: 'YamatoWithdrawer', version: 'V3', contractName: V1_5_UPGRADE_IMPLEMENTATIONS.YamatoWithdrawer },
-    { name: 'YamatoSweeper', version: 'V3', contractName: V1_5_UPGRADE_IMPLEMENTATIONS.YamatoSweeper },
-    { name: 'YamatoDepositor', version: 'V3', contractName: V1_5_UPGRADE_IMPLEMENTATIONS.YamatoDepositor },
-    { name: 'YamatoBorrower', version: 'V2', contractName: V1_5_UPGRADE_IMPLEMENTATIONS.YamatoBorrower },
-    { name: 'CurrencyOS', version: 'V3', contractName: V1_5_UPGRADE_IMPLEMENTATIONS.CurrencyOS },
-    { name: 'Yamato', version: 'V4', contractName: V1_5_UPGRADE_IMPLEMENTATIONS.Yamato },
-    { name: 'FeePool', version: 'V2', contractName: V1_5_UPGRADE_IMPLEMENTATIONS.FeePool },
+    { name: CONTRACT_NAMES.YamatoRepayer, contractName: V1_5_UPGRADE_IMPLEMENTATIONS.YamatoRepayer },
+    { name: CONTRACT_NAMES.YamatoRedeemer, contractName: V1_5_UPGRADE_IMPLEMENTATIONS.YamatoRedeemer },
+    { name: CONTRACT_NAMES.YamatoWithdrawer, contractName: V1_5_UPGRADE_IMPLEMENTATIONS.YamatoWithdrawer },
+    { name: CONTRACT_NAMES.YamatoSweeper, contractName: V1_5_UPGRADE_IMPLEMENTATIONS.YamatoSweeper },
+    { name: CONTRACT_NAMES.YamatoDepositor, contractName: V1_5_UPGRADE_IMPLEMENTATIONS.YamatoDepositor },
+    { name: CONTRACT_NAMES.YamatoBorrower, contractName: V1_5_UPGRADE_IMPLEMENTATIONS.YamatoBorrower },
+    { name: CONTRACT_NAMES.CurrencyOS, contractName: V1_5_UPGRADE_IMPLEMENTATIONS.CurrencyOS },
+    { name: CONTRACT_NAMES.Yamato, contractName: V1_5_UPGRADE_IMPLEMENTATIONS.Yamato },
+    { name: CONTRACT_NAMES.FeePool, contractName: V1_5_UPGRADE_IMPLEMENTATIONS.FeePool },
   ];
 
   const publicClient = await hre.viem.getPublicClient();
@@ -72,7 +73,7 @@ async function main() {
       console.log(`   ✅ Deployed: ${implAddress}`);
 
       // アドレスを保存（共通関数を使用）
-      saveImplementationAddress(network, impl.name, impl.version, implAddress);
+      saveImplementationAddress(network, impl.name, implAddress);
 
       successCount++;
     } catch (error) {

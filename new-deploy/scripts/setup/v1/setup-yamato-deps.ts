@@ -1,6 +1,6 @@
 import hre from 'hardhat';
 import { loadProxyAddress, type NetworkName } from '../../core/address-manager';
-import { V1_CONTRACTS } from '../../core/contract-definitions';
+import { V1_CONTRACTS, CONTRACT_NAMES } from '../../core/contract-definitions';
 
 async function main() {
   const network = hre.network.name as NetworkName;
@@ -8,15 +8,15 @@ async function main() {
 
   // 全てのアドレスを読み込む
   console.log('📖 Loading contract addresses...');
-  const yamatoAddress = loadProxyAddress(network, 'Yamato');
-  const depositorAddress = loadProxyAddress(network, 'YamatoDepositor');
-  const borrowerAddress = loadProxyAddress(network, 'YamatoBorrower');
-  const repayerAddress = loadProxyAddress(network, 'YamatoRepayer');
-  const withdrawerAddress = loadProxyAddress(network, 'YamatoWithdrawer');
-  const redeemerAddress = loadProxyAddress(network, 'YamatoRedeemer');
-  const sweeperAddress = loadProxyAddress(network, 'YamatoSweeper');
-  const poolAddress = loadProxyAddress(network, 'Pool');
-  const priorityRegistryAddress = loadProxyAddress(network, 'PriorityRegistry');
+  const yamatoAddress = loadProxyAddress(network, CONTRACT_NAMES.Yamato);
+  const depositorAddress = loadProxyAddress(network, CONTRACT_NAMES.YamatoDepositor);
+  const borrowerAddress = loadProxyAddress(network, CONTRACT_NAMES.YamatoBorrower);
+  const repayerAddress = loadProxyAddress(network, CONTRACT_NAMES.YamatoRepayer);
+  const withdrawerAddress = loadProxyAddress(network, CONTRACT_NAMES.YamatoWithdrawer);
+  const redeemerAddress = loadProxyAddress(network, CONTRACT_NAMES.YamatoRedeemer);
+  const sweeperAddress = loadProxyAddress(network, CONTRACT_NAMES.YamatoSweeper);
+  const poolAddress = loadProxyAddress(network, CONTRACT_NAMES.Pool);
+  const priorityRegistryAddress = loadProxyAddress(network, CONTRACT_NAMES.PriorityRegistry);
   console.log('✅ All addresses loaded\n');
 
   // Yamatoコントラクトを取得

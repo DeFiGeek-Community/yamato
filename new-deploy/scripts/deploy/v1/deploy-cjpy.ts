@@ -1,7 +1,7 @@
 import hre from 'hardhat';
 import { deployContract } from '../../core/contract-deployer-hh';
 import type { NetworkName } from '../../core/address-manager';
-import { V1_CONTRACTS } from '../../core/contract-definitions';
+import { V1_CONTRACTS, CONTRACT_NAMES } from '../../core/contract-definitions';
 
 async function main() {
   const network = hre.network.name as NetworkName;
@@ -9,7 +9,7 @@ async function main() {
 
   // CJPYをデプロイ
   const result = await deployContract({
-    name: 'CJPY',
+    name: CONTRACT_NAMES.CJPY,
     contractName: V1_CONTRACTS.CJPY,
     args: [], // CJPYはコンストラクタ引数なし
   });

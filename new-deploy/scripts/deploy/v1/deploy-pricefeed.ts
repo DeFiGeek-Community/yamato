@@ -1,7 +1,7 @@
 import hre from 'hardhat';
 import { deployUUPS } from '../../core/uups-deployer';
 import { loadAddress, type NetworkName } from '../../core/address-manager';
-import { V1_CONTRACTS } from '../../core/contract-definitions';
+import { V1_CONTRACTS, CONTRACT_NAMES } from '../../core/contract-definitions';
 
 async function main() {
   const network = hre.network.name as NetworkName;
@@ -17,7 +17,7 @@ async function main() {
 
   // PriceFeedをデプロイ
   const result = await deployUUPS({
-    name: 'PriceFeed',
+    name: CONTRACT_NAMES.PriceFeed,
     contractName: V1_CONTRACTS.PriceFeed,
     initFunction: 'initialize',
     initArgs: [

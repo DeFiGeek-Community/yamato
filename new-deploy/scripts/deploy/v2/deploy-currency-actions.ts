@@ -1,8 +1,8 @@
 import hre from 'hardhat';
 import { deployUUPS } from '../../core/uups-deployer';
-import { loadAddress, type NetworkName } from '../../core/address-manager';
+import { loadAddress, loadProxyAddress, type NetworkName } from '../../core/address-manager';
 import { getCurrency, getCurrencyContractName } from '../../core/currency-manager';
-import { V2_CURRENCY_CONTRACTS, V1_CONTRACTS, requiresPledgeLib } from '../../core/contract-definitions';
+import { V2_CURRENCY_CONTRACTS, V1_CONTRACTS, requiresPledgeLib, CONTRACT_NAMES } from '../../core/contract-definitions';
 
 /**
  * 通貨別アクションコントラクト デプロイ
@@ -28,7 +28,7 @@ async function main() {
   console.log(`💱 Currency: ${currency}\n`);
 
   console.log('📖 Loading dependencies...');
-  const yamatoAddr = loadProxyAddress(network, 'Yamato', currency);
+  const yamatoAddr = loadProxyAddress(network, CONTRACT_NAMES.Yamato, currency);
   const pledgeLibAddr = loadAddress(network, V1_CONTRACTS.PledgeLib);
   console.log(`   Yamato (${currency}): ${yamatoAddr}`);
   console.log(`   PledgeLib: ${pledgeLibAddr}`);
@@ -36,12 +36,12 @@ async function main() {
 
   // contract-definitions.tsから定義を取得
   const actions = [
-    { name: 'YamatoDepositor', version: 'V3', contractName: V2_CURRENCY_CONTRACTS.YamatoDepositor },
-    { name: 'YamatoBorrower', version: 'V2', contractName: V2_CURRENCY_CONTRACTS.YamatoBorrower },
-    { name: 'YamatoRepayer', version: 'V3', contractName: V2_CURRENCY_CONTRACTS.YamatoRepayer },
-    { name: 'YamatoWithdrawer', version: 'V3', contractName: V2_CURRENCY_CONTRACTS.YamatoWithdrawer },
-    { name: 'YamatoRedeemer', version: 'V5', contractName: V2_CURRENCY_CONTRACTS.YamatoRedeemer },
-    { name: 'YamatoSweeper', version: 'V3', contractName: V2_CURRENCY_CONTRACTS.YamatoSweeper },
+    { name: CONTRACT_NAMES.YamatoDepositor, version: 'V3', contractName: V2_CURRENCY_CONTRACTS.YamatoDepositor },
+    { name: CONTRACT_NAMES.YamatoBorrower, version: 'V2', contractName: V2_CURRENCY_CONTRACTS.YamatoBorrower },
+    { name: CONTRACT_NAMES.YamatoRepayer, version: 'V3', contractName: V2_CURRENCY_CONTRACTS.YamatoRepayer },
+    { name: CONTRACT_NAMES.YamatoWithdrawer, version: 'V3', contractName: V2_CURRENCY_CONTRACTS.YamatoWithdrawer },
+    { name: CONTRACT_NAMES.YamatoRedeemer, version: 'V5', contractName: V2_CURRENCY_CONTRACTS.YamatoRedeemer },
+    { name: CONTRACT_NAMES.YamatoSweeper, version: 'V3', contractName: V2_CURRENCY_CONTRACTS.YamatoSweeper },
   ];
 
   let successCount = 0;

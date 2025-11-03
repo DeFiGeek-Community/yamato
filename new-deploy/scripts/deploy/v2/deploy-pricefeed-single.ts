@@ -1,7 +1,8 @@
 import hre from 'hardhat';
 import { deployUUPS } from '../../core/uups-deployer';
 import { type NetworkName } from '../../core/address-manager';
-import { V2_CONTRACTS } from '../../core/contract-definitions';
+import { getCurrencyContractName } from '../../core/currency-manager';
+import { V2_CONTRACTS, CONTRACT_NAMES } from '../../core/contract-definitions';
 
 /**
  * PriceFeedSingle デプロイ
@@ -17,8 +18,9 @@ async function main() {
   console.log(`\n🌐 Network: ${network}\n`);
 
   // PriceFeedSingleは引数なしで初期化
+  // PriceFeedSingleはCUSD専用
   const result = await deployUUPS({
-    name: 'PriceFeedSingle_CUSD',
+    name: getCurrencyContractName(CONTRACT_NAMES.PriceFeedSingle, 'CUSD'),
     contractName: V2_CONTRACTS.PriceFeedSingle,
     initFunction: 'initialize',
     initArgs: [],

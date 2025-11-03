@@ -2,7 +2,7 @@ import hre from 'hardhat';
 import { deployUUPS } from '../../core/uups-deployer';
 import { loadProxyAddress, type NetworkName } from '../../core/address-manager';
 import { getCurrency, getCurrencyContractName } from '../../core/currency-manager';
-import { V2_CURRENCY_CONTRACTS } from '../../core/contract-definitions';
+import { V2_CURRENCY_CONTRACTS, CONTRACT_NAMES } from '../../core/contract-definitions';
 
 /**
  * 通貨別Yamato デプロイ
@@ -25,7 +25,7 @@ async function main() {
   console.log(`💱 Currency: ${currency}\n`);
 
   console.log('📖 Loading dependencies...');
-  const currencyOSAddr = loadProxyAddress(network, 'CurrencyOS', currency);
+  const currencyOSAddr = loadProxyAddress(network, CONTRACT_NAMES.CurrencyOS, currency);
   console.log(`   CurrencyOS (${currency}): ${currencyOSAddr}`);
   console.log('✅ Dependencies loaded\n');
 

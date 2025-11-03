@@ -1,7 +1,7 @@
 import hre from 'hardhat';
 import { deployUUPS } from '../../core/uups-deployer';
 import { loadAddress, loadProxyAddress, type NetworkName } from '../../core/address-manager';
-import { V1_5_CONTRACTS } from '../../core/contract-definitions';
+import { V1_5_CONTRACTS, CONTRACT_NAMES } from '../../core/contract-definitions';
 
 /**
  * YmtMinter デプロイ
@@ -20,7 +20,7 @@ async function main() {
 
   console.log('📖 Loading dependencies...');
   const ymtAddr = loadAddress(network, V1_5_CONTRACTS.YMT);
-  const controllerAddr = loadProxyAddress(network, 'ScoreWeightController');
+  const controllerAddr = loadProxyAddress(network, CONTRACT_NAMES.ScoreWeightController);
   console.log(`   YMT: ${ymtAddr}`);
   console.log(`   ScoreWeightController: ${controllerAddr}`);
   console.log('✅ Dependencies loaded\n');
@@ -33,7 +33,7 @@ async function main() {
   console.log(`⏰ Mining start time: ${startTime} (${new Date(startTime * 1000).toISOString()})\n`);
 
   const result = await deployUUPS({
-    name: 'YmtMinter',
+    name: CONTRACT_NAMES.YmtMinter,
     contractName: V1_5_CONTRACTS.YmtMinter,
     initFunction: 'initialize',
     initArgs: [ymtAddr, controllerAddr, startTime],

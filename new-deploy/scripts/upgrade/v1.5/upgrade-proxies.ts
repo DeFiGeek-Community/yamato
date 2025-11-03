@@ -5,6 +5,7 @@ import { createAndProposeSafeTransaction } from '../../core/safe-transaction';
 import { 
   V1_5_UPGRADE_IMPLEMENTATIONS, 
   V1_5_UPGRADE_PROXIES,
+  CONTRACT_NAMES,
 } from '../../core/contract-definitions';
 
 /**
@@ -32,15 +33,15 @@ async function main() {
 
   // contract-definitions.tsから定義を取得
   const upgrades = [
-    { name: 'YamatoRepayer', version: 'V3', proxyContract: V1_5_UPGRADE_PROXIES.YamatoRepayer, method: 'upgradeTo' },
-    { name: 'YamatoRedeemer', version: 'V5', proxyContract: V1_5_UPGRADE_PROXIES.YamatoRedeemer, method: 'upgradeTo' },
-    { name: 'YamatoWithdrawer', version: 'V3', proxyContract: V1_5_UPGRADE_PROXIES.YamatoWithdrawer, method: 'upgradeTo' },
-    { name: 'YamatoSweeper', version: 'V3', proxyContract: V1_5_UPGRADE_PROXIES.YamatoSweeper, method: 'upgradeTo' },
-    { name: 'YamatoDepositor', version: 'V3', proxyContract: V1_5_UPGRADE_PROXIES.YamatoDepositor, method: 'upgradeTo' },
-    { name: 'YamatoBorrower', version: 'V2', proxyContract: V1_5_UPGRADE_PROXIES.YamatoBorrower, method: 'upgradeTo' },
-    { name: 'CurrencyOS', version: 'V3', proxyContract: V1_5_UPGRADE_PROXIES.CurrencyOS, method: 'upgradeTo' },
-    { name: 'Yamato', version: 'V4', proxyContract: V1_5_UPGRADE_PROXIES.Yamato, method: 'upgradeTo' },
-    { name: 'FeePool', version: 'V2', proxyContract: V1_5_UPGRADE_PROXIES.FeePool, method: 'upgradeToAndCall' },
+    { name: CONTRACT_NAMES.YamatoRepayer, proxyContract: V1_5_UPGRADE_PROXIES.YamatoRepayer, method: 'upgradeTo' },
+    { name: CONTRACT_NAMES.YamatoRedeemer, proxyContract: V1_5_UPGRADE_PROXIES.YamatoRedeemer, method: 'upgradeTo' },
+    { name: CONTRACT_NAMES.YamatoWithdrawer, proxyContract: V1_5_UPGRADE_PROXIES.YamatoWithdrawer, method: 'upgradeTo' },
+    { name: CONTRACT_NAMES.YamatoSweeper, proxyContract: V1_5_UPGRADE_PROXIES.YamatoSweeper, method: 'upgradeTo' },
+    { name: CONTRACT_NAMES.YamatoDepositor, proxyContract: V1_5_UPGRADE_PROXIES.YamatoDepositor, method: 'upgradeTo' },
+    { name: CONTRACT_NAMES.YamatoBorrower, proxyContract: V1_5_UPGRADE_PROXIES.YamatoBorrower, method: 'upgradeTo' },
+    { name: CONTRACT_NAMES.CurrencyOS, proxyContract: V1_5_UPGRADE_PROXIES.CurrencyOS, method: 'upgradeTo' },
+    { name: CONTRACT_NAMES.Yamato, proxyContract: V1_5_UPGRADE_PROXIES.Yamato, method: 'upgradeTo' },
+    { name: CONTRACT_NAMES.FeePool, proxyContract: V1_5_UPGRADE_PROXIES.FeePool, method: 'upgradeToAndCall' },
   ];
 
   const publicClient = await hre.viem.getPublicClient();
@@ -60,7 +61,7 @@ async function main() {
       console.log(`   📍 Proxy: ${proxyAddress}`);
 
       // 新しい実装アドレスを取得（共通関数を使用）
-      const newImplAddress = loadImplementationAddress(network, upgrade.name, upgrade.version);
+      const newImplAddress = loadImplementationAddress(network, upgrade.name);
       console.log(`   📦 New Implementation: ${newImplAddress}`);
 
       // プロキシコントラクトを取得（現在のバージョンのABIを使用）

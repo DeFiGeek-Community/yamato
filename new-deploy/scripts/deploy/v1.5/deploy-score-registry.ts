@@ -1,7 +1,7 @@
 import hre from 'hardhat';
 import { deployUUPS } from '../../core/uups-deployer';
 import { loadAddress, loadProxyAddress, type NetworkName } from '../../core/address-manager';
-import { V1_5_CONTRACTS, V1_CONTRACTS, requiresPledgeLib } from '../../core/contract-definitions';
+import { V1_5_CONTRACTS, V1_CONTRACTS, requiresPledgeLib, CONTRACT_NAMES } from '../../core/contract-definitions';
 
 /**
  * ScoreRegistry デプロイ
@@ -18,8 +18,8 @@ async function main() {
   console.log(`\n🌐 Network: ${network}\n`);
 
   console.log('📖 Loading dependencies...');
-  const ymtMinterAddr = loadProxyAddress(network, 'YmtMinter');
-  const yamatoAddr = loadProxyAddress(network, 'Yamato');
+  const ymtMinterAddr = loadProxyAddress(network, CONTRACT_NAMES.YmtMinter);
+  const yamatoAddr = loadProxyAddress(network, CONTRACT_NAMES.Yamato);
   const pledgeLibAddr = loadAddress(network, V1_CONTRACTS.PledgeLib);
   console.log(`   YmtMinter: ${ymtMinterAddr}`);
   console.log(`   Yamato: ${yamatoAddr}`);
@@ -29,7 +29,7 @@ async function main() {
   const needsLibrary = requiresPledgeLib(V1_5_CONTRACTS.ScoreRegistry, 'v1.5');
 
   const result = await deployUUPS({
-    name: 'ScoreRegistry',
+    name: CONTRACT_NAMES.ScoreRegistry,
     contractName: V1_5_CONTRACTS.ScoreRegistry,
     initFunction: 'initialize',
     initArgs: [ymtMinterAddr, yamatoAddr],

@@ -1,6 +1,6 @@
 import hre from 'hardhat';
 import { loadProxyAddress, type NetworkName } from '../core/address-manager';
-import { V1_5_CONTRACTS } from '../core/contract-definitions';
+import { V1_5_CONTRACTS, CONTRACT_NAMES } from '../core/contract-definitions';
 
 /**
  * v1.5 ガバナンス権限を受け入れ
@@ -28,9 +28,9 @@ async function main() {
 
   // contract-definitions.tsから定義を取得
   const contracts = [
-    { name: 'YmtMinter', contractName: V1_5_CONTRACTS.YmtMinter },
-    { name: 'ScoreWeightController', contractName: V1_5_CONTRACTS.ScoreWeightController },
-    { name: 'ScoreRegistry', contractName: V1_5_CONTRACTS.ScoreRegistry },
+    { name: CONTRACT_NAMES.YmtMinter, contractName: V1_5_CONTRACTS.YmtMinter },
+    { name: CONTRACT_NAMES.ScoreWeightController, contractName: V1_5_CONTRACTS.ScoreWeightController },
+    { name: CONTRACT_NAMES.ScoreRegistry, contractName: V1_5_CONTRACTS.ScoreRegistry },
   ];
 
   const publicClient = await hre.viem.getPublicClient();

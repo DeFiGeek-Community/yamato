@@ -1,7 +1,7 @@
 import hre from 'hardhat';
 import { loadProxyAddress, type NetworkName } from '../../core/address-manager';
 import { getCurrency } from '../../core/currency-manager';
-import { V2_CURRENCY_CONTRACTS } from '../../core/contract-definitions';
+import { V2_CURRENCY_CONTRACTS, CONTRACT_NAMES } from '../../core/contract-definitions';
 
 /**
  * 通貨別Yamato依存関係設定
@@ -17,15 +17,15 @@ async function main() {
   console.log('⚙️  Setting Yamato dependencies...\n');
 
   console.log('📖 Loading addresses...');
-  const yamatoAddr = loadProxyAddress(network, 'Yamato', currency);
-  const depositorAddr = loadProxyAddress(network, 'YamatoDepositor', currency);
-  const borrowerAddr = loadProxyAddress(network, 'YamatoBorrower', currency);
-  const repayerAddr = loadProxyAddress(network, 'YamatoRepayer', currency);
-  const withdrawerAddr = loadProxyAddress(network, 'YamatoWithdrawer', currency);
-  const redeemerAddr = loadProxyAddress(network, 'YamatoRedeemer', currency);
-  const sweeperAddr = loadProxyAddress(network, 'YamatoSweeper', currency);
-  const poolAddr = loadProxyAddress(network, 'Pool', currency);
-  const priorityRegistryAddr = loadProxyAddress(network, 'PriorityRegistry', currency);
+  const yamatoAddr = loadProxyAddress(network, CONTRACT_NAMES.Yamato, currency);
+  const depositorAddr = loadProxyAddress(network, CONTRACT_NAMES.YamatoDepositor, currency);
+  const borrowerAddr = loadProxyAddress(network, CONTRACT_NAMES.YamatoBorrower, currency);
+  const repayerAddr = loadProxyAddress(network, CONTRACT_NAMES.YamatoRepayer, currency);
+  const withdrawerAddr = loadProxyAddress(network, CONTRACT_NAMES.YamatoWithdrawer, currency);
+  const redeemerAddr = loadProxyAddress(network, CONTRACT_NAMES.YamatoRedeemer, currency);
+  const sweeperAddr = loadProxyAddress(network, CONTRACT_NAMES.YamatoSweeper, currency);
+  const poolAddr = loadProxyAddress(network, CONTRACT_NAMES.Pool, currency);
+  const priorityRegistryAddr = loadProxyAddress(network, CONTRACT_NAMES.PriorityRegistry, currency);
   
   console.log(`   Yamato: ${yamatoAddr}`);
   console.log(`   YamatoDepositor: ${depositorAddr}`);

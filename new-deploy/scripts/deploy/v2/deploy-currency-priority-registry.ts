@@ -2,7 +2,7 @@ import hre from 'hardhat';
 import { deployUUPS } from '../../core/uups-deployer';
 import { loadAddress, loadProxyAddress, type NetworkName } from '../../core/address-manager';
 import { getCurrency, getCurrencyContractName } from '../../core/currency-manager';
-import { V2_CURRENCY_CONTRACTS, V1_CONTRACTS, requiresPledgeLib } from '../../core/contract-definitions';
+import { V2_CURRENCY_CONTRACTS, V1_CONTRACTS, requiresPledgeLib, CONTRACT_NAMES } from '../../core/contract-definitions';
 
 /**
  * 通貨別PriorityRegistry デプロイ
@@ -18,7 +18,7 @@ async function main() {
   console.log(`💱 Currency: ${currency}\n`);
 
   console.log('📖 Loading dependencies...');
-  const yamatoAddr = loadProxyAddress(network, 'Yamato', currency);
+  const yamatoAddr = loadProxyAddress(network, CONTRACT_NAMES.Yamato, currency);
   const pledgeLibAddr = loadAddress(network, V1_CONTRACTS.PledgeLib);
   console.log(`   Yamato (${currency}): ${yamatoAddr}`);
   console.log(`   PledgeLib: ${pledgeLibAddr}`);

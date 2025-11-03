@@ -1,6 +1,6 @@
 import hre from 'hardhat';
 import { loadProxyAddress, type NetworkName } from '../core/address-manager';
-import { V1_CONTRACTS } from '../core/contract-definitions';
+import { V1_CONTRACTS, CONTRACT_NAMES } from '../core/contract-definitions';
 
 /**
  * v1.0 ガバナンス権限をマルチシグに移譲
@@ -21,18 +21,18 @@ async function main() {
 
   // contract-definitions.tsから定義を取得
   const contracts = [
-    { name: 'PriceFeed', contractName: V1_CONTRACTS.PriceFeed },
-    { name: 'FeePool', contractName: V1_CONTRACTS.FeePool },
-    { name: 'CurrencyOS', contractName: V1_CONTRACTS.CurrencyOS },
-    { name: 'Pool', contractName: V1_CONTRACTS.Pool },
-    { name: 'PriorityRegistry', contractName: V1_CONTRACTS.PriorityRegistry },
-    { name: 'Yamato', contractName: V1_CONTRACTS.Yamato },
-    { name: 'YamatoDepositor', contractName: V1_CONTRACTS.YamatoDepositor },
-    { name: 'YamatoBorrower', contractName: V1_CONTRACTS.YamatoBorrower },
-    { name: 'YamatoRepayer', contractName: V1_CONTRACTS.YamatoRepayer },
-    { name: 'YamatoWithdrawer', contractName: V1_CONTRACTS.YamatoWithdrawer },
-    { name: 'YamatoRedeemer', contractName: V1_CONTRACTS.YamatoRedeemer },
-    { name: 'YamatoSweeper', contractName: V1_CONTRACTS.YamatoSweeper },
+    { name: CONTRACT_NAMES.PriceFeed, contractName: V1_CONTRACTS.PriceFeed },
+    { name: CONTRACT_NAMES.FeePool, contractName: V1_CONTRACTS.FeePool },
+    { name: CONTRACT_NAMES.CurrencyOS, contractName: V1_CONTRACTS.CurrencyOS },
+    { name: CONTRACT_NAMES.Pool, contractName: V1_CONTRACTS.Pool },
+    { name: CONTRACT_NAMES.PriorityRegistry, contractName: V1_CONTRACTS.PriorityRegistry },
+    { name: CONTRACT_NAMES.Yamato, contractName: V1_CONTRACTS.Yamato },
+    { name: CONTRACT_NAMES.YamatoDepositor, contractName: V1_CONTRACTS.YamatoDepositor },
+    { name: CONTRACT_NAMES.YamatoBorrower, contractName: V1_CONTRACTS.YamatoBorrower },
+    { name: CONTRACT_NAMES.YamatoRepayer, contractName: V1_CONTRACTS.YamatoRepayer },
+    { name: CONTRACT_NAMES.YamatoWithdrawer, contractName: V1_CONTRACTS.YamatoWithdrawer },
+    { name: CONTRACT_NAMES.YamatoRedeemer, contractName: V1_CONTRACTS.YamatoRedeemer },
+    { name: CONTRACT_NAMES.YamatoSweeper, contractName: V1_CONTRACTS.YamatoSweeper },
   ];
 
   const publicClient = await hre.viem.getPublicClient();

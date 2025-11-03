@@ -1,7 +1,7 @@
 import hre from 'hardhat';
 import { deployUUPS } from '../../core/uups-deployer';
 import { loadProxyAddress, type NetworkName } from '../../core/address-manager';
-import { V1_CONTRACTS } from '../../core/contract-definitions';
+import { V1_CONTRACTS, CONTRACT_NAMES } from '../../core/contract-definitions';
 
 async function main() {
   const network = hre.network.name as NetworkName;
@@ -9,13 +9,13 @@ async function main() {
 
   // 依存コントラクトのアドレスを読み込む（共通関数を使用）
   console.log('📖 Loading dependencies...');
-  const currencyOSAddress = loadProxyAddress(network, 'CurrencyOS');
+  const currencyOSAddress = loadProxyAddress(network, CONTRACT_NAMES.CurrencyOS);
   console.log(`   CurrencyOS: ${currencyOSAddress}`);
   console.log('✅ Dependencies loaded\n');
 
   // Yamatoをデプロイ
   const result = await deployUUPS({
-    name: 'Yamato',
+    name: CONTRACT_NAMES.Yamato,
     contractName: V1_CONTRACTS.Yamato,
     initFunction: 'initialize',
     initArgs: [currencyOSAddress],

@@ -1,6 +1,6 @@
 import hre from 'hardhat';
 import { loadAddress, loadProxyAddress, type NetworkName } from '../core/address-manager';
-import { V1_5_CONTRACTS } from '../core/contract-definitions';
+import { V1_5_CONTRACTS, CONTRACT_NAMES } from '../core/contract-definitions';
 
 /**
  * v1.5 ガバナンス権限をマルチシグに移譲
@@ -70,7 +70,7 @@ async function main() {
   // YmtMinter.setGovernance() - UUPSコントラクト
   try {
     console.log(`\n🔄 [3/5] YmtMinter.setGovernance()...`);
-    const ymtMinterAddr = loadProxyAddress(network, 'YmtMinter');
+    const ymtMinterAddr = loadProxyAddress(network, CONTRACT_NAMES.YmtMinter);
     const ymtMinter = await hre.viem.getContractAt(V1_5_CONTRACTS.YmtMinter, ymtMinterAddr);
     
     const hash = await ymtMinter.write.setGovernance([multisigAddr as `0x${string}`]);
@@ -86,7 +86,7 @@ async function main() {
   // ScoreWeightController.setGovernance() - UUPSコントラクト
   try {
     console.log(`\n🔄 [4/5] ScoreWeightController.setGovernance()...`);
-    const controllerAddr = loadProxyAddress(network, 'ScoreWeightController');
+    const controllerAddr = loadProxyAddress(network, CONTRACT_NAMES.ScoreWeightController);
     const controller = await hre.viem.getContractAt(V1_5_CONTRACTS.ScoreWeightController, controllerAddr);
     
     const hash = await controller.write.setGovernance([multisigAddr as `0x${string}`]);
@@ -102,7 +102,7 @@ async function main() {
   // ScoreRegistry.setGovernance() - UUPSコントラクト
   try {
     console.log(`\n🔄 [5/5] ScoreRegistry.setGovernance()...`);
-    const scoreRegistryAddr = loadProxyAddress(network, 'ScoreRegistry');
+    const scoreRegistryAddr = loadProxyAddress(network, CONTRACT_NAMES.ScoreRegistry);
     const scoreRegistry = await hre.viem.getContractAt(V1_5_CONTRACTS.ScoreRegistry, scoreRegistryAddr);
     
     const hash = await scoreRegistry.write.setGovernance([multisigAddr as `0x${string}`]);

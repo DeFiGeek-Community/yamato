@@ -1,7 +1,7 @@
 import hre from 'hardhat';
 import { deployContract } from '../../core/contract-deployer-hh';
 import { type NetworkName } from '../../core/address-manager';
-import { V2_CONTRACTS } from '../../core/contract-definitions';
+import { V2_CONTRACTS, CONTRACT_NAMES } from '../../core/contract-definitions';
 
 /**
  * CEUR デプロイ
@@ -17,7 +17,7 @@ async function main() {
   console.log(`\n🌐 Network: ${network}\n`);
 
   const result = await deployContract({
-    name: 'CEUR',
+    name: CONTRACT_NAMES.CEUR,
     contractName: V2_CONTRACTS.CEUR,
     args: [], // コンストラクタ引数なし
   });

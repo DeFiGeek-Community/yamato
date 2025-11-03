@@ -1,6 +1,6 @@
 import hre from 'hardhat';
 import { loadAddress, loadProxyAddress, type NetworkName } from '../../core/address-manager';
-import { V1_5_CONTRACTS } from '../../core/contract-definitions';
+import { V1_5_CONTRACTS, CONTRACT_NAMES } from '../../core/contract-definitions';
 
 /**
  * YMT.setMinter() 実行
@@ -13,7 +13,7 @@ async function main() {
 
   console.log('📖 Loading addresses...');
   const ymtAddr = loadAddress(network, V1_5_CONTRACTS.YMT);
-  const ymtMinterAddr = loadProxyAddress(network, 'YmtMinter');
+  const ymtMinterAddr = loadProxyAddress(network, CONTRACT_NAMES.YmtMinter);
   console.log(`   YMT: ${ymtAddr}`);
   console.log(`   YmtMinter: ${ymtMinterAddr}`);
   console.log('✅ Addresses loaded\n');
