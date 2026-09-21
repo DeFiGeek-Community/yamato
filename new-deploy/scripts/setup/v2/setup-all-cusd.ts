@@ -28,6 +28,7 @@ async function main() {
     'scripts/setup/v2/setup-currency-token.ts',
     'scripts/setup/v2/setup-ymtos-add-currencyos.ts',
     'scripts/setup/v2/setup-currency-yamato-score-registry.ts',
+    'scripts/setup/v2/setup-currency-add-score.ts',
   ];
 
   for (let i = 0; i < scripts.length; i++) {

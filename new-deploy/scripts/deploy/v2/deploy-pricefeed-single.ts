@@ -17,11 +17,20 @@ async function main() {
   const network = hre.network.name as NetworkName;
   console.log(`\n🌐 Network: ${network}\n`);
 
-  // モックオラクルアドレスを読み込む
-  console.log('📖 Loading mock oracle address...');
-  const chainlinkEthUsdAddress = loadAddress(network, 'ChainLinkMockEthUsd');
+  // ETH/USD オラクルアドレスを取得
+  // - mainnet/sepolia: Chainlink の実オラクル
+  // - localhost: ChainLinkMock（deploy-mocks で事前デプロイ）
+  console.log('📖 Loading ETH/USD oracle address...');
+  let chainlinkEthUsdAddress: string;
+  if (network === 'mainnet') {
+    chainlinkEthUsdAddress = '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419';
+  } else if (network === 'sepolia') {
+    chainlinkEthUsdAddress = '0x694AA1769357215DE4FAC081bf1f309aDC325306';
+  } else {
+    chainlinkEthUsdAddress = loadAddress(network, 'ChainLinkMockEthUsd');
+  }
   console.log(`   ETH/USD Oracle: ${chainlinkEthUsdAddress}`);
-  console.log('✅ Mock address loaded\n');
+  console.log('✅ Oracle address loaded\n');
 
   // PriceFeedSingleはCUSD専用
   const result = await deployUUPS({
