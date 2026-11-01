@@ -112,3 +112,34 @@ export async function createAndProposeSafeTransaction(
   console.log(`\n⚠️  This transaction requires multisig approval before execution.`);
 }
 
+
+/**
+ * 宛先と calldata が同じ未実行のトランザクションが Safe にあれば、その nonce と safeTxHash を返す
+ *
+ * @param contractAddress コントラクトアドレス
+ * @param data 関数呼び出しの calldata
+ * @param network ネットワーク名
+ */
+export async function findPendingSafeTransaction(
+  contractAddress: Address,
+  data: `0x${string}`,
+  network: string
+): Promise<{ nonce: number; safeTxHash: string } | undefined> {
+  const networkConfig = getNetworkConfig(network as NetworkName);
+  const safeAddress = networkConfig.safeAddress || '';
+  if (!safeAddress) {
+    throw new Error(`SAFE_ADDRESS_${network.toUpperCase()} is not set in .env`);
+  }
+
+  const apiKit = new SafeApiKit({
+    chainId: BigInt(networkConfig.chainId),
+  });
+  const { results } = await apiKit.getPendingTransactions(safeAddress, { limit: 100 });
+
+  const match = results.find(
+    (tx) =>
+      tx.to.toLowerCase() === contractAddress.toLowerCase() &&
+      (tx.data ?? '0x').toLowerCase() === data.toLowerCase()
+  );
+  return match ? { nonce: Number(match.nonce), safeTxHash: match.safeTxHash } : undefined;
+}

@@ -153,8 +153,8 @@ CURRENCY=CEUR npx hardhat run scripts/deploy/v2/deploy-currency-yamato.ts
 
 ### 4. YmtOS.addCurrencyOS()の実行条件
 
-- **CUSD**: 実行する
-- **CEUR**: 実行しない（`index.md`に基づく）
+- **CUSD / CEUR**: 実行する
+- 登録済み（`YmtOS.exists()` が true）なら実行しない。`addCurrencyOS` は重複を確認せず、登録を削除する関数もないため
 
 ### 5. ライブラリリンク
 
@@ -177,7 +177,8 @@ PledgeLibのリンクが必要なコントラクト（v2.0）：
 
 - **localhost**: 直接トランザクション実行
 - **その他（sepolia, mainnet）**: Safe Transaction提案
-- アップグレードとガバナンス移譲で実装
+- アップグレードとガバナンス承認で使用。ガバナンス移譲（setGovernance）は現在の governance であるデプロイ用アカウントから直接送信する
+- ガバナンスの移譲・承認と YmtOS.addCurrencyOS() は、送信前にオンチェーンの状態を確認し、済んでいるものは送信しない
 
 ## デプロイフロー
 
@@ -198,11 +199,11 @@ v1.0 → v1.5 → v2.0
    ↓
 4. CUSDデプロイ（トークン、PriceFeedSingle、CurrencyOS、Yamato、Actions、Pool、PriorityRegistry、ScoreRegistry）
    ↓
-5. CUSDセットアップ（setDeps、addYamato、setYmtOS、setCurrencyOS、addCurrencyOS、setScoreRegistry）
+5. CUSDセットアップ（setDeps、addYamato、setYmtOS、setCurrencyOS、addCurrencyOS、setScoreRegistry、addScore）
    ↓
 6. CEURデプロイ（トークン、PriceFeed、CurrencyOS、Yamato、Actions、Pool、PriorityRegistry、ScoreRegistry）
    ↓
-7. CEURセットアップ（setDeps、addYamato、setYmtOS、setCurrencyOS、setScoreRegistry）
+7. CEURセットアップ（setDeps、addYamato、setYmtOS、setCurrencyOS、addCurrencyOS、setScoreRegistry、addScore）
 ```
 
 ## テスト状況

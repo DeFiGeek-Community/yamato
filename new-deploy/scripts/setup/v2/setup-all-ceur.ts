@@ -10,10 +10,9 @@ import { execSync } from 'child_process';
  * 2. CurrencyOS.addYamato()
  * 3. CurrencyOS.setYmtOS()
  * 4. CEUR.setCurrencyOS() + CEUR.revokeGovernance()
- * 5. Yamato.setScoreRegistry()
- * 
- * ⚠️ 注意:
- * - CEURはYmtOS.addCurrencyOS()を実行しません（index.mdに基づく）
+ * 5. YmtOS.addCurrencyOS()
+ * 6. Yamato.setScoreRegistry()
+ * 7. ScoreWeightController.addScore()
  */
 async function main() {
   const network = process.env.HARDHAT_NETWORK || 'localhost';
@@ -28,7 +27,7 @@ async function main() {
     'scripts/setup/v2/setup-currency-currencyos-add-yamato.ts',
     'scripts/setup/v2/setup-currency-currencyos-set-ymtos.ts',
     'scripts/setup/v2/setup-currency-token.ts',
-    // CEURはYmtOS.addCurrencyOS()をスキップ
+    'scripts/setup/v2/setup-ymtos-add-currencyos.ts',
     'scripts/setup/v2/setup-currency-yamato-score-registry.ts',
     'scripts/setup/v2/setup-currency-add-score.ts',
   ];

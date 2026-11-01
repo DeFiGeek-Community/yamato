@@ -242,7 +242,7 @@ npx hardhat run scripts/governance/v1.5-accept-governance.ts --network sepolia
 
 ### v2.0 ガバナンス移譲（本番環境のみ）
 
-本番環境では、通貨別コントラクトのガバナンス権限をマルチシグウォレットに移譲します：
+本番環境では、通貨別コントラクトと YmtOS のガバナンス権限をマルチシグウォレットに移譲します：
 
 #### ステップ1: ガバナンス移譲
 
@@ -250,7 +250,7 @@ npx hardhat run scripts/governance/v1.5-accept-governance.ts --network sepolia
 # .envにマルチシグアドレスを設定
 SAFE_ADDRESS_SEPOLIA=0x...
 
-# デプロイ用の秘密鍵で実行
+# デプロイ用の秘密鍵（PRIVATE_KEY）から setGovernance を直接送信
 CURRENCY=CUSD npx hardhat run scripts/governance/v2-transfer-governance.ts --network sepolia
 # または
 CURRENCY=CEUR npx hardhat run scripts/governance/v2-transfer-governance.ts --network sepolia
@@ -259,13 +259,19 @@ CURRENCY=CEUR npx hardhat run scripts/governance/v2-transfer-governance.ts --net
 #### ステップ2: ガバナンス受け入れ
 
 ```bash
-# .envのPRIVATE_KEYをマルチシグ署名者の秘密鍵に変更
+# .envのSIGNER_ADDRESS_PRIVATE_KEYにマルチシグ署名者の秘密鍵を設定
 
-# マルチシグ署名者の秘密鍵で実行
+# acceptGovernance を Safe Transaction として提案（マルチシグでの承認・実行が必要）
 CURRENCY=CUSD npx hardhat run scripts/governance/v2-accept-governance.ts --network sepolia
 # または
 CURRENCY=CEUR npx hardhat run scripts/governance/v2-accept-governance.ts --network sepolia
 ```
+
+どちらのスクリプトも、送信前に全コントラクトの `governance` / `pendingGovernance` を確認し、済んでいるものは送信しません。そのため、通貨の実行順や再実行に関係なく失敗しません。
+
+- 移譲: マルチシグが `governance` または `pendingGovernance` のコントラクトは対象外。YmtOS は最初に実行した通貨で移譲され、以降は対象外になる
+- 受け入れ: マルチシグが `governance` のコントラクトは対象外。宛先と calldata が同じ未実行の提案が Safe にあるものは提案しない
+- 想定外の状態のコントラクト（移譲: `governance` がデプロイ用アカウントでもマルチシグでもない、受け入れ: 移譲先が未設定）があれば、何も送信せずに終了する
 
 ## ディレクトリ構造
 
@@ -383,8 +389,9 @@ CURRENCY=CUSD npx hardhat run scripts/setup/v2/setup-all-cusd.ts --network local
 2. `CurrencyOS.addYamato()`
 3. `CurrencyOS.setYmtOS()`
 4. `CUSD.setCurrencyOS()` + `CUSD.revokeGovernance()`
-5. `YmtOS.addCurrencyOS()`
+5. `YmtOS.addCurrencyOS()`（登録済みなら何もしない）
 6. `Yamato.setScoreRegistry()`
+7. `ScoreWeightController.addScore()`
 
 #### ステップ6: CEURデプロイ（オプション）
 
@@ -422,9 +429,9 @@ CURRENCY=CEUR npx hardhat run scripts/setup/v2/setup-all-ceur.ts --network local
 2. `CurrencyOS.addYamato()`
 3. `CurrencyOS.setYmtOS()`
 4. `CEUR.setCurrencyOS()` + `CEUR.revokeGovernance()`
-5. `Yamato.setScoreRegistry()`
-
-⚠️ **注意:** CEURは`YmtOS.addCurrencyOS()`を実行しません（index.mdに基づく）
+5. `YmtOS.addCurrencyOS()`（登録済みなら何もしない）
+6. `Yamato.setScoreRegistry()`
+7. `ScoreWeightController.addScore()`
 
 #### v2.0 完全フロー（ローカルテスト用）
 

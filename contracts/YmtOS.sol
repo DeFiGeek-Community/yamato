@@ -1,5 +1,4 @@
 pragma solidity 0.8.4;
-// This contract is not in use.
 
 /*
  * SPDX-License-Identifier: GPL-3.0-or-later

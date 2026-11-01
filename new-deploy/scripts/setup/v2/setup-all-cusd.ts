@@ -12,6 +12,7 @@ import { execSync } from 'child_process';
  * 4. CUSD.setCurrencyOS() + CUSD.revokeGovernance()
  * 5. YmtOS.addCurrencyOS()
  * 6. Yamato.setScoreRegistry()
+ * 7. ScoreWeightController.addScore()
  */
 async function main() {
   const network = process.env.HARDHAT_NETWORK || 'localhost';

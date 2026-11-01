@@ -1,20 +1,24 @@
 import hre from 'hardhat';
 import { loadProxyAddress, type NetworkName } from '../core/address-manager';
-import { getNetworkConfig } from '../../config/networks';
 import { getCurrency } from '../core/currency-manager';
-import { createAndProposeSafeTransaction } from '../core/safe-transaction';
+import { getMultisigAddress, readGovernance, sendFromMultisig, type SendResult } from '../core/governance';
 import { V2_CONTRACTS, V2_CURRENCY_CONTRACTS, V1_CONTRACTS, CONTRACT_NAMES } from '../core/contract-definitions';
 
 /**
  * v2.0 ガバナンス承認
- * 
- * マルチシグが通貨別コントラクトのガバナンス権限を承認します。
- * 
+ *
+ * マルチシグが acceptGovernance を実行し、通貨別コントラクトと YmtOS の移譲を完了します。
+ *
  * 実行方法:
- * - localhost: 直接トランザクション実行（テスト用）
- * - その他（sepolia, mainnet）: Safe Transaction提案
- * 
- * 対象コントラクト（通貨別）:
+ * - localhost: アカウント #1 から直接送信
+ * - その他（sepolia, mainnet）: Safe Transaction 提案
+ *
+ * 送信前に全コントラクトの状態を確認し、次のものは送信しません。
+ * - governance がマルチシグ（承認済み）
+ * - 宛先と calldata が同じ未実行の提案が Safe にある（sepolia, mainnet）
+ * 未承認で pendingGovernance もマルチシグでないコントラクト（移譲先が未設定）があれば、何も送信せずに終了します。
+ *
+ * 対象コントラクト:
  * - YmtOS (共有)
  * - PriceFeed (通貨別)
  * - CurrencyOS (通貨別)
@@ -28,39 +32,21 @@ import { V2_CONTRACTS, V2_CURRENCY_CONTRACTS, V1_CONTRACTS, CONTRACT_NAMES } fro
  * - YamatoRedeemer (通貨別)
  * - YamatoSweeper (通貨別)
  * - ScoreRegistry (通貨別)
- * 
- * ⚠️ 注意:
- * - 本番環境では、マルチシグの署名者が実行する必要があります
- * - ローカル環境では、テスト用アカウント#1で実行します
  */
 async function main() {
   const network = hre.network.name as NetworkName;
-  const isLocalhost = network === 'localhost';
   const currency = getCurrency();
-  
+  const multisig = getMultisigAddress(network);
+
   console.log(`\n🌐 Network: ${network}`);
   console.log(`💱 Currency: ${currency}`);
-  console.log(`📝 Execution mode: ${isLocalhost ? 'Direct' : 'Safe Transaction'}\n`);
+  console.log(`📝 Execution mode: ${network === 'localhost' ? 'Direct (account #1)' : 'Safe Transaction'}`);
+  console.log(`🔐 Multisig: ${multisig}\n`);
 
-  // マルチシグアドレスを取得
-  const networkConfig = getNetworkConfig(network);
-  const multisigAddr = isLocalhost
-    ? '0x70997970C51812dc3A010C7d01b50e0d17dc79C8' // Anvilのアカウント#1（テスト用）
-    : (networkConfig.safeAddress as `0x${string}`);
-
-  if (!multisigAddr) {
-    throw new Error(`SAFE_ADDRESS_${network.toUpperCase()} is not set in .env`);
-  }
-
-  console.log(`🔐 Multisig Address: ${multisigAddr}\n`);
-  console.log('🔄 Accepting governance...\n');
-
-  // contract-definitions.tsから定義を取得
-  const priceFeedContractName = currency === 'CUSD' 
-    ? V2_CONTRACTS.PriceFeedSingle 
+  const priceFeedContractName = currency === 'CUSD'
+    ? V2_CONTRACTS.PriceFeedSingle
     : V1_CONTRACTS.PriceFeed;
 
-  // 共通関数を使用してアドレスを読み込み
   const contracts = [
     { name: CONTRACT_NAMES.YmtOS, contractName: V2_CONTRACTS.YmtOS, address: loadProxyAddress(network, CONTRACT_NAMES.YmtOS) },
     { name: `PriceFeed (${currency})`, contractName: priceFeedContractName, address: loadProxyAddress(network, currency === 'CUSD' ? CONTRACT_NAMES.PriceFeedSingle : CONTRACT_NAMES.PriceFeed, currency) },
@@ -77,52 +63,49 @@ async function main() {
     { name: `ScoreRegistry (${currency})`, contractName: V2_CURRENCY_CONTRACTS.ScoreRegistry, address: loadProxyAddress(network, CONTRACT_NAMES.ScoreRegistry, currency) },
   ];
 
-  const publicClient = isLocalhost ? await hre.viem.getPublicClient() : null;
-  let successCount = 0;
-
-  // ローカル環境の場合、アカウント#1を使用
-  const [, multisigSigner] = isLocalhost ? await hre.viem.getWalletClients() : [null, null];
-
+  console.log('🔍 Checking governance state...\n');
+  const plan = [];
   for (const contract of contracts) {
-    try {
-      console.log(`🔄 [${successCount + 1}/${contracts.length}] ${contract.name}.acceptGovernance()...`);
-      
-      const contractInstance = await hre.viem.getContractAt(contract.contractName, contract.address);
+    const state = await readGovernance(contract.address);
+    const action =
+      state.governance === multisig ? 'done'
+      : state.pendingGovernance === multisig ? 'accept'
+      : 'blocked';
+    plan.push({ ...contract, ...state, action });
+    console.log(`   ${action.padEnd(8)} ${contract.name}  governance=${state.governance}  pending=${state.pendingGovernance}`);
+  }
 
-      if (isLocalhost && multisigSigner) {
-        // ローカル環境: アカウント#1で直接実行
-        const hash = await multisigSigner.writeContract({
-          address: contract.address,
-          abi: contractInstance.abi,
-          functionName: 'acceptGovernance',
-        });
-        const receipt = await publicClient!.waitForTransactionReceipt({ hash });
-        console.log(`   📝 Transaction hash: ${hash}`);
-        console.log(`   ✅ Confirmed in block ${receipt.blockNumber}\n`);
-      } else {
-        // 本番環境: Safe Transaction提案
-        await createAndProposeSafeTransaction(
-          contract.address,
-          contractInstance.abi,
-          'acceptGovernance',
-          [],
-          network
-        );
-      }
+  const blocked = plan.filter((p) => p.action === 'blocked');
+  if (blocked.length > 0) {
+    throw new Error(
+      `Nothing was sent. pendingGovernance is not the multisig (run v2-transfer-governance.ts first) for: ${blocked.map((p) => p.name).join(', ')}`
+    );
+  }
 
-      successCount++;
-    } catch (error) {
-      console.error(`   ❌ Failed:`, error);
-      throw error;
-    }
+  const targets = plan.filter((p) => p.action === 'accept');
+  console.log(`\n🔄 Accepting ${targets.length} contract(s)...\n`);
+  const results: SendResult[] = [];
+  for (const target of targets) {
+    console.log(`🔄 ${target.name}.acceptGovernance()`);
+    const instance = await hre.viem.getContractAt(target.contractName, target.address);
+    results.push(
+      await sendFromMultisig({
+        network,
+        address: target.address,
+        abi: instance.abi,
+        functionName: 'acceptGovernance',
+        args: [],
+      })
+    );
   }
 
   console.log(`\n${'='.repeat(60)}`);
   console.log(`\n✅ Governance acceptance completed!`);
-  console.log(`\n📊 Summary:`);
-  console.log(`   Currency: ${currency}`);
-  console.log(`   Accepted: ${successCount}/${contracts.length} contracts`);
-  console.log(`   Multisig: ${multisigAddr}`);
+  console.log(`\n📊 Summary (${currency}):`);
+  console.log(`   Accepted now:           ${results.filter((r) => r === 'sent').length}`);
+  console.log(`   Proposed to Safe:       ${results.filter((r) => r === 'proposed').length}`);
+  console.log(`   Already proposed:       ${results.filter((r) => r === 'already-proposed').length}`);
+  console.log(`   Already multisig-owned: ${plan.filter((p) => p.action === 'done').length}`);
   console.log(`\n${'='.repeat(60)}\n`);
 }
 
